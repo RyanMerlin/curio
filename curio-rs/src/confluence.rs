@@ -30,6 +30,34 @@ impl ConfluenceClient {
         })
     }
 
+    pub async fn get_current_user(&self) -> Result<serde_json::Value> {
+        let url = format!("{}/rest/api/user/current", self.base_url);
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to send Confluence API request for current user")?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body for current user")?;
+
+        if status.is_success() {
+            serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence API response for current user")
+        } else {
+            anyhow::bail!(
+                "Confluence auth check failed with status {}: {}",
+                status,
+                response_text
+            );
+        }
+    }
+
     async fn assert_within_write_root(&self, page_id: &str) -> Result<()> {
         let Some(write_root_folder_id) = self.write_root_folder_id.as_deref() else {
             return Ok(());

@@ -1,5 +1,7 @@
 # Curio Onboarding
 
+`curio onboard` is the entrypoint for this flow.
+
 ## Base Requirements
 
 - Rust toolchain for `curio-rs`
@@ -11,8 +13,15 @@
 Curio writes only within the configured Confluence output folder:
 
 - `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the primary setting
-- `CURIO_ROOT_FOLDER_NAME` is a fallback only for older setups
-- `.env` and `.env.example` must contain the same keys
+- `.env` and `.env.example` must contain the same Curio keys
+
+The onboarding command will:
+
+- merge current shell environment values into `.env`
+- keep existing `.env` values when the shell does not override them
+- validate Confluence auth with the current token
+- check the managed output folder and lifecycle pages
+- report provider launcher availability as warnings or failures
 
 ## Provider Overrides
 
@@ -41,6 +50,7 @@ Curio merges launch settings in this order:
 ## Verification
 
 ```powershell
+.\curio.ps1 onboard
 .\curio.ps1 agent doctor
 .\curio.ps1 agent list-providers
 .\curio.ps1 agent prepare codex

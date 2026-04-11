@@ -26,14 +26,20 @@ All three providers are launched from the same Curio workspace contract:
 Curio content writes are scoped by Confluence folder ID:
 
 - `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the authoritative write root
-- `CURIO_ROOT_FOLDER_NAME` is only a fallback for older setups
-- `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` and `.env.example` stay in sync with `.env`
+- Curio's onboarding flow keeps `.env` and `.env.example` aligned on the six Curio keys
+
+Run onboarding with:
+
+```powershell
+.\curio.ps1 onboard
+```
 
 ## Quickstart
 
 From `C:\code\agents\curio`:
 
 ```powershell
+.\curio.ps1 onboard
 .\curio.ps1 agent doctor
 .\curio.ps1 agent list-providers
 .\curio.ps1 agent launch codex

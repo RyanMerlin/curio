@@ -12,6 +12,7 @@ use curio::{
         gold_publish::run_gold_publish,
         gold_resolve::run_gold_resolve,
         intake::run_intake_create,
+        onboard::run_onboard,
         process_intake::run_process_intake,
         review::{run_review_approve, run_review_reject}, // Import review functions
         search::run_search,
@@ -24,6 +25,9 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Onboard => {
+            run_onboard(cli.dry_run).await?;
+        }
         Commands::Agent(agent_commands) => match agent_commands {
             AgentCommands::Prepare { provider } => {
                 run_agent_prepare(provider)?;

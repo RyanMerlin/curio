@@ -40,6 +40,9 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
+    /// Inspect and synchronize the Curio onboarding state.
+    Onboard,
+
     /// Create and verify the core Confluence structure (folders, templates).
     Bootstrap,
 

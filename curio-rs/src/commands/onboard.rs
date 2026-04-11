@@ -1,0 +1,470 @@
+use crate::{
+    config::{Config, ConnectionConfig, ContentModelConfig, RuntimeConfig},
+    confluence::ConfluenceClient,
+    harness::{HarnessPaths, run_checks},
+};
+use anyhow::{Context, Result, bail};
+use std::collections::{BTreeMap, BTreeSet};
+use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+const CURIO_ENV_KEYS: &[&str] = &[
+    "CURIO_CONFLUENCE_URL",
+    "CURIO_CONFLUENCE_EMAIL",
+    "CURIO_CONFLUENCE_TOKEN",
+    "CURIO_SPACE_KEY",
+    "CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID",
+    "CURIO_TEMP_DIR",
+];
+
+const CURIO_LIFECYCLE_PAGES: &[&str] = &[
+    "Intake",
+    "Staged",
+    "Review",
+    "Published",
+    "_templates",
+    "_registry",
+];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ValueSource {
+    ProcessEnv,
+    EnvFile,
+    Default,
+    Missing,
+}
+
+impl ValueSource {
+    fn label(self) -> &'static str {
+        match self {
+            ValueSource::ProcessEnv => "env",
+            ValueSource::EnvFile => "file",
+            ValueSource::Default => "default",
+            ValueSource::Missing => "missing",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct ResolvedValue {
+    value: String,
+    source: ValueSource,
+}
+
+#[derive(Debug, Clone)]
+struct OnboardState {
+    resolved: BTreeMap<String, ResolvedValue>,
+    env_file_values: BTreeMap<String, String>,
+    example_file_values: BTreeMap<String, String>,
+    env_path: PathBuf,
+    example_path: PathBuf,
+}
+
+pub async fn run_onboard(dry_run: bool) -> Result<()> {
+    let paths = HarnessPaths::discover()?;
+    let mut critical_issues = 0usize;
+    let mut warning_issues = 0usize;
+
+    println!("Running Curio onboarding...");
+    println!("repo_root :: {}", paths.repo_root.display());
+    println!("crate_root :: {}", paths.crate_root.display());
+
+    let harness_checks = run_checks(&paths, None)?;
+    for check in harness_checks {
+        let is_warning = check.label.ends_with(":launcher") || check.label == "claude_settings";
+        let ok = check.ok;
+        let status = if ok {
+            "OK"
+        } else if is_warning {
+            warning_issues += 1;
+            "WARN"
+        } else {
+            critical_issues += 1;
+            "FAIL"
+        };
+        println!("[{}] {} :: {}", status, check.label, check.detail);
+    }
+
+    let state = load_onboard_state(&paths)?;
+    report_env_alignment(&state, dry_run, &mut critical_issues)?;
+
+    let config = build_onboard_config(&state);
+    report_runtime_defaults(&config);
+    let token = state
+        .resolved
+        .get("CURIO_CONFLUENCE_TOKEN")
+        .map(|resolved| resolved.value.as_str())
+        .unwrap_or("");
+    validate_confluence(&config, token, &mut critical_issues, &mut warning_issues).await?;
+
+    if !dry_run {
+        write_env_file(&state)?;
+    } else {
+        println!("(Dry run) Would sync {}", state.env_path.display());
+    }
+
+    println!(
+        "Onboarding complete with {} critical issue(s) and {} warning(s).",
+        critical_issues, warning_issues
+    );
+
+    if critical_issues > 0 {
+        bail!(
+            "Curio onboarding found {} critical issue(s).",
+            critical_issues
+        );
+    }
+
+    Ok(())
+}
+
+async fn validate_lifecycle_pages(
+    client: &ConfluenceClient,
+    config: &Config,
+    warning_issues: &mut usize,
+) -> Result<()> {
+    let Some(folder_id) = config.content_model.output_root_folder_id.as_deref() else {
+        return Ok(());
+    };
+
+    let space_key = config.content_model.space_key.as_str();
+    for page_name in CURIO_LIFECYCLE_PAGES {
+        let page = client
+            .get_page_by_title(space_key, Some(folder_id), page_name)
+            .await?;
+        if page.is_some() {
+            println!("[OK] lifecycle_page :: {}", page_name);
+        } else {
+            *warning_issues += 1;
+            println!("[WARN] lifecycle_page :: {} is missing", page_name);
+            println!("  hint :: run `curio bootstrap` to create or repair Curio lifecycle pages");
+        }
+    }
+
+    Ok(())
+}
+
+fn load_onboard_state(paths: &HarnessPaths) -> Result<OnboardState> {
+    let env_path = paths.repo_root.join(".env");
+    let example_path = paths.repo_root.join(".env.example");
+    let env_file_values = read_env_file(&env_path)?;
+    let example_file_values = read_env_file(&example_path)?;
+
+    let resolved = CURIO_ENV_KEYS
+        .iter()
+        .map(|key| {
+            let (value, source) = resolve_env_value(key, &env_file_values);
+            ((*key).to_string(), ResolvedValue { value, source })
+        })
+        .collect();
+
+    Ok(OnboardState {
+        resolved,
+        env_file_values,
+        example_file_values,
+        env_path,
+        example_path,
+    })
+}
+
+fn resolve_env_value(
+    key: &str,
+    env_file_values: &BTreeMap<String, String>,
+) -> (String, ValueSource) {
+    if let Ok(value) = env::var(key) {
+        if !value.trim().is_empty() {
+            return (value, ValueSource::ProcessEnv);
+        }
+    }
+
+    if let Some(value) = env_file_values.get(key) {
+        if !value.trim().is_empty() {
+            return (value.clone(), ValueSource::EnvFile);
+        }
+    }
+
+    match key {
+        "CURIO_SPACE_KEY" => ("CURIO".to_string(), ValueSource::Default),
+        "CURIO_TEMP_DIR" => (String::new(), ValueSource::Default),
+        _ => (String::new(), ValueSource::Missing),
+    }
+}
+
+fn read_env_file(path: &Path) -> Result<BTreeMap<String, String>> {
+    if !path.is_file() {
+        return Ok(BTreeMap::new());
+    }
+
+    let raw =
+        fs::read_to_string(path).with_context(|| format!("Failed to read {}", path.display()))?;
+
+    let mut values = BTreeMap::new();
+    for line in raw.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if let Some((key, value)) = trimmed.split_once('=') {
+            values.insert(key.trim().to_string(), strip_quotes(value.trim()));
+        }
+    }
+
+    Ok(values)
+}
+
+fn strip_quotes(value: &str) -> String {
+    let bytes = value.as_bytes();
+    if bytes.len() >= 2
+        && ((bytes[0] == b'"' && bytes[bytes.len() - 1] == b'"')
+            || (bytes[0] == b'\'' && bytes[bytes.len() - 1] == b'\''))
+    {
+        value[1..value.len() - 1].to_string()
+    } else {
+        value.to_string()
+    }
+}
+
+fn report_env_alignment(
+    state: &OnboardState,
+    dry_run: bool,
+    critical_issues: &mut usize,
+) -> Result<()> {
+    if state.env_path.is_file() {
+        println!("[OK] env_file :: {}", state.env_path.display());
+    } else {
+        *critical_issues += 1;
+        println!("[FAIL] env_file :: {} is missing", state.env_path.display());
+        println!("  hint :: create the file or run `curio onboard` with `--dry-run` first");
+    }
+
+    if state.example_path.is_file() {
+        println!("[OK] env_example :: {}", state.example_path.display());
+    } else {
+        *critical_issues += 1;
+        println!(
+            "[FAIL] env_example :: {} is missing",
+            state.example_path.display()
+        );
+        println!("  hint :: restore the tracked example file from the repository");
+    }
+
+    let env_keys: BTreeSet<_> = state.env_file_values.keys().cloned().collect();
+    let example_keys: BTreeSet<_> = state.example_file_values.keys().cloned().collect();
+
+    if env_keys == example_keys {
+        println!(
+            "[OK] env_key_parity :: {} key(s) match between .env and .env.example",
+            env_keys.len()
+        );
+    } else {
+        *critical_issues += 1;
+        let missing_from_env: Vec<_> = example_keys.difference(&env_keys).cloned().collect();
+        let extra_in_env: Vec<_> = env_keys.difference(&example_keys).cloned().collect();
+        println!("[FAIL] env_key_parity :: .env and .env.example are out of sync");
+        if !missing_from_env.is_empty() {
+            println!("  missing_from_.env :: {}", missing_from_env.join(", "));
+        }
+        if !extra_in_env.is_empty() {
+            println!("  extra_in_.env :: {}", extra_in_env.join(", "));
+        }
+    }
+
+    for key in CURIO_ENV_KEYS {
+        if let Some(resolved) = state.resolved.get(*key) {
+            let rendered = render_value(key, &resolved.value);
+            let status = match resolved.source {
+                ValueSource::ProcessEnv | ValueSource::EnvFile | ValueSource::Default => "OK",
+                ValueSource::Missing => "WARN",
+            };
+            println!(
+                "[{}] {} :: {} :: {}",
+                status,
+                key,
+                resolved.source.label(),
+                rendered
+            );
+        }
+    }
+
+    if dry_run {
+        println!("(Dry run) Would synchronize {}", state.env_path.display());
+    }
+
+    Ok(())
+}
+
+fn render_value(key: &str, value: &str) -> String {
+    if value.is_empty() {
+        return "<empty>".to_string();
+    }
+
+    if key.contains("TOKEN") || key.contains("PASSWORD") || key.contains("SECRET") {
+        let visible = value.chars().take(4).collect::<String>();
+        return format!("{}*** ({} chars)", visible, value.chars().count());
+    }
+
+    value.to_string()
+}
+
+fn build_onboard_config(state: &OnboardState) -> Config {
+    let get = |key: &str| {
+        state
+            .resolved
+            .get(key)
+            .map(|resolved| resolved.value.clone())
+            .unwrap_or_default()
+    };
+    let temp_dir = {
+        let raw = get("CURIO_TEMP_DIR");
+        if raw.trim().is_empty() {
+            Some(std::env::temp_dir().join("curio"))
+        } else {
+            Some(PathBuf::from(raw))
+        }
+    };
+
+    Config {
+        connection: ConnectionConfig {
+            confluence_url: get("CURIO_CONFLUENCE_URL"),
+            confluence_email: get("CURIO_CONFLUENCE_EMAIL"),
+        },
+        content_model: ContentModelConfig {
+            space_key: get("CURIO_SPACE_KEY"),
+            root_folder_name: String::new(),
+            output_root_folder_id: {
+                let v = get("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
+                if v.trim().is_empty() { None } else { Some(v) }
+            },
+            label_namespace: "curio".to_string(),
+        },
+        runtime: RuntimeConfig {
+            temp_dir,
+            log_level: None,
+        },
+    }
+}
+
+fn report_runtime_defaults(config: &Config) {
+    if let Some(temp_dir) = &config.runtime.temp_dir {
+        println!("[OK] temp_dir :: {}", temp_dir.display());
+    }
+}
+
+async fn validate_confluence(
+    config: &Config,
+    auth_token: &str,
+    critical_issues: &mut usize,
+    warning_issues: &mut usize,
+) -> Result<()> {
+    let missing = missing_core_fields(config, auth_token);
+    if !missing.is_empty() {
+        *critical_issues += missing.len();
+        println!(
+            "[FAIL] confluence_core :: missing required value(s): {}",
+            missing.join(", ")
+        );
+        println!("  hint :: run `curio onboard` after setting the missing environment variables");
+        return Ok(());
+    }
+
+    let client = ConfluenceClient::new(
+        config.connection.confluence_url.clone(),
+        config.connection.confluence_email.clone(),
+        auth_token.to_string(),
+        config.content_model.output_root_folder_id.clone(),
+    )?;
+
+    match client.get_current_user().await {
+        Ok(user) => {
+            let display_name = user["displayName"].as_str().unwrap_or("unknown");
+            println!("[OK] confluence_auth :: authenticated as {}", display_name);
+        }
+        Err(err) => {
+            *critical_issues += 1;
+            println!("[FAIL] confluence_auth :: {}", err);
+            println!(
+                "  hint :: confirm CURIO_CONFLUENCE_URL, CURIO_CONFLUENCE_EMAIL, and CURIO_CONFLUENCE_TOKEN"
+            );
+            return Ok(());
+        }
+    }
+
+    if let Some(folder_id) = config.content_model.output_root_folder_id.as_deref() {
+        match client.get_folder_by_id_v2(folder_id).await? {
+            Some(folder) => {
+                let title = folder["title"].as_str().unwrap_or(folder_id);
+                println!("[OK] output_root_folder :: {} ({})", folder_id, title);
+            }
+            None => {
+                *critical_issues += 1;
+                println!(
+                    "[FAIL] output_root_folder :: {} was not found in Confluence",
+                    folder_id
+                );
+                println!(
+                    "  hint :: set CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID to an existing folder ID"
+                );
+            }
+        }
+    } else {
+        *critical_issues += 1;
+        println!("[FAIL] output_root_folder :: CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID is missing");
+        println!(
+            "  hint :: use the folder ID from your managed output folder URL, then rerun onboarding"
+        );
+    }
+
+    validate_lifecycle_pages(&client, config, warning_issues).await?;
+
+    Ok(())
+}
+
+fn missing_core_fields(config: &Config, auth_token: &str) -> Vec<&'static str> {
+    let mut missing = Vec::new();
+    if config.connection.confluence_url.trim().is_empty() {
+        missing.push("CURIO_CONFLUENCE_URL");
+    }
+    if config.connection.confluence_email.trim().is_empty() {
+        missing.push("CURIO_CONFLUENCE_EMAIL");
+    }
+    if auth_token.trim().is_empty() {
+        missing.push("CURIO_CONFLUENCE_TOKEN");
+    }
+    if config.content_model.space_key.trim().is_empty() {
+        missing.push("CURIO_SPACE_KEY");
+    }
+    if config.content_model.output_root_folder_id.is_none() {
+        missing.push("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
+    }
+    missing
+}
+
+fn write_env_file(state: &OnboardState) -> Result<()> {
+    let mut lines = Vec::new();
+    lines.push("# Curio harness config".to_string());
+    for key in CURIO_ENV_KEYS {
+        let value = if *key == "CURIO_TEMP_DIR" {
+            String::new()
+        } else {
+            state
+                .resolved
+                .get(*key)
+                .map(|resolved| resolved.value.clone())
+                .unwrap_or_default()
+        };
+        lines.push(format!("{}={}", key, value));
+    }
+
+    let new_content = lines.join("\n") + "\n";
+    let current_content = fs::read_to_string(&state.env_path).unwrap_or_default();
+    if current_content == new_content {
+        println!("[OK] env_sync :: {}", state.env_path.display());
+        return Ok(());
+    }
+
+    fs::write(&state.env_path, new_content)
+        .with_context(|| format!("Failed to write {}", state.env_path.display()))?;
+    println!("[OK] env_sync :: updated {}", state.env_path.display());
+    Ok(())
+}
