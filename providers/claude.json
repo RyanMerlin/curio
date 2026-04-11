@@ -1,0 +1,8 @@
+{
+  "args": [],
+  "env": {
+    "CURIO_CLAUDE_MODE": "workspace",
+    "CURIO_CLAUDE_SETTINGS_PATH": "C:\\code\\agents\\curio\\.claude\\settings.local.json"
+  },
+  "bootstrap_summary": "Use CLAUDE.md as the Claude entrypoint, load Curio skills and enabled plugins, and apply repo-local Claude settings."
+}

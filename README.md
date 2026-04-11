@@ -1,0 +1,48 @@
+# Curio
+
+Curio is the harness and orchestration repo for `curio-rs`.
+
+The split is deliberate:
+
+- `curio-rs` owns deterministic execution, checks, and CLI primitives
+- Curio owns provider launch, prompt routing, skills, plugins, and onboarding
+- Curio can later externalize reusable plugin bundles into a separate shared catalog without changing the local harness contract
+
+## Supported Providers
+
+- Codex
+- Claude
+- Gemini
+
+All three providers are launched from the same Curio workspace contract:
+
+- repo root: `C:\code\agents\curio`
+- authored skills: `skills/`
+- compatibility skills: `.agents/skills/`
+- plugin catalog: `.agents/plugins/marketplace.json`
+- provider entrypoints: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
+- provider profiles: `providers/*.json`
+
+## Quickstart
+
+From `C:\code\agents\curio`:
+
+```powershell
+.\curio.ps1 agent doctor
+.\curio.ps1 agent list-providers
+.\curio.ps1 agent launch codex
+```
+
+If the provider binary is not on `PATH`, set one of:
+
+- `CURIO_CODEX_CMD`
+- `CURIO_CLAUDE_CMD`
+- `CURIO_GEMINI_CMD`
+
+Curio also supports provider-owned extra args through:
+
+- `CURIO_CODEX_ARGS`
+- `CURIO_CLAUDE_ARGS`
+- `CURIO_GEMINI_ARGS`
+
+See `docs/onboarding.md` for the full bootstrap flow.

@@ -1,0 +1,7 @@
+{
+  "args": [],
+  "env": {
+    "CURIO_CODEX_MODE": "workspace"
+  },
+  "bootstrap_summary": "Use AGENTS.md as the Codex entrypoint, load Curio skills and enabled plugin bundles, and operate from the Curio repo root."
+}

@@ -1,0 +1,20 @@
+[package]
+name = "curio"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+dotenvy = "0.15"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+dirs = "5"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde_yaml = "0.9"
+sha2 = "0.10"
+scraper = "0.19"
+walkdir = "2.5"
+chrono = "0.4"
