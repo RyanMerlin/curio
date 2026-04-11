@@ -35,7 +35,7 @@ pub struct Cli {
     pub log_level: Option<String>,
 
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]

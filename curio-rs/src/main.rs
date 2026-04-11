@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use curio::{
     cli::{AgentCommands, Cli, Commands, ReviewCommands},
     commands::{
@@ -25,13 +25,13 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Onboard { install } => {
+        Some(Commands::Onboard { install }) => {
             run_onboard(cli.dry_run, install).await?;
         }
-        Commands::Doctor { provider } => {
+        Some(Commands::Doctor { provider }) => {
             run_agent_doctor(provider)?;
         }
-        Commands::Agent(agent_commands) => match agent_commands {
+        Some(Commands::Agent(agent_commands)) => match agent_commands {
             AgentCommands::Prepare { provider } => {
                 run_agent_prepare(provider)?;
             }
@@ -54,18 +54,18 @@ async fn main() -> Result<()> {
                 run_agent_print_env(provider)?;
             }
         },
-        Commands::Bootstrap => {
+        Some(Commands::Bootstrap) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_bootstrap(&config, cli.dry_run).await?;
         }
-        Commands::IntakeCreate {
+        Some(Commands::IntakeCreate {
             url,
             file,
             folder,
             subject_hint,
             metadata,
-        } => {
+        }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_intake_create(
@@ -79,41 +79,41 @@ async fn main() -> Result<()> {
             )
             .await?;
         }
-        Commands::ProcessIntake { limit } => {
+        Some(Commands::ProcessIntake { limit }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_process_intake(&config, cli.dry_run, limit).await?;
         }
-        Commands::Search {
+        Some(Commands::Search {
             labels,
             text,
             content_type,
             limit,
-        } => {
+        }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_search(&config, cli.dry_run, labels, text, content_type, limit).await?;
         }
-        Commands::AgentAnalyze {
+        Some(Commands::AgentAnalyze {
             page_id,
             status,
             limit,
-        } => {
+        }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_agent_analyze(&config, cli.dry_run, &page_id, &status, limit).await?;
         }
-        Commands::GoldResolve { page_id } => {
+        Some(Commands::GoldResolve { page_id }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_gold_resolve(&config, cli.dry_run, page_id).await?;
         }
-        Commands::GoldPublish { page_id } => {
+        Some(Commands::GoldPublish { page_id }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_gold_publish(&config, cli.dry_run, page_id).await?;
         }
-        Commands::Review(review_commands) => {
+        Some(Commands::Review(review_commands)) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             match review_commands {
@@ -124,6 +124,10 @@ async fn main() -> Result<()> {
                     run_review_reject(&config, cli.dry_run, page_id, reason).await?;
                 }
             }
+        }
+        None => {
+            Cli::command().print_help()?;
+            println!();
         }
     }
 
