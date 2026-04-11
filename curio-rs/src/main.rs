@@ -28,6 +28,9 @@ async fn main() -> Result<()> {
         Commands::Onboard => {
             run_onboard(cli.dry_run).await?;
         }
+        Commands::Doctor { provider } => {
+            run_agent_doctor(provider)?;
+        }
         Commands::Agent(agent_commands) => match agent_commands {
             AgentCommands::Prepare { provider } => {
                 run_agent_prepare(provider)?;

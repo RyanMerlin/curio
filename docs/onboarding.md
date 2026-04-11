@@ -51,6 +51,7 @@ Curio merges launch settings in this order:
 
 ```powershell
 .\curio.ps1 onboard
+.\curio.ps1 doctor
 .\curio.ps1 agent doctor
 .\curio.ps1 agent list-providers
 .\curio.ps1 agent prepare codex

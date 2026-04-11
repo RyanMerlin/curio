@@ -43,6 +43,12 @@ pub enum Commands {
     /// Inspect and synchronize the Curio onboarding state.
     Onboard,
 
+    /// Verify provider and harness prerequisites.
+    Doctor {
+        #[arg(value_enum)]
+        provider: Option<AgentProvider>,
+    },
+
     /// Create and verify the core Confluence structure (folders, templates).
     Bootstrap,
 
