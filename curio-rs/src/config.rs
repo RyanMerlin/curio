@@ -131,11 +131,6 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
         if !trimmed.is_empty() {
             config.content_model.output_root_folder_id = Some(trimmed.to_string());
         }
-    } else if let Ok(legacy_output_root_page_id) = env::var("CURIO_OUTPUT_ROOT_PAGE_ID") {
-        let trimmed = legacy_output_root_page_id.trim();
-        if !trimmed.is_empty() {
-            config.content_model.output_root_folder_id = Some(trimmed.to_string());
-        }
     }
     if let Ok(temp_dir) = env::var("CURIO_TEMP_DIR") {
         if !temp_dir.trim().is_empty() {
@@ -209,7 +204,6 @@ mod tests {
             env::remove_var("CURIO_SPACE_KEY");
             env::remove_var("CURIO_ROOT_FOLDER_NAME");
             env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
-            env::remove_var("CURIO_OUTPUT_ROOT_PAGE_ID");
             env::remove_var("CURIO_TEMP_DIR");
         }
 
@@ -241,7 +235,6 @@ mod tests {
             env::remove_var("CURIO_CONFLUENCE_EMAIL");
             env::remove_var("CURIO_SPACE_KEY");
             env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
-            env::remove_var("CURIO_OUTPUT_ROOT_PAGE_ID");
             env::remove_var("CURIO_TEMP_DIR");
         }
     }
@@ -255,7 +248,6 @@ mod tests {
             env::remove_var("CURIO_SPACE_KEY");
             env::remove_var("CURIO_ROOT_FOLDER_NAME");
             env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
-            env::remove_var("CURIO_OUTPUT_ROOT_PAGE_ID");
             env::remove_var("CURIO_TEMP_DIR");
 
             env::set_var("CURIO_CONFLUENCE_URL", "http://test.confluence.com");
