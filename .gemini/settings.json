@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "missioncontrol": {
+      "args": [
+        "serve"
+      ],
+      "command": "C:\\Users\\ryan.merlin\\.cargo\\bin\\mc.exe"
+    }
+  }
+}
