@@ -40,6 +40,7 @@ From `C:\code\agents\curio`:
 
 ```powershell
 .\curio.ps1 onboard
+.\curio.ps1 onboard --install
 .\curio.ps1 doctor
 .\curio.ps1 agent doctor
 .\curio.ps1 agent list-providers

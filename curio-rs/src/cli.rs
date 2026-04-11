@@ -41,7 +41,14 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Inspect and synchronize the Curio onboarding state.
-    Onboard,
+    ///
+    /// By default, Curio prompts to install the user-level shim and treats
+    /// Enter as yes so `curio` works from any terminal.
+    Onboard {
+        /// Force install or update the user-level Curio shim without prompting.
+        #[arg(long)]
+        install: bool,
+    },
 
     /// Verify provider and harness prerequisites.
     Doctor {

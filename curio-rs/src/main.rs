@@ -25,8 +25,8 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Onboard => {
-            run_onboard(cli.dry_run).await?;
+        Commands::Onboard { install } => {
+            run_onboard(cli.dry_run, install).await?;
         }
         Commands::Doctor { provider } => {
             run_agent_doctor(provider)?;

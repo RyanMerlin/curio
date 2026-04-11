@@ -7,6 +7,7 @@ use anyhow::{Context, Result, bail};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
+use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
 const CURIO_ENV_KEYS: &[&str] = &[
@@ -61,7 +62,7 @@ struct OnboardState {
     example_path: PathBuf,
 }
 
-pub async fn run_onboard(dry_run: bool) -> Result<()> {
+pub async fn run_onboard(dry_run: bool, force_install: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
     let mut critical_issues = 0usize;
     let mut warning_issues = 0usize;
@@ -104,6 +105,20 @@ pub async fn run_onboard(dry_run: bool) -> Result<()> {
         println!("(Dry run) Would sync {}", state.env_path.display());
     }
 
+    let should_install = if dry_run {
+        false
+    } else if force_install {
+        true
+    } else {
+        prompt_install_shim()?
+    };
+
+    if should_install {
+        install_curio_shim(&paths, dry_run)?;
+    } else {
+        println!("[OK] shim_install :: skipped");
+    }
+
     println!(
         "Onboarding complete with {} critical issue(s) and {} warning(s).",
         critical_issues, warning_issues
@@ -117,6 +132,127 @@ pub async fn run_onboard(dry_run: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn prompt_install_shim() -> Result<bool> {
+    if !io::stdin().is_terminal() {
+        println!("[OK] shim_install :: non-interactive session, defaulting to yes");
+        return Ok(true);
+    }
+
+    print!("Install Curio shim to cargo bin so `curio` works from any terminal? [Y/n] ");
+    io::stdout()
+        .flush()
+        .context("Failed to flush install prompt")?;
+
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .context("Failed to read install prompt response")?;
+
+    let answer = input.trim().to_ascii_lowercase();
+    Ok(answer.is_empty() || matches!(answer.as_str(), "y" | "yes"))
+}
+
+fn cargo_bin_dir() -> Result<PathBuf> {
+    if let Ok(cargo_home) = env::var("CARGO_HOME") {
+        return Ok(PathBuf::from(cargo_home).join("bin"));
+    }
+
+    let home = dirs::home_dir().context("Could not resolve home directory for cargo bin path")?;
+    Ok(home.join(".cargo").join("bin"))
+}
+
+fn install_curio_shim(paths: &HarnessPaths, dry_run: bool) -> Result<()> {
+    let cargo_bin = cargo_bin_dir()?;
+    let shim_path = if cfg!(windows) {
+        cargo_bin.join("curio.cmd")
+    } else {
+        cargo_bin.join("curio")
+    };
+
+    let manifest_path = paths.crate_root.join("Cargo.toml");
+    let manifest_path = manifest_path.canonicalize().unwrap_or(manifest_path);
+    let manifest_path = manifest_path.display().to_string();
+
+    let desired_content = if cfg!(windows) {
+        format!(
+            "@echo off\r\nset \"CURIO_REPO_ROOT={}\"\r\ncargo run --manifest-path \"{}\" -- %*\r\n",
+            paths.repo_root.display(),
+            manifest_path
+        )
+    } else {
+        format!(
+            "#!/usr/bin/env sh\nexport CURIO_REPO_ROOT=\"{}\"\nexec cargo run --manifest-path \"{}\" -- \"$@\"\n",
+            paths.repo_root.display(),
+            manifest_path
+        )
+    };
+
+    if dry_run {
+        println!("[Dry run] Would install shim at {}", shim_path.display());
+        return Ok(());
+    }
+
+    fs::create_dir_all(&cargo_bin).with_context(|| {
+        format!(
+            "Failed to create cargo bin directory {}",
+            cargo_bin.display()
+        )
+    })?;
+
+    let current_content = fs::read_to_string(&shim_path).unwrap_or_default();
+    if current_content != desired_content {
+        fs::write(&shim_path, desired_content)
+            .with_context(|| format!("Failed to write shim {}", shim_path.display()))?;
+        println!("[OK] shim_install :: updated {}", shim_path.display());
+    } else {
+        println!("[OK] shim_install :: {}", shim_path.display());
+    }
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&shim_path)
+            .with_context(|| format!("Failed to read metadata for {}", shim_path.display()))?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&shim_path, perms)
+            .with_context(|| format!("Failed to set executable bit on {}", shim_path.display()))?;
+    }
+
+    if !path_contains(&cargo_bin)? {
+        println!(
+            "[WARN] shim_install :: {} is not currently on PATH",
+            cargo_bin.display()
+        );
+        println!(
+            "  hint :: add {} to PATH or open a new shell if your environment refreshes PATH on startup",
+            cargo_bin.display()
+        );
+    }
+
+    Ok(())
+}
+
+fn path_contains(target: &Path) -> Result<bool> {
+    let Some(path_var) = env::var_os("PATH") else {
+        return Ok(false);
+    };
+
+    let normalized_target = normalize_path(target);
+    for entry in env::split_paths(&path_var) {
+        if normalize_path(&entry) == normalized_target {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
+fn normalize_path(path: &Path) -> PathBuf {
+    let text = path.to_string_lossy().replace('/', "\\");
+    PathBuf::from(text.trim_end_matches('\\'))
 }
 
 async fn validate_lifecycle_pages(

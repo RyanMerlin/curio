@@ -2,6 +2,9 @@
 
 `curio onboard` is the entrypoint for this flow.
 
+By default it prompts to install the user-level Curio shim and treats Enter as yes.
+Pass `--install` to force shim installation without prompting.
+
 ## Base Requirements
 
 - Rust toolchain for `curio-rs`
@@ -19,6 +22,7 @@ The onboarding command will:
 
 - merge current shell environment values into `.env`
 - keep existing `.env` values when the shell does not override them
+- install or update the `curio` shim in the user cargo bin when approved
 - validate Confluence auth with the current token
 - check the managed output folder and lifecycle pages
 - report provider launcher availability as warnings or failures
@@ -51,6 +55,7 @@ Curio merges launch settings in this order:
 
 ```powershell
 .\curio.ps1 onboard
+.\curio.ps1 onboard --install
 .\curio.ps1 doctor
 .\curio.ps1 agent doctor
 .\curio.ps1 agent list-providers

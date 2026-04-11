@@ -25,6 +25,10 @@ pub struct HarnessPaths {
 
 impl HarnessPaths {
     pub fn discover() -> Result<Self> {
+        if let Some(repo_root) = repo_root_override() {
+            return Self::discover_from(&repo_root);
+        }
+
         let cwd = std::env::current_dir().context("Failed to resolve current working directory")?;
         Self::discover_from(&cwd)
     }
@@ -60,6 +64,15 @@ impl HarnessPaths {
             AgentProvider::Gemini => &self.gemini_entrypoint,
         }
     }
+}
+
+fn repo_root_override() -> Option<PathBuf> {
+    let value = std::env::var_os("CURIO_REPO_ROOT")?;
+    if value.is_empty() {
+        return None;
+    }
+
+    Some(PathBuf::from(value))
 }
 
 fn find_repo_root(start: &Path) -> Result<PathBuf> {
