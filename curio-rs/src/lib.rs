@@ -58,18 +58,11 @@ pub async fn generate_change_proposal_with_agent(_content: &str) -> AnyhowResult
         summary: "This is a simulated change proposal.".to_string(),
         proposed_changes: vec![
             Change {
-                target_page_id: "mock_page_id_1".to_string(),
-                target_page_title: "Simulated Gold Page 1".to_string(),
+                target_page_id: "4218060932".to_string(),
+                target_page_title: "publish-test - publish-".to_string(),
                 change_type: "update_section".to_string(),
                 summary_of_change: "Adds simulated new detail to section.".to_string(),
                 proposed_content_diff: "<p>Simulated new content for section.</p>".to_string(),
-            },
-            Change {
-                target_page_id: "mock_page_id_2".to_string(),
-                target_page_title: "Simulated Gold Page 2".to_string(),
-                change_type: "add_note".to_string(),
-                summary_of_change: "Adds a simulated note about impact.".to_string(),
-                proposed_content_diff: "<p>Simulated note about impact.</p>".to_string(),
             },
         ],
     })

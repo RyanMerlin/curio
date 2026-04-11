@@ -24,7 +24,7 @@ pub async fn run_gold_publish(
 
     // 1. Fetch Source Page Content and Metadata
     let source_page = client
-        .get_page_by_title(space_key, None, &page_id_arg)
+        .get_page_by_id_v2(&page_id_arg)
         .await?
         .context(format!("Source page with ID {} not found", page_id_arg))?;
     let _source_page_body = source_page["body"]["storage"]["value"]
@@ -33,9 +33,12 @@ pub async fn run_gold_publish(
         .to_string();
     let current_metadata_json = client
         .get_content_property(&page_id_arg, "curio_metadata")
-        .await?
-        .unwrap_or_else(|| json!({}));
-    let mut curio_metadata_mut = current_metadata_json;
+        .await?;
+    let mut curio_metadata_mut = if let Some(metadata) = current_metadata_json {
+        metadata["value"].clone()
+    } else {
+        json!({})
+    };
 
     // Ensure page is in 'resolved' status
     if curio_metadata_mut["status"].as_str() != Some("resolved") {
@@ -64,7 +67,7 @@ pub async fn run_gold_publish(
 
         // Fetch target page
         let target_page_current = client
-            .get_page_by_title(space_key, None, &change.target_page_id)
+            .get_page_by_id_v2(&change.target_page_id)
             .await?
             .context(format!(
                 "Target gold page with ID {} not found",
@@ -101,7 +104,7 @@ pub async fn run_gold_publish(
                 .set_content_property(
                     &change.target_page_id,
                     "curio_metadata",
-                    target_metadata_mut,
+                    target_metadata_mut.clone(),
                 )
                 .await?;
         } else {

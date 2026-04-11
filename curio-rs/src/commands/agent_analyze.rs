@@ -81,9 +81,12 @@ pub async fn run_agent_analyze(
             println!("  - Setting status to 'analyzing' for page {}", page_id);
             let current_metadata_json = client
                 .get_content_property(&page_id, "curio_metadata")
-                .await?
-                .unwrap_or_else(|| json!({}));
-            let mut curio_metadata_mut = current_metadata_json;
+                .await?;
+            let mut curio_metadata_mut = if let Some(metadata) = current_metadata_json {
+                metadata["value"].clone()
+            } else {
+                json!({})
+            };
             curio_metadata_mut["status"] = json!("analyzing");
             client
                 .set_content_property(&page_id, "curio_metadata", curio_metadata_mut.clone())
@@ -124,9 +127,12 @@ pub async fn run_agent_analyze(
             );
             let current_metadata_json = client
                 .get_content_property(&page_id, "curio_metadata")
-                .await?
-                .unwrap_or_else(|| json!({}));
-            let mut curio_metadata_mut = current_metadata_json;
+                .await?;
+            let mut curio_metadata_mut = if let Some(metadata) = current_metadata_json {
+                metadata["value"].clone()
+            } else {
+                json!({})
+            };
             curio_metadata_mut["status"] = json!("analyzed");
             curio_metadata_mut["agent_analysis"] = json!({
                 "summary": analysis_result.summary,
