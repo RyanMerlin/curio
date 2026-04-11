@@ -1,5 +1,12 @@
+use crate::curio_docs::{
+    AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, build_audit_root_body,
+    build_registry_root_body, ensure_registry_record, ensure_scoped_page,
+};
 use crate::output::emit_json;
-use crate::{Change, ChangeProposal, Result, config::Config, confluence::ConfluenceClient};
+use crate::{
+    Change, ChangeProposal, Result, config::Config, confluence::ConfluenceClient,
+    resolve_managed_root_folder_id,
+};
 use anyhow::Context;
 use chrono::Utc;
 use serde::Serialize;
@@ -34,6 +41,30 @@ pub async fn run_gold_publish(
 
     let space_key = &config.content_model.space_key;
     let label_namespace = &config.content_model.label_namespace;
+    let root_folder_id = resolve_managed_root_folder_id(
+        &client,
+        space_key,
+        &config.content_model.root_folder_name,
+        config.content_model.output_root_folder_id.as_deref(),
+        json_output,
+    )
+    .await?;
+    let registry_root_id = ensure_scoped_page(
+        &client,
+        space_key,
+        &root_folder_id,
+        "_registry",
+        &build_registry_root_body(),
+    )
+    .await?;
+    let audit_root_id = ensure_scoped_page(
+        &client,
+        space_key,
+        &root_folder_id,
+        AUDIT_TITLE,
+        &build_audit_root_body(),
+    )
+    .await?;
 
     // 1. Fetch Source Page Content and Metadata
     let source_page = client
@@ -159,6 +190,43 @@ pub async fn run_gold_publish(
                 vec![format!("{}-status-published", label_namespace)],
             )
             .await?;
+
+        let registry_record = RegistryRecord {
+            key: page_id_arg.clone(),
+            item_type: "gold-source-page".to_string(),
+            title: source_page["title"]
+                .as_str()
+                .unwrap_or(&page_id_arg)
+                .to_string(),
+            page_id: page_id_arg.clone(),
+            parent_id: source_page["parentId"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string(),
+            status: "published".to_string(),
+            source_id: page_id_arg.clone(),
+            summary: change_proposal.summary.clone(),
+            updated_at: Utc::now().to_rfc3339(),
+        };
+        ensure_registry_record(&client, space_key, &registry_root_id, &registry_record).await?;
+
+        let audit_entry = AuditEntry {
+            actor: config.connection.confluence_email.clone(),
+            command: "gold-publish".to_string(),
+            subject: source_page["title"]
+                .as_str()
+                .unwrap_or(&page_id_arg)
+                .to_string(),
+            action: "Applied change proposal and marked the page published".to_string(),
+            rationale: change_proposal.summary.clone(),
+            source: page_id_arg.clone(),
+            result: "published".to_string(),
+            detail_lines: vec![
+                format!("Page ID: {}", page_id_arg),
+                format!("Changes applied: {}", changes_applied),
+            ],
+        };
+        append_audit_entry(&client, space_key, &audit_root_id, &audit_entry).await?;
 
         // (Optional) Move source page to _archive
         // Not implemented in initial version

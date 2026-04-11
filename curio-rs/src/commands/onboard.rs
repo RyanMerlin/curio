@@ -19,13 +19,15 @@ const CURIO_ENV_KEYS: &[&str] = &[
     "CURIO_TEMP_DIR",
 ];
 
-const CURIO_LIFECYCLE_PAGES: &[&str] = &[
+const CURIO_STRUCTURE_PAGES: &[&str] = &[
+    "README",
     "Intake",
     "Staged",
     "Review",
     "Published",
     "_templates",
     "_registry",
+    "_audit",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -255,7 +257,7 @@ fn normalize_path(path: &Path) -> PathBuf {
     PathBuf::from(text.trim_end_matches('\\'))
 }
 
-async fn validate_lifecycle_pages(
+async fn validate_structure_pages(
     client: &ConfluenceClient,
     config: &Config,
     warning_issues: &mut usize,
@@ -265,16 +267,16 @@ async fn validate_lifecycle_pages(
     };
 
     let space_key = config.content_model.space_key.as_str();
-    for page_name in CURIO_LIFECYCLE_PAGES {
+    for page_name in CURIO_STRUCTURE_PAGES {
         let page = client
             .get_page_by_title(space_key, Some(folder_id), page_name)
             .await?;
         if page.is_some() {
-            println!("[OK] lifecycle_page :: {}", page_name);
+            println!("[OK] structure_page :: {}", page_name);
         } else {
             *warning_issues += 1;
-            println!("[WARN] lifecycle_page :: {} is missing", page_name);
-            println!("  hint :: run `curio bootstrap` to create or repair Curio lifecycle pages");
+            println!("[WARN] structure_page :: {} is missing", page_name);
+            println!("  hint :: run `curio bootstrap` to create or repair Curio structure pages");
         }
     }
 
@@ -551,7 +553,7 @@ async fn validate_confluence(
         );
     }
 
-    validate_lifecycle_pages(&client, config, warning_issues).await?;
+    validate_structure_pages(&client, config, warning_issues).await?;
 
     Ok(())
 }

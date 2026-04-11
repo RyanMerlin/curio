@@ -13,6 +13,7 @@
 - onboarding docs
 - harness-only skills
 - local plugin catalog
+- Confluence bootstrap docs and structural pages (`README`, `Intake`, `Staged`, `Review`, `Published`, `_templates`, `_registry`, `_audit`)
 
 ## `plugins/`
 
@@ -31,3 +32,9 @@
 - machine-readable helper command output
 - `--json` usage patterns
 - output shapes for agent automation
+
+## `docs/`
+
+- Curio architecture and onboarding guidance
+- provider and CLI contract notes
+- operational docs for the harness and Confluence structure

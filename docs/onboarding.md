@@ -28,6 +28,11 @@ The onboarding command will:
 - report provider launcher availability as warnings or failures
 
 The bootstrap command will create or refresh the README landing page, the hero image, and the base lifecycle pages so the documentation layer is ready for human and agent use.
+It also builds the Curio operating layers:
+
+- `_templates` for reusable page blueprints and examples
+- `_registry` for the master index of Curio-managed pages and records
+- `_audit` for the append-only action history and rationale trail
 
 ## Provider Overrides
 

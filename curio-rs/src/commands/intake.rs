@@ -1,3 +1,7 @@
+use crate::curio_docs::{
+    AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, build_audit_root_body,
+    build_registry_root_body, ensure_registry_record, ensure_scoped_page,
+};
 use crate::output::emit_json;
 use crate::{
     Result, config::Config, confluence::ConfluenceClient, resolve_managed_root_folder_id,
@@ -63,6 +67,22 @@ pub async fn run_intake_create(
         &root_folder_id,
         "Intake",
         "<p>This page holds raw, unprocessed content that has been ingested.</p>",
+    )
+    .await?;
+    let registry_root_id = ensure_scoped_page(
+        &client,
+        space_key,
+        &root_folder_id,
+        "_registry",
+        &build_registry_root_body(),
+    )
+    .await?;
+    let audit_root_id = ensure_scoped_page(
+        &client,
+        space_key,
+        &root_folder_id,
+        AUDIT_TITLE,
+        &build_audit_root_body(),
     )
     .await?;
 
@@ -224,6 +244,8 @@ pub async fn run_intake_create(
             dry_run,
             json_output,
             &intake_page_id,
+            &registry_root_id,
+            &audit_root_id,
             &content,
             &source_id,
             &content_type,
@@ -321,6 +343,8 @@ async fn process_single_content(
     dry_run: bool,
     json_output: bool,
     intake_page_id: &str,
+    registry_root_id: &str,
+    audit_root_id: &str,
     content: &str,
     source_id: &str,
     content_type: &str,
@@ -464,6 +488,51 @@ async fn process_single_content(
             println!("Adding labels to page {}: {:?}", page_id, labels);
         }
         client.add_labels(&page_id, labels).await?;
+
+        let registry_record = RegistryRecord {
+            key: page_id.clone(),
+            item_type: content_type.to_string(),
+            title: page_title.clone(),
+            page_id: page_id.clone(),
+            parent_id: intake_page_id.to_string(),
+            status: "intake".to_string(),
+            source_id: source_id.to_string(),
+            summary: format!(
+                "Created from {} and routed to Intake with subject '{}'",
+                source_id, subject_key
+            ),
+            updated_at: Utc::now().to_rfc3339(),
+        };
+        ensure_registry_record(
+            client,
+            &config.content_model.space_key,
+            registry_root_id,
+            &registry_record,
+        )
+        .await?;
+
+        let audit_entry = AuditEntry {
+            actor: config.connection.confluence_email.clone(),
+            command: "intake-create".to_string(),
+            subject: page_title.clone(),
+            action: "Created intake page and indexed it in Curio".to_string(),
+            rationale: format!("Capture source {} for Curio processing", source_id),
+            source: source_id.to_string(),
+            result: "intake".to_string(),
+            detail_lines: vec![
+                format!("Page ID: {}", page_id),
+                format!("Content type: {}", content_type),
+                format!("Subject key: {}", subject_key),
+                format!("Dedupe key: {}", dedupe_key),
+            ],
+        };
+        append_audit_entry(
+            client,
+            &config.content_model.space_key,
+            audit_root_id,
+            &audit_entry,
+        )
+        .await?;
     } else {
         if !json_output {
             println!(

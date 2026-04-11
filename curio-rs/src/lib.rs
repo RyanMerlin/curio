@@ -2,6 +2,7 @@ pub mod cli;
 pub mod commands;
 pub mod config;
 pub mod confluence;
+pub mod curio_docs;
 pub mod error;
 pub mod harness;
 pub mod output;

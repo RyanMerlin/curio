@@ -27,6 +27,14 @@ Curio content writes are scoped by Confluence folder ID:
 
 - `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the authoritative write root
 - Curio's onboarding flow keeps `.env` and `.env.example` aligned on the six Curio keys
+- Bootstrap creates a single `README` landing page plus the structural Confluence layers:
+  - `Intake`
+  - `Staged`
+  - `Review`
+  - `Published`
+  - `_templates`
+  - `_registry`
+  - `_audit`
 
 For agent integrations, use `--json` on the helper commands and search:
 
@@ -49,7 +57,7 @@ Run onboarding with:
 .\curio.ps1 onboard
 ```
 
-`curio bootstrap` now lays down the README landing page, hero artwork, and the base lifecycle documentation under the managed Confluence write root.
+`curio bootstrap` lays down the README landing page, hero artwork, the lifecycle documentation, the template playbook, the registry index, and the audit log under the managed Confluence write root.
 
 ## Quickstart
 

@@ -1,18 +1,20 @@
-use crate::output::emit_json;
-use crate::{
-    Result, config::Config, confluence::ConfluenceClient, harness::HarnessPaths,
-    resolve_managed_root_folder_id, resolve_or_create_scoped_child_page_id,
+use crate::curio_docs::{
+    AUDIT_TITLE, AuditEntry, CurioCorePages, README_TITLE, REGISTRY_TITLE, RegistryRecord,
+    TEMPLATES_TITLE, append_audit_entry, build_audit_root_body, build_lifecycle_page,
+    build_readme_body, build_registry_root_body, build_template_page, build_templates_root_body,
+    ensure_registry_record, ensure_scoped_page,
 };
+use crate::output::emit_json;
+use crate::{Result, config::Config, confluence::ConfluenceClient, harness::HarnessPaths};
 use anyhow::Context;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
+use chrono::Utc;
 use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
 use serde::Serialize;
-use std::fmt::Write as _;
 use std::fs;
 
 const HERO_IMAGE_PATH: &str = "docs/assets/Curio_curated_intelligence_operator.png";
-const README_TITLE: &str = "README";
 
 #[derive(Debug, Serialize)]
 struct BootstrapPageOutput {
@@ -24,7 +26,10 @@ struct BootstrapPageOutput {
 #[derive(Debug, Serialize)]
 struct BootstrapOutput {
     root_folder_id: String,
-    overview_page_id: Option<String>,
+    readme_page_id: Option<String>,
+    templates_page_id: Option<String>,
+    registry_page_id: Option<String>,
+    audit_page_id: Option<String>,
     pages: Vec<BootstrapPageOutput>,
 }
 
@@ -41,6 +46,9 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
 
     let paths = HarnessPaths::discover()?;
     let hero_image_html = build_hero_image_html(&paths);
+    let readme_body = build_readme_body(hero_image_html.as_deref());
+    let root_page_specs = root_page_specs(readme_body);
+    let template_page_specs = template_page_specs();
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -54,7 +62,7 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
 
     let space_key = &config.content_model.space_key;
     let root_folder_name = &config.content_model.root_folder_name;
-    let root_folder_id = resolve_managed_root_folder_id(
+    let root_folder_id = crate::resolve_managed_root_folder_id(
         &client,
         space_key,
         root_folder_name,
@@ -70,50 +78,276 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
         );
     }
 
-    let page_specs = lifecycle_page_specs(render_readme_body(hero_image_html.as_deref()));
-    let mut ensured_pages = Vec::new();
+    let actor_email = config.connection.confluence_email.clone();
 
-    for spec in page_specs {
+    let mut ensured_pages = Vec::new();
+    let mut core_ids = CurioCorePages {
+        readme_page_id: String::new(),
+        intake_page_id: String::new(),
+        staged_page_id: String::new(),
+        review_page_id: String::new(),
+        published_page_id: String::new(),
+        templates_page_id: String::new(),
+        registry_page_id: String::new(),
+        audit_page_id: String::new(),
+    };
+
+    for spec in root_page_specs {
         if !json_output {
             println!("Checking for sub-page: '{}' under managed root", spec.title);
         }
 
-        if dry_run {
+        let page_id = if dry_run {
             if !json_output {
                 println!(
                     "(Dry run) Would ensure sub-page: '{}' under managed root",
                     spec.title
                 );
             }
-            ensured_pages.push(BootstrapPageOutput {
-                title: spec.title.to_string(),
-                page_id: None,
-                purpose: spec.purpose.to_string(),
-            });
-            continue;
-        }
+            None
+        } else {
+            let page_id =
+                ensure_scoped_page(&client, space_key, &root_folder_id, spec.title, &spec.body)
+                    .await?;
+            if !json_output {
+                println!("Ensured sub-page '{}' with ID: {}", spec.title, page_id);
+            }
+            Some(page_id)
+        };
 
-        let page_id = resolve_or_create_scoped_child_page_id(
-            &client,
-            space_key,
-            &root_folder_id,
-            spec.title,
-            &spec.body,
-        )
-        .await?;
-
-        if !json_output {
-            println!("Ensured sub-page '{}' with ID: {}", spec.title, page_id);
+        if spec.title == README_TITLE {
+            core_ids.readme_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == "Intake" {
+            core_ids.intake_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == "Staged" {
+            core_ids.staged_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == "Review" {
+            core_ids.review_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == "Published" {
+            core_ids.published_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == TEMPLATES_TITLE {
+            core_ids.templates_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == REGISTRY_TITLE {
+            core_ids.registry_page_id = page_id.clone().unwrap_or_default();
+        } else if spec.title == AUDIT_TITLE {
+            core_ids.audit_page_id = page_id.clone().unwrap_or_default();
         }
 
         ensured_pages.push(BootstrapPageOutput {
             title: spec.title.to_string(),
-            page_id: Some(page_id),
+            page_id,
             purpose: spec.purpose.to_string(),
         });
     }
 
-    let output_pages = ensured_pages;
+    if !dry_run {
+        if let Some(legacy_overview) = client
+            .get_page_by_title(space_key, Some(&root_folder_id), "Curio Overview")
+            .await?
+        {
+            let legacy_id = legacy_overview["id"].as_str().unwrap_or_default();
+            if !legacy_id.is_empty() && legacy_id != core_ids.readme_page_id {
+                if !json_output {
+                    println!("Retiring legacy Curio Overview page {}", legacy_id);
+                }
+                if let Err(err) = client.delete_page(legacy_id).await {
+                    if !json_output {
+                        println!(
+                            "Warning: unable to retire legacy Curio Overview page {}: {}",
+                            legacy_id, err
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    let templates_root_id = if dry_run {
+        None
+    } else {
+        Some(core_ids.templates_page_id.clone())
+    };
+
+    let mut template_outputs = Vec::new();
+    if let Some(templates_root_id) = templates_root_id.as_deref() {
+        for spec in template_page_specs {
+            if !json_output {
+                println!("Checking for template page: '{}'", spec.title);
+            }
+            let page_id = ensure_scoped_page(
+                &client,
+                space_key,
+                templates_root_id,
+                spec.title,
+                &spec.body,
+            )
+            .await?;
+            if !json_output {
+                println!(
+                    "Ensured template page '{}' with ID: {}",
+                    spec.title, page_id
+                );
+            }
+            template_outputs.push(BootstrapPageOutput {
+                title: spec.title.to_string(),
+                page_id: Some(page_id),
+                purpose: spec.purpose.to_string(),
+            });
+        }
+    } else if dry_run {
+        for spec in template_page_specs {
+            template_outputs.push(BootstrapPageOutput {
+                title: spec.title.to_string(),
+                page_id: None,
+                purpose: spec.purpose.to_string(),
+            });
+        }
+    }
+
+    if !dry_run {
+        let mut registry_targets = vec![
+            (
+                README_TITLE,
+                core_ids.readme_page_id.as_str(),
+                root_folder_id.as_str(),
+                "landing page",
+                "human landing page and operational start point",
+            ),
+            (
+                "Intake",
+                core_ids.intake_page_id.as_str(),
+                root_folder_id.as_str(),
+                "lane",
+                "raw content capture lane",
+            ),
+            (
+                "Staged",
+                core_ids.staged_page_id.as_str(),
+                root_folder_id.as_str(),
+                "lane",
+                "content ready for review",
+            ),
+            (
+                "Review",
+                core_ids.review_page_id.as_str(),
+                root_folder_id.as_str(),
+                "lane",
+                "human arbitration lane",
+            ),
+            (
+                "Published",
+                core_ids.published_page_id.as_str(),
+                root_folder_id.as_str(),
+                "lane",
+                "canonical published lane",
+            ),
+            (
+                TEMPLATES_TITLE,
+                core_ids.templates_page_id.as_str(),
+                root_folder_id.as_str(),
+                "section",
+                "template playbook root",
+            ),
+            (
+                REGISTRY_TITLE,
+                core_ids.registry_page_id.as_str(),
+                root_folder_id.as_str(),
+                "section",
+                "master index root",
+            ),
+            (
+                AUDIT_TITLE,
+                core_ids.audit_page_id.as_str(),
+                root_folder_id.as_str(),
+                "section",
+                "append-only audit root",
+            ),
+        ];
+
+        for (key, page_id, parent_id, item_type, summary) in registry_targets.drain(..) {
+            if page_id.is_empty() {
+                continue;
+            }
+            let record = RegistryRecord {
+                key: key.to_string(),
+                item_type: item_type.to_string(),
+                title: key.to_string(),
+                page_id: page_id.to_string(),
+                parent_id: parent_id.to_string(),
+                status: "structural".to_string(),
+                source_id: "bootstrap".to_string(),
+                summary: summary.to_string(),
+                updated_at: Utc::now().to_rfc3339(),
+            };
+            let _ = ensure_registry_record(&client, space_key, &core_ids.registry_page_id, &record)
+                .await?;
+        }
+
+        for spec in &template_outputs {
+            if let Some(page_id) = spec.page_id.as_deref() {
+                let record = RegistryRecord {
+                    key: page_id.to_string(),
+                    item_type: "template".to_string(),
+                    title: spec.title.clone(),
+                    page_id: page_id.to_string(),
+                    parent_id: core_ids.templates_page_id.clone(),
+                    status: "template".to_string(),
+                    source_id: "bootstrap".to_string(),
+                    summary: spec.purpose.clone(),
+                    updated_at: Utc::now().to_rfc3339(),
+                };
+                let _ =
+                    ensure_registry_record(&client, space_key, &core_ids.registry_page_id, &record)
+                        .await?;
+            }
+        }
+
+        let audit_entry = AuditEntry {
+            actor: actor_email,
+            command: "bootstrap".to_string(),
+            subject: "Curio root structure".to_string(),
+            action: "Ensured landing page, lifecycle pages, template playbook, registry, and audit roots".to_string(),
+            rationale: "Keep Confluence as the indexed datastore with visible structure for humans and agents".to_string(),
+            source: format!("root_folder_id={}", root_folder_id),
+            result: "completed".to_string(),
+            detail_lines: vec![
+                format!("README page id: {}", core_ids.readme_page_id),
+                format!("Intake page id: {}", core_ids.intake_page_id),
+                format!("Staged page id: {}", core_ids.staged_page_id),
+                format!("Review page id: {}", core_ids.review_page_id),
+                format!("Published page id: {}", core_ids.published_page_id),
+                format!("Templates page id: {}", core_ids.templates_page_id),
+                format!("Registry page id: {}", core_ids.registry_page_id),
+                format!("Audit page id: {}", core_ids.audit_page_id),
+            ],
+        };
+        let _ =
+            append_audit_entry(&client, space_key, &core_ids.audit_page_id, &audit_entry).await?;
+    }
+
+    let mut output_pages = ensured_pages;
+    output_pages.extend(template_outputs);
+
+    let landing_page_id = if core_ids.readme_page_id.is_empty() {
+        None
+    } else {
+        Some(core_ids.readme_page_id.clone())
+    };
+    let templates_page_id = if core_ids.templates_page_id.is_empty() {
+        None
+    } else {
+        Some(core_ids.templates_page_id.clone())
+    };
+    let registry_page_id = if core_ids.registry_page_id.is_empty() {
+        None
+    } else {
+        Some(core_ids.registry_page_id.clone())
+    };
+    let audit_page_id = if core_ids.audit_page_id.is_empty() {
+        None
+    } else {
+        Some(core_ids.audit_page_id.clone())
+    };
 
     if json_output {
         emit_json(
@@ -121,10 +355,10 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
             true,
             BootstrapOutput {
                 root_folder_id,
-                overview_page_id: output_pages
-                    .iter()
-                    .find(|page| page.title == README_TITLE)
-                    .and_then(|page| page.page_id.clone()),
+                readme_page_id: landing_page_id,
+                templates_page_id,
+                registry_page_id,
+                audit_page_id,
                 pages: output_pages,
             },
         )?;
@@ -135,7 +369,7 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
     Ok(())
 }
 
-fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
+fn root_page_specs(readme_body: String) -> Vec<PageSpec> {
     vec![
         PageSpec {
             title: README_TITLE,
@@ -145,7 +379,7 @@ fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
         PageSpec {
             title: "Intake",
             purpose: "Raw capture lane for newly ingested material.",
-            body: render_lifecycle_page(
+            body: build_lifecycle_page(
                 "Intake",
                 "Raw content enters here first. Curio uses Intake as the controlled entry point for new sources, unsorted notes, web captures, and file imports.",
                 "Purpose",
@@ -169,7 +403,7 @@ fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
         PageSpec {
             title: "Staged",
             purpose: "High-confidence content prepared for human review or publish.",
-            body: render_lifecycle_page(
+            body: build_lifecycle_page(
                 "Staged",
                 "Staged is the ready room. Content here has cleared the first pass, is conflict-free, and is waiting for a human or a higher-confidence workflow to approve the final move.",
                 "Purpose",
@@ -193,7 +427,7 @@ fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
         PageSpec {
             title: "Review",
             purpose: "Human arbitration lane for conflict, ambiguity, or risk.",
-            body: render_lifecycle_page(
+            body: build_lifecycle_page(
                 "Review",
                 "Review is where Curio stops and asks for judgment. This is the place for conflicts, low-confidence outputs, policy questions, or anything that should not move forward automatically.",
                 "Purpose",
@@ -217,7 +451,7 @@ fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
         PageSpec {
             title: "Published",
             purpose: "Canonical output surface for approved Curio content.",
-            body: render_lifecycle_page(
+            body: build_lifecycle_page(
                 "Published",
                 "Published is the source of truth. Once content lands here, it should read as intentional, stable, and reusable by people and agents alike.",
                 "Purpose",
@@ -239,150 +473,154 @@ fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
             ),
         },
         PageSpec {
-            title: "_templates",
+            title: TEMPLATES_TITLE,
             purpose: "Reusable structural templates and page blueprints.",
-            body: render_lifecycle_page(
-                "_templates",
-                "Templates are the shape library for Curio. This area holds reusable structures that help agents generate consistent pages without reinventing the layout each time.",
-                "Purpose",
-                "Use this page for stable structural templates, boilerplate layouts, and form-factors that should be copied into new content.",
-                &[
-                    "Page blueprints and content scaffolds.",
-                    "Reusable headings, sections, and lifecycle layouts.",
-                    "Standard language that keeps the workspace consistent.",
-                ],
-                &[
-                    "Live work items and active intake pages.",
-                    "Published content that is meant to be the final answer.",
-                ],
-                &[
-                    "Templates should be obvious, conservative, and easy for an agent to reuse safely.",
-                    "Keep the content descriptive enough that a new agent knows when to start from it.",
-                ],
-            ),
+            body: build_templates_root_body(),
         },
         PageSpec {
-            title: "_registry",
+            title: REGISTRY_TITLE,
             purpose: "Canonical topic registry and routing inventory.",
-            body: render_lifecycle_page(
-                "_registry",
-                "The registry is Curio's map of what exists and where the canonical version lives. It keeps the workspace navigable and helps agents route requests to the right published target.",
-                "Purpose",
-                "Use this page for indexes, topic maps, canonical references, and pointers to published assets.",
-                &[
-                    "Subject-to-page mappings.",
-                    "Registry records for published deliverables.",
-                    "Operational references that help agents avoid duplicating work.",
-                ],
-                &[
-                    "Narrative content that belongs in Published.",
-                    "Working draft content that belongs in Intake, Staged, or Review.",
-                ],
-                &[
-                    "A good registry entry should explain what the topic is, why it exists, and where the current authoritative page lives.",
-                    "Registry content should be stable and easy to scan.",
-                ],
-            ),
+            body: build_registry_root_body(),
+        },
+        PageSpec {
+            title: AUDIT_TITLE,
+            purpose: "Append-only audit log for Curio actions and decisions.",
+            body: build_audit_root_body(),
         },
     ]
 }
 
-fn render_readme_body(hero_image_html: Option<&str>) -> String {
-    let mut html = String::new();
-    html.push_str("<h1>README</h1>");
-    html.push_str("<p><strong>Start here.</strong> This page explains Curio in plain language for people who just need to know what to do next.</p>");
-    html.push_str("<p>Curio is the operating layer that turns Confluence into a structured workspace. It captures raw material, stages it for review, routes exceptions to humans, and preserves the published result as a reusable source of truth.</p>");
-
-    if let Some(hero_image_html) = hero_image_html {
-        html.push_str("<p>");
-        html.push_str(hero_image_html);
-        html.push_str("</p>");
-    }
-
-    append_section(
-        &mut html,
-        "How This Space Works",
-        Some("Use the lane names to understand where a piece of work belongs."),
-        &[
-            "README is the human-friendly entry point.",
-            "If something is new, unclear, or still being gathered, it belongs in Intake.",
-            "If something is close but not final, it belongs in Staged or Review.",
-            "If something is approved and ready for others to use, it belongs in Published.",
-            "_templates holds reusable blueprints and page scaffolds.",
-            "_registry tracks canonical topics and where the authoritative page lives.",
-        ],
-    );
-
-    append_section(
-        &mut html,
-        "What To Do First",
-        Some("Use the simplest lane that fits the work."),
-        &[
-            "Drop new source material into Intake.",
-            "Use README when you want a quick human explanation instead of the operational detail.",
-            "Check the lane pages if you need more exact operational rules.",
-        ],
-    );
-
-    append_section(
-        &mut html,
-        "When You Are Unsure",
-        Some("If you do not know where something belongs, do not force it into the wrong place."),
-        &[
-            "Leave the item in Intake until it can be routed correctly.",
-            "Ask Curio to help classify it if the next step is unclear.",
-            "Use Review when a human decision is needed.",
-        ],
-    );
-
-    append_section(
-        &mut html,
-        "How To Read The Lanes",
-        Some("The page names tell you how far along the work is."),
-        &[
-            "Intake means new and unprocessed.",
-            "Staged means ready for review or nearly ready to publish.",
-            "Review means someone needs to make a decision.",
-            "Published means final and approved.",
-        ],
-    );
-
-    html
-}
-
-fn render_lifecycle_page(
-    title: &str,
-    intro: &str,
-    purpose_heading: &str,
-    purpose: &str,
-    use_for: &[&str],
-    avoid: &[&str],
-    notes: &[&str],
-) -> String {
-    let mut html = String::new();
-    let _ = write!(&mut html, "<h1>{}</h1>", title);
-    let _ = write!(&mut html, "<p>{}</p>", intro);
-
-    append_section(&mut html, purpose_heading, Some(purpose), &[]);
-    append_section(&mut html, "Use This For", None, use_for);
-    append_section(&mut html, "Do Not Use This For", None, avoid);
-    append_section(&mut html, "Operating Notes", None, notes);
-
-    html
-}
-
-fn append_section(body: &mut String, heading: &str, intro: Option<&str>, items: &[&str]) {
-    let _ = write!(body, "<h2>{}</h2>", heading);
-    if let Some(intro) = intro {
-        let _ = write!(body, "<p>{}</p>", intro);
-    }
-    if !items.is_empty() {
-        body.push_str("<ul>");
-        for item in items {
-            let _ = write!(body, "<li>{}</li>", item);
-        }
-        body.push_str("</ul>");
-    }
+fn template_page_specs() -> Vec<PageSpec> {
+    vec![
+        PageSpec {
+            title: "Template - Intake Page",
+            purpose: "Copy this when you need a new intake-shaped capture page.",
+            body: build_template_page(
+                "Template - Intake Page",
+                "Use this for a page that is capturing raw information before it has been fully analyzed.",
+                "Sales, operations, and agents that need a landing spot for fresh material.",
+                &[
+                    "New notes and meeting captures.",
+                    "Source snippets that still need classification.",
+                    "Content that should be routed into Curio instead of being answered immediately.",
+                ],
+                &[
+                    "Title",
+                    "Source",
+                    "Short summary",
+                    "Attached artifacts or links",
+                    "Next-step notes",
+                ],
+            ),
+        },
+        PageSpec {
+            title: "Template - Staged Page",
+            purpose: "Copy this when content is mostly ready and needs human approval.",
+            body: build_template_page(
+                "Template - Staged Page",
+                "Use this for content that has already been cleaned up and is ready for a final decision.",
+                "People who need a working page before publishing.",
+                &[
+                    "High-confidence drafts.",
+                    "Content that is structurally complete.",
+                    "Items waiting for a final review pass.",
+                ],
+                &[
+                    "Approved summary",
+                    "Open questions",
+                    "Risks or exclusions",
+                    "Publish-ready copy",
+                ],
+            ),
+        },
+        PageSpec {
+            title: "Template - Review Page",
+            purpose: "Copy this when a human needs to arbitrate a decision.",
+            body: build_template_page(
+                "Template - Review Page",
+                "Use this for conflict, ambiguity, or policy decisions that should not be automated.",
+                "Reviewers, managers, and subject-matter experts.",
+                &[
+                    "Competing interpretations.",
+                    "Low-confidence outputs.",
+                    "Items needing a business decision.",
+                ],
+                &[
+                    "Problem statement",
+                    "What Curio saw",
+                    "Why the item was escalated",
+                    "Decision requested",
+                    "Outcome",
+                ],
+            ),
+        },
+        PageSpec {
+            title: "Template - Published Page",
+            purpose: "Copy this when you need a durable published answer.",
+            body: build_template_page(
+                "Template - Published Page",
+                "Use this for final, approved content that other pages should reference.",
+                "Anyone who needs a stable answer or deliverable.",
+                &[
+                    "Canonical answers.",
+                    "Approved deliverables.",
+                    "Final versions that should not change casually.",
+                ],
+                &[
+                    "Executive summary",
+                    "Final answer",
+                    "Supporting context",
+                    "Source lineage",
+                    "Last reviewed date",
+                ],
+            ),
+        },
+        PageSpec {
+            title: "Template - Registry Record",
+            purpose: "Copy this when Curio needs a structured master-record page.",
+            body: build_template_page(
+                "Template - Registry Record",
+                "Use this as the canonical record format for a page, artifact, or operational entity.",
+                "Curio operators and administrators.",
+                &[
+                    "Any page that should be tracked as a record.",
+                    "Any artifact that needs a current status and source trail.",
+                ],
+                &[
+                    "Key",
+                    "Title",
+                    "Type",
+                    "Status",
+                    "Source",
+                    "Current parent",
+                    "Updated at",
+                    "Summary",
+                ],
+            ),
+        },
+        PageSpec {
+            title: "Template - Audit Entry",
+            purpose: "Copy this when Curio needs an append-only event log page.",
+            body: build_template_page(
+                "Template - Audit Entry",
+                "Use this as the durable history format for a Curio action.",
+                "Operators, reviewers, and future Curio runs.",
+                &[
+                    "Any meaningful write action.",
+                    "Any decision that should be explained later.",
+                ],
+                &[
+                    "Timestamp",
+                    "Command",
+                    "Actor",
+                    "Source used",
+                    "Rationale",
+                    "Result",
+                    "Details",
+                ],
+            ),
+        },
+    ]
 }
 
 fn build_hero_image_html(paths: &HarnessPaths) -> Option<String> {

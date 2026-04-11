@@ -1034,4 +1034,37 @@ impl ConfluenceClient {
             );
         }
     }
+
+    pub async fn delete_page(&self, page_id: &str) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
+        let url = format!("{}/rest/api/content/{}", self.base_url, page_id);
+
+        let response = self
+            .client
+            .delete(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context(format!(
+                "Failed to send Confluence API request to delete page {}",
+                page_id
+            ))?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body after deleting page")?;
+
+        if status.is_success() || status == StatusCode::NOT_FOUND {
+            Ok(())
+        } else {
+            anyhow::bail!(
+                "Confluence API request to delete page {} failed with status {}: {}",
+                page_id,
+                status,
+                response_text
+            );
+        }
+    }
 }
