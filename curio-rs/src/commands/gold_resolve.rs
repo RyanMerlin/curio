@@ -19,6 +19,7 @@ pub async fn run_gold_resolve(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let label_namespace = &config.content_model.label_namespace;

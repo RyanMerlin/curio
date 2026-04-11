@@ -20,9 +20,9 @@ pub struct Cli {
     #[arg(
         long,
         global = true,
-        help = "Confluence root page ID to operate within"
+        help = "Confluence output root folder ID to operate within"
     )]
-    pub root_page_id: Option<String>,
+    pub root_folder_id: Option<String>,
 
     #[arg(long, global = true, help = "Working directory for ephemeral files")]
     pub workdir: Option<PathBuf>,

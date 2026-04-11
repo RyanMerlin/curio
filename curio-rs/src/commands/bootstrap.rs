@@ -1,4 +1,7 @@
-use crate::{Result, config::Config, confluence::ConfluenceClient};
+use crate::{
+    Result, config::Config, confluence::ConfluenceClient, resolve_managed_root_folder_id,
+    resolve_or_create_scoped_child_page_id,
+};
 use anyhow::Context;
 
 pub async fn run_bootstrap(config: &Config, dry_run: bool) -> Result<()> {
@@ -11,51 +14,23 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool) -> Result<()> {
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;
     let root_folder_name = &config.content_model.root_folder_name;
+    let root_folder_id = resolve_managed_root_folder_id(
+        &client,
+        space_key,
+        root_folder_name,
+        config.content_model.output_root_folder_id.as_deref(),
+    )
+    .await?;
 
-    // Ensure the root folder exists
     println!(
-        "Checking for root page: '{}' in space '{}'",
-        root_folder_name, space_key
+        "Using managed write root folder ID {} for space '{}'",
+        root_folder_id, space_key
     );
-    let root_page_id = if let Some(root_page) = client
-        .get_page_by_title(space_key, None, root_folder_name)
-        .await?
-    {
-        println!(
-            "Root page '{}' already exists with ID: {}",
-            root_folder_name,
-            root_page["id"].as_str().unwrap_or_default()
-        );
-        root_page["id"]
-            .as_str()
-            .map(|s| s.to_string())
-            .context("Root page ID not found")?
-    } else {
-        if dry_run {
-            println!("(Dry run) Would create root page: '{}'", root_folder_name);
-            "dry_run_id".to_string() // Placeholder for dry run
-        } else {
-            println!("Creating root page: '{}'", root_folder_name);
-            let page_id = client
-                .create_or_update_page(
-                    space_key,
-                    None,
-                    root_folder_name,
-                    "storage",
-                    "<p>This is the root page for Curio knowledge base content.</p>",
-                )
-                .await?;
-            println!(
-                "Created root page '{}' with ID: {}",
-                root_folder_name, page_id
-            );
-            page_id
-        }
-    };
 
     // Define the required sub-pages for the process-oriented lifecycle
     let lifecycle_pages = vec![
@@ -68,62 +43,42 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool) -> Result<()> {
     ];
 
     for page_name in lifecycle_pages {
-        println!(
-            "Checking for sub-page: '{}' under '{}'",
-            page_name, root_folder_name
-        );
-        if let Some(sub_page) = client
-            .get_page_by_title(space_key, Some(&root_page_id), page_name)
-            .await?
-        {
+        println!("Checking for sub-page: '{}' under managed root", page_name);
+        let body_content = match page_name {
+            "Intake" => "<p>This page holds raw, unprocessed content that has been ingested.</p>",
+            "Staged" => {
+                "<p>Content on this page is high-confidence, conflict-free, and ready for publishing or final review.</p>"
+            }
+            "Review" => {
+                "<p>Content on this page requires manual human intervention due to conflicts, missing information, or low confidence.</p>"
+            }
+            "Published" => {
+                "<p>This page contains the final, published 'gold' content, optimized for agent consumption.</p>"
+            }
+            "_templates" => {
+                "<p>This page is for storing templates for various content types managed by Curio.</p>"
+            }
+            "_registry" => {
+                "<p>This page acts as a central registry for canonical 'Published' topics and their associated pages.</p>"
+            }
+            _ => "<p>Curio lifecycle stage page.</p>",
+        };
+
+        if dry_run {
             println!(
-                "Sub-page '{}' already exists with ID: {}",
-                page_name,
-                sub_page["id"].as_str().unwrap_or_default()
+                "(Dry run) Would ensure sub-page: '{}' under managed root",
+                page_name
             );
         } else {
-            if dry_run {
-                println!(
-                    "(Dry run) Would create sub-page: '{}' under '{}'",
-                    page_name, root_folder_name
-                );
-            } else {
-                println!(
-                    "Creating sub-page: '{}' under '{}'",
-                    page_name, root_folder_name
-                );
-                let body_content = match page_name {
-                    "Intake" => {
-                        "<p>This page holds raw, unprocessed content that has been ingested.</p>"
-                    }
-                    "Staged" => {
-                        "<p>Content on this page is high-confidence, conflict-free, and ready for publishing or final review.</p>"
-                    }
-                    "Review" => {
-                        "<p>Content on this page requires manual human intervention due to conflicts, missing information, or low confidence.</p>"
-                    }
-                    "Published" => {
-                        "<p>This page contains the final, published 'gold' content, optimized for agent consumption.</p>"
-                    }
-                    "_templates" => {
-                        "<p>This page is for storing templates for various content types managed by Curio.</p>"
-                    }
-                    "_registry" => {
-                        "<p>This page acts as a central registry for canonical 'Published' topics and their associated pages.</p>"
-                    }
-                    _ => "<p>Curio lifecycle stage page.</p>",
-                };
-                let page_id = client
-                    .create_or_update_page(
-                        space_key,
-                        Some(&root_page_id),
-                        page_name,
-                        "storage",
-                        body_content,
-                    )
-                    .await?;
-                println!("Created sub-page '{}' with ID: {}", page_name, page_id);
-            }
+            let page_id = resolve_or_create_scoped_child_page_id(
+                &client,
+                space_key,
+                &root_folder_id,
+                page_name,
+                body_content,
+            )
+            .await?;
+            println!("Ensured sub-page '{}' with ID: {}", page_name, page_id);
         }
     }
 

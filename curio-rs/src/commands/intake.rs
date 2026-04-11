@@ -1,4 +1,7 @@
-use crate::{Result, config::Config, confluence::ConfluenceClient};
+use crate::{
+    Result, config::Config, confluence::ConfluenceClient, resolve_managed_root_folder_id,
+    resolve_or_create_scoped_child_page_id,
+};
 use anyhow::Context;
 use chrono::Utc;
 use scraper::{Html, Selector};
@@ -25,29 +28,41 @@ pub async fn run_intake_create(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;
     let root_folder_name = &config.content_model.root_folder_name;
 
-    // Fetch root and Intake page IDs
-    let root_page_id =
-        get_page_id_by_title(&client, space_key, None, root_folder_name, "root page").await?;
-    let intake_page_id = get_page_id_by_title(
+    // Fetch managed root and Intake page IDs
+    let root_folder_id = resolve_managed_root_folder_id(
         &client,
         space_key,
-        Some(&root_page_id),
+        root_folder_name,
+        config.content_model.output_root_folder_id.as_deref(),
+    )
+    .await?;
+    let intake_page_id = resolve_or_create_scoped_child_page_id(
+        &client,
+        space_key,
+        &root_folder_id,
         "Intake",
-        "Intake page",
+        "<p>This page holds raw, unprocessed content that has been ingested.</p>",
     )
     .await?;
 
-    let mut all_content: Vec<(String, String, String)> = Vec::new(); // (content, source_id, content_type)
+    let mut all_content: Vec<(String, String, String, Option<String>)> = Vec::new();
+    // (content, source_id, content_type, subject_hint)
 
     if let Some(u) = url {
         println!("Ingesting from URL: {}", u);
         let content = fetch_url_content(u).await?;
-        all_content.push((content, format!("url:{}", u), "web_page".to_string()));
+        all_content.push((
+            content,
+            format!("url:{}", u),
+            "web_page".to_string(),
+            subject_hint.clone(),
+        ));
     } else if let Some(f) = file {
         println!("Ingesting from file: {}", f.display());
         let content = read_file_content(f).await?;
@@ -55,10 +70,16 @@ pub async fn run_intake_create(
             .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or("unknown_file");
+        let derived_subject_hint = f.file_stem().and_then(|name| name.to_str()).map(|name| {
+            name.split_once("__")
+                .map(|(_, subject)| subject.to_string())
+                .unwrap_or_else(|| name.to_string())
+        });
         all_content.push((
             content,
             format!("file:{}", f.display()),
             get_mime_type(filename),
+            derived_subject_hint.or_else(|| subject_hint.clone()),
         ));
     } else if let Some(f) = folder {
         println!("Ingesting from folder: {}", f.display());
@@ -71,10 +92,17 @@ pub async fn run_intake_create(
                     .file_name()
                     .and_then(|name| name.to_str())
                     .unwrap_or("unknown_file");
+                let derived_subject_hint =
+                    path.file_stem().and_then(|name| name.to_str()).map(|name| {
+                        name.split_once("__")
+                            .map(|(_, subject)| subject.to_string())
+                            .unwrap_or_else(|| name.to_string())
+                    });
                 all_content.push((
                     content,
                     format!("file:{}", path.display()),
                     get_mime_type(filename),
+                    derived_subject_hint.or_else(|| subject_hint.clone()),
                 ));
             }
         }
@@ -82,7 +110,8 @@ pub async fn run_intake_create(
         anyhow::bail!("No input source provided. Use --url, --file, or --folder.");
     }
 
-    for (content, source_id, content_type) in all_content {
+    for (content, source_id, content_type, item_subject_hint) in all_content {
+        let effective_subject_hint = item_subject_hint.or_else(|| subject_hint.clone());
         process_single_content(
             &client,
             config,
@@ -91,7 +120,7 @@ pub async fn run_intake_create(
             &content,
             &source_id,
             &content_type,
-            subject_hint,
+            &effective_subject_hint,
             metadata_str,
         )
         .await?;
@@ -99,23 +128,6 @@ pub async fn run_intake_create(
 
     println!("Intake create command finished.");
     Ok(())
-}
-
-async fn get_page_id_by_title(
-    client: &ConfluenceClient,
-    space_key: &str,
-    parent_id: Option<&str>,
-    title: &str,
-    page_type: &str,
-) -> Result<String> {
-    client
-        .get_page_by_title(space_key, parent_id, title)
-        .await?
-        .and_then(|page| page["id"].as_str().map(|s| s.to_string()))
-        .context(format!(
-            "Could not find {} page '{}' in space '{}'",
-            page_type, title, space_key
-        ))
 }
 
 async fn fetch_url_content(url: &str) -> Result<String> {
@@ -154,7 +166,12 @@ async fn fetch_url_content(url: &str) -> Result<String> {
 }
 
 async fn read_file_content(path: &Path) -> Result<String> {
-    std::fs::read_to_string(path).context(format!("Failed to read file: {}", path.display()))
+    let content = std::fs::read_to_string(path)
+        .context(format!("Failed to read file: {}", path.display()))?;
+    Ok(content
+        .strip_prefix('\u{feff}')
+        .unwrap_or(&content)
+        .to_string())
 }
 
 fn get_mime_type(filename: &str) -> String {
@@ -199,12 +216,16 @@ async fn process_single_content(
                 .join(" ")
         });
 
-    let page_title = format!(
-        "[{}] {} - {}",
-        content_type.to_uppercase(),
-        subject_key,
-        current_datetime
-    );
+    let page_title = if !subject_key.is_empty() {
+        subject_key.clone()
+    } else {
+        format!(
+            "[{}] {} - {}",
+            content_type.to_uppercase(),
+            source_id,
+            current_datetime
+        )
+    };
 
     let label_namespace = &config.content_model.label_namespace;
 

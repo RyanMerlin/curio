@@ -21,6 +21,7 @@ pub async fn run_agent_analyze(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;
@@ -52,7 +53,20 @@ pub async fn run_agent_analyze(
         );
 
         println!("Searching for pages to analyze with CQL: {}", cql_query);
-        pages_to_analyze = client.execute_cql(&cql_query).await?;
+        let pages = client.execute_cql(&cql_query).await?;
+        if let Some(write_root_folder_id) = config.content_model.output_root_folder_id.as_deref() {
+            for page in pages {
+                let page_id = page["id"].as_str().unwrap_or_default();
+                if client
+                    .page_is_descendant_of(page_id, write_root_folder_id)
+                    .await?
+                {
+                    pages_to_analyze.push(page);
+                }
+            }
+        } else {
+            pages_to_analyze = pages;
+        }
         println!("Found {} pages to analyze.", pages_to_analyze.len());
     }
     if pages_to_analyze.is_empty() {

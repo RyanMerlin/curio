@@ -23,6 +23,12 @@ All three providers are launched from the same Curio workspace contract:
 - provider entrypoints: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
 - provider profiles: `providers/*.json`
 
+Curio content writes are scoped by Confluence folder ID:
+
+- `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the authoritative write root
+- `CURIO_ROOT_FOLDER_NAME` is only a fallback for older setups
+- `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` and `.env.example` stay in sync with `.env`
+
 ## Quickstart
 
 From `C:\code\agents\curio`:

@@ -20,6 +20,7 @@ pub async fn run_review_approve(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;
@@ -65,9 +66,7 @@ pub async fn run_review_approve(
             "(Dry run) Would update curio_metadata for page {} with status 'approved_for_publish' and review details.",
             page_id_arg
         );
-        println!(
-            "(Dry run) Would remove old labels and add `curio-status-approved_for_publish`."
-        );
+        println!("(Dry run) Would remove old labels and add `curio-status-approved_for_publish`.");
     } else {
         println!("Updating curio_metadata for page {}", page_id_arg);
         client
@@ -113,6 +112,7 @@ pub async fn run_review_reject(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;

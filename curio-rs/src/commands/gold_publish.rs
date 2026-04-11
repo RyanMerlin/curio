@@ -17,6 +17,7 @@ pub async fn run_gold_publish(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;

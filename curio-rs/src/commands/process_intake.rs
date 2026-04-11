@@ -1,7 +1,8 @@
 #[allow(unused_imports)]
 use crate::{
     AgentAnalysis, Result, analyze_content_with_agent, config::Config,
-    confluence::ConfluenceClient, get_page_id_by_title,
+    confluence::ConfluenceClient, resolve_managed_root_folder_id,
+    resolve_or_create_scoped_child_page_id,
 };
 use anyhow::Context;
 use chrono::Utc;
@@ -17,6 +18,7 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
+        config.content_model.output_root_folder_id.clone(),
     )?;
 
     let space_key = &config.content_model.space_key;
@@ -24,38 +26,43 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
     let label_namespace = &config.content_model.label_namespace;
 
     // Fetch required page IDs for stage transitions
-    let root_page_id =
-        get_page_id_by_title(&client, space_key, None, root_folder_name, "root page").await?;
-    let _intake_page_id = get_page_id_by_title(
+    let root_folder_id = resolve_managed_root_folder_id(
         &client,
         space_key,
-        Some(&root_page_id),
+        root_folder_name,
+        config.content_model.output_root_folder_id.as_deref(),
+    )
+    .await?;
+    let _intake_page_id = resolve_or_create_scoped_child_page_id(
+        &client,
+        space_key,
+        &root_folder_id,
         "Intake",
-        "Intake page",
+        "<p>This page holds raw, unprocessed content that has been ingested.</p>",
     )
     .await?;
-    let staged_page_id: String = get_page_id_by_title(
+    let staged_page_id: String = resolve_or_create_scoped_child_page_id(
         &client,
         space_key,
-        Some(&root_page_id),
+        &root_folder_id,
         "Staged",
-        "Staged page",
+        "<p>Content on this page is high-confidence, conflict-free, and ready for publishing or final review.</p>",
     )
     .await?;
-    let review_page_id: String = get_page_id_by_title(
+    let review_page_id: String = resolve_or_create_scoped_child_page_id(
         &client,
         space_key,
-        Some(&root_page_id),
+        &root_folder_id,
         "Review",
-        "Review page",
+        "<p>Content on this page requires manual human intervention due to conflicts, missing information, or low confidence.</p>",
     )
     .await?;
-    let _published_page_id = get_page_id_by_title(
+    let _published_page_id = resolve_or_create_scoped_child_page_id(
         &client,
         space_key,
-        Some(&root_page_id),
+        &root_folder_id,
         "Published",
-        "Published page",
+        "<p>This page contains the final, published 'gold' content, optimized for agent consumption.</p>",
     )
     .await?;
 
@@ -66,9 +73,22 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
     );
     println!("Searching for intake items with CQL: {}", cql_query);
     let intake_pages = client.execute_cql(&cql_query).await?;
-    println!("Found {} intake items.", intake_pages.len());
+    let mut scoped_intake_pages = Vec::new();
+    for page in intake_pages {
+        let page_id = page["id"].as_str().unwrap_or_default();
+        if client
+            .page_is_descendant_of(page_id, &root_folder_id)
+            .await?
+        {
+            scoped_intake_pages.push(page);
+        }
+    }
+    println!(
+        "Found {} intake items in managed root subtree.",
+        scoped_intake_pages.len()
+    );
 
-    for page_json in intake_pages.into_iter().take(limit as usize) {
+    for page_json in scoped_intake_pages.into_iter().take(limit as usize) {
         let page_id = page_json["id"]
             .as_str()
             .context("Page ID not found")?

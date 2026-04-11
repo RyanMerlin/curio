@@ -25,6 +25,7 @@ pub struct ConnectionConfig {
 pub struct ContentModelConfig {
     pub space_key: String,
     pub root_folder_name: String,
+    pub output_root_folder_id: Option<String>,
     pub label_namespace: String, // e.g., "curio"
                                  // Add other content model-related fields (e.g., templates)
 }
@@ -34,6 +35,7 @@ impl Default for ContentModelConfig {
         ContentModelConfig {
             space_key: String::default(),
             root_folder_name: String::default(),
+            output_root_folder_id: None,
             label_namespace: "curio".to_string(), // Default label namespace
         }
     }
@@ -89,6 +91,12 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
                 config.content_model.root_folder_name =
                     loaded_config.content_model.root_folder_name;
             }
+            if loaded_config.content_model.output_root_folder_id
+                != config.content_model.output_root_folder_id
+            {
+                config.content_model.output_root_folder_id =
+                    loaded_config.content_model.output_root_folder_id;
+            }
             if loaded_config.runtime.temp_dir != config.runtime.temp_dir {
                 config.runtime.temp_dir = loaded_config.runtime.temp_dir;
             }
@@ -118,11 +126,28 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
     if let Ok(root_name) = env::var("CURIO_ROOT_FOLDER_NAME") {
         config.content_model.root_folder_name = root_name;
     }
+    if let Ok(output_root_folder_id) = env::var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID") {
+        let trimmed = output_root_folder_id.trim();
+        if !trimmed.is_empty() {
+            config.content_model.output_root_folder_id = Some(trimmed.to_string());
+        }
+    } else if let Ok(legacy_output_root_page_id) = env::var("CURIO_OUTPUT_ROOT_PAGE_ID") {
+        let trimmed = legacy_output_root_page_id.trim();
+        if !trimmed.is_empty() {
+            config.content_model.output_root_folder_id = Some(trimmed.to_string());
+        }
+    }
     if let Ok(temp_dir) = env::var("CURIO_TEMP_DIR") {
-        config.runtime.temp_dir = Some(PathBuf::from(temp_dir));
+        if !temp_dir.trim().is_empty() {
+            config.runtime.temp_dir = Some(PathBuf::from(temp_dir));
+        }
     }
     if let Ok(log_level) = env::var("CURIO_LOG_LEVEL") {
         config.runtime.log_level = Some(log_level);
+    }
+
+    if config.runtime.temp_dir.is_none() {
+        config.runtime.temp_dir = Some(default_temp_dir());
     }
 
     // Validate essential config
@@ -141,9 +166,11 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
             "Confluence space key is not configured. Set CURIO_SPACE_KEY environment variable or in config file."
         );
     }
-    if config.content_model.root_folder_name.is_empty() {
+    if config.content_model.root_folder_name.is_empty()
+        && config.content_model.output_root_folder_id.is_none()
+    {
         anyhow::bail!(
-            "Confluence root folder name is not configured. Set CURIO_ROOT_FOLDER_NAME environment variable or in config file."
+            "Confluence output root folder is not configured. Set CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID environment variable or in config file, or set CURIO_ROOT_FOLDER_NAME as a fallback."
         );
     }
     if config.content_model.label_namespace.is_empty() {
@@ -155,25 +182,42 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
     Ok(config)
 }
 
+fn default_temp_dir() -> PathBuf {
+    env::temp_dir().join("curio")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    fn env_test_lock() -> std::sync::MutexGuard<'static, ()> {
+        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        ENV_LOCK
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .expect("env test lock poisoned")
+    }
 
     #[test]
     fn test_load_config_from_env() {
+        let _guard = env_test_lock();
         // Clear environment variables to ensure a clean test state
         unsafe {
             env::remove_var("CURIO_CONFLUENCE_URL");
             env::remove_var("CURIO_CONFLUENCE_EMAIL");
             env::remove_var("CURIO_SPACE_KEY");
             env::remove_var("CURIO_ROOT_FOLDER_NAME");
+            env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
+            env::remove_var("CURIO_OUTPUT_ROOT_PAGE_ID");
+            env::remove_var("CURIO_TEMP_DIR");
         }
 
         unsafe {
             env::set_var("CURIO_CONFLUENCE_URL", "http://test.confluence.com");
             env::set_var("CURIO_CONFLUENCE_EMAIL", "test@example.com");
             env::set_var("CURIO_SPACE_KEY", "TEST");
-            env::set_var("CURIO_ROOT_FOLDER_NAME", "TestRoot");
+            env::set_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID", "12345");
         }
 
         let config = load_config(None).unwrap();
@@ -184,14 +228,84 @@ mod tests {
         );
         assert_eq!(config.connection.confluence_email, "test@example.com");
         assert_eq!(config.content_model.space_key, "TEST");
-        assert_eq!(config.content_model.root_folder_name, "TestRoot");
+        assert_eq!(config.content_model.root_folder_name, "");
+        assert_eq!(
+            config.content_model.output_root_folder_id,
+            Some("12345".to_string())
+        );
+        assert_eq!(config.runtime.temp_dir, Some(env::temp_dir().join("curio")));
 
         // Clean up environment variables
         unsafe {
             env::remove_var("CURIO_CONFLUENCE_URL");
             env::remove_var("CURIO_CONFLUENCE_EMAIL");
             env::remove_var("CURIO_SPACE_KEY");
-            env::remove_var("CURIO_ROOT_FOLDER_NAME");
+            env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
+            env::remove_var("CURIO_OUTPUT_ROOT_PAGE_ID");
+            env::remove_var("CURIO_TEMP_DIR");
         }
+    }
+
+    #[test]
+    fn test_load_config_with_folder_id_only() {
+        let _guard = env_test_lock();
+        unsafe {
+            env::remove_var("CURIO_CONFLUENCE_URL");
+            env::remove_var("CURIO_CONFLUENCE_EMAIL");
+            env::remove_var("CURIO_SPACE_KEY");
+            env::remove_var("CURIO_ROOT_FOLDER_NAME");
+            env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
+            env::remove_var("CURIO_OUTPUT_ROOT_PAGE_ID");
+            env::remove_var("CURIO_TEMP_DIR");
+
+            env::set_var("CURIO_CONFLUENCE_URL", "http://test.confluence.com");
+            env::set_var("CURIO_CONFLUENCE_EMAIL", "test@example.com");
+            env::set_var("CURIO_SPACE_KEY", "TEST");
+            env::set_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID", "4241129474");
+        }
+
+        let config = load_config(None).unwrap();
+
+        assert_eq!(config.content_model.root_folder_name, "");
+        assert_eq!(
+            config.content_model.output_root_folder_id,
+            Some("4241129474".to_string())
+        );
+
+        unsafe {
+            env::remove_var("CURIO_CONFLUENCE_URL");
+            env::remove_var("CURIO_CONFLUENCE_EMAIL");
+            env::remove_var("CURIO_SPACE_KEY");
+            env::remove_var("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
+            env::remove_var("CURIO_TEMP_DIR");
+        }
+    }
+
+    #[test]
+    fn test_env_files_have_matching_keys() {
+        fn read_keys(path: std::path::PathBuf) -> std::collections::BTreeSet<String> {
+            std::fs::read_to_string(&path)
+                .unwrap_or_else(|err| panic!("failed to read {}: {}", path.display(), err))
+                .lines()
+                .filter_map(|line| {
+                    let trimmed = line.trim();
+                    if trimmed.is_empty() || trimmed.starts_with('#') {
+                        None
+                    } else {
+                        trimmed
+                            .split_once('=')
+                            .map(|(key, _)| key.trim().to_string())
+                    }
+                })
+                .collect()
+        }
+
+        let repo_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("crate should have a parent repo directory")
+            .to_path_buf();
+        let env_keys = read_keys(repo_root.join(".env"));
+        let example_keys = read_keys(repo_root.join(".env.example"));
+        assert_eq!(env_keys, example_keys);
     }
 }

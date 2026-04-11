@@ -6,10 +6,16 @@ pub struct ConfluenceClient {
     base_url: String,
     auth_token: String,
     email: String,
+    write_root_folder_id: Option<String>,
 }
 
 impl ConfluenceClient {
-    pub fn new(base_url: String, email: String, auth_token: String) -> Result<Self> {
+    pub fn new(
+        base_url: String,
+        email: String,
+        auth_token: String,
+        write_root_folder_id: Option<String>,
+    ) -> Result<Self> {
         let client = Client::builder()
             .default_headers(HeaderMap::new())
             .build()
@@ -20,7 +26,39 @@ impl ConfluenceClient {
             base_url,
             auth_token,
             email,
+            write_root_folder_id,
         })
+    }
+
+    async fn assert_within_write_root(&self, page_id: &str) -> Result<()> {
+        let Some(write_root_folder_id) = self.write_root_folder_id.as_deref() else {
+            return Ok(());
+        };
+
+        if page_id == write_root_folder_id {
+            return Ok(());
+        }
+
+        if self
+            .page_is_descendant_of(page_id, write_root_folder_id)
+            .await?
+        {
+            Ok(())
+        } else {
+            anyhow::bail!(
+                "Refusing to write page {} because it is outside the configured CURIO output root folder {}",
+                page_id,
+                write_root_folder_id
+            );
+        }
+    }
+
+    async fn assert_parent_within_write_root(&self, parent_id: Option<&str>) -> Result<()> {
+        let Some(parent_id) = parent_id else {
+            return Ok(());
+        };
+
+        self.assert_within_write_root(parent_id).await
     }
 
     /// Creates a new Confluence page or updates it if it exists.
@@ -33,81 +71,158 @@ impl ConfluenceClient {
         body_storage_format: &str, // e.g., "storage", "editor2"
         body_content: &str,
     ) -> Result<String> {
-        let url = format!("{}/rest/api/content", self.base_url);
+        let effective_parent_id = parent_id.or(self.write_root_folder_id.as_deref());
+        self.assert_parent_within_write_root(effective_parent_id)
+            .await?;
 
         // First, check if the page exists
-        let existing_page = self.get_page_by_title(space_key, parent_id, title).await?;
+        let existing_page = self
+            .get_page_by_title(space_key, effective_parent_id, title)
+            .await?;
 
-        let mut page_data = serde_json::json!({
-            "type": "page",
-            "title": title,
-            "space": { "key": space_key },
-            "body": {
-                body_storage_format: {
-                    "value": body_content,
-                    "representation": body_storage_format
-                }
+        let existing_page = if let Some(page) = existing_page {
+            let page_id = page["id"]
+                .as_str()
+                .context("Page ID missing from existing page lookup")?;
+            if self.write_root_folder_id.is_some()
+                && !self
+                    .page_is_descendant_of(page_id, self.write_root_folder_id.as_deref().unwrap())
+                    .await?
+            {
+                None
+            } else {
+                Some(page)
             }
-        });
+        } else {
+            None
+        };
 
-        let request = if let Some(page) = existing_page {
-            // Update existing page
-            let version = page["version"]["number"]
+        if let Some(page) = existing_page {
+            let page_id = page["id"]
+                .as_str()
+                .context("Page ID missing from existing page lookup")?;
+            let current_page = self
+                .get_page_by_id_v2(page_id)
+                .await?
+                .context("Existing page could not be loaded via v2 API")?;
+            let version = current_page["version"]["number"]
                 .as_i64()
                 .context("Page version missing")?
                 + 1;
-            page_data["id"] = page["id"].clone();
-            page_data["version"] = serde_json::json!({ "number": version });
+
+            let mut page_data = serde_json::json!({
+                "id": page_id,
+                "status": "current",
+                "title": title,
+                "body": {
+                    "representation": body_storage_format,
+                    "value": body_content
+                },
+                "version": { "number": version }
+            });
+
+            if let Some(space_id) = current_page["spaceId"].as_str() {
+                page_data["spaceId"] = serde_json::json!(space_id);
+            }
+            if let Some(parent_id) = current_page["parentId"].as_str() {
+                page_data["parentId"] = serde_json::json!(parent_id);
+            }
 
             println!(
-                "Updating Confluence page: {} (ID: {})",
-                title,
-                page["id"].as_str().unwrap_or_default()
+                "Updating Confluence page via v2: {} (ID: {})",
+                title, page_id
             );
-            self.client
-                .put(&format!(
-                    "{}/wiki/rest/api/content/{}",
-                    self.base_url,
-                    page["id"].as_str().unwrap_or_default()
-                ))
+            let response = self
+                .client
+                .put(&format!("{}/api/v2/pages/{}", self.base_url, page_id))
                 .json(&page_data)
-        } else {
-            // Create new page
-            if let Some(p_id) = parent_id {
-                page_data["ancestors"] = serde_json::json!([{"id": p_id}]);
+                .basic_auth(&self.email, Some(&self.auth_token))
+                .send()
+                .await
+                .with_context(|| {
+                    format!("Failed to send Confluence API request for page: {}", title)
+                })?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body")?;
+
+            if status.is_success() {
+                let json: serde_json::Value = serde_json::from_str(&response_text)
+                    .context("Failed to parse Confluence API response")?;
+                json["id"]
+                    .as_str()
+                    .map(|s| s.to_string())
+                    .context("Page ID not found in response")
+            } else {
+                anyhow::bail!(
+                    "Confluence API request failed with status {}: {}",
+                    status,
+                    response_text
+                );
             }
-            println!("Creating Confluence page: {}", title);
-            self.client.post(&url).json(&page_data)
-        };
-
-        let response = request
-            .basic_auth(&self.email, Some(&self.auth_token))
-            .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .send()
-            .await
-            .with_context(|| {
-                format!("Failed to send Confluence API request for page: {}", title)
-            })?;
-
-        let status = response.status();
-        let response_text = response
-            .text()
-            .await
-            .context("Failed to read response body")?;
-
-        if status.is_success() {
-            let json: serde_json::Value = serde_json::from_str(&response_text)
-                .context("Failed to parse Confluence API response")?;
-            json["id"]
-                .as_str()
-                .map(|s| s.to_string())
-                .context("Page ID not found in response")
         } else {
-            anyhow::bail!(
-                "Confluence API request failed with status {}: {}",
-                status,
-                response_text
-            );
+            let Some(effective_parent_id) = effective_parent_id else {
+                anyhow::bail!(
+                    "Creating a top-level page is not supported without a configured output root folder or explicit parent"
+                );
+            };
+
+            // Create new page using the v2 API so current Confluence folders/pages accept it.
+            let parent_page = self
+                .get_content_tree_item_by_id_v2(effective_parent_id)
+                .await?
+                .context("Parent page not found when creating a child page")?;
+
+            let mut page_data = serde_json::json!({
+                "status": "current",
+                "title": title,
+                "body": {
+                    "representation": body_storage_format,
+                    "value": body_content
+                },
+                "subtype": "live"
+            });
+            let space_id = parent_page["spaceId"]
+                .as_str()
+                .context("spaceId missing from parent page response")?;
+            page_data["spaceId"] = serde_json::json!(space_id);
+            page_data["parentId"] = serde_json::json!(effective_parent_id);
+
+            println!("Creating Confluence page: {}", title);
+            let response = self
+                .client
+                .post(&format!("{}/api/v2/pages", self.base_url))
+                .basic_auth(&self.email, Some(&self.auth_token))
+                .json(&page_data)
+                .send()
+                .await
+                .with_context(|| {
+                    format!("Failed to send Confluence API request for page: {}", title)
+                })?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body")?;
+
+            if status.is_success() {
+                let json: serde_json::Value = serde_json::from_str(&response_text)
+                    .context("Failed to parse Confluence API response")?;
+                json["id"]
+                    .as_str()
+                    .map(|s| s.to_string())
+                    .context("Page ID not found in response")
+            } else {
+                anyhow::bail!(
+                    "Confluence API request failed with status {}: {}",
+                    status,
+                    response_text
+                );
+            }
         }
     }
 
@@ -180,6 +295,7 @@ impl ConfluenceClient {
 
     /// Adds a list of labels to a Confluence page.
     pub async fn add_labels(&self, page_id: &str, labels: Vec<String>) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
         let url = format!("{}/rest/api/content/{}/label", self.base_url, page_id);
         let labels_json: Vec<serde_json::Value> = labels
             .into_iter()
@@ -217,6 +333,7 @@ impl ConfluenceClient {
 
     /// Removes a single label from a Confluence page.
     pub async fn remove_label(&self, page_id: &str, label: &str) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
         let url = format!(
             "{}/rest/api/content/{}/label/{}",
             self.base_url, page_id, label
@@ -266,6 +383,7 @@ impl ConfluenceClient {
         key: &str,
         value: serde_json::Value,
     ) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
         // First, try to get the existing property to determine its version.
         let existing_property = self.get_content_property(page_id, key).await?;
 
@@ -438,8 +556,85 @@ impl ConfluenceClient {
         }
     }
 
+    pub async fn get_folder_by_id_v2(&self, folder_id: &str) -> Result<Option<serde_json::Value>> {
+        let url = format!("{}/api/v2/folders/{}", self.base_url, folder_id);
+
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context(format!(
+                "Failed to send Confluence API request for folder ID: {}",
+                folder_id
+            ))?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body")?;
+
+        if status.is_success() {
+            let json: serde_json::Value = serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence API response for get_folder_by_id_v2")?;
+            Ok(Some(json))
+        } else if status == StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            anyhow::bail!(
+                "Confluence API request for folder ID {} failed with status {}: {}",
+                folder_id,
+                status,
+                response_text
+            );
+        }
+    }
+
+    pub async fn get_content_tree_item_by_id_v2(
+        &self,
+        item_id: &str,
+    ) -> Result<Option<serde_json::Value>> {
+        if let Some(page) = self.get_page_by_id_v2(item_id).await? {
+            return Ok(Some(page));
+        }
+
+        self.get_folder_by_id_v2(item_id).await
+    }
+
+    pub async fn page_is_descendant_of(&self, page_id: &str, ancestor_id: &str) -> Result<bool> {
+        if page_id == ancestor_id {
+            return Ok(true);
+        }
+
+        let mut current_page_id = page_id.to_string();
+
+        loop {
+            let current_page = match self
+                .get_content_tree_item_by_id_v2(&current_page_id)
+                .await?
+            {
+                Some(page) => page,
+                None => return Ok(false),
+            };
+
+            let Some(parent_id) = current_page["parentId"].as_str() else {
+                return Ok(false);
+            };
+
+            if parent_id == ancestor_id {
+                return Ok(true);
+            }
+
+            current_page_id = parent_id.to_string();
+        }
+    }
+
     /// Moves a Confluence page to a new parent page.
     pub async fn move_page(&self, page_id: &str, new_parent_id: &str) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
+        self.assert_within_write_root(new_parent_id).await?;
         let url = format!("{}/rest/api/content/{}", self.base_url, page_id);
 
         // First, get the current page details to extract the version and other necessary fields
@@ -536,6 +731,112 @@ impl ConfluenceClient {
         } else {
             anyhow::bail!(
                 "Confluence API request to move page {} failed with status {}: {}",
+                page_id,
+                status,
+                response_text
+            );
+        }
+    }
+
+    /// Moves a page under a managed parent while allowing the source page to live outside
+    /// the current write root. Use this only for migration of legacy pages into the scoped tree.
+    pub async fn migrate_page_to_parent(&self, page_id: &str, new_parent_id: &str) -> Result<()> {
+        self.assert_within_write_root(new_parent_id).await?;
+        let url = format!("{}/rest/api/content/{}", self.base_url, page_id);
+
+        let response = self
+            .client
+            .get(&format!(
+                "{}/rest/api/content/{}?expand=version,body,space",
+                self.base_url, page_id
+            ))
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context(format!(
+                "Failed to fetch current page details for migrating page {}",
+                page_id
+            ))?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body for current page details")?;
+
+        if !status.is_success() {
+            anyhow::bail!(
+                "Failed to get current page details for migrating page {}. Status: {}. Response: {}",
+                page_id,
+                status,
+                response_text
+            );
+        }
+        let current_page: serde_json::Value = serde_json::from_str(&response_text)
+            .context("Failed to parse current page details for migrating page")?;
+
+        let current_version = current_page["version"]["number"]
+            .as_i64()
+            .context("Page version missing")?
+            + 1;
+        let space_key = current_page["space"]["key"]
+            .as_str()
+            .context("Space key missing from current page")?;
+        let title = current_page["title"]
+            .as_str()
+            .context("Page title missing from current page")?;
+        let body_content = current_page["body"]["storage"]["value"]
+            .as_str()
+            .unwrap_or_default();
+
+        let update_payload = serde_json::json!({
+            "id": page_id,
+            "type": "page",
+            "title": title,
+            "space": { "key": space_key },
+            "body": {
+                "storage": {
+                    "value": body_content,
+                    "representation": "storage"
+                }
+            },
+            "ancestors": [{"id": new_parent_id}],
+            "version": { "number": current_version }
+        });
+
+        println!(
+            "Migrating page {} (ID: {}) to new parent {}",
+            title, page_id, new_parent_id
+        );
+
+        let response = self
+            .client
+            .put(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .header(reqwest::header::CONTENT_TYPE, "application/json")
+            .json(&update_payload)
+            .send()
+            .await
+            .context(format!(
+                "Failed to send Confluence API request to migrate page {}",
+                page_id
+            ))?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body after migrating page")?;
+
+        if status.is_success() {
+            println!(
+                "Page {} migrated successfully to parent {}.",
+                page_id, new_parent_id
+            );
+            Ok(())
+        } else {
+            anyhow::bail!(
+                "Confluence API request to migrate page {} failed with status {}: {}",
                 page_id,
                 status,
                 response_text

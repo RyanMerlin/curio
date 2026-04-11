@@ -6,6 +6,14 @@
 - provider launcher on `PATH`, or provider command override via environment variable
 - run commands from `C:\code\agents\curio`
 
+## Content Root Contract
+
+Curio writes only within the configured Confluence output folder:
+
+- `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the primary setting
+- `CURIO_ROOT_FOLDER_NAME` is a fallback only for older setups
+- `.env` and `.env.example` must contain the same keys
+
 ## Provider Overrides
 
 - Codex: `CURIO_CODEX_CMD`
