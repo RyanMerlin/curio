@@ -17,6 +17,7 @@ struct IntakeOutput {
     source_items: usize,
     handled_items: usize,
     duplicate_skipped: usize,
+    skipped_unavailable: usize,
     dry_run: bool,
 }
 
@@ -66,24 +67,105 @@ pub async fn run_intake_create(
     .await?;
 
     let mut all_content: Vec<(String, String, String, Option<String>)> = Vec::new();
+    let mut source_items = 0usize;
+    let mut skipped_unavailable = 0usize;
     // (content, source_id, content_type, subject_hint)
 
     if let Some(u) = url {
-        if !json_output {
-            println!("Ingesting from URL: {}", u);
+        if let Some(folder_id) = extract_confluence_folder_id(u) {
+            if !json_output {
+                println!("Ingesting from Confluence folder: {}", u);
+            }
+
+            let folder = client
+                .get_folder_by_id_v2(&folder_id)
+                .await?
+                .context(format!("Confluence folder not found: {}", folder_id))?;
+            let folder_title = folder["title"].as_str().unwrap_or(&folder_id).to_string();
+            let descendants = client.get_folder_descendants_v2(&folder_id).await?;
+
+            if !json_output {
+                println!(
+                    "Found {} descendant items under folder '{}'",
+                    descendants.len(),
+                    folder_title
+                );
+            }
+
+            for descendant in descendants {
+                let content_type = descendant["type"].as_str().unwrap_or_default();
+                if content_type != "page" {
+                    continue;
+                }
+                source_items += 1;
+
+                let page_id = descendant["id"]
+                    .as_str()
+                    .context("Folder descendant page is missing an ID")?;
+                let page = match client.get_page_by_id_with_body_v1(page_id).await {
+                    Ok(Some(page)) => page,
+                    Ok(None) => {
+                        skipped_unavailable += 1;
+                        if !json_output {
+                            println!(
+                                "  - Skipping inaccessible descendant page {} (not found)",
+                                page_id
+                            );
+                        }
+                        continue;
+                    }
+                    Err(err) => {
+                        skipped_unavailable += 1;
+                        if !json_output {
+                            println!(
+                                "  - Skipping descendant page {} because it could not be loaded: {}",
+                                page_id, err
+                            );
+                        }
+                        continue;
+                    }
+                };
+
+                let page_title = page["title"]
+                    .as_str()
+                    .or_else(|| descendant["title"].as_str())
+                    .unwrap_or("Untitled Confluence Page")
+                    .to_string();
+                let content = page["body"]["storage"]["value"]
+                    .as_str()
+                    .unwrap_or("")
+                    .to_string();
+
+                if !json_output {
+                    println!("  - Queuing page from folder: {} ({})", page_title, page_id);
+                }
+
+                all_content.push((
+                    content,
+                    format!("confluence-folder:{}:page:{}", folder_id, page_id),
+                    "confluence_page".to_string(),
+                    Some(page_title),
+                ));
+            }
+        } else {
+            if !json_output {
+                println!("Ingesting from URL: {}", u);
+            }
+            let content = fetch_url_content(u).await?;
+            source_items += 1;
+            all_content.push((
+                content,
+                format!("url:{}", u),
+                "web_page".to_string(),
+                subject_hint.clone(),
+            ));
         }
-        let content = fetch_url_content(u).await?;
-        all_content.push((
-            content,
-            format!("url:{}", u),
-            "web_page".to_string(),
-            subject_hint.clone(),
-        ));
     } else if let Some(f) = file {
         if !json_output {
             println!("Ingesting from file: {}", f.display());
         }
         let content = read_file_content(f).await?;
+        source_items += 1;
         let filename = f
             .file_name()
             .and_then(|name| name.to_str())
@@ -108,6 +190,7 @@ pub async fn run_intake_create(
                     println!("  - Ingesting file: {}", path.display());
                 }
                 let content = read_file_content(path).await?;
+                source_items += 1;
                 let filename = path
                     .file_name()
                     .and_then(|name| name.to_str())
@@ -130,7 +213,6 @@ pub async fn run_intake_create(
         anyhow::bail!("No input source provided. Use --url, --file, or --folder.");
     }
 
-    let source_items = all_content.len();
     let mut handled_items = 0usize;
     let mut duplicate_skipped = 0usize;
 
@@ -164,6 +246,7 @@ pub async fn run_intake_create(
                 source_items,
                 handled_items,
                 duplicate_skipped,
+                skipped_unavailable,
                 dry_run,
             },
         )?;
@@ -394,4 +477,17 @@ async fn process_single_content(
         println!("Successfully processed content from source: {}", source_id);
     }
     Ok(true)
+}
+
+fn extract_confluence_folder_id(url: &str) -> Option<String> {
+    let marker = "/folder/";
+    let start = url.find(marker)? + marker.len();
+    let tail = &url[start..];
+    let folder_id: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
+
+    if folder_id.is_empty() {
+        None
+    } else {
+        Some(folder_id)
+    }
 }

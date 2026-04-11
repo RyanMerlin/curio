@@ -68,7 +68,7 @@ pub enum Commands {
 
     /// Ingest content from various sources into Confluence.
     IntakeCreate {
-        /// URL of a web page or Confluence link to ingest.
+        /// URL of a web page, Confluence page, or Confluence folder to ingest.
         #[arg(long, group = "source", help_heading = "Input Source (choose one)")]
         url: Option<String>,
 

@@ -12,7 +12,7 @@ use std::fmt::Write as _;
 use std::fs;
 
 const HERO_IMAGE_PATH: &str = "docs/assets/Curio_curated_intelligence_operator.png";
-const OVERVIEW_TITLE: &str = "Curio Overview";
+const README_TITLE: &str = "README";
 
 #[derive(Debug, Serialize)]
 struct BootstrapPageOutput {
@@ -70,7 +70,7 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
         );
     }
 
-    let page_specs = lifecycle_page_specs();
+    let page_specs = lifecycle_page_specs(render_readme_body(hero_image_html.as_deref()));
     let mut ensured_pages = Vec::new();
 
     for spec in page_specs {
@@ -113,38 +113,7 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
         });
     }
 
-    let overview_body = render_overview_body(hero_image_html.as_deref());
-    let overview_page_id = if dry_run {
-        if !json_output {
-            println!("(Dry run) Would ensure overview page: '{}'", OVERVIEW_TITLE);
-        }
-        None
-    } else {
-        let page_id = resolve_or_create_scoped_child_page_id(
-            &client,
-            space_key,
-            &root_folder_id,
-            OVERVIEW_TITLE,
-            &overview_body,
-        )
-        .await?;
-
-        if !json_output {
-            println!(
-                "Ensured overview page '{}' with ID: {}",
-                OVERVIEW_TITLE, page_id
-            );
-        }
-
-        Some(page_id)
-    };
-
-    let mut output_pages = ensured_pages;
-    output_pages.push(BootstrapPageOutput {
-        title: OVERVIEW_TITLE.to_string(),
-        page_id: overview_page_id.clone(),
-        purpose: "Curio landing page, visual identity, and navigation hub.".to_string(),
-    });
+    let output_pages = ensured_pages;
 
     if json_output {
         emit_json(
@@ -152,7 +121,10 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
             true,
             BootstrapOutput {
                 root_folder_id,
-                overview_page_id,
+                overview_page_id: output_pages
+                    .iter()
+                    .find(|page| page.title == README_TITLE)
+                    .and_then(|page| page.page_id.clone()),
                 pages: output_pages,
             },
         )?;
@@ -163,8 +135,13 @@ pub async fn run_bootstrap(config: &Config, dry_run: bool, json_output: bool) ->
     Ok(())
 }
 
-fn lifecycle_page_specs() -> Vec<PageSpec> {
+fn lifecycle_page_specs(readme_body: String) -> Vec<PageSpec> {
     vec![
+        PageSpec {
+            title: README_TITLE,
+            purpose: "Plain-English starting point for non-technical users.",
+            body: readme_body,
+        },
         PageSpec {
             title: "Intake",
             purpose: "Raw capture lane for newly ingested material.",
@@ -310,44 +287,65 @@ fn lifecycle_page_specs() -> Vec<PageSpec> {
     ]
 }
 
-fn render_overview_body(hero_image_html: Option<&str>) -> String {
+fn render_readme_body(hero_image_html: Option<&str>) -> String {
     let mut html = String::new();
-    html.push_str("<h1>Curio Overview</h1>");
-    html.push_str("<p><strong>Curated Intelligence Operator</strong> for Confluence-first knowledge operations.</p>");
-    html.push_str("<p>Curio is the operating layer that turns Confluence into a structured agent workspace. It captures raw material, stages it for review, routes exceptions to humans, and preserves the published result as a reusable source of truth.</p>");
+    html.push_str("<h1>README</h1>");
+    html.push_str("<p><strong>Start here.</strong> This page explains Curio in plain language for people who just need to know what to do next.</p>");
+    html.push_str("<p>Curio is the operating layer that turns Confluence into a structured workspace. It captures raw material, stages it for review, routes exceptions to humans, and preserves the published result as a reusable source of truth.</p>");
 
     if let Some(hero_image_html) = hero_image_html {
         html.push_str("<p>");
         html.push_str(hero_image_html);
         html.push_str("</p>");
-    } else {
-        html.push_str("<p><em>Hero artwork is managed from docs/assets/Curio_curated_intelligence_operator.png.</em></p>");
     }
 
-    html.push_str("<h2>How This Space Works</h2>");
-    html.push_str("<ul>");
-    html.push_str("<li><strong>Intake</strong> is the raw capture lane for new material.</li>");
-    html.push_str("<li><strong>Staged</strong> is the high-confidence handoff zone before final approval.</li>");
-    html.push_str("<li><strong>Review</strong> holds conflict, ambiguity, and items that need human judgment.</li>");
-    html.push_str(
-        "<li><strong>Published</strong> is the canonical output surface for approved content.</li>",
+    append_section(
+        &mut html,
+        "How This Space Works",
+        Some("Use the lane names to understand where a piece of work belongs."),
+        &[
+            "README is the human-friendly entry point.",
+            "If something is new, unclear, or still being gathered, it belongs in Intake.",
+            "If something is close but not final, it belongs in Staged or Review.",
+            "If something is approved and ready for others to use, it belongs in Published.",
+            "_templates holds reusable blueprints and page scaffolds.",
+            "_registry tracks canonical topics and where the authoritative page lives.",
+        ],
     );
-    html.push_str(
-        "<li><strong>_templates</strong> holds reusable blueprints and page scaffolds.</li>",
+
+    append_section(
+        &mut html,
+        "What To Do First",
+        Some("Use the simplest lane that fits the work."),
+        &[
+            "Drop new source material into Intake.",
+            "Use README when you want a quick human explanation instead of the operational detail.",
+            "Check the lane pages if you need more exact operational rules.",
+        ],
     );
-    html.push_str("<li><strong>_registry</strong> tracks canonical topics and where the authoritative page lives.</li>");
-    html.push_str("</ul>");
 
-    html.push_str("<h2>Operating Principles</h2>");
-    html.push_str("<ol>");
-    html.push_str("<li>Write only inside the managed Curio root.</li>");
-    html.push_str("<li>Keep source provenance intact as content moves through the lifecycle.</li>");
-    html.push_str("<li>Prefer clear page names, stable labels, and visible structure over implicit conventions.</li>");
-    html.push_str("<li>Use the registry and published pages as the authoritative references for downstream agent work.</li>");
-    html.push_str("</ol>");
+    append_section(
+        &mut html,
+        "When You Are Unsure",
+        Some("If you do not know where something belongs, do not force it into the wrong place."),
+        &[
+            "Leave the item in Intake until it can be routed correctly.",
+            "Ask Curio to help classify it if the next step is unclear.",
+            "Use Review when a human decision is needed.",
+        ],
+    );
 
-    html.push_str("<h2>Agent Notes</h2>");
-    html.push_str("<p>When agents land in this space, they should quickly understand what each lane is for, where to place new material, and where to look for the current answer. The documentation layer is part of the operating system, not an afterthought.</p>");
+    append_section(
+        &mut html,
+        "How To Read The Lanes",
+        Some("The page names tell you how far along the work is."),
+        &[
+            "Intake means new and unprocessed.",
+            "Staged means ready for review or nearly ready to publish.",
+            "Review means someone needs to make a decision.",
+            "Published means final and approved.",
+        ],
+    );
 
     html
 }

@@ -631,6 +631,158 @@ impl ConfluenceClient {
         }
     }
 
+    pub async fn get_page_by_id_with_body_v1(
+        &self,
+        page_id: &str,
+    ) -> Result<Option<serde_json::Value>> {
+        let url = format!(
+            "{}/rest/api/content/{}?expand=body.storage,space,version,title",
+            self.base_url, page_id
+        );
+
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context(format!(
+                "Failed to send Confluence API request for page body: {}",
+                page_id
+            ))?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body")?;
+
+        if status.is_success() {
+            let json: serde_json::Value = serde_json::from_str(&response_text).context(
+                "Failed to parse Confluence API response for get_page_by_id_with_body_v1",
+            )?;
+            Ok(Some(json))
+        } else if status == StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            anyhow::bail!(
+                "Confluence API request for page body {} failed with status {}: {}",
+                page_id,
+                status,
+                response_text
+            );
+        }
+    }
+
+    pub async fn get_folder_descendants_v2(
+        &self,
+        folder_id: &str,
+    ) -> Result<Vec<serde_json::Value>> {
+        let mut descendants = Vec::new();
+        let mut next_url = Some(format!(
+            "{}/api/v2/folders/{}/descendants?limit=200",
+            self.base_url, folder_id
+        ));
+
+        while let Some(url) = next_url.take() {
+            let response = self
+                .client
+                .get(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+                .send()
+                .await
+                .context(format!(
+                    "Failed to send Confluence API request for folder descendants: {}",
+                    folder_id
+                ))?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body")?;
+
+            if !status.is_success() {
+                anyhow::bail!(
+                    "Confluence API request for folder descendants {} failed with status {}: {}",
+                    folder_id,
+                    status,
+                    response_text
+                );
+            }
+
+            let json: serde_json::Value = serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence API response for folder descendants")?;
+
+            if let Some(results) = json["results"].as_array() {
+                descendants.extend(results.iter().cloned());
+            }
+
+            next_url = json["_links"]["next"].as_str().map(|next| {
+                if next.starts_with("http://") || next.starts_with("https://") {
+                    next.to_string()
+                } else {
+                    format!("{}{}", self.base_url, next)
+                }
+            });
+        }
+
+        Ok(descendants)
+    }
+
+    pub async fn get_page_descendants_v2(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
+        let mut descendants = Vec::new();
+        let mut next_url = Some(format!(
+            "{}/api/v2/pages/{}/descendants?limit=200",
+            self.base_url, page_id
+        ));
+
+        while let Some(url) = next_url.take() {
+            let response = self
+                .client
+                .get(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+                .send()
+                .await
+                .context(format!(
+                    "Failed to send Confluence API request for page descendants: {}",
+                    page_id
+                ))?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body")?;
+
+            if !status.is_success() {
+                anyhow::bail!(
+                    "Confluence API request for page descendants {} failed with status {}: {}",
+                    page_id,
+                    status,
+                    response_text
+                );
+            }
+
+            let json: serde_json::Value = serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence API response for page descendants")?;
+
+            if let Some(results) = json["results"].as_array() {
+                descendants.extend(results.iter().cloned());
+            }
+
+            next_url = json["_links"]["next"].as_str().map(|next| {
+                if next.starts_with("http://") || next.starts_with("https://") {
+                    next.to_string()
+                } else {
+                    format!("{}{}", self.base_url, next)
+                }
+            });
+        }
+
+        Ok(descendants)
+    }
+
     pub async fn get_content_tree_item_by_id_v2(
         &self,
         item_id: &str,

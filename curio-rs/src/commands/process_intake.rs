@@ -105,6 +105,39 @@ pub async fn run_process_intake(
             scoped_intake_pages.push(page);
         }
     }
+
+    if scoped_intake_pages.is_empty() {
+        if !json_output {
+            println!(
+                "Label search returned no intake items yet; falling back to descendants under the Intake page."
+            );
+        }
+
+        let intake_descendants = client.get_page_descendants_v2(&_intake_page_id).await?;
+        for descendant in intake_descendants {
+            if descendant["type"].as_str().unwrap_or_default() != "page" {
+                continue;
+            }
+
+            if descendant["parentId"].as_str().unwrap_or_default() != _intake_page_id {
+                continue;
+            }
+
+            let page_id = descendant["id"].as_str().unwrap_or_default();
+            match client.get_page_by_id_with_body_v1(page_id).await? {
+                Some(page) => scoped_intake_pages.push(page),
+                None => {
+                    if !json_output {
+                        println!(
+                            "Skipping descendant page {} because it could not be reloaded for processing.",
+                            page_id
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     if !json_output {
         println!(
             "Found {} intake items in managed root subtree.",
