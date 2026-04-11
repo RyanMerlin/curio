@@ -1,3 +1,7 @@
+---
+name: curio-workspace-bootstrap
+description: Curio workspace bootstrap guidance for harness orientation and readiness checks.
+---
 # Curio Workspace Bootstrap
 
 Use this skill when the agent needs to orient itself inside the Curio harness.

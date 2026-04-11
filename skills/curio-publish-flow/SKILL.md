@@ -1,3 +1,7 @@
+---
+name: curio-publish-flow
+description: Curio publish flow guidance for orchestration and curio-rs content workflows.
+---
 # Curio Publish Flow
 
 Use this skill when the task crosses between Curio orchestration and `curio-rs` content workflows.
