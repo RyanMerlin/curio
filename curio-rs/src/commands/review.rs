@@ -1,17 +1,29 @@
+use crate::output::emit_json;
 use crate::{Result, config::Config, confluence::ConfluenceClient};
 use anyhow::Context;
 use chrono::Utc;
+use serde::Serialize;
 use serde_json::json;
+
+#[derive(Debug, Serialize)]
+struct ReviewOutput {
+    page_id: String,
+    status: String,
+    dry_run: bool,
+}
 
 pub async fn run_review_approve(
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     page_id_arg: String, // The page to approve
 ) -> Result<()> {
-    println!(
-        "Running review approve command for page ID: {}",
-        page_id_arg
-    );
+    if !json_output {
+        println!(
+            "Running review approve command for page ID: {}",
+            page_id_arg
+        );
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -62,19 +74,27 @@ pub async fn run_review_approve(
     });
 
     if dry_run {
-        println!(
-            "(Dry run) Would update curio_metadata for page {} with status 'approved_for_publish' and review details.",
-            page_id_arg
-        );
-        println!("(Dry run) Would remove old labels and add `curio-status-approved_for_publish`.");
+        if !json_output {
+            println!(
+                "(Dry run) Would update curio_metadata for page {} with status 'approved_for_publish' and review details.",
+                page_id_arg
+            );
+            println!(
+                "(Dry run) Would remove old labels and add `curio-status-approved_for_publish`."
+            );
+        }
     } else {
-        println!("Updating curio_metadata for page {}", page_id_arg);
+        if !json_output {
+            println!("Updating curio_metadata for page {}", page_id_arg);
+        }
         client
             .set_content_property(&page_id_arg, "curio_metadata", curio_metadata_mut.clone())
             .await?;
 
         // Update Labels
-        println!("Updating labels for page {}", page_id_arg);
+        if !json_output {
+            println!("Updating labels for page {}", page_id_arg);
+        }
         // Remove existing review labels
         client
             .remove_label(&page_id_arg, &format!("{}-needs-review", label_namespace))
@@ -93,17 +113,32 @@ pub async fn run_review_approve(
             .await?;
     }
 
-    println!("Review approve command finished for page: {}", page_id_arg);
+    if json_output {
+        emit_json(
+            "review-approve",
+            true,
+            ReviewOutput {
+                page_id: page_id_arg,
+                status: "approved_for_publish".to_string(),
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Review approve command finished for page: {}", page_id_arg);
+    }
     Ok(())
 }
 
 pub async fn run_review_reject(
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     page_id_arg: String, // The page to reject
     reason: String,      // The reason for rejection
 ) -> Result<()> {
-    println!("Running review reject command for page ID: {}", page_id_arg);
+    if !json_output {
+        println!("Running review reject command for page ID: {}", page_id_arg);
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -155,19 +190,25 @@ pub async fn run_review_reject(
     });
 
     if dry_run {
-        println!(
-            "(Dry run) Would update curio_metadata for page {} with status 'rejected' and rejection reason.",
-            page_id_arg
-        );
-        println!("(Dry run) Would remove old labels and add `curio-status-rejected`.");
+        if !json_output {
+            println!(
+                "(Dry run) Would update curio_metadata for page {} with status 'rejected' and rejection reason.",
+                page_id_arg
+            );
+            println!("(Dry run) Would remove old labels and add `curio-status-rejected`.");
+        }
     } else {
-        println!("Updating curio_metadata for page {}", page_id_arg);
+        if !json_output {
+            println!("Updating curio_metadata for page {}", page_id_arg);
+        }
         client
             .set_content_property(&page_id_arg, "curio_metadata", curio_metadata_mut.clone())
             .await?;
 
         // Update Labels
-        println!("Updating labels for page {}", page_id_arg);
+        if !json_output {
+            println!("Updating labels for page {}", page_id_arg);
+        }
         // Remove existing review labels
         client
             .remove_label(&page_id_arg, &format!("{}-needs-review", label_namespace))
@@ -186,6 +227,18 @@ pub async fn run_review_reject(
             .await?;
     }
 
-    println!("Review reject command finished for page: {}", page_id_arg);
+    if json_output {
+        emit_json(
+            "review-reject",
+            true,
+            ReviewOutput {
+                page_id: page_id_arg,
+                status: "rejected".to_string(),
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Review reject command finished for page: {}", page_id_arg);
+    }
     Ok(())
 }

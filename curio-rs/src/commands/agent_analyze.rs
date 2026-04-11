@@ -1,18 +1,30 @@
+use crate::output::emit_json;
 #[allow(unused_imports)]
 use crate::{
     AgentAnalysis, Result, analyze_content_with_agent, config::Config, confluence::ConfluenceClient,
 };
 use anyhow::Context;
+use serde::Serialize;
 use serde_json::json;
+
+#[derive(Debug, Serialize)]
+struct AgentAnalyzeOutput {
+    requested: usize,
+    analyzed: usize,
+    dry_run: bool,
+}
 
 pub async fn run_agent_analyze(
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     page_id_arg: &Option<String>,
     status_arg: &Option<String>,
     limit: u32,
 ) -> Result<()> {
-    println!("Running agent-analyze command...");
+    if !json_output {
+        println!("Running agent-analyze command...");
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -30,17 +42,23 @@ pub async fn run_agent_analyze(
     let mut pages_to_analyze: Vec<serde_json::Value> = Vec::new();
 
     if let Some(pid) = page_id_arg {
-        println!("Attempting to fetch page with ID: {}", pid);
+        if !json_output {
+            println!("Attempting to fetch page with ID: {}", pid);
+        }
         match client.get_page_by_id_v2(pid).await {
             Ok(Some(page)) => {
                 pages_to_analyze.push(page);
             }
             Ok(None) => {
-                println!("Page with ID {} not found.", pid);
+                if !json_output {
+                    println!("Page with ID {} not found.", pid);
+                }
                 return Ok(());
             }
             Err(e) => {
-                eprintln!("Error fetching page with ID {}: {:?}", pid, e);
+                if !json_output {
+                    eprintln!("Error fetching page with ID {}: {:?}", pid, e);
+                }
                 return Err(e);
             }
         }
@@ -52,7 +70,9 @@ pub async fn run_agent_analyze(
             label_namespace, target_status, space_key
         );
 
-        println!("Searching for pages to analyze with CQL: {}", cql_query);
+        if !json_output {
+            println!("Searching for pages to analyze with CQL: {}", cql_query);
+        }
         let pages = client
             .execute_cql_with_limit(&cql_query, Some(limit))
             .await?;
@@ -69,13 +89,28 @@ pub async fn run_agent_analyze(
         } else {
             pages_to_analyze = pages;
         }
-        println!("Found {} pages to analyze.", pages_to_analyze.len());
+        if !json_output {
+            println!("Found {} pages to analyze.", pages_to_analyze.len());
+        }
     }
     if pages_to_analyze.is_empty() {
-        println!("No pages found matching criteria for analysis.");
+        if json_output {
+            emit_json(
+                "agent-analyze",
+                true,
+                AgentAnalyzeOutput {
+                    requested: limit as usize,
+                    analyzed: 0,
+                    dry_run,
+                },
+            )?;
+        } else {
+            println!("No pages found matching criteria for analysis.");
+        }
         return Ok(());
     }
 
+    let analyzed = pages_to_analyze.len();
     for page_json in pages_to_analyze {
         let page_id = page_json["id"]
             .as_str()
@@ -90,11 +125,15 @@ pub async fn run_agent_analyze(
             .unwrap_or("")
             .to_string();
 
-        println!("Analyzing page: {} (ID: {})", page_title, page_id);
+        if !json_output {
+            println!("Analyzing page: {} (ID: {})", page_title, page_id);
+        }
 
         // Update status to 'analyzing' first
         if !dry_run {
-            println!("  - Setting status to 'analyzing' for page {}", page_id);
+            if !json_output {
+                println!("  - Setting status to 'analyzing' for page {}", page_id);
+            }
             let current_metadata_json = client
                 .get_content_property(&page_id, "curio_metadata")
                 .await?;
@@ -122,25 +161,31 @@ pub async fn run_agent_analyze(
                 )
                 .await?;
         } else {
-            println!(
-                "(Dry run) Would set status to 'analyzing' for page {}",
-                page_id
-            );
+            if !json_output {
+                println!(
+                    "(Dry run) Would set status to 'analyzing' for page {}",
+                    page_id
+                );
+            }
         }
 
         // Perform analysis (placeholder)
         let analysis_result = analyze_content_with_agent(&page_body).await?;
-        println!(
-            "  - Analysis Complete: Confidence {:.2}, Keywords: {:?}",
-            analysis_result.confidence_score, analysis_result.keywords
-        );
+        if !json_output {
+            println!(
+                "  - Analysis Complete: Confidence {:.2}, Keywords: {:?}",
+                analysis_result.confidence_score, analysis_result.keywords
+            );
+        }
 
         // Update with analysis results and final status
         if !dry_run {
-            println!(
-                "  - Updating page {} with analysis results and status 'analyzed'",
-                page_id
-            );
+            if !json_output {
+                println!(
+                    "  - Updating page {} with analysis results and status 'analyzed'",
+                    page_id
+                );
+            }
             let current_metadata_json = client
                 .get_content_property(&page_id, "curio_metadata")
                 .await?;
@@ -170,13 +215,27 @@ pub async fn run_agent_analyze(
                 )
                 .await?;
         } else {
-            println!(
-                "(Dry run) Would update page {} with analysis results and status 'analyzed'",
-                page_id
-            );
+            if !json_output {
+                println!(
+                    "(Dry run) Would update page {} with analysis results and status 'analyzed'",
+                    page_id
+                );
+            }
         }
     }
 
-    println!("Agent analyze command finished.");
+    if json_output {
+        emit_json(
+            "agent-analyze",
+            true,
+            AgentAnalyzeOutput {
+                requested: limit as usize,
+                analyzed,
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Agent analyze command finished.");
+    }
     Ok(())
 }

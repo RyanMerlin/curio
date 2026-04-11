@@ -1,3 +1,4 @@
+use crate::output::emit_json;
 use crate::{
     Result, config::Config, confluence::ConfluenceClient, resolve_managed_root_folder_id,
     resolve_or_create_scoped_child_page_id,
@@ -5,21 +6,33 @@ use crate::{
 use anyhow::Context;
 use chrono::Utc;
 use scraper::{Html, Selector};
+use serde::Serialize;
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
+#[derive(Debug, Serialize)]
+struct IntakeOutput {
+    source_items: usize,
+    handled_items: usize,
+    duplicate_skipped: usize,
+    dry_run: bool,
+}
+
 pub async fn run_intake_create(
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     url: &Option<String>,
     file: &Option<PathBuf>,
     folder: &Option<PathBuf>,
     subject_hint: &Option<String>,
     metadata_str: &Option<String>,
 ) -> Result<()> {
-    println!("Running intake create command...");
+    if !json_output {
+        println!("Running intake create command...");
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -40,6 +53,7 @@ pub async fn run_intake_create(
         space_key,
         root_folder_name,
         config.content_model.output_root_folder_id.as_deref(),
+        json_output,
     )
     .await?;
     let intake_page_id = resolve_or_create_scoped_child_page_id(
@@ -55,7 +69,9 @@ pub async fn run_intake_create(
     // (content, source_id, content_type, subject_hint)
 
     if let Some(u) = url {
-        println!("Ingesting from URL: {}", u);
+        if !json_output {
+            println!("Ingesting from URL: {}", u);
+        }
         let content = fetch_url_content(u).await?;
         all_content.push((
             content,
@@ -64,7 +80,9 @@ pub async fn run_intake_create(
             subject_hint.clone(),
         ));
     } else if let Some(f) = file {
-        println!("Ingesting from file: {}", f.display());
+        if !json_output {
+            println!("Ingesting from file: {}", f.display());
+        }
         let content = read_file_content(f).await?;
         let filename = f
             .file_name()
@@ -86,7 +104,9 @@ pub async fn run_intake_create(
         for entry in WalkDir::new(f).into_iter().filter_map(|e| e.ok()) {
             if entry.file_type().is_file() {
                 let path = entry.path();
-                println!("  - Ingesting file: {}", path.display());
+                if !json_output {
+                    println!("  - Ingesting file: {}", path.display());
+                }
                 let content = read_file_content(path).await?;
                 let filename = path
                     .file_name()
@@ -110,12 +130,17 @@ pub async fn run_intake_create(
         anyhow::bail!("No input source provided. Use --url, --file, or --folder.");
     }
 
+    let source_items = all_content.len();
+    let mut handled_items = 0usize;
+    let mut duplicate_skipped = 0usize;
+
     for (content, source_id, content_type, item_subject_hint) in all_content {
         let effective_subject_hint = item_subject_hint.or_else(|| subject_hint.clone());
-        process_single_content(
+        let handled = process_single_content(
             &client,
             config,
             dry_run,
+            json_output,
             &intake_page_id,
             &content,
             &source_id,
@@ -124,9 +149,27 @@ pub async fn run_intake_create(
             metadata_str,
         )
         .await?;
+        if handled {
+            handled_items += 1;
+        } else {
+            duplicate_skipped += 1;
+        }
     }
 
-    println!("Intake create command finished.");
+    if json_output {
+        emit_json(
+            "intake-create",
+            true,
+            IntakeOutput {
+                source_items,
+                handled_items,
+                duplicate_skipped,
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Intake create command finished.");
+    }
     Ok(())
 }
 
@@ -193,13 +236,14 @@ async fn process_single_content(
     client: &ConfluenceClient,
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     intake_page_id: &str,
     content: &str,
     source_id: &str,
     content_type: &str,
     subject_hint: &Option<String>,
     metadata_str: &Option<String>,
-) -> Result<()> {
+) -> Result<bool> {
     let source_hash = format!("{:x}", Sha256::digest(content.as_bytes()));
     let dedupe_key = format!("{}:{}", content_type, &source_hash);
 
@@ -234,27 +278,35 @@ async fn process_single_content(
         "label = \"{}::dedupe-key::{}\"",
         label_namespace, dedupe_key
     );
-    println!("Checking for duplicates with CQL: {}", cql_dedupe);
+    if !json_output {
+        println!("Checking for duplicates with CQL: {}", cql_dedupe);
+    }
     let existing_pages = client.execute_cql(&cql_dedupe).await?;
 
     if !existing_pages.is_empty() {
-        println!(
-            "Skipping ingestion: Duplicate content found with dedupe key '{}'. Existing page IDs: {:?}",
-            dedupe_key,
-            existing_pages
-                .iter()
-                .filter_map(|p| p["id"].as_str())
-                .collect::<Vec<&str>>()
-        );
-        return Ok(());
+        if !json_output {
+            println!(
+                "Skipping ingestion: Duplicate content found with dedupe key '{}'. Existing page IDs: {:?}",
+                dedupe_key,
+                existing_pages
+                    .iter()
+                    .filter_map(|p| p["id"].as_str())
+                    .collect::<Vec<&str>>()
+            );
+        }
+        return Ok(false);
     }
 
     // 2. Create Page
     let page_id = if dry_run {
-        println!("(Dry run) Would create page: '{}' under Intake", page_title);
+        if !json_output {
+            println!("(Dry run) Would create page: '{}' under Intake", page_title);
+        }
         "dry_run_page_id".to_string()
     } else {
-        println!("Creating page: '{}' under Intake", page_title);
+        if !json_output {
+            println!("Creating page: '{}' under Intake", page_title);
+        }
         client
             .create_or_update_page(
                 &config.content_model.space_key,
@@ -294,16 +346,20 @@ async fn process_single_content(
     }
 
     if !dry_run {
-        println!("Setting curio_metadata for page {}", page_id);
+        if !json_output {
+            println!("Setting curio_metadata for page {}", page_id);
+        }
         client
             .set_content_property(&page_id, "curio_metadata", curio_metadata)
             .await?;
     } else {
-        println!(
-            "(Dry run) Would set curio_metadata for page {}: {}",
-            page_id,
-            curio_metadata.to_string()
-        );
+        if !json_output {
+            println!(
+                "(Dry run) Would set curio_metadata for page {}: {}",
+                page_id,
+                curio_metadata.to_string()
+            );
+        }
     }
 
     // 4. Add Labels
@@ -321,15 +377,21 @@ async fn process_single_content(
     }
 
     if !dry_run {
-        println!("Adding labels to page {}: {:?}", page_id, labels);
+        if !json_output {
+            println!("Adding labels to page {}: {:?}", page_id, labels);
+        }
         client.add_labels(&page_id, labels).await?;
     } else {
-        println!(
-            "(Dry run) Would add labels to page {}: {:?}",
-            page_id, labels
-        );
+        if !json_output {
+            println!(
+                "(Dry run) Would add labels to page {}: {:?}",
+                page_id, labels
+            );
+        }
     }
 
-    println!("Successfully processed content from source: {}", source_id);
-    Ok(())
+    if !json_output {
+        println!("Successfully processed content from source: {}", source_id);
+    }
+    Ok(true)
 }

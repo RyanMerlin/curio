@@ -1,13 +1,6 @@
-use crate::{Result, config::Config, confluence::ConfluenceClient};
+use crate::{Result, config::Config, confluence::ConfluenceClient, output::emit_json};
 use anyhow::Context;
 use serde::Serialize;
-
-#[derive(Debug, Serialize)]
-struct JsonEnvelope<T> {
-    command: &'static str,
-    ok: bool,
-    data: T,
-}
 
 #[derive(Debug, Serialize)]
 struct SearchData {
@@ -71,20 +64,15 @@ pub async fn run_search(
         .await?;
 
     if json_output {
-        let results_json = JsonEnvelope {
-            command: "search",
-            ok: true,
-            data: SearchData {
+        emit_json(
+            "search",
+            true,
+            SearchData {
                 query: cql_query,
                 count: search_results.len(),
                 results: search_results,
             },
-        };
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&results_json)
-                .context("Failed to serialize search results to JSON")?
-        );
+        )?;
     } else {
         if search_results.is_empty() {
             println!("No results found for your search query.");

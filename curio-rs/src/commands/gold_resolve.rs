@@ -1,16 +1,28 @@
+use crate::output::emit_json;
 use crate::{
     ChangeProposal, Result, config::Config, confluence::ConfluenceClient,
     generate_change_proposal_with_agent,
 };
 use anyhow::Context;
+use serde::Serialize;
 use serde_json::json;
+
+#[derive(Debug, Serialize)]
+struct GoldResolveOutput {
+    page_id: String,
+    change_count: usize,
+    dry_run: bool,
+}
 
 pub async fn run_gold_resolve(
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     page_id_arg: String, // The page to resolve
 ) -> Result<()> {
-    println!("Running gold-resolve command for page ID: {}", page_id_arg);
+    if !json_output {
+        println!("Running gold-resolve command for page ID: {}", page_id_arg);
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -51,41 +63,51 @@ pub async fn run_gold_resolve(
     }
 
     // 2. [Integration Point] Trigger Analysis Agent to Generate Change Proposal
-    println!(
-        "Triggering agent to generate change proposal for page {}...",
-        page_id_arg
-    );
+    if !json_output {
+        println!(
+            "Triggering agent to generate change proposal for page {}...",
+            page_id_arg
+        );
+    }
     let change_proposal: ChangeProposal =
         generate_change_proposal_with_agent(&source_page_content).await?;
-    println!(
-        "  - Generated proposal summary: {}",
-        change_proposal.summary
-    );
-    println!(
-        "  - Proposed changes for {} target pages.",
-        change_proposal.proposed_changes.len()
-    );
+    if !json_output {
+        println!(
+            "  - Generated proposal summary: {}",
+            change_proposal.summary
+        );
+        println!(
+            "  - Proposed changes for {} target pages.",
+            change_proposal.proposed_changes.len()
+        );
+    }
 
     // 3. Store the Change Proposal in Source Page Metadata
     curio_metadata_mut["status"] = json!("resolved");
     curio_metadata_mut["change_proposal"] = json!(change_proposal);
 
     if dry_run {
-        println!(
-            "(Dry run) Would update curio_metadata for page {} with status 'resolved' and change proposal: {:?}",
-            page_id_arg, curio_metadata_mut["change_proposal"]
-        );
-        println!(
-            "(Dry run) Would remove labels like `curio-status-staged` and add `curio-status-resolved`."
-        );
+        if !json_output {
+            println!(
+                "(Dry run) Would update curio_metadata for page {} with status 'resolved' and change proposal: {:?}",
+                page_id_arg, curio_metadata_mut["change_proposal"]
+            );
+            println!(
+                "(Dry run) Would remove labels like `curio-status-staged` and add `curio-status-resolved`."
+            );
+        }
     } else {
-        println!("Updating curio_metadata for page {}", page_id_arg);
+        if !json_output {
+            println!("Updating curio_metadata for page {}", page_id_arg);
+        }
         client
             .set_content_property(&page_id_arg, "curio_metadata", curio_metadata_mut.clone())
             .await?;
 
         // Update Labels
-        println!("Updating labels for page {}", page_id_arg);
+        if !json_output {
+            println!("Updating labels for page {}", page_id_arg);
+        }
         let old_status_label = format!("{}-status-analyzed", label_namespace);
         client.remove_label(&page_id_arg, &old_status_label).await?;
         client
@@ -96,6 +118,18 @@ pub async fn run_gold_resolve(
             .await?;
     }
 
-    println!("Gold resolve command finished for page: {}", page_id_arg);
+    if json_output {
+        emit_json(
+            "gold-resolve",
+            true,
+            GoldResolveOutput {
+                page_id: page_id_arg,
+                change_count: change_proposal.proposed_changes.len(),
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Gold resolve command finished for page: {}", page_id_arg);
+    }
     Ok(())
 }

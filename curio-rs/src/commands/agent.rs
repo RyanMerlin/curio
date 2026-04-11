@@ -2,9 +2,9 @@ use crate::cli::AgentProvider;
 use crate::harness::{
     HarnessPaths, build_launch_plan, discover_skills, load_marketplace, run_checks,
 };
+use crate::output::emit_json;
 use anyhow::{Context, Result, bail};
 use serde::Serialize;
-use serde_json::to_string_pretty;
 use std::collections::BTreeMap;
 use std::process::{Command, Stdio};
 
@@ -58,21 +58,6 @@ struct EnvOutput {
     env: BTreeMap<String, String>,
 }
 
-fn print_json<T: Serialize>(value: &T) -> Result<()> {
-    println!(
-        "{}",
-        to_string_pretty(value).context("Failed to serialize JSON output")?
-    );
-    Ok(())
-}
-
-#[derive(Debug, Serialize)]
-struct JsonEnvelope<T> {
-    command: &'static str,
-    ok: bool,
-    data: T,
-}
-
 pub fn run_agent_prepare(provider: AgentProvider, json_output: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
     let plan = build_launch_plan(provider, &paths)?;
@@ -80,10 +65,10 @@ pub fn run_agent_prepare(provider: AgentProvider, json_output: bool) -> Result<(
     let marketplace = load_marketplace(&paths)?;
 
     if json_output {
-        let output = JsonEnvelope {
-            command: "agent.prepare",
-            ok: true,
-            data: PreparedProviderOutput {
+        return emit_json(
+            "agent.prepare",
+            true,
+            PreparedProviderOutput {
                 provider: provider.as_str().to_string(),
                 repo_root: plan.repo_root.display().to_string(),
                 entrypoint: plan.entrypoint_path.display().to_string(),
@@ -97,8 +82,7 @@ pub fn run_agent_prepare(provider: AgentProvider, json_output: bool) -> Result<(
                     .filter(|plugin| plugin.enabled)
                     .count(),
             },
-        };
-        return print_json(&output);
+        );
     }
 
     println!("provider: {}", provider.as_str());
@@ -170,17 +154,16 @@ pub fn run_agent_doctor(provider: Option<AgentProvider>, json_output: bool) -> R
                 failed += 1;
             }
         }
-        let output = JsonEnvelope {
-            command: "agent.doctor",
-            ok: failed == 0,
-            data: DoctorOutput {
+        emit_json(
+            "agent.doctor",
+            failed == 0,
+            DoctorOutput {
                 provider: provider.map(|value| value.as_str().to_string()),
                 ok: failed == 0,
                 failed,
                 checks,
             },
-        };
-        print_json(&output)?;
+        )?;
         if failed > 0 {
             bail!("Doctor found {} failing check(s)", failed);
         }
@@ -249,11 +232,7 @@ pub fn run_agent_list_providers(json_output: bool) -> Result<()> {
     }
 
     if json_output {
-        print_json(&JsonEnvelope {
-            command: "agent.list-providers",
-            ok: true,
-            data: ProvidersOutput { providers },
-        })?;
+        emit_json("agent.list-providers", true, ProvidersOutput { providers })?;
     }
 
     Ok(())
@@ -264,11 +243,7 @@ pub fn run_agent_list_skills(json_output: bool) -> Result<()> {
     let skills = discover_skills(&paths)?;
 
     if json_output {
-        print_json(&JsonEnvelope {
-            command: "agent.list-skills",
-            ok: true,
-            data: SkillsOutput { skills },
-        })?;
+        emit_json("agent.list-skills", true, SkillsOutput { skills })?;
     } else {
         for skill in skills {
             println!("{} :: {}", skill.name, skill.path.display());
@@ -283,13 +258,13 @@ pub fn run_agent_list_plugins(json_output: bool) -> Result<()> {
     let marketplace = load_marketplace(&paths)?;
 
     if json_output {
-        print_json(&JsonEnvelope {
-            command: "agent.list-plugins",
-            ok: true,
-            data: PluginsOutput {
+        emit_json(
+            "agent.list-plugins",
+            true,
+            PluginsOutput {
                 plugins: marketplace.plugins,
             },
-        })?;
+        )?;
     } else {
         for plugin in marketplace.plugins {
             println!(
@@ -307,14 +282,14 @@ pub fn run_agent_print_env(provider: AgentProvider, json_output: bool) -> Result
     let plan = build_launch_plan(provider, &paths)?;
 
     if json_output {
-        print_json(&JsonEnvelope {
-            command: "agent.print-env",
-            ok: true,
-            data: EnvOutput {
+        emit_json(
+            "agent.print-env",
+            true,
+            EnvOutput {
                 provider: provider.as_str().to_string(),
                 env: plan.env,
             },
-        })?;
+        )?;
     } else {
         for (key, value) in plan.env {
             println!("{}={}", key, value);

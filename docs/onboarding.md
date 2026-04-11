@@ -27,6 +27,8 @@ The onboarding command will:
 - check the managed output folder and lifecycle pages
 - report provider launcher availability as warnings or failures
 
+The bootstrap command will create or refresh the Curio overview page, the hero image, and the base lifecycle pages so the documentation layer is ready for human and agent use.
+
 ## Provider Overrides
 
 - Codex: `CURIO_CODEX_CMD`

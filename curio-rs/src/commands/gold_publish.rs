@@ -1,14 +1,26 @@
+use crate::output::emit_json;
 use crate::{Change, ChangeProposal, Result, config::Config, confluence::ConfluenceClient};
 use anyhow::Context;
 use chrono::Utc;
+use serde::Serialize;
 use serde_json::json;
+
+#[derive(Debug, Serialize)]
+struct GoldPublishOutput {
+    page_id: String,
+    changes_applied: usize,
+    dry_run: bool,
+}
 
 pub async fn run_gold_publish(
     config: &Config,
     dry_run: bool,
+    json_output: bool,
     page_id_arg: String, // The resolved page to publish
 ) -> Result<()> {
-    println!("Running gold-publish command for page ID: {}", page_id_arg);
+    if !json_output {
+        println!("Running gold-publish command for page ID: {}", page_id_arg);
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -54,17 +66,22 @@ pub async fn run_gold_publish(
         serde_json::from_value(curio_metadata_mut["change_proposal"].clone())
             .context("Change proposal missing or invalid in metadata")?;
 
-    println!(
-        "Executing change proposal (summary: {}) for page {}",
-        change_proposal.summary, page_id_arg
-    );
+    if !json_output {
+        println!(
+            "Executing change proposal (summary: {}) for page {}",
+            change_proposal.summary, page_id_arg
+        );
+    }
 
     // 2. Loop Through and Apply Changes
+    let changes_applied = change_proposal.proposed_changes.len();
     for change in change_proposal.proposed_changes {
-        println!(
-            "  - Applying change to target page {} ({}): {}",
-            change.target_page_title, change.target_page_id, change.summary_of_change
-        );
+        if !json_output {
+            println!(
+                "  - Applying change to target page {} ({}): {}",
+                change.target_page_title, change.target_page_id, change.summary_of_change
+            );
+        }
 
         // Fetch target page
         let target_page_current = client
@@ -83,7 +100,9 @@ pub async fn run_gold_publish(
         let updated_target_body = apply_content_change(&target_page_current_body, &change).await?;
 
         if !dry_run {
-            println!("    - Updating target page {}", change.target_page_id);
+            if !json_output {
+                println!("    - Updating target page {}", change.target_page_id);
+            }
             client
                 .create_or_update_page(
                     space_key,
@@ -109,23 +128,29 @@ pub async fn run_gold_publish(
                 )
                 .await?;
         } else {
-            println!(
-                "    (Dry run) Would update target page {} with new content.",
-                change.target_page_id
-            );
+            if !json_output {
+                println!(
+                    "    (Dry run) Would update target page {} with new content.",
+                    change.target_page_id
+                );
+            }
         }
     }
 
     // 3. Update Source Page (Post-Publish)
     if !dry_run {
-        println!("Updating source page {} status to 'published'", page_id_arg);
+        if !json_output {
+            println!("Updating source page {} status to 'published'", page_id_arg);
+        }
         curio_metadata_mut["status"] = json!("published");
         client
             .set_content_property(&page_id_arg, "curio_metadata", curio_metadata_mut.clone())
             .await?;
 
         // Update Labels
-        println!("Updating labels for source page {}", page_id_arg);
+        if !json_output {
+            println!("Updating labels for source page {}", page_id_arg);
+        }
         let old_status_label = format!("{}-status-resolved", label_namespace);
         client.remove_label(&page_id_arg, &old_status_label).await?;
         client
@@ -138,13 +163,27 @@ pub async fn run_gold_publish(
         // (Optional) Move source page to _archive
         // Not implemented in initial version
     } else {
-        println!(
-            "(Dry run) Would update source page {} status to 'published' and update labels.",
-            page_id_arg
-        );
+        if !json_output {
+            println!(
+                "(Dry run) Would update source page {} status to 'published' and update labels.",
+                page_id_arg
+            );
+        }
     }
 
-    println!("Gold publish command finished for page: {}", page_id_arg);
+    if json_output {
+        emit_json(
+            "gold-publish",
+            true,
+            GoldPublishOutput {
+                page_id: page_id_arg,
+                changes_applied,
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Gold publish command finished for page: {}", page_id_arg);
+    }
     Ok(())
 }
 

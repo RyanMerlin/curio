@@ -18,3 +18,5 @@ sha2 = "0.10"
 scraper = "0.19"
 walkdir = "2.5"
 chrono = "0.4"
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }

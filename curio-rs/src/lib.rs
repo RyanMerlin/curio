@@ -4,6 +4,7 @@ pub mod config;
 pub mod confluence;
 pub mod error;
 pub mod harness;
+pub mod output;
 
 use anyhow::Result as AnyhowResult;
 pub use error::Result;
@@ -91,6 +92,7 @@ pub async fn resolve_managed_root_folder_id(
     space_key: &str,
     root_folder_name: &str,
     output_root_folder_id: Option<&str>,
+    json_output: bool,
 ) -> AnyhowResult<String> {
     if let Some(explicit_output_root_folder_id) = output_root_folder_id {
         let explicit_output_root_folder = client
@@ -106,10 +108,12 @@ pub async fn resolve_managed_root_folder_id(
         let explicit_output_root_title = explicit_output_root_folder["title"]
             .as_str()
             .unwrap_or(explicit_output_root_folder_id);
-        println!(
-            "Using configured CURIO output root folder {} ('{}')",
-            explicit_output_root_folder_id, explicit_output_root_title
-        );
+        if !json_output {
+            println!(
+                "Using configured CURIO output root folder {} ('{}')",
+                explicit_output_root_folder_id, explicit_output_root_title
+            );
+        }
 
         Ok(explicit_output_root_folder_id.to_string())
     } else if root_folder_name.is_empty() {

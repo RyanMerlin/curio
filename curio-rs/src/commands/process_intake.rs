@@ -1,3 +1,4 @@
+use crate::output::emit_json;
 #[allow(unused_imports)]
 use crate::{
     AgentAnalysis, Result, analyze_content_with_agent, config::Config,
@@ -6,10 +7,28 @@ use crate::{
 };
 use anyhow::Context;
 use chrono::Utc;
+use serde::Serialize;
 use serde_json::json;
 
-pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> Result<()> {
-    println!("Running process-intake command with limit: {}", limit);
+#[derive(Debug, Serialize)]
+struct ProcessIntakeOutput {
+    limit: u32,
+    intake_found: usize,
+    handled: usize,
+    staged: usize,
+    review_required: usize,
+    dry_run: bool,
+}
+
+pub async fn run_process_intake(
+    config: &Config,
+    dry_run: bool,
+    json_output: bool,
+    limit: u32,
+) -> Result<()> {
+    if !json_output {
+        println!("Running process-intake command with limit: {}", limit);
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -31,6 +50,7 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
         space_key,
         root_folder_name,
         config.content_model.output_root_folder_id.as_deref(),
+        json_output,
     )
     .await?;
     let _intake_page_id = resolve_or_create_scoped_child_page_id(
@@ -71,7 +91,9 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
         "label = \"{}-status-intake\" AND space = \"{}\" ORDER BY created ASC",
         label_namespace, space_key
     );
-    println!("Searching for intake items with CQL: {}", cql_query);
+    if !json_output {
+        println!("Searching for intake items with CQL: {}", cql_query);
+    }
     let intake_pages = client.execute_cql(&cql_query).await?;
     let mut scoped_intake_pages = Vec::new();
     for page in intake_pages {
@@ -83,10 +105,17 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
             scoped_intake_pages.push(page);
         }
     }
-    println!(
-        "Found {} intake items in managed root subtree.",
-        scoped_intake_pages.len()
-    );
+    if !json_output {
+        println!(
+            "Found {} intake items in managed root subtree.",
+            scoped_intake_pages.len()
+        );
+    }
+
+    let intake_found = scoped_intake_pages.len();
+    let mut handled = 0usize;
+    let mut staged = 0usize;
+    let mut review_required = 0usize;
 
     for page_json in scoped_intake_pages.into_iter().take(limit as usize) {
         let page_id = page_json["id"]
@@ -103,7 +132,9 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
             .unwrap_or("")
             .to_string();
 
-        println!("Processing intake item: {} (ID: {})", page_title, page_id);
+        if !json_output {
+            println!("Processing intake item: {} (ID: {})", page_title, page_id);
+        }
 
         // Retrieve existing metadata
         let current_metadata_json = client
@@ -114,10 +145,12 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
 
         // 2. [Integration Point] Content Analysis (Placeholder)
         let analysis_result = analyze_content_with_agent(&page_body).await?;
-        println!(
-            "  - Analysis: Confidence {:.2}, Keywords: {:?}",
-            analysis_result.confidence_score, analysis_result.keywords
-        );
+        if !json_output {
+            println!(
+                "  - Analysis: Confidence {:.2}, Keywords: {:?}",
+                analysis_result.confidence_score, analysis_result.keywords
+            );
+        }
 
         // 3. Semantic Conflict Detection (Conceptual)
         let mut has_conflict = false;
@@ -170,23 +203,27 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
 
         // 5. Perform Stage Transition
         if dry_run {
-            println!(
-                "(Dry run) Would move page '{}' (ID: {}) to '{}'",
-                page_title, page_id, target_page_name
-            );
-            println!(
-                "(Dry run) Would update curio_metadata for page {}: status={}, review_details={:?}",
-                page_id, new_status_label, conflict_details
-            );
-            println!(
-                "(Dry run) Would remove labels {:?} and add labels {:?}",
-                labels_to_remove, labels_to_add
-            );
+            if !json_output {
+                println!(
+                    "(Dry run) Would move page '{}' (ID: {}) to '{}'",
+                    page_title, page_id, target_page_name
+                );
+                println!(
+                    "(Dry run) Would update curio_metadata for page {}: status={}, review_details={:?}",
+                    page_id, new_status_label, conflict_details
+                );
+                println!(
+                    "(Dry run) Would remove labels {:?} and add labels {:?}",
+                    labels_to_remove, labels_to_add
+                );
+            }
         } else {
-            println!(
-                "Moving page '{}' (ID: {}) to '{}'",
-                page_title, page_id, target_page_name
-            );
+            if !json_output {
+                println!(
+                    "Moving page '{}' (ID: {}) to '{}'",
+                    page_title, page_id, target_page_name
+                );
+            }
             client.move_page(&page_id, new_parent_id).await?;
 
             // Update curio_metadata
@@ -207,25 +244,53 @@ pub async fn run_process_intake(config: &Config, dry_run: bool, limit: u32) -> R
                 }),
                 "review_details": conflict_details,
             });
-            println!("Updating curio_metadata for page {}", page_id);
+            if !json_output {
+                println!("Updating curio_metadata for page {}", page_id);
+            }
             client
                 .set_content_property(&page_id, "curio_metadata", updated_metadata)
                 .await?;
 
             // Update labels
-            println!("Updating labels for page {}", page_id);
+            if !json_output {
+                println!("Updating labels for page {}", page_id);
+            }
             for label in labels_to_remove {
                 client.remove_label(&page_id, &label).await?;
             }
             client.add_labels(&page_id, labels_to_add).await?;
 
-            println!(
-                "Successfully transitioned page '{}' to '{}'",
-                page_title, target_page_name
-            );
+            if !json_output {
+                println!(
+                    "Successfully transitioned page '{}' to '{}'",
+                    page_title, target_page_name
+                );
+            }
+        }
+
+        handled += 1;
+        if target_page_name == "Staged" {
+            staged += 1;
+        } else {
+            review_required += 1;
         }
     }
 
-    println!("Process-intake command finished.");
+    if json_output {
+        emit_json(
+            "process-intake",
+            true,
+            ProcessIntakeOutput {
+                limit,
+                intake_found,
+                handled,
+                staged,
+                review_required,
+                dry_run,
+            },
+        )?;
+    } else {
+        println!("Process-intake command finished.");
+    }
     Ok(())
 }

@@ -49,6 +49,8 @@ Run onboarding with:
 .\curio.ps1 onboard
 ```
 
+`curio bootstrap` now also lays down the Curio overview page, hero artwork, and the base lifecycle documentation under the managed Confluence write root.
+
 ## Quickstart
 
 From `C:\code\agents\curio`:

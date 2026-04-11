@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
         Some(Commands::Bootstrap) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_bootstrap(&config, cli.dry_run).await?;
+            run_bootstrap(&config, cli.dry_run, cli.json).await?;
         }
         Some(Commands::IntakeCreate {
             url,
@@ -71,6 +71,7 @@ async fn main() -> Result<()> {
             run_intake_create(
                 &config,
                 cli.dry_run,
+                cli.json,
                 &url,
                 &file,
                 &folder,
@@ -82,7 +83,7 @@ async fn main() -> Result<()> {
         Some(Commands::ProcessIntake { limit }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_process_intake(&config, cli.dry_run, limit).await?;
+            run_process_intake(&config, cli.dry_run, cli.json, limit).await?;
         }
         Some(Commands::Search {
             labels,
@@ -110,27 +111,27 @@ async fn main() -> Result<()> {
         }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_agent_analyze(&config, cli.dry_run, &page_id, &status, limit).await?;
+            run_agent_analyze(&config, cli.dry_run, cli.json, &page_id, &status, limit).await?;
         }
         Some(Commands::GoldResolve { page_id }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_gold_resolve(&config, cli.dry_run, page_id).await?;
+            run_gold_resolve(&config, cli.dry_run, cli.json, page_id).await?;
         }
         Some(Commands::GoldPublish { page_id }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_gold_publish(&config, cli.dry_run, page_id).await?;
+            run_gold_publish(&config, cli.dry_run, cli.json, page_id).await?;
         }
         Some(Commands::Review(review_commands)) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             match review_commands {
                 ReviewCommands::Approve { page_id } => {
-                    run_review_approve(&config, cli.dry_run, page_id).await?;
+                    run_review_approve(&config, cli.dry_run, cli.json, page_id).await?;
                 }
                 ReviewCommands::Reject { page_id, reason } => {
-                    run_review_reject(&config, cli.dry_run, page_id, reason).await?;
+                    run_review_reject(&config, cli.dry_run, cli.json, page_id, reason).await?;
                 }
             }
         }

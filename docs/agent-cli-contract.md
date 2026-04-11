@@ -14,6 +14,14 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `curio agent list-plugins --json`
 - `curio agent print-env <provider> --json`
 - `curio search --json`
+- `curio bootstrap --json`
+- `curio intake-create --json`
+- `curio process-intake --json`
+- `curio agent-analyze --json`
+- `curio gold-resolve --json`
+- `curio gold-publish --json`
+- `curio review approve --json`
+- `curio review reject --json`
 
 ## Output Shapes
 
@@ -28,10 +36,18 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `list-plugins` data includes a `plugins` array.
 - `print-env` data includes `provider` and an `env` map.
 - `search` data includes the CQL query, a result count, and the raw Confluence result array.
+- `bootstrap` data includes the managed root folder ID, the overview page ID, and the ensured base pages.
+- `intake-create` data includes source item counts, handled items, and duplicate skips.
+- `process-intake` data includes the intake count, handled count, staged count, and review-required count.
+- `agent-analyze` data includes the requested page count and analyzed page count.
+- `gold-resolve` data includes the page ID and the number of proposed changes.
+- `gold-publish` data includes the page ID and how many changes were applied.
+- `review approve` and `review reject` data include the page ID, resulting status, and dry-run flag.
 
 ## Notes
 
 - `--json` is intended for helper and discovery commands.
+- `--json` is also available on write commands for deterministic agent automation.
 - `curio agent launch` remains streaming and human-oriented.
 - `curio onboard` remains interactive and may prompt to install the user-level shim.
 - If a command fails in JSON mode, Curio still emits JSON first and then exits non-zero.
