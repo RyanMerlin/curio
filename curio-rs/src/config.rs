@@ -50,13 +50,15 @@ pub struct RuntimeConfig {
 
 pub fn load_config(config_path: Option<&str>) -> Result<Config> {
     let mut config = Config::default();
+    let config_root = repo_root_override()
+        .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     // 1. Load from default config files
     let mut candidates = Vec::new();
 
-    // Current directory
-    candidates.push(PathBuf::from(".curio.yaml"));
-    candidates.push(PathBuf::from("curio.yaml"));
+    // Repo root or current directory, depending on how Curio was launched
+    candidates.push(config_root.join(".curio.yaml"));
+    candidates.push(config_root.join("curio.yaml"));
 
     // Home directory
     if let Some(home_dir) = dirs::home_dir() {
@@ -108,7 +110,13 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
     }
 
     // 2. Load from environment variables (overrides file config)
-    dotenvy::dotenv().ok(); // Load .env file
+    let env_path = config_root.join(".env");
+    if env_path.is_file() {
+        dotenvy::from_path(&env_path)
+            .with_context(|| format!("Failed to load env file: {}", env_path.display()))?;
+    } else {
+        dotenvy::dotenv().ok(); // Fall back to dotenv search from the current directory
+    }
 
     if let Ok(url) = env::var("CURIO_CONFLUENCE_URL") {
         config.connection.confluence_url = url;
@@ -179,6 +187,15 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
 
 fn default_temp_dir() -> PathBuf {
     env::temp_dir().join("curio")
+}
+
+fn repo_root_override() -> Option<PathBuf> {
+    let value = env::var_os("CURIO_REPO_ROOT")?;
+    if value.is_empty() {
+        return None;
+    }
+
+    Some(PathBuf::from(value))
 }
 
 #[cfg(test)]

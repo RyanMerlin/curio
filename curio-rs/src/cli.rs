@@ -34,6 +34,13 @@ pub struct Cli {
     )]
     pub log_level: Option<String>,
 
+    #[arg(
+        long,
+        global = true,
+        help = "Emit machine-readable JSON for helper commands"
+    )]
+    pub json: bool,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }

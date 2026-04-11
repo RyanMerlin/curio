@@ -19,3 +19,13 @@ Each provider receives:
 - `CURIO_MARKETPLACE_PATH`
 - `CURIO_ENTRYPOINT`
 - `CURIO_PROVIDER`
+
+For machine-readable provider and harness inspection, use `--json` with:
+
+- `curio doctor`
+- `curio agent doctor`
+- `curio agent prepare <provider>`
+- `curio agent list-providers`
+- `curio agent list-skills`
+- `curio agent list-plugins`
+- `curio agent print-env <provider>`

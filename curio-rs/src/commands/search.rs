@@ -1,16 +1,33 @@
 use crate::{Result, config::Config, confluence::ConfluenceClient};
 use anyhow::Context;
-use serde_json::to_string_pretty;
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
+struct JsonEnvelope<T> {
+    command: &'static str,
+    ok: bool,
+    data: T,
+}
+
+#[derive(Debug, Serialize)]
+struct SearchData {
+    query: String,
+    count: usize,
+    results: Vec<serde_json::Value>,
+}
 
 pub async fn run_search(
     config: &Config,
     _dry_run: bool, // Not directly used in search, but part of global CLI context
+    json_output: bool,
     labels: Vec<String>,
     text: Option<String>,
     content_type: Option<String>,
     limit: u32,
 ) -> Result<()> {
-    println!("Running search command...");
+    if !json_output {
+        println!("Running search command...");
+    }
 
     let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
         .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
@@ -44,23 +61,41 @@ pub async fn run_search(
     }
 
     // Combine all parts with AND
-    let mut cql_query = cql_parts.join(" AND ");
+    let cql_query = cql_parts.join(" AND ");
 
-    // Add limit and ordering
-    cql_query.push_str(&format!(" ORDER BY lastModified DESC LIMIT {}", limit));
+    if !json_output {
+        println!("Executing Confluence search with CQL: {}", cql_query);
+    }
+    let search_results = client
+        .execute_cql_with_limit(&cql_query, Some(limit))
+        .await?;
 
-    println!("Executing Confluence search with CQL: {}", cql_query);
-    let search_results = client.execute_cql(&cql_query).await?;
-
-    if search_results.is_empty() {
-        println!("No results found for your search query.");
+    if json_output {
+        let results_json = JsonEnvelope {
+            command: "search",
+            ok: true,
+            data: SearchData {
+                query: cql_query,
+                count: search_results.len(),
+                results: search_results,
+            },
+        };
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&results_json)
+                .context("Failed to serialize search results to JSON")?
+        );
     } else {
-        println!("Found {} results:", search_results.len());
-        let results_json = to_string_pretty(&search_results)
-            .context("Failed to serialize search results to JSON")?;
-        println!("{}", results_json);
+        if search_results.is_empty() {
+            println!("No results found for your search query.");
+        } else {
+            println!("Found {} results:", search_results.len());
+            let results_json = serde_json::to_string_pretty(&search_results)
+                .context("Failed to serialize search results to JSON")?;
+            println!("{}", results_json);
+        }
+        println!("Search command finished.");
     }
 
-    println!("Search command finished.");
     Ok(())
 }

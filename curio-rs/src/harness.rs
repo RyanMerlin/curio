@@ -1,6 +1,6 @@
 use crate::cli::AgentProvider;
 use anyhow::{Context, Result, bail};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -110,7 +110,7 @@ fn find_repo_root(start: &Path) -> Result<PathBuf> {
     )
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SkillInfo {
     pub name: String,
     pub path: PathBuf,
@@ -157,7 +157,7 @@ fn discover_skill_dirs(root: &Path) -> Result<Vec<SkillInfo>> {
     Ok(skills)
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MarketplacePlugin {
     pub name: String,
     pub path: String,
@@ -177,7 +177,7 @@ pub struct MarketplaceCatalog {
     pub plugins: Vec<MarketplacePlugin>,
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct ProviderProfile {
     #[serde(default)]
     pub command: Option<String>,
@@ -413,7 +413,7 @@ fn command_exists(command: &str) -> bool {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CheckResult {
     pub label: String,
     pub ok: bool,

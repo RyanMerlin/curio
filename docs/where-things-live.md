@@ -5,6 +5,7 @@
 - deterministic CLI behavior
 - checks and safety gates
 - provider launch planning and repo discovery
+- helper command JSON output and agent-facing CLI contract
 
 ## Curio Root
 
@@ -24,3 +25,9 @@
 - authored harness skills
 - compatibility copies live in `.agents/skills/`
 - do not make `.agents/skills/` the authored source of truth
+
+## `docs/agent-cli-contract.md`
+
+- machine-readable helper command output
+- `--json` usage patterns
+- output shapes for agent automation

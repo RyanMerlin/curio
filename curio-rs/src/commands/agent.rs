@@ -3,13 +3,103 @@ use crate::harness::{
     HarnessPaths, build_launch_plan, discover_skills, load_marketplace, run_checks,
 };
 use anyhow::{Context, Result, bail};
+use serde::Serialize;
+use serde_json::to_string_pretty;
+use std::collections::BTreeMap;
 use std::process::{Command, Stdio};
 
-pub fn run_agent_prepare(provider: AgentProvider) -> Result<()> {
+#[derive(Debug, Serialize)]
+struct PreparedProviderOutput {
+    provider: String,
+    repo_root: String,
+    entrypoint: String,
+    profile: String,
+    bootstrap_summary: String,
+    command: String,
+    skills_count: usize,
+    enabled_plugins_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct DoctorOutput {
+    provider: Option<String>,
+    ok: bool,
+    failed: usize,
+    checks: Vec<crate::harness::CheckResult>,
+}
+
+#[derive(Debug, Serialize)]
+struct ProviderAvailabilityOutput {
+    provider: String,
+    available: bool,
+    command: Option<String>,
+    profile: Option<String>,
+    error: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct ProvidersOutput {
+    providers: Vec<ProviderAvailabilityOutput>,
+}
+
+#[derive(Debug, Serialize)]
+struct SkillsOutput {
+    skills: Vec<crate::harness::SkillInfo>,
+}
+
+#[derive(Debug, Serialize)]
+struct PluginsOutput {
+    plugins: Vec<crate::harness::MarketplacePlugin>,
+}
+
+#[derive(Debug, Serialize)]
+struct EnvOutput {
+    provider: String,
+    env: BTreeMap<String, String>,
+}
+
+fn print_json<T: Serialize>(value: &T) -> Result<()> {
+    println!(
+        "{}",
+        to_string_pretty(value).context("Failed to serialize JSON output")?
+    );
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct JsonEnvelope<T> {
+    command: &'static str,
+    ok: bool,
+    data: T,
+}
+
+pub fn run_agent_prepare(provider: AgentProvider, json_output: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
     let plan = build_launch_plan(provider, &paths)?;
     let skills = discover_skills(&paths)?;
     let marketplace = load_marketplace(&paths)?;
+
+    if json_output {
+        let output = JsonEnvelope {
+            command: "agent.prepare",
+            ok: true,
+            data: PreparedProviderOutput {
+                provider: provider.as_str().to_string(),
+                repo_root: plan.repo_root.display().to_string(),
+                entrypoint: plan.entrypoint_path.display().to_string(),
+                profile: plan.profile_path.display().to_string(),
+                bootstrap_summary: plan.bootstrap_summary.clone(),
+                command: plan.command_line(),
+                skills_count: skills.len(),
+                enabled_plugins_count: marketplace
+                    .plugins
+                    .iter()
+                    .filter(|plugin| plugin.enabled)
+                    .count(),
+            },
+        };
+        return print_json(&output);
+    }
 
     println!("provider: {}", provider.as_str());
     println!("repo_root: {}", plan.repo_root.display());
@@ -69,10 +159,33 @@ pub fn run_agent_launch(provider: AgentProvider, dry_run: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn run_agent_doctor(provider: Option<AgentProvider>) -> Result<()> {
+pub fn run_agent_doctor(provider: Option<AgentProvider>, json_output: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
     let checks = run_checks(&paths, provider)?;
     let mut failed = 0usize;
+
+    if json_output {
+        for check in &checks {
+            if !check.ok {
+                failed += 1;
+            }
+        }
+        let output = JsonEnvelope {
+            command: "agent.doctor",
+            ok: failed == 0,
+            data: DoctorOutput {
+                provider: provider.map(|value| value.as_str().to_string()),
+                ok: failed == 0,
+                failed,
+                checks,
+            },
+        };
+        print_json(&output)?;
+        if failed > 0 {
+            bail!("Doctor found {} failing check(s)", failed);
+        }
+        return Ok(());
+    }
 
     for check in &checks {
         let status = if check.ok { "OK" } else { "FAIL" };
@@ -90,8 +203,9 @@ pub fn run_agent_doctor(provider: Option<AgentProvider>) -> Result<()> {
     Ok(())
 }
 
-pub fn run_agent_list_providers() -> Result<()> {
+pub fn run_agent_list_providers(json_output: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
+    let mut providers = Vec::new();
 
     for provider in [
         AgentProvider::Codex,
@@ -100,50 +214,111 @@ pub fn run_agent_list_providers() -> Result<()> {
     ] {
         let plan = build_launch_plan(provider, &paths);
         match plan {
-            Ok(plan) => println!(
-                "{} :: available :: {} :: {}",
-                provider.as_str(),
-                plan.command_line(),
-                plan.profile_path.display()
-            ),
-            Err(err) => println!("{} :: unavailable :: {}", provider.as_str(), err),
+            Ok(plan) => {
+                if json_output {
+                    providers.push(ProviderAvailabilityOutput {
+                        provider: provider.as_str().to_string(),
+                        available: true,
+                        command: Some(plan.command_line()),
+                        profile: Some(plan.profile_path.display().to_string()),
+                        error: None,
+                    });
+                } else {
+                    println!(
+                        "{} :: available :: {} :: {}",
+                        provider.as_str(),
+                        plan.command_line(),
+                        plan.profile_path.display()
+                    );
+                }
+            }
+            Err(err) => {
+                if json_output {
+                    providers.push(ProviderAvailabilityOutput {
+                        provider: provider.as_str().to_string(),
+                        available: false,
+                        command: None,
+                        profile: None,
+                        error: Some(err.to_string()),
+                    });
+                } else {
+                    println!("{} :: unavailable :: {}", provider.as_str(), err);
+                }
+            }
+        }
+    }
+
+    if json_output {
+        print_json(&JsonEnvelope {
+            command: "agent.list-providers",
+            ok: true,
+            data: ProvidersOutput { providers },
+        })?;
+    }
+
+    Ok(())
+}
+
+pub fn run_agent_list_skills(json_output: bool) -> Result<()> {
+    let paths = HarnessPaths::discover()?;
+    let skills = discover_skills(&paths)?;
+
+    if json_output {
+        print_json(&JsonEnvelope {
+            command: "agent.list-skills",
+            ok: true,
+            data: SkillsOutput { skills },
+        })?;
+    } else {
+        for skill in skills {
+            println!("{} :: {}", skill.name, skill.path.display());
         }
     }
 
     Ok(())
 }
 
-pub fn run_agent_list_skills() -> Result<()> {
-    let paths = HarnessPaths::discover()?;
-    let skills = discover_skills(&paths)?;
-
-    for skill in skills {
-        println!("{} :: {}", skill.name, skill.path.display());
-    }
-
-    Ok(())
-}
-
-pub fn run_agent_list_plugins() -> Result<()> {
+pub fn run_agent_list_plugins(json_output: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
     let marketplace = load_marketplace(&paths)?;
 
-    for plugin in marketplace.plugins {
-        println!(
-            "{} :: enabled={} :: {} :: {}",
-            plugin.name, plugin.enabled, plugin.path, plugin.description
-        );
+    if json_output {
+        print_json(&JsonEnvelope {
+            command: "agent.list-plugins",
+            ok: true,
+            data: PluginsOutput {
+                plugins: marketplace.plugins,
+            },
+        })?;
+    } else {
+        for plugin in marketplace.plugins {
+            println!(
+                "{} :: enabled={} :: {} :: {}",
+                plugin.name, plugin.enabled, plugin.path, plugin.description
+            );
+        }
     }
 
     Ok(())
 }
 
-pub fn run_agent_print_env(provider: AgentProvider) -> Result<()> {
+pub fn run_agent_print_env(provider: AgentProvider, json_output: bool) -> Result<()> {
     let paths = HarnessPaths::discover()?;
     let plan = build_launch_plan(provider, &paths)?;
 
-    for (key, value) in plan.env {
-        println!("{}={}", key, value);
+    if json_output {
+        print_json(&JsonEnvelope {
+            command: "agent.print-env",
+            ok: true,
+            data: EnvOutput {
+                provider: provider.as_str().to_string(),
+                env: plan.env,
+            },
+        })?;
+    } else {
+        for (key, value) in plan.env {
+            println!("{}={}", key, value);
+        }
     }
 
     Ok(())

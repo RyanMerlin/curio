@@ -28,6 +28,21 @@ Curio content writes are scoped by Confluence folder ID:
 - `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the authoritative write root
 - Curio's onboarding flow keeps `.env` and `.env.example` aligned on the six Curio keys
 
+For agent integrations, use `--json` on the helper commands and search:
+
+- `.\curio.ps1 doctor --json`
+- `.\curio.ps1 agent doctor --json`
+- `.\curio.ps1 agent list-providers --json`
+- `.\curio.ps1 agent list-skills --json`
+- `.\curio.ps1 agent print-env codex --json`
+- `.\curio.ps1 search --json`
+
+The JSON shape uses a simple envelope:
+
+- `command`
+- `ok`
+- `data`
+
 Run onboarding with:
 
 ```powershell
@@ -60,3 +75,4 @@ Curio also supports provider-owned extra args through:
 - `CURIO_GEMINI_ARGS`
 
 See `docs/onboarding.md` for the full bootstrap flow.
+See `docs/agent-cli-contract.md` for the machine-readable CLI contract.

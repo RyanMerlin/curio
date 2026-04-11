@@ -511,13 +511,24 @@ impl ConfluenceClient {
 
     /// Executes a Confluence Query Language (CQL) query and returns a list of matching pages.
     pub async fn execute_cql(&self, cql: &str) -> Result<Vec<serde_json::Value>> {
-        let url = format!("{}/rest/api/content/search?cql={}", self.base_url, cql);
+        self.execute_cql_with_limit(cql, None).await
+    }
 
-        println!("Executing CQL query: {}", cql);
+    pub async fn execute_cql_with_limit(
+        &self,
+        cql: &str,
+        limit: Option<u32>,
+    ) -> Result<Vec<serde_json::Value>> {
+        let url = format!("{}/rest/api/content/search", self.base_url);
+        let mut query_params = vec![("cql".to_string(), cql.to_string())];
+        if let Some(limit) = limit {
+            query_params.push(("limit".to_string(), limit.to_string()));
+        }
 
         let response = self
             .client
             .get(&url)
+            .query(&query_params)
             .basic_auth(&self.email, Some(&self.auth_token))
             .send()
             .await

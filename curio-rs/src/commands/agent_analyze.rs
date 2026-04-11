@@ -48,12 +48,14 @@ pub async fn run_agent_analyze(
         // Otherwise, query for pages with a specific status or intake by default
         let target_status = status_arg.as_deref().unwrap_or("intake"); // Default to intake
         let cql_query = format!(
-            "label = \"{}-status-{}\" AND space = \"{}\" ORDER BY created ASC LIMIT {}",
-            label_namespace, target_status, space_key, limit
+            "label = \"{}-status-{}\" AND space = \"{}\" ORDER BY created ASC",
+            label_namespace, target_status, space_key
         );
 
         println!("Searching for pages to analyze with CQL: {}", cql_query);
-        let pages = client.execute_cql(&cql_query).await?;
+        let pages = client
+            .execute_cql_with_limit(&cql_query, Some(limit))
+            .await?;
         if let Some(write_root_folder_id) = config.content_model.output_root_folder_id.as_deref() {
             for page in pages {
                 let page_id = page["id"].as_str().unwrap_or_default();

@@ -29,29 +29,29 @@ async fn main() -> Result<()> {
             run_onboard(cli.dry_run, install).await?;
         }
         Some(Commands::Doctor { provider }) => {
-            run_agent_doctor(provider)?;
+            run_agent_doctor(provider, cli.json)?;
         }
         Some(Commands::Agent(agent_commands)) => match agent_commands {
             AgentCommands::Prepare { provider } => {
-                run_agent_prepare(provider)?;
+                run_agent_prepare(provider, cli.json)?;
             }
             AgentCommands::Launch { provider } => {
                 run_agent_launch(provider, cli.dry_run)?;
             }
             AgentCommands::Doctor { provider } => {
-                run_agent_doctor(provider)?;
+                run_agent_doctor(provider, cli.json)?;
             }
             AgentCommands::ListProviders => {
-                run_agent_list_providers()?;
+                run_agent_list_providers(cli.json)?;
             }
             AgentCommands::ListSkills => {
-                run_agent_list_skills()?;
+                run_agent_list_skills(cli.json)?;
             }
             AgentCommands::ListPlugins => {
-                run_agent_list_plugins()?;
+                run_agent_list_plugins(cli.json)?;
             }
             AgentCommands::PrintEnv { provider } => {
-                run_agent_print_env(provider)?;
+                run_agent_print_env(provider, cli.json)?;
             }
         },
         Some(Commands::Bootstrap) => {
@@ -92,7 +92,16 @@ async fn main() -> Result<()> {
         }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_search(&config, cli.dry_run, labels, text, content_type, limit).await?;
+            run_search(
+                &config,
+                cli.dry_run,
+                cli.json,
+                labels,
+                text,
+                content_type,
+                limit,
+            )
+            .await?;
         }
         Some(Commands::AgentAnalyze {
             page_id,
