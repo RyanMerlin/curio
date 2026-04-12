@@ -1,7 +1,7 @@
 ---
 id: dd354a6069320a10
 title: ServiceData Blob Removal in 23.2
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1944160523
@@ -17,7 +17,7 @@ keywords:
 - related
 - will
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:16Z
+updated_at: 2026-04-12T21:06:09Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:b33c860f0d493d84217a8eb75dea5e099d8f21672c3f653606e6ae1c9f71e89d
