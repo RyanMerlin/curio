@@ -25,7 +25,7 @@
 - **staged/by-topic/admin-ignore-this-page.md** — 
 - **staged/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/pre-upgrade-checks.md** — ---
-- **staged/product-tree/alteryx-server/errors-pre-upgrade-checks.md** — Errors
+- **published/product-tree/alteryx-server/errors-pre-upgrade-checks.md** — Errors
 - **staged/product-tree/intelligence-suite/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/host-recovery.md** — ---
 - **published/product-tree/alteryx-server/errors-host-recovery.md** — Errors
