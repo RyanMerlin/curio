@@ -9,15 +9,15 @@ source:
   summary: null
 category:
 - product-tree
-- alteryx-designer
+- alteryx-server
 keywords:
-- error
 - server
+- error
 - installed
-- would
 - system
+- installer
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:33Z
+updated_at: 2026-04-12T21:05:16Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:0a8190253289db6c3a9c25a07a218aac7031883db5d0d30d35559bdab5a18a1e

@@ -11,13 +11,13 @@ category:
 - product-tree
 - alteryx-server
 keywords:
+- upgrade
+- issues
+- installation
 - gcsedcfcfffefeeffsystem
 - jira
-- installation
-- issues
-- upgrade
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:31Z
+updated_at: 2026-04-12T21:05:13Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:fdd56bfc61c26736a7e1872e73c72a0cac47564ca288e2c33f4dc442a40f3914

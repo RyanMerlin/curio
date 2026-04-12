@@ -9,7 +9,7 @@ source:
   summary: null
 category:
 - product-tree
-- alteryx-designer
+- alteryx-server
 keywords:
 - server
 - health
@@ -17,7 +17,7 @@ keywords:
 - mongodb
 - sharepoint
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:32Z
+updated_at: 2026-04-12T21:05:15Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:c9d8168074be07759847493c62b8c9fa71d87fa4f5734f750d63cd49c6195bca

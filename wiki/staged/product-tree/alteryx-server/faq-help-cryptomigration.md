@@ -9,15 +9,15 @@ source:
   summary: null
 category:
 - product-tree
-- alteryx-designer
+- alteryx-server
 keywords:
 - cryptomigration
 - tool
 - prep
 - upgrade
-- will
+- service
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:29Z
+updated_at: 2026-04-12T21:05:11Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:a4fea0557829743ef9cd3e9caa6dd0dccead375893cad2e8af728b7d227298e7

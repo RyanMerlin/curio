@@ -12,12 +12,12 @@ category:
 - intelligence-suite
 keywords:
 - uninstall
-- prior
 - server
-- mongo
+- prior
 - designer
+- versions
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:32Z
+updated_at: 2026-04-12T21:05:15Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:6328abc5f435e9f4605240461227bfa187babf37ac12e711ee43311839e3d817

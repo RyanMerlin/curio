@@ -11,10 +11,10 @@ category:
 - product-tree
 - alteryx-server
 keywords:
-- installation
 - upgrade
+- installation
 created_at: 2026-04-12T20:57:04Z
-updated_at: 2026-04-12T21:02:31Z
+updated_at: 2026-04-12T21:05:13Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b

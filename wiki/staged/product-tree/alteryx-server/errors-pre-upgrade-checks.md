@@ -12,10 +12,10 @@ category:
 - alteryx-server
 keywords:
 - errors
-- preupgrade
 - checks
+- preupgrade
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:29Z
+updated_at: 2026-04-12T21:05:11Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:622473a170d1a94d8dd1ee8c335680abe7a7a2baae463c631dbfb51488794038

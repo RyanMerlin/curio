@@ -9,7 +9,7 @@ source:
   summary: null
 category:
 - product-tree
-- alteryx-designer
+- alteryx-server
 keywords:
 - error
 - upgrade
@@ -17,7 +17,7 @@ keywords:
 - jira
 - migration
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:32Z
+updated_at: 2026-04-12T21:05:15Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:16b345ab03f2b34295f59c027cb50c3a86ffe34398393f090c2d9b338f07b820

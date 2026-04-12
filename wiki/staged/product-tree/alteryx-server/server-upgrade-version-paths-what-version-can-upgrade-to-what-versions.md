@@ -9,15 +9,15 @@ source:
   summary: null
 category:
 - product-tree
-- alteryx-designer
+- alteryx-server
 keywords:
 - mongo
 - upgrade
 - help
-- version
 - token
+- version
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:32Z
+updated_at: 2026-04-12T21:05:16Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:881e8e9ccb43fb2d56343cd29e59702b65e7af0d83af4af7d19ccb10d36ae762

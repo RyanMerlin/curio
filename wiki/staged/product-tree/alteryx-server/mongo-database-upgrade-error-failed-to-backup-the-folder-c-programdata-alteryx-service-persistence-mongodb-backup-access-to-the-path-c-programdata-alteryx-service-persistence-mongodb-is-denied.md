@@ -12,12 +12,12 @@ category:
 - alteryx-server
 keywords:
 - antivirus
-- folder
-- mongo
 - error
 - upgrade
+- mongo
+- folder
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:31Z
+updated_at: 2026-04-12T21:05:14Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:b2fd50975c9aea35f629df23a35c274dfeece5b5f767b15902a74c46fbaef074

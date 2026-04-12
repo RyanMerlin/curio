@@ -17,7 +17,7 @@ keywords:
 - service
 - schema
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:29Z
+updated_at: 2026-04-12T21:05:11Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:ff8395bcb3dfcd369738738194ade85a6ab14d83bb993e13875dd12d08dcdc66

@@ -55,7 +55,7 @@
     "id": "591975c0cc4d7d3f"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
+    "path": "staged/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
     "title": "Upgrade Error - Failed to open XML file C:\\ProgramData\\Alteryx\\Engine\\202#.#\\InstallInfo.xml, system error: -2147024786",
     "category": [],
     "keywords": [],
@@ -110,7 +110,7 @@
     "id": "8036d36f5b34bfa8"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md",
+    "path": "staged/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md",
     "title": "Server Upgrade Version Paths - What version can upgrade to what versions?",
     "category": [],
     "keywords": [],
@@ -121,7 +121,7 @@
     "id": "b9ac518153229f71"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/server-upgrade-issues-by-version.md",
+    "path": "staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md",
     "title": "Server Upgrade Issues-by-Version",
     "category": [],
     "keywords": [],
@@ -165,7 +165,7 @@
     "id": "d8b45be104aeaaf8"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/faq-help-cryptomigration.md",
+    "path": "staged/product-tree/alteryx-server/faq-help-cryptomigration.md",
     "title": "FAQ / Help - CryptoMigration",
     "category": [],
     "keywords": [],
@@ -198,7 +198,7 @@
     "id": "fa12e00bbe18677c"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md",
+    "path": "staged/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md",
     "title": "How to find the appinfos Workflow for an AS_PackageDefinitions._id",
     "category": [],
     "keywords": [],
@@ -209,7 +209,7 @@
     "id": "aeb68099f66cc0e8"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/how-to-build-remove-queries-from-cryptomigration-logs.md",
+    "path": "staged/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md",
     "title": "How to build remove() queries from CryptoMigration logs",
     "category": [],
     "keywords": [],
@@ -231,7 +231,7 @@
     "id": "8f2710a925a4d02a"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/servicedata-blob-removal-in-23-2.md",
+    "path": "staged/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md",
     "title": "ServiceData Blob Removal in 23.2",
     "category": [],
     "keywords": [],
@@ -242,7 +242,7 @@
     "id": "dd354a6069320a10"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/pre-upgrade-checks.md",
+    "path": "staged/product-tree/alteryx-server/pre-upgrade-checks.md",
     "title": "Pre-Upgrade Checks",
     "category": [],
     "keywords": [],
@@ -286,7 +286,7 @@
     "id": "c3fff7762fbe4739"
   },
   {
-    "path": "staged/topic-tree/errors-host-recovery.md",
+    "path": "staged/product-tree/alteryx-server/errors-host-recovery.md",
     "title": "Errors (Host Recovery)",
     "category": [],
     "keywords": [],
@@ -385,7 +385,7 @@
     "id": "1053cc0d7e5753dc"
   },
   {
-    "path": "staged/product-tree/alteryx-designer/server-health-check.md",
+    "path": "staged/product-tree/alteryx-server/server-health-check.md",
     "title": "Server Health Check",
     "category": [],
     "keywords": [],

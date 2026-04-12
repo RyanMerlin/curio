@@ -11,13 +11,13 @@ category:
 - product-tree
 - alteryx-server
 keywords:
-- encryption
 - transfer
-- process
+- encryption
 - patch
-- recovery
+- process
+- source
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:02:30Z
+updated_at: 2026-04-12T21:05:12Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:9dee756716df5a597fc70dd1347dcbdaceb80aea363714e0315a4f2b37aaf1f1
