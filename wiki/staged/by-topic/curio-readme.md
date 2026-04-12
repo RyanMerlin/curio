@@ -1,21 +1,25 @@
 ---
 id: 42c59af8a4bae559
 title: Curio README
-status: intake
+status: staged
 source:
   kind: file
   id: file:README.md
   origin_url: null
   summary: null
-category: []
-keywords: []
+category:
+- by-topic
+keywords:
+- readme
+- documentation
+- overview
 created_at: 2026-04-12T18:33:36Z
-updated_at: 2026-04-12T18:33:36Z
-confidence: null
+updated_at: 2026-04-12T18:35:52Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:bc73f6918b22feac7b076865326674bda81b5d768e1e1ecac14151faa200acda
 confluence_page_id: null
-model_used: null
+model_used: manual
 ---
 
 # Curio

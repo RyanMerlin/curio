@@ -1,10 +1,10 @@
 [
   {
-    "path": "intake/curio-readme.md",
+    "path": "staged/by-topic/curio-readme.md",
     "title": "Curio README",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "Curio",
     "confidence": null,
     "updated_at": "2026-04-12T18:33:36Z",
