@@ -9,7 +9,6 @@
 /// 6. Skip update if content_hash unchanged.
 /// 7. After walk: delete pages with curio-sync property not seen this run.
 use anyhow::{Context, Result};
-use pulldown_cmark::{html, Options, Parser};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -443,14 +442,17 @@ async fn find_stale_pages(
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 fn markdown_to_html(md: &str) -> String {
-    let mut opts = Options::empty();
-    opts.insert(Options::ENABLE_TABLES);
-    opts.insert(Options::ENABLE_STRIKETHROUGH);
-    opts.insert(Options::ENABLE_TASKLISTS);
-    let parser = Parser::new_ext(md, opts);
-    let mut out = String::new();
-    html::push_html(&mut out, parser);
-    out
+    crate::md_to_confluence::markdown_to_storage(md)
+        .unwrap_or_else(|_| {
+            // Fallback: plain pulldown_cmark if macro parsing fails
+            use pulldown_cmark::{html, Options, Parser};
+            let mut opts = Options::empty();
+            opts.insert(Options::ENABLE_TABLES);
+            let parser = Parser::new_ext(md, opts);
+            let mut out = String::new();
+            html::push_html(&mut out, parser);
+            out
+        })
 }
 
 /// Set the emoji icon on a Confluence page using a hardcoded slug → emoji map. Best-effort.
@@ -516,13 +518,7 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
         let md = lines.join("\n");
         lines.clear();
         if md.trim().is_empty() { return String::new(); }
-        // Convert markdown to HTML for the description
-        let mut opts = pulldown_cmark::Options::empty();
-        opts.insert(pulldown_cmark::Options::ENABLE_TABLES);
-        let parser = pulldown_cmark::Parser::new_ext(&md, opts);
-        let mut html_out = String::new();
-        pulldown_cmark::html::push_html(&mut html_out, parser);
-        html_out
+        crate::md_to_confluence::markdown_to_storage(&md).unwrap_or_default()
     };
 
     for line in northstar_md.lines() {
