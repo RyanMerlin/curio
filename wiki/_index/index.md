@@ -4,7 +4,7 @@
 ## uncategorized (38 pages)
 - **published/product-tree/alteryx-server/installation-and-upgrade.md** — ---
 - **published/product-tree/alteryx-server/issues-installation-and-upgrade.md** — ---
-- **staged/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md** — | Issue | "Please wait while we uninstall prior versions of the product" never finishes |
+- **published/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md** — | Issue | "Please wait while we uninstall prior versions of the product" never finishes |
 - **published/product-tree/alteryx-server/errors-installation-and-upgrade.md** — Installation and Upgrade Errors
 - **published/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md** — | Context | Upgrading Server |
 - **published/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md** — | Context |  |
