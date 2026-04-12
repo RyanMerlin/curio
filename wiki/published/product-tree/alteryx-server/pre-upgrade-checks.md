@@ -1,7 +1,7 @@
 ---
 id: 3ace91393a47ef5d
 title: Pre-Upgrade Checks
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1831112050
@@ -17,7 +17,7 @@ keywords:
 - during
 - they
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:14Z
+updated_at: 2026-04-12T21:06:00Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:f820c46d999615444317e23b31bab6ff96964d61b0f5a72ed042a7c0bd8071f0
