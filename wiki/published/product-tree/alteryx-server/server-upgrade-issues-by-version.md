@@ -1,7 +1,7 @@
 ---
 id: 76ab286cdda87a35
 title: Server Upgrade Issues-by-Version
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2650999118
@@ -17,7 +17,7 @@ keywords:
 - jira
 - migration
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:15Z
+updated_at: 2026-04-12T21:06:03Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:16b345ab03f2b34295f59c027cb50c3a86ffe34398393f090c2d9b338f07b820

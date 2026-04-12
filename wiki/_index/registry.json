@@ -121,11 +121,11 @@
     "id": "b9ac518153229f71"
   },
   {
-    "path": "staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md",
+    "path": "published/product-tree/alteryx-server/server-upgrade-issues-by-version.md",
     "title": "Server Upgrade Issues-by-Version",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
