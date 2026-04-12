@@ -1,5 +1,7 @@
 use anyhow::{Context, Result};
 use reqwest::{Client, StatusCode, header::HeaderMap};
+use std::time::Duration as StdDuration;
+use tokio::time::{sleep, Duration};
 
 pub struct ConfluenceClient {
     client: Client,
@@ -7,6 +9,77 @@ pub struct ConfluenceClient {
     auth_token: String,
     email: String,
     write_root_folder_id: Option<String>,
+    space_key: String,
+}
+
+fn is_retryable_status(status: StatusCode) -> bool {
+    matches!(
+        status,
+        StatusCode::TOO_MANY_REQUESTS
+            | StatusCode::BAD_GATEWAY
+            | StatusCode::SERVICE_UNAVAILABLE
+            | StatusCode::GATEWAY_TIMEOUT
+    )
+}
+
+async fn send_with_retry<F>(action: &str, mut build_request: F) -> Result<reqwest::Response>
+where
+    F: FnMut() -> reqwest::RequestBuilder,
+{
+    let mut last_error: Option<anyhow::Error> = None;
+
+    for attempt in 1..=3 {
+        let response = build_request()
+            .send()
+            .await
+            .with_context(|| format!("Failed to send Confluence API request for {}", action));
+
+        let response = match response {
+            Ok(response) => response,
+            Err(err) => {
+                last_error = Some(err);
+                if attempt < 3 {
+                    sleep(Duration::from_millis(500 * attempt as u64)).await;
+                    continue;
+                }
+                break;
+            }
+        };
+
+        if is_retryable_status(response.status()) {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            last_error = Some(anyhow::anyhow!(
+                "Confluence API request for {} failed with retryable status {}: {}",
+                action,
+                status,
+                body
+            ));
+            if attempt < 3 {
+                sleep(Duration::from_millis(500 * attempt as u64)).await;
+                continue;
+            }
+            break;
+        }
+
+        return Ok(response);
+    }
+
+    Err(last_error.unwrap_or_else(|| {
+        anyhow::anyhow!("Unknown error while calling Confluence API for {}", action)
+    }))
+}
+
+pub fn http_timeout_seconds() -> u64 {
+    std::env::var("CURIO_HTTP_TIMEOUT_SECONDS")
+        .ok()
+        .and_then(|value| value.trim().parse::<u64>().ok())
+        .filter(|value| *value > 0)
+        .unwrap_or(45)
+}
+
+pub fn http_timeout_duration() -> StdDuration {
+    StdDuration::from_secs(http_timeout_seconds())
 }
 
 impl ConfluenceClient {
@@ -14,6 +87,7 @@ impl ConfluenceClient {
         base_url: String,
         email: String,
         auth_token: String,
+        space_key: String,
         write_root_folder_id: Option<String>,
     ) -> Result<Self> {
         let client = Client::builder()
@@ -27,6 +101,7 @@ impl ConfluenceClient {
             auth_token,
             email,
             write_root_folder_id,
+            space_key,
         })
     }
 
@@ -192,18 +267,7 @@ impl ConfluenceClient {
                 );
             }
         } else {
-            let Some(effective_parent_id) = effective_parent_id else {
-                anyhow::bail!(
-                    "Creating a top-level page is not supported without a configured output root folder or explicit parent"
-                );
-            };
-
             // Create new page using the v2 API so current Confluence folders/pages accept it.
-            let parent_page = self
-                .get_content_tree_item_by_id_v2(effective_parent_id)
-                .await?
-                .context("Parent page not found when creating a child page")?;
-
             let mut page_data = serde_json::json!({
                 "status": "current",
                 "title": title,
@@ -213,11 +277,19 @@ impl ConfluenceClient {
                 },
                 "subtype": "live"
             });
-            let space_id = parent_page["spaceId"]
-                .as_str()
-                .context("spaceId missing from parent page response")?;
-            page_data["spaceId"] = serde_json::json!(space_id);
-            page_data["parentId"] = serde_json::json!(effective_parent_id);
+            if let Some(effective_parent_id) = effective_parent_id {
+                let parent_page = self
+                    .get_content_tree_item_by_id_v2(effective_parent_id)
+                    .await?
+                    .context("Parent page not found when creating a child page")?;
+                let space_id = parent_page["spaceId"]
+                    .as_str()
+                    .context("spaceId missing from parent page response")?;
+                page_data["spaceId"] = serde_json::json!(space_id);
+                page_data["parentId"] = serde_json::json!(effective_parent_id);
+            } else {
+                page_data["spaceId"] = serde_json::json!(self.space_key.clone());
+            }
 
             println!("Creating Confluence page: {}", title);
             let response = self
@@ -244,6 +316,31 @@ impl ConfluenceClient {
                     .as_str()
                     .map(|s| s.to_string())
                     .context("Page ID not found in response")
+            } else if status == StatusCode::BAD_REQUEST
+                && response_text.contains("A page already exists with the same TITLE")
+            {
+                let direct_match = self.get_page_by_title(space_key, parent_id, title).await?;
+                let fallback_match = if direct_match.is_none() {
+                    self.get_page_by_title(space_key, None, title).await?
+                } else {
+                    None
+                };
+                if let Some(existing_page) = direct_match.or(fallback_match) {
+                    if let Some(page_id) = existing_page["id"].as_str() {
+                        println!(
+                            "Duplicate page detected, updating existing page via v1: {} (ID: {})",
+                            title, page_id
+                        );
+                        self.update_page_body_by_id(page_id, body_storage_format, body_content)
+                            .await?;
+                        return Ok(page_id.to_string());
+                    }
+                }
+                anyhow::bail!(
+                    "Confluence API request failed with status {}: {}",
+                    status,
+                    response_text
+                );
             } else {
                 anyhow::bail!(
                     "Confluence API request failed with status {}: {}",
@@ -252,6 +349,100 @@ impl ConfluenceClient {
                 );
             }
         }
+    }
+
+    pub async fn update_page_body_by_id(
+        &self,
+        page_id: &str,
+        body_storage_format: &str,
+        body_content: &str,
+    ) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
+        let mut last_error: Option<anyhow::Error> = None;
+
+        for attempt in 0..3 {
+            let current_page = self
+                .get_page_by_id_with_body_v1(page_id)
+                .await?
+                .context("Page not found while updating page body")?;
+            let version = current_page["version"]["number"]
+                .as_i64()
+                .context("Page version missing")?
+                + 1;
+            let title = current_page["title"]
+                .as_str()
+                .context("Page title missing from current page")?;
+            let space_key = current_page["space"]["key"]
+                .as_str()
+                .context("Space key missing from current page")?;
+            let body_key = if body_storage_format == "atlas_doc_format" {
+                "atlas_doc_format"
+            } else {
+                "storage"
+            };
+            let body_storage = serde_json::json!({
+                body_key: {
+                    "value": body_content,
+                    "representation": body_storage_format,
+                }
+            });
+            let mut page_data = serde_json::json!({
+                "id": page_id,
+                "type": "page",
+                "title": title,
+                "space": { "key": space_key },
+                "body": body_storage,
+                "version": { "number": version }
+            });
+            if let Some(parent_id) = current_page["ancestors"]
+                .as_array()
+                .and_then(|ancestors| ancestors.last())
+                .and_then(|ancestor| ancestor["id"].as_str())
+            {
+                page_data["ancestors"] = serde_json::json!([{ "id": parent_id }]);
+            }
+
+            println!(
+                "Updating Confluence page via v1: {} (ID: {})",
+                title, page_id
+            );
+            let response = send_with_retry("update page via v1", || {
+                self.client
+                    .put(&format!("{}/rest/api/content/{}", self.base_url, page_id))
+                    .basic_auth(&self.email, Some(&self.auth_token))
+                    .json(&page_data)
+            })
+            .await
+            .with_context(|| {
+                format!("Failed to send Confluence API request for page: {}", title)
+            })?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body after updating page body")?;
+
+            if status.is_success() {
+                return Ok(());
+            }
+
+            let is_stale = status == StatusCode::CONFLICT
+                || response_text.contains("StaleStateException")
+                || response_text.contains("expected: 1");
+            last_error = Some(anyhow::anyhow!(
+                "Confluence API request to update page body failed with status {}: {}",
+                status,
+                response_text
+            ));
+            if is_stale && attempt < 2 {
+                sleep(Duration::from_millis(500)).await;
+                continue;
+            }
+            break;
+        }
+
+        Err(last_error.unwrap_or_else(|| anyhow::anyhow!("Unknown error updating page body")))
     }
 
     /// Fetches a Confluence page by its title. If a parent_id is provided, it searches within that parent.

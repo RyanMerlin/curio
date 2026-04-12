@@ -829,11 +829,20 @@ async fn create_scoped_intake_page(
 }
 
 fn build_safe_intake_body(page_title: &str, source_id: &str, content: &str) -> String {
-    let excerpt_lines = content.lines().take(120).collect::<Vec<_>>();
-    let excerpt_blocks = excerpt_lines
-        .into_iter()
-        .map(adf_text_line)
+    let excerpt_lines = content
+        .lines()
+        .take(80)
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
         .collect::<Vec<_>>();
+    let excerpt_nodes = if excerpt_lines.is_empty() {
+        vec![adf_paragraph_text("No readable source body was available.")]
+    } else {
+        excerpt_lines
+            .into_iter()
+            .map(adf_paragraph_text)
+            .collect::<Vec<_>>()
+    };
 
     let adf = json!({
         "type": "doc",
@@ -842,8 +851,13 @@ fn build_safe_intake_body(page_title: &str, source_id: &str, content: &str) -> S
             adf_heading(1, page_title),
             adf_paragraph_text(&format!("Source: {}", source_id)),
             adf_paragraph_text("Curio stored a sanitized intake copy because the original page body could not be written cleanly."),
+            adf_heading(2, "Captured Preview"),
+            adf_table(vec![
+                vec!["Source".to_string(), source_id.to_string()],
+                vec!["Lines Captured".to_string(), format!("{}", excerpt_nodes.len())],
+            ]),
             adf_heading(2, "Captured Text"),
-            adf_paragraph_from_lines(excerpt_blocks),
+            adf_expand("Open sanitized excerpt", excerpt_nodes),
         ]
     });
 
@@ -875,17 +889,31 @@ fn adf_paragraph_text(text: &str) -> serde_json::Value {
     })
 }
 
-fn adf_paragraph_from_lines(lines: Vec<serde_json::Value>) -> serde_json::Value {
-    let mut content = Vec::new();
-    for (index, line) in lines.into_iter().enumerate() {
-        if index > 0 {
-            content.push(json!({ "type": "hardBreak" }));
-        }
-        content.push(line);
-    }
+fn adf_expand(title: &str, content: Vec<serde_json::Value>) -> serde_json::Value {
     json!({
-        "type": "paragraph",
+        "type": "expand",
+        "attrs": {
+            "title": title
+        },
         "content": content
+    })
+}
+
+fn adf_table(rows: Vec<Vec<String>>) -> serde_json::Value {
+    json!({
+        "type": "table",
+        "content": rows.into_iter().map(|row| json!({
+            "type": "tableRow",
+            "content": row.into_iter().map(|cell| json!({
+                "type": "tableCell",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [adf_text(&cell)]
+                    }
+                ]
+            })).collect::<Vec<_>>()
+        })).collect::<Vec<_>>()
     })
 }
 
@@ -894,10 +922,6 @@ fn adf_text(text: &str) -> serde_json::Value {
         "type": "text",
         "text": text
     })
-}
-
-fn adf_text_line(text: &str) -> serde_json::Value {
-    adf_text(text)
 }
 
 fn build_unique_intake_title(page_title: &str, source_id: &str) -> String {
