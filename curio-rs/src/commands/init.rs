@@ -84,6 +84,23 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
         }
     }
 
+    // Seed _schema/readme.md from repo README.md
+    let schema_readme = wiki_dir.join("_schema/readme.md");
+    if !schema_readme.exists() || reset {
+        let repo_readme = wiki_dir
+            .parent()
+            .map(|p| p.join("README.md"))
+            .filter(|p| p.exists());
+        if let Some(src) = repo_readme {
+            std::fs::copy(&src, &schema_readme)?;
+        } else {
+            std::fs::write(
+                &schema_readme,
+                "# CURIO Readme\n\nCurio is a Git-native enterprise intelligence workspace.\n",
+            )?;
+        }
+    }
+
     // Seed _schema/config.yaml
     let schema_config = wiki_dir.join("_schema/config.yaml");
     if !schema_config.exists() || reset {

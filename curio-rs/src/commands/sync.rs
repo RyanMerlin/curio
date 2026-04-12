@@ -87,37 +87,64 @@ pub async fn run_sync(
     // Sync top-level schema pages first (NORTHSTAR, config) at the space root
     let schema_dir = wiki_dir.join("_schema");
     if schema_dir.exists() && !dry_run {
-        for entry in std::fs::read_dir(&schema_dir).into_iter().flatten().filter_map(|e| e.ok()) {
+        // Sort entries so config is processed first (alphabetically: config < northstar < readme)
+        let mut schema_entries: Vec<_> = std::fs::read_dir(&schema_dir)
+            .into_iter().flatten().filter_map(|e| e.ok()).collect();
+        schema_entries.sort_by_key(|e| e.file_name());
+
+        let mut config_page_id: Option<String> = None;
+
+        for entry in schema_entries {
             let path = entry.path();
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
             if ext != "md" && ext != "yaml" && ext != "yml" { continue; }
             let stem = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
             if stem.starts_with('_') { continue; }
-            let page_title = to_title(stem);
+
+            // Readme and Northstar live under Config; everything else at the parent level
+            let schema_parent: Option<&str> = match stem {
+                "northstar" | "readme" => config_page_id.as_deref().or(parent_page_id.as_deref()),
+                _ => parent_page_id.as_deref(),
+            };
+
+            // Readme uses a custom title
+            let page_title = if stem == "readme" {
+                "CURIO Readme".to_string()
+            } else {
+                to_title(stem)
+            };
+
             let raw = std::fs::read_to_string(&path)
                 .with_context(|| format!("Failed to read {}", path.display()))?;
             let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
-            let html_body = if ext == "md" {
+            let html_body = if stem == "northstar" {
+                // Custom rich rendering: replace the raw blueprint section with a
+                // visual nested list built from the parsed TreeNode data.
+                let trees = parse_northstar_blueprint(body_md);
+                render_northstar_for_confluence(body_md, &trees)
+            } else if ext == "md" {
                 markdown_to_html(body_md)
             } else {
                 format!("<pre><code>{}</code></pre>", body_md)
             };
             let hash = content_hash(body_md);
             // Check existing
-            if let Ok(Some(ref page)) = client.get_page_by_title(space_key, parent_page_id.as_deref(), &page_title).await {
+            if let Ok(Some(ref page)) = client.get_page_by_title(space_key, schema_parent, &page_title).await {
                 let page_id = page["id"].as_str().unwrap_or_default().to_string();
                 if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
                     if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
                         skipped.push(format!("[schema] {}", page_title));
+                        if stem == "config" { config_page_id = Some(page_id.clone()); }
                         synced_page_ids.insert(page_id);
                         continue;
                     }
                 }
             }
-            match client.create_or_update_page(space_key, parent_page_id.as_deref(), &page_title, "storage", &html_body).await {
+            match client.create_or_update_page(space_key, schema_parent, &page_title, "storage", &html_body).await {
                 Ok(page_id) => {
                     let _ = set_sync_prop(&client, &page_id, &hash).await;
                     set_page_icon(&client, &page_id, stem).await;
+                    if stem == "config" { config_page_id = Some(page_id.clone()); }
                     synced_page_ids.insert(page_id);
                     upserted.push(format!("[schema] {}", page_title));
                 }
@@ -486,6 +513,106 @@ fn to_title(name: &str) -> String {
         // "Account Tree" → "Account-tree" etc. is handled by the slug naming convention
         // We want "Account-tree" not "Account Tree" for tree nodes
         .replace(" Tree", "-tree")
+}
+
+// ─── NORTHSTAR rich Confluence renderer ──────────────────────────────────
+
+/// Render the NORTHSTAR page as rich Confluence storage format.
+///
+/// The `## Published Tree Blueprint` section is replaced with a custom visual
+/// nested list built from parsed `TreeNode` data, so parent/child relationships
+/// are immediately obvious. Everything else passes through `markdown_to_html`.
+fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> String {
+    // Split at the blueprint section boundary
+    let blueprint_start = northstar_md.find("## Published Tree Blueprint");
+    let after_blueprint = blueprint_start.and_then(|s| {
+        // Find the next `## ` section after the blueprint
+        northstar_md[s + 1..].find("\n## ").map(|o| s + 1 + o)
+    });
+
+    let (pre_md, post_md) = match (blueprint_start, after_blueprint) {
+        (Some(start), Some(end)) => (
+            &northstar_md[..start],
+            &northstar_md[end..],
+        ),
+        (Some(start), None) => (&northstar_md[..start], ""),
+        _ => (northstar_md, ""),
+    };
+
+    let mut out = String::new();
+
+    // Pre-blueprint sections (Name, High-Level Description, What Curio Curates)
+    out.push_str(&markdown_to_html(pre_md));
+
+    // Blueprint section heading + intro
+    out.push_str("<h2>Published Tree Blueprint</h2>\n");
+    out.push_str("<p>Tree definitions below drive the <code>published/</code> wiki structure and the Confluence hierarchy. \
+        Run <code>curio tree</code> after editing <code>NORTHSTAR.md</code> to sync directory structure and Confluence pages.</p>\n");
+
+    if trees.is_empty() {
+        out.push_str("<p><em>No tree definitions found. Add <code>### TreeName</code> headings under <code>## Published Tree Blueprint</code> in NORTHSTAR.md.</em></p>\n");
+    } else {
+        out.push_str("<ul>\n");
+        for tree in trees {
+            let icon = tree.icon.as_deref()
+                .and_then(|cp| u32::from_str_radix(cp, 16).ok())
+                .and_then(char::from_u32)
+                .map(|c| format!("{} ", c))
+                .unwrap_or_default();
+
+            // Strip outer <p> tags from description for inline use
+            let desc = strip_outer_p(&tree.description_html);
+
+            out.push_str(&format!(
+                "<li><strong>{icon}{title}</strong> &mdash; <code>{slug}/</code><br/>{desc}",
+                icon = icon,
+                title = html_escape(&tree.title),
+                slug = html_escape(&tree.slug),
+                desc = desc,
+            ));
+
+            if !tree.subtrees.is_empty() {
+                out.push_str("<ul>\n");
+                for sub in &tree.subtrees {
+                    let sub_icon = sub.icon.as_deref()
+                        .and_then(|cp| u32::from_str_radix(cp, 16).ok())
+                        .and_then(char::from_u32)
+                        .map(|c| format!("{} ", c))
+                        .unwrap_or_default();
+                    let sub_desc = strip_outer_p(&sub.description_html);
+                    out.push_str(&format!(
+                        "<li>{sub_icon}<strong>{title}</strong> &mdash; <code>{slug}/</code><br/>{sub_desc}</li>\n",
+                        sub_icon = sub_icon,
+                        title = html_escape(&sub.title),
+                        slug = html_escape(&sub.slug),
+                        sub_desc = sub_desc,
+                    ));
+                }
+                out.push_str("</ul>\n");
+            }
+
+            out.push_str("</li>\n");
+        }
+        out.push_str("</ul>\n");
+    }
+
+    // Post-blueprint sections (Structure, Helpful Guidance)
+    if !post_md.is_empty() {
+        out.push_str(&markdown_to_html(post_md));
+    }
+
+    out
+}
+
+fn strip_outer_p(html: &str) -> &str {
+    let s = html.trim();
+    let s = s.strip_prefix("<p>").unwrap_or(s);
+    let s = s.strip_suffix("</p>").unwrap_or(s);
+    s.trim()
+}
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
 // ─── NORTHSTAR blueprint parser ───────────────────────────────────────────
