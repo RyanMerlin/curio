@@ -1,7 +1,7 @@
 ---
 id: c3fff7762fbe4739
 title: Host Recovery
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1803420127
@@ -17,7 +17,7 @@ keywords:
 - released
 - tgaldcfcfffefeeffsystem
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:12Z
+updated_at: 2026-04-12T21:05:44Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:1f430619bd87c60cacf1494d7b3de1d655814db230965ce5a42aaf7caea25b9c
