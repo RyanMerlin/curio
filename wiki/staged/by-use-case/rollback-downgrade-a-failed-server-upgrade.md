@@ -1,21 +1,27 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1709050604
   origin_url: https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1709050604/Rollback+Downgrade+a+Failed+Server+Upgrade
   summary: null
-category: []
-keywords: []
+category:
+- by-use-case
+keywords:
+- rollback
+- downgrade
+- server
+- upgrade
+- disaster-recovery
 created_at: 2026-04-12T19:22:10Z
-updated_at: 2026-04-12T19:22:10Z
-confidence: null
+updated_at: 2026-04-12T19:27:15Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:ef67dd84769e58eef7b0e75c5c8f8dda56b4b19d104c39cb7065399babd53854
 confluence_page_id: null
-model_used: null
+model_used: manual
 ---
 
 > **Info:** > Rolling back a failed Server upgrade is typically quick and successful

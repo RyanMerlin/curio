@@ -8,7 +8,6 @@ source:
   origin_url: null
   summary: null
 category:
-- by-topic
 keywords:
 - readme
 - documentation
