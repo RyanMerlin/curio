@@ -253,7 +253,7 @@ impl SourceKind {
             }
             SourceKind::ConfluencePage { page_id, webui_path: None } => {
                 Some(format!(
-                    "{}/wiki/pages/{}",
+                    "{}/wiki/pages/viewpage.action?pageId={}",
                     confluence_base_url.trim_end_matches('/'),
                     page_id
                 ))
@@ -387,5 +387,17 @@ mod source_kind_tests {
     fn origin_url_file_is_none() {
         let kind = SourceKind::File { path: "/tmp/f".into(), mime: "text/plain".into() };
         assert_eq!(kind.origin_url("https://ignored"), None);
+    }
+
+    #[test]
+    fn origin_url_confluence_without_webui_path() {
+        let kind = SourceKind::ConfluencePage {
+            page_id: "456".into(),
+            webui_path: None,
+        };
+        assert_eq!(
+            kind.origin_url("https://company.atlassian.net"),
+            Some("https://company.atlassian.net/wiki/pages/viewpage.action?pageId=456".into())
+        );
     }
 }
