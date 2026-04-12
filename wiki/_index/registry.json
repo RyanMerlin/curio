@@ -55,11 +55,11 @@
     "id": "591975c0cc4d7d3f"
   },
   {
-    "path": "staged/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
+    "path": "published/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
     "title": "Upgrade Error - Failed to open XML file C:\\ProgramData\\Alteryx\\Engine\\202#.#\\InstallInfo.xml, system error: -2147024786",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| Context |  |",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
