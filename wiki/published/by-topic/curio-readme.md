@@ -1,7 +1,7 @@
 ---
 id: 42c59af8a4bae559
 title: Curio README
-status: staged
+status: published
 source:
   kind: file
   id: file:README.md
@@ -14,7 +14,7 @@ keywords:
 - documentation
 - overview
 created_at: 2026-04-12T18:33:36Z
-updated_at: 2026-04-12T18:35:52Z
+updated_at: 2026-04-12T18:37:05Z
 confidence: 0.8
 cross_refs: []
 content_hash: sha256:bc73f6918b22feac7b076865326674bda81b5d768e1e1ecac14151faa200acda
