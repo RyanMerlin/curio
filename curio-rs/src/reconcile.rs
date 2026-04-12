@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// Routing decision produced by the agent (or the heuristic fallback).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReconcileDecision {
-    /// Relative path segments for the target category, e.g. `["by-account", "acme"]`.
+    /// Relative path segments for the target category, e.g. `["product-tree", "alteryx-server"]`.
     pub category: Vec<String>,
     pub keywords: Vec<String>,
     pub confidence: f32,
@@ -29,19 +29,53 @@ pub struct ReconcileDecision {
 
 impl ReconcileDecision {
     /// Simple keyword-based heuristic fallback. Routes to `staged` with medium confidence.
+    /// Category slugs match the NORTHSTAR tree structure (e.g. `product-tree/alteryx-server`).
     pub fn heuristic(title: &str, body: &str) -> Self {
         let text = format!("{} {}", title, body).to_lowercase();
 
-        let category = if text.contains("account") || text.contains("customer") {
-            vec!["by-account".to_string()]
+        // Check for specific Alteryx product subtrees first (more specific wins).
+        // Order matters: server signals are checked before designer to avoid "workflow" false positives.
+        let category = if text.contains("intelligence suite")
+            || text.contains("automl")
+            || text.contains("machine learning")
+            || text.contains("ai/ml")
+        {
+            vec!["product-tree".to_string(), "intelligence-suite".to_string()]
+        } else if text.contains("server")
+            || text.contains("upgrade")
+            || text.contains("install")
+            || text.contains("mongodb")
+            || text.contains("cryptomigration")
+            || text.contains("servicedata")
+            || text.contains("rollback")
+            || text.contains("downgrade")
+            || text.contains("deployment")
+            || text.contains("alteryxservice")
+            || text.contains("host recovery")
+            || text.contains("pre-upgrade")
+            || text.contains("server health")
+        {
+            vec!["product-tree".to_string(), "alteryx-server".to_string()]
+        } else if text.contains("designer")
+            || text.contains("canvas")
+            || text.contains("tool palette")
+            || (text.contains("workflow") && !text.contains("server"))
+        {
+            vec!["product-tree".to_string(), "alteryx-designer".to_string()]
         } else if text.contains("product") || text.contains("feature") || text.contains("release") {
-            vec!["by-product".to_string()]
-        } else if text.contains("audience") || text.contains("persona") || text.contains("user") {
-            vec!["by-audience".to_string()]
-        } else if text.contains("playbook") || text.contains("workflow") || text.contains("process") {
-            vec!["by-use-case".to_string()]
+            vec!["product-tree".to_string()]
+        } else if text.contains("account") || text.contains("customer") {
+            vec!["account-tree".to_string()]
+        } else if text.contains("executive") || text.contains("roi") || text.contains("business value") {
+            vec!["audience-tree".to_string(), "executive-business".to_string()]
+        } else if text.contains("cse") || text.contains("escalation") || text.contains("technical support") {
+            vec!["audience-tree".to_string(), "technical-cse".to_string()]
+        } else if text.contains("audience") || text.contains("persona") {
+            vec!["audience-tree".to_string()]
+        } else if text.contains("playbook") || text.contains("use case") || text.contains("runbook") {
+            vec!["use-case-tree".to_string()]
         } else {
-            vec!["by-topic".to_string()]
+            vec!["topic-tree".to_string()]
         };
 
         // Extract naive keywords: most frequent non-stopwords

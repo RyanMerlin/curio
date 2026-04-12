@@ -64,6 +64,10 @@ pub enum Commands {
         /// Optional subject or category hint.
         #[arg(long)]
         subject_hint: Option<String>,
+
+        /// When ingesting a Confluence URL, also fetch all descendant pages.
+        #[arg(long)]
+        recursive: bool,
     },
 
     /// Route intake pages to staged/ or review/ using heuristics or agent decisions.

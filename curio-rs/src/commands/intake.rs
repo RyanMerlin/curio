@@ -20,10 +20,11 @@ pub async fn run_intake(
     folder: &Option<PathBuf>,
     title: &Option<String>,
     subject_hint: &Option<String>,
+    recursive: bool,
 ) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
 
-    let items = collect_items(config, url, file, folder, title, subject_hint).await?;
+    let items = collect_items(config, url, file, folder, title, subject_hint, recursive).await?;
 
     if items.is_empty() {
         anyhow::bail!("No content to ingest — provide --url, --file, or --folder");
@@ -140,12 +141,13 @@ async fn collect_items(
     folder: &Option<PathBuf>,
     title: &Option<String>,
     _subject_hint: &Option<String>,
+    recursive: bool,
 ) -> Result<Vec<IntakeItem>> {
     let mut items = Vec::new();
 
     if let Some(url_str) = url {
         if is_confluence_url(url_str, &config.connection.confluence_url) {
-            items.extend(collect_from_confluence(config, url_str, title).await?);
+            items.extend(collect_from_confluence(config, url_str, title, recursive).await?);
         } else {
             items.extend(collect_from_url(url_str, title).await?);
         }
@@ -199,6 +201,7 @@ async fn collect_from_confluence(
     config: &Config,
     url: &str,
     title_hint: &Option<String>,
+    recursive: bool,
 ) -> Result<Vec<IntakeItem>> {
     config.connection.require_confluence()?;
     let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
@@ -214,29 +217,63 @@ async fn collect_from_confluence(
     let page_id = extract_confluence_page_id(url)
         .ok_or_else(|| anyhow::anyhow!("Could not extract page ID from Confluence URL: {}", url))?;
 
-    let page = client
-        .get_page_body(&page_id)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("Confluence page not found: {}", page_id))?;
+    // Collect the root page + all descendants if recursive
+    let mut page_ids: Vec<String> = vec![page_id.clone()];
+    if recursive {
+        let descendants = client.get_page_descendants_v2(&page_id).await?;
+        for d in descendants {
+            if let Some(id) = d["id"].as_str() {
+                page_ids.push(id.to_string());
+            }
+        }
+        eprintln!("Fetching {} pages (root + {} descendants)...", page_ids.len(), page_ids.len() - 1);
+    }
 
-    let title = title_hint.clone().unwrap_or_else(|| {
-        page["title"].as_str().unwrap_or("Untitled").to_string()
-    });
-    let html_body = page["body"]["storage"]["value"].as_str().unwrap_or("").to_string();
-    let text = extract_text_from_html(&html_body);
-    let id = generate_id(&format!("confluence-page:{}", page_id));
+    let mut items = Vec::new();
+    for (i, pid) in page_ids.iter().enumerate() {
+        let page = match client.get_page_body(pid).await? {
+            Some(p) => p,
+            None => {
+                eprintln!("  [{}/{}] page {} not found — skipping", i + 1, page_ids.len(), pid);
+                continue;
+            }
+        };
 
-    Ok(vec![IntakeItem {
-        id,
-        title,
-        text,
-        source_ref: SourceRef {
-            kind: "confluence_page".to_string(),
-            id: format!("confluence-page:{}", page_id),
-            origin_url: Some(url.to_string()),
-            summary: None,
-        },
-    }])
+        let title = if pid == &page_id {
+            title_hint.clone().unwrap_or_else(|| page["title"].as_str().unwrap_or("Untitled").to_string())
+        } else {
+            page["title"].as_str().unwrap_or("Untitled").to_string()
+        };
+
+        let page_url = format!(
+            "{}/wiki/spaces/{}/pages/{}",
+            config.connection.confluence_url.trim_end_matches("/wiki"),
+            config.content_model.space_key,
+            pid
+        );
+
+        let html_body = page["body"]["storage"]["value"].as_str().unwrap_or("").to_string();
+        let text = extract_text_from_html(&html_body);
+        let id = generate_id(&format!("confluence-page:{}", pid));
+
+        if recursive {
+            eprintln!("  [{}/{}] {}", i + 1, page_ids.len(), title);
+        }
+
+        items.push(IntakeItem {
+            id,
+            title,
+            text,
+            source_ref: SourceRef {
+                kind: "confluence_page".to_string(),
+                id: format!("confluence-page:{}", pid),
+                origin_url: Some(if pid == &page_id { url.to_string() } else { page_url }),
+                summary: None,
+            },
+        });
+    }
+
+    Ok(items)
 }
 
 fn collect_from_file(path: &Path, title_hint: &Option<String>) -> Result<Vec<IntakeItem>> {

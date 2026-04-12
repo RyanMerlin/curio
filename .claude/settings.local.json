@@ -56,7 +56,11 @@
       "Read(//c/code/curio//**)",
       "Read(//c/code//**)",
       "Bash(./curio-rs/target/debug/curio sync:*)",
-      "Bash(./curio-rs/target/debug/curio tree:*)"
+      "Bash(./curio-rs/target/debug/curio tree:*)",
+      "mcp__atlassian-api__get-page-children",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(d\\);console.log\\('spaceId:',r.id,'homepageId:',r.homepage?.id\\)}\\)\")",
+      "Bash(find wiki/staged -name \"*.md\" -exec mv {} wiki/intake/ \\\\;)",
+      "Bash(find wiki/staged -mindepth 1 -type d -empty -delete)"
     ]
   }
 }

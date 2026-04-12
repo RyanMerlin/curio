@@ -40,7 +40,7 @@ pub async fn run_process(
 
         let cat_segments = category
             .as_deref()
-            .unwrap_or("by-topic")
+            .unwrap_or("topic-tree")
             .split('/')
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
@@ -208,6 +208,9 @@ fn apply_routing(
     let filename = format!("{}.md", slug);
     let dest_dir = wiki_dir.join(target_status).join(&cat_path);
     let dest_path = dest_dir.join(&filename);
+
+    // Ensure destination directory exists (tree subtree dirs may not be pre-created)
+    std::fs::create_dir_all(&dest_dir)?;
 
     let mut page = parse_wiki_page(src_path)?;
     let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();

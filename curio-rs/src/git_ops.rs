@@ -32,6 +32,13 @@ pub fn git_mv(repo_root: &Path, from: &Path, to: &Path) -> Result<()> {
             .with_context(|| format!("Failed to create directory {}", abs_parent.display()))?;
     }
 
+    // Stage source if untracked so git mv can operate on it
+    let _ = Command::new("git")
+        .args(["add", "--"])
+        .arg(from)
+        .current_dir(repo_root)
+        .status();
+
     let status = Command::new("git")
         .args(["mv", "--"])
         .arg(from)

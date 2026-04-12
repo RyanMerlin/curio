@@ -63,9 +63,9 @@ async fn main() -> Result<()> {
             let config = load_config(config_path_str)?;
             run_init(&config, cli.dry_run, cli.json, reset).await?;
         }
-        Some(Commands::Intake { url, file, folder, title, subject_hint }) => {
+        Some(Commands::Intake { url, file, folder, title, subject_hint, recursive }) => {
             let config = load_config(config_path_str)?;
-            run_intake(&config, cli.dry_run, cli.json, &url, &file, &folder, &title, &subject_hint).await?;
+            run_intake(&config, cli.dry_run, cli.json, &url, &file, &folder, &title, &subject_hint, recursive).await?;
         }
         Some(Commands::Process {
             limit,
