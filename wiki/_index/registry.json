@@ -44,11 +44,11 @@
     "id": "0cfb0e96ee956763"
   },
   {
-    "path": "staged/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md",
+    "path": "published/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md",
     "title": "Upgrade Error - mongod.exe - Entry Point Not Found | The procedure entry point BCryptHash could not be located in the dynamic link library \\Alteryx\\bin\\mongod.exe",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| Context | Upgrading Server |",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
