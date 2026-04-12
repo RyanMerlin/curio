@@ -313,6 +313,7 @@ pub async fn run_process_intake(
                 target_page_name,
                 conflict_details.as_ref(),
                 &config.connection.confluence_url,
+                &curio_metadata,
             );
             if !json_output {
                 println!("Updating page body for {}", page_id);
@@ -467,11 +468,10 @@ fn build_stage_artifact_body(
     lane_name: &str,
     conflict_details: Option<&serde_json::Value>,
     confluence_url: &str,
+    curio_metadata: &serde_json::Value,
 ) -> String {
-    let source_id = proposal
-        .source_refs
-        .first()
-        .map(|s| s.as_str())
+    let source_id = curio_metadata["source_id"]
+        .as_str()
         .unwrap_or_default();
     let kind = SourceKind::from_source_id(source_id);
 
