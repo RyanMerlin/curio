@@ -1,4 +1,6 @@
 # Curio Wiki Index
-> Last updated: 2026-04-12 20:56 UTC | Pages: 0
+> Last updated: 2026-04-12 20:57 UTC | Pages: 1
 
-_No pages yet. Run `curio intake` to add content._
+## uncategorized (1 pages)
+- **intake/installation-and-upgrade.md** — ---
+
