@@ -1,0 +1,14 @@
+connection:
+  confluence_url: "${CURIO_CONFLUENCE_URL}"
+  confluence_email: "${CURIO_CONFLUENCE_EMAIL}"
+
+content_model:
+  space_key: "${CURIO_SPACE_KEY}"
+
+wiki:
+  wiki_dir: "wiki"
+  auto_commit: true
+  sync:
+    enabled: true
+    # CURIO homepage page ID — all synced pages are children of this page
+    confluence_parent_page_id: "4240479045"

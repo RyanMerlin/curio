@@ -4,7 +4,7 @@ Curio is the Gemini harness for `curio-rs`.
 
 ## Startup Contract
 
-- operate from `C:\code\agents\curio`
+- operate from the repo root
 - treat `curio-rs` as the deterministic execution substrate
 - consume Curio-authored skills from `skills/`
 - use `.agents/plugins/marketplace.json` as the plugin catalog

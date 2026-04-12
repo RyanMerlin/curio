@@ -288,7 +288,11 @@ impl ConfluenceClient {
                 page_data["spaceId"] = serde_json::json!(space_id);
                 page_data["parentId"] = serde_json::json!(effective_parent_id);
             } else {
-                page_data["spaceId"] = serde_json::json!(self.space_key.clone());
+                // Top-level page: the v2 API requires the numeric space ID, not the key string.
+                // Fetch it via the spaces API.
+                let space_id = self.get_numeric_space_id(&self.space_key.clone()).await
+                    .context("Failed to look up numeric space ID for top-level page creation")?;
+                page_data["spaceId"] = serde_json::json!(space_id);
             }
 
             println!("Creating Confluence page: {}", title);
@@ -320,7 +324,10 @@ impl ConfluenceClient {
                 && response_text.contains("A page already exists with the same TITLE")
             {
                 let direct_match = self.get_page_by_title(space_key, parent_id, title).await?;
-                let fallback_match = if direct_match.is_none() {
+                // Only do a space-wide fallback when no parent was specified.
+                // If a parent_id was given but the page isn't under that parent, surface
+                // the collision error so the caller can retry with a unique title.
+                let fallback_match = if direct_match.is_none() && parent_id.is_none() {
                     self.get_page_by_title(space_key, None, title).await?
                 } else {
                     None
@@ -452,17 +459,21 @@ impl ConfluenceClient {
         parent_id: Option<&str>,
         title: &str,
     ) -> Result<Option<serde_json::Value>> {
-        let mut url = format!(
-            "{}/rest/api/content?spaceKey={}&title={}&expand=version",
-            self.base_url, space_key, title
-        );
-
-        if let Some(p_id) = parent_id {
-            url = format!(
-                "{}/rest/api/content?spaceKey={}&title={}&ancestor={}&expand=version",
-                self.base_url, space_key, title, p_id
-            );
+        // Build the URL with proper percent-encoding for the title so characters like
+        // spaces, brackets, and colons don't cause partial-match false positives.
+        let base = format!("{}/rest/api/content", self.base_url);
+        let mut url_builder = reqwest::Url::parse(&base)
+            .unwrap_or_else(|_| reqwest::Url::parse("http://invalid").unwrap());
+        {
+            let mut pairs = url_builder.query_pairs_mut();
+            pairs.append_pair("spaceKey", space_key);
+            pairs.append_pair("title", title);
+            pairs.append_pair("expand", "version");
+            if let Some(p_id) = parent_id {
+                pairs.append_pair("ancestor", p_id);
+            }
         }
+        let url = url_builder.to_string();
 
         let response = self
             .client
@@ -749,6 +760,35 @@ impl ConfluenceClient {
         }
     }
 
+    /// Fetches a Confluence page by ID including the storage-format body.
+    pub async fn get_page_body(&self, page_id: &str) -> Result<Option<serde_json::Value>> {
+        let url = format!("{}/api/v2/pages/{}?body-format=storage", self.base_url, page_id);
+
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context(format!("Failed to fetch body for Confluence page {}", page_id))?;
+
+        let status = response.status();
+        let response_text = response.text().await.context("Failed to read response body")?;
+
+        if status.is_success() {
+            let json: serde_json::Value = serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence page body response")?;
+            Ok(Some(json))
+        } else if status == reqwest::StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            anyhow::bail!(
+                "Failed to fetch Confluence page {} body ({}): {}",
+                page_id, status, response_text
+            );
+        }
+    }
+
     /// Fetches a Confluence page directly by its ID using the v2 API.
     pub async fn get_page_by_id_v2(&self, page_id: &str) -> Result<Option<serde_json::Value>> {
         let url = format!("{}/api/v2/pages/{}", self.base_url, page_id);
@@ -921,6 +961,60 @@ impl ConfluenceClient {
         Ok(descendants)
     }
 
+    /// Returns only the direct children of a page (non-recursive), using the v2 API.
+    pub async fn get_direct_children_v2(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
+        let mut children = Vec::new();
+        let mut next_url = Some(format!(
+            "{}/api/v2/pages/{}/children?limit=200",
+            self.base_url, page_id
+        ));
+
+        while let Some(url) = next_url.take() {
+            let response = self
+                .client
+                .get(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+                .send()
+                .await
+                .context(format!(
+                    "Failed to send Confluence API request for direct children: {}",
+                    page_id
+                ))?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body")?;
+
+            if !status.is_success() {
+                anyhow::bail!(
+                    "Confluence API request for direct children of {} failed with status {}: {}",
+                    page_id,
+                    status,
+                    response_text
+                );
+            }
+
+            let json: serde_json::Value = serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence API response for direct children")?;
+
+            if let Some(results) = json["results"].as_array() {
+                children.extend(results.iter().cloned());
+            }
+
+            next_url = json["_links"]["next"].as_str().map(|next| {
+                if next.starts_with("http://") || next.starts_with("https://") {
+                    next.to_string()
+                } else {
+                    format!("{}{}", self.base_url, next)
+                }
+            });
+        }
+
+        Ok(children)
+    }
+
     pub async fn get_page_descendants_v2(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
         let mut descendants = Vec::new();
         let mut next_url = Some(format!(
@@ -983,6 +1077,29 @@ impl ConfluenceClient {
         }
 
         self.get_folder_by_id_v2(item_id).await
+    }
+
+    /// Returns the numeric space ID (e.g. "98304") for a given space key (e.g. "CURIO").
+    /// The v2 pages API requires the numeric ID, not the key string.
+    pub async fn get_numeric_space_id(&self, space_key: &str) -> Result<String> {
+        let url = format!("{}/api/v2/spaces?keys={}", self.base_url, space_key);
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to fetch space info")?;
+        let status = response.status();
+        let text = response.text().await.context("Failed to read space response")?;
+        if !status.is_success() {
+            anyhow::bail!("Failed to look up space {}: {} — {}", space_key, status, text);
+        }
+        let json: serde_json::Value = serde_json::from_str(&text).context("Failed to parse space response")?;
+        json["results"][0]["id"]
+            .as_str()
+            .map(|s| s.to_string())
+            .context(format!("Numeric space ID not found for key '{}'", space_key))
     }
 
     pub async fn page_is_descendant_of(&self, page_id: &str, ancestor_id: &str) -> Result<bool> {

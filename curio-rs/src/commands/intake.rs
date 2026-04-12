@@ -1,917 +1,551 @@
-use crate::confluence::http_timeout_duration;
-use crate::curio_docs::{
-    ADMIN_TITLE, AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, audit_bucket_path,
-    build_admin_root_body, build_audit_root_body, build_capture_intake_adf,
-    build_reference_card_adf, build_registry_root_body, ensure_registry_record, ensure_scoped_page,
-    ensure_scoped_structure_page, extract_page_text, extract_summary_from_html,
-    extract_summary_from_text, infer_route_plan, update_branch_index,
-};
-use crate::output::emit_json;
-use crate::{
-    ChangeProposal, ContentItem, Result, SourceKind, compact_change_proposal, config::Config,
-    confluence::ConfluenceClient, generate_change_proposal_with_agent,
-};
-use anyhow::Context;
+use anyhow::{Context, Result};
 use chrono::Utc;
-use scraper::{Html, Selector};
-use serde::Serialize;
-use serde_json::json;
-use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-#[derive(Debug, Serialize)]
-struct IntakeOutput {
-    source_items: usize,
-    handled_items: usize,
-    duplicate_skipped: usize,
-    skipped_unavailable: usize,
-    failed_items: usize,
-    dry_run: bool,
-}
+use crate::{
+    config::Config,
+    output::emit_json,
+    wiki_fs::{content_hash, generate_id, slug_from_title, write_wiki_page, first_line_summary},
+    wiki_index::{append_log, load_registry, rebuild_index_md, save_registry, entry_from_frontmatter},
+    Frontmatter, PageStatus, SourceRef, WikiPage,
+};
 
-pub async fn run_intake_create(
+pub async fn run_intake(
     config: &Config,
     dry_run: bool,
-    json_output: bool,
+    json: bool,
     url: &Option<String>,
     file: &Option<PathBuf>,
     folder: &Option<PathBuf>,
+    title: &Option<String>,
     subject_hint: &Option<String>,
-    metadata_str: &Option<String>,
 ) -> Result<()> {
-    if !json_output {
-        println!("Running intake create command...");
+    let wiki_dir = &config.wiki.wiki_dir;
+
+    let items = collect_items(config, url, file, folder, title, subject_hint).await?;
+
+    if items.is_empty() {
+        anyhow::bail!("No content to ingest — provide --url, --file, or --folder");
     }
 
-    let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
-        .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
+    let mut ingested: Vec<String> = Vec::new();
+    let mut skipped: Vec<String> = Vec::new();
+    let mut registry = load_registry(wiki_dir)?;
 
-    let client = ConfluenceClient::new(
-        config.connection.confluence_url.clone(),
-        config.connection.confluence_email.clone(),
-        auth_token,
-        config.content_model.space_key.clone(),
-        None,
-    )?;
+    for item in items {
+        let hash = content_hash(&item.text);
 
-    let space_key = &config.content_model.space_key;
-    let intake_page_id = ensure_scoped_structure_page(
-        &client,
-        space_key,
-        "",
-        "Intake",
-        "<p>This page holds raw, unprocessed content that has been ingested.</p>",
-    )
-    .await?;
-    let admin_page_id = ensure_scoped_structure_page(
-        &client,
-        space_key,
-        "",
-        ADMIN_TITLE,
-        &build_admin_root_body(),
-    )
-    .await?;
-    let registry_root_id = ensure_scoped_page(
-        &client,
-        space_key,
-        &admin_page_id,
-        "_registry",
-        &build_registry_root_body(),
-    )
-    .await?;
-    let audit_root_id = ensure_scoped_page(
-        &client,
-        space_key,
-        &admin_page_id,
-        AUDIT_TITLE,
-        &build_audit_root_body(),
-    )
-    .await?;
-
-    let mut all_content: Vec<ContentItem> = Vec::new();
-    let mut source_items = 0usize;
-    let mut skipped_unavailable = 0usize;
-
-    if let Some(u) = url {
-        if let Some(folder_id) = extract_confluence_folder_id(u) {
-            if !json_output {
-                println!("Ingesting from Confluence folder: {}", u);
-            }
-
-            let folder = client
-                .get_folder_by_id_v2(&folder_id)
-                .await?
-                .context(format!("Confluence folder not found: {}", folder_id))?;
-            let folder_title = folder["title"].as_str().unwrap_or(&folder_id).to_string();
-            let descendants = client.get_folder_descendants_v2(&folder_id).await?;
-
-            if !json_output {
-                println!(
-                    "Found {} descendant items under folder '{}'",
-                    descendants.len(),
-                    folder_title
-                );
-            }
-
-            for descendant in descendants {
-                let content_type = descendant["type"].as_str().unwrap_or_default();
-                if content_type != "page" {
-                    continue;
-                }
-                source_items += 1;
-
-                let page_id = descendant["id"]
-                    .as_str()
-                    .context("Folder descendant page is missing an ID")?;
-                let page = match client.get_page_by_id_with_body_v1(page_id).await {
-                    Ok(Some(page)) => page,
-                    Ok(None) => {
-                        skipped_unavailable += 1;
-                        if !json_output {
-                            println!(
-                                "  - Skipping inaccessible descendant page {} (not found)",
-                                page_id
-                            );
-                        }
-                        continue;
-                    }
-                    Err(err) => {
-                        skipped_unavailable += 1;
-                        if !json_output {
-                            println!(
-                                "  - Skipping descendant page {} because it could not be loaded: {}",
-                                page_id, err
-                            );
-                        }
-                        continue;
-                    }
-                };
-
-                let page_title = page["title"]
-                    .as_str()
-                    .or_else(|| descendant["title"].as_str())
-                    .unwrap_or("Untitled Confluence Page")
-                    .to_string();
-                let content = extract_page_text(&page);
-
-                if !json_output {
-                    println!("  - Queuing page from folder: {} ({})", page_title, page_id);
-                }
-
-                let webui_path = page["_links"]["webui"].as_str().map(|s| s.to_string());
-                let summary = page["body"]["storage"]["value"]
-                    .as_str()
-                    .and_then(|html| extract_summary_from_html(html, 300))
-                    .or_else(|| extract_summary_from_text(&content, 300));
-                all_content.push(ContentItem {
-                    text: content,
-                    source_id: format!("confluence-folder:{}:page:{}", folder_id, page_id),
-                    subject_hint: Some(page_title),
-                    kind: SourceKind::ConfluencePage { page_id: page_id.to_string(), webui_path },
-                    summary,
-                });
-            }
-        } else if let Some(page_id) = extract_confluence_page_id_from_url(u) {
-            if !json_output {
-                println!("Ingesting from Confluence page tree: {}", u);
-            }
-
-            let root_page = client
-                .get_page_by_id_with_body_v1(&page_id)
-                .await?
-                .context(format!("Confluence page not found: {}", page_id))?;
-            let root_title = root_page["title"].as_str().unwrap_or(&page_id).to_string();
-            let root_content = extract_page_text(&root_page);
-
-            if !json_output {
-                println!("  - Queuing page from tree: {} ({})", root_title, page_id);
-            }
-            source_items += 1;
-            let root_webui_path = root_page["_links"]["webui"].as_str().map(|s| s.to_string());
-            let root_summary = root_page["body"]["storage"]["value"]
-                .as_str()
-                .and_then(|html| extract_summary_from_html(html, 300))
-                .or_else(|| extract_summary_from_text(&root_content, 300));
-            all_content.push(ContentItem {
-                text: root_content,
-                source_id: format!("confluence-page:{}:page:{}", page_id, page_id),
-                subject_hint: Some(root_title.clone()),
-                kind: SourceKind::ConfluencePage { page_id: page_id.to_string(), webui_path: root_webui_path },
-                summary: root_summary,
-            });
-
-            let descendants = client.get_page_descendants_v2(&page_id).await?;
-            if !json_output {
-                println!(
-                    "Found {} descendant items under page '{}'",
-                    descendants.len(),
-                    root_title
-                );
-            }
-
-            for descendant in descendants {
-                let content_type = descendant["type"].as_str().unwrap_or_default();
-                if content_type != "page" {
-                    continue;
-                }
-                source_items += 1;
-
-                let child_page_id = descendant["id"]
-                    .as_str()
-                    .context("Page descendant is missing an ID")?;
-                let page = match client.get_page_by_id_with_body_v1(child_page_id).await {
-                    Ok(Some(page)) => page,
-                    Ok(None) => {
-                        skipped_unavailable += 1;
-                        if !json_output {
-                            println!(
-                                "  - Skipping inaccessible descendant page {} (not found)",
-                                child_page_id
-                            );
-                        }
-                        continue;
-                    }
-                    Err(err) => {
-                        skipped_unavailable += 1;
-                        if !json_output {
-                            println!(
-                                "  - Skipping descendant page {} because it could not be loaded: {}",
-                                child_page_id, err
-                            );
-                        }
-                        continue;
-                    }
-                };
-
-                let page_title = page["title"]
-                    .as_str()
-                    .or_else(|| descendant["title"].as_str())
-                    .unwrap_or("Untitled Confluence Page")
-                    .to_string();
-                let content = extract_page_text(&page);
-
-                if !json_output {
-                    println!(
-                        "  - Queuing descendant page from tree: {} ({})",
-                        page_title, child_page_id
-                    );
-                }
-
-                let webui_path = page["_links"]["webui"].as_str().map(|s| s.to_string());
-                let summary = page["body"]["storage"]["value"]
-                    .as_str()
-                    .and_then(|html| extract_summary_from_html(html, 300))
-                    .or_else(|| extract_summary_from_text(&content, 300));
-                all_content.push(ContentItem {
-                    text: content,
-                    source_id: format!("confluence-page:{}:page:{}", page_id, child_page_id),
-                    subject_hint: Some(page_title),
-                    kind: SourceKind::ConfluencePage { page_id: child_page_id.to_string(), webui_path },
-                    summary,
-                });
-            }
-        } else if let Some(space_key) = extract_confluence_space_key_from_url(u) {
-            if !json_output {
-                println!("Ingesting from Confluence space: {}", space_key);
-            }
-            let pages = client
-                .execute_cql(&format!(
-                    "space = \"{}\" AND type = page ORDER BY created ASC",
-                    space_key
-                ))
-                .await?;
-            source_items = pages.len();
-            for page in pages {
-                let page_id = page["id"].as_str().context("Space page is missing an ID")?;
-                let loaded = match client.get_page_by_id_with_body_v1(page_id).await {
-                    Ok(Some(page)) => page,
-                    Ok(None) => {
-                        skipped_unavailable += 1;
-                        if !json_output {
-                            println!(
-                                "  - Skipping inaccessible space page {} (not found)",
-                                page_id
-                            );
-                        }
-                        continue;
-                    }
-                    Err(err) => {
-                        skipped_unavailable += 1;
-                        if !json_output {
-                            println!(
-                                "  - Skipping space page {} because it could not be loaded: {}",
-                                page_id, err
-                            );
-                        }
-                        continue;
-                    }
-                };
-
-                let page_title = loaded["title"]
-                    .as_str()
-                    .or_else(|| page["title"].as_str())
-                    .unwrap_or("Untitled Confluence Page")
-                    .to_string();
-                let content = extract_page_text(&loaded);
-
-                if !json_output {
-                    println!("  - Queuing page from space: {} ({})", page_title, page_id);
-                }
-
-                let webui_path = loaded["_links"]["webui"].as_str().map(|s| s.to_string());
-                let summary = loaded["body"]["storage"]["value"]
-                    .as_str()
-                    .and_then(|html| extract_summary_from_html(html, 300))
-                    .or_else(|| extract_summary_from_text(&content, 300));
-                all_content.push(ContentItem {
-                    text: content,
-                    source_id: format!("confluence-space:{}:page:{}", space_key, page_id),
-                    subject_hint: Some(page_title),
-                    kind: SourceKind::ConfluencePage { page_id: page_id.to_string(), webui_path },
-                    summary,
-                });
-            }
-        } else {
-            if !json_output {
-                println!("Ingesting from URL: {}", u);
-            }
-            let content = fetch_url_content(u).await?;
-            source_items += 1;
-            let summary = extract_summary_from_text(&content, 300);
-            all_content.push(ContentItem {
-                text: content,
-                source_id: format!("url:{}", u),
-                subject_hint: subject_hint.clone(),
-                kind: SourceKind::Url { url: u.clone() },
-                summary,
-            });
+        // Dedup: same id means same source
+        if registry.pages.iter().any(|e| e.id == item.id) {
+            skipped.push(item.title.clone());
+            continue;
         }
-    } else if let Some(f) = file {
-        if !json_output {
-            println!("Ingesting from file: {}", f.display());
+
+        if dry_run {
+            ingested.push(item.title.clone());
+            continue;
         }
-        let content = read_file_content(f).await?;
-        source_items += 1;
-        let filename = f
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("unknown_file");
-        let derived_subject_hint = f.file_stem().and_then(|name| name.to_str()).map(|name| {
-            name.split_once("__")
-                .map(|(_, subject)| subject.to_string())
-                .unwrap_or_else(|| name.to_string())
-        });
-        let mime = get_mime_type(filename);
-        let summary = extract_summary_from_text(&content, 300);
-        all_content.push(ContentItem {
-            text: content,
-            source_id: format!("file:{}", f.display()),
-            subject_hint: derived_subject_hint.or_else(|| subject_hint.clone()),
-            kind: SourceKind::File { path: f.display().to_string(), mime },
-            summary,
-        });
-    } else if let Some(f) = folder {
-        println!("Ingesting from folder: {}", f.display());
-        for entry in WalkDir::new(f).into_iter().filter_map(|e| e.ok()) {
-            if entry.file_type().is_file() {
-                let path = entry.path();
-                if !json_output {
-                    println!("  - Ingesting file: {}", path.display());
-                }
-                let content = read_file_content(path).await?;
-                source_items += 1;
-                let filename = path
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .unwrap_or("unknown_file");
-                let derived_subject_hint =
-                    path.file_stem().and_then(|name| name.to_str()).map(|name| {
-                        name.split_once("__")
-                            .map(|(_, subject)| subject.to_string())
-                            .unwrap_or_else(|| name.to_string())
-                    });
-                let mime = get_mime_type(filename);
-                let summary = extract_summary_from_text(&content, 300);
-                all_content.push(ContentItem {
-                    text: content,
-                    source_id: format!("file:{}", path.display()),
-                    subject_hint: derived_subject_hint.or_else(|| subject_hint.clone()),
-                    kind: SourceKind::File { path: path.display().to_string(), mime },
-                    summary,
-                });
-            }
-        }
-    } else {
-        anyhow::bail!("No input source provided. Use --url, --file, or --folder.");
+
+        let slug = slug_from_title(&item.title);
+        let filename = format!("{}.md", slug);
+        let dest = wiki_dir.join("intake").join(&filename);
+
+        let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let fm = Frontmatter {
+            id: item.id.clone(),
+            title: item.title.clone(),
+            status: PageStatus::Intake,
+            source: item.source_ref.clone(),
+            category: vec![],
+            keywords: vec![],
+            created_at: now.clone(),
+            updated_at: now,
+            confidence: None,
+            cross_refs: vec![],
+            content_hash: hash,
+            confluence_page_id: None,
+            model_used: None,
+        };
+
+        let summary = first_line_summary(&item.text, 200);
+        let page = WikiPage { path: dest.clone(), frontmatter: fm.clone(), body: item.text.clone() };
+        write_wiki_page(&dest, &page)?;
+
+        let rel = format!("intake/{}", filename);
+        let entry = entry_from_frontmatter(&fm, &rel, &summary);
+        registry.pages.push(entry);
+
+        ingested.push(item.title.clone());
     }
 
-    let mut handled_items = 0usize;
-    let mut duplicate_skipped = 0usize;
-    let mut failed_items = 0usize;
+    if !dry_run && !ingested.is_empty() {
+        save_registry(wiki_dir, &registry)?;
+        rebuild_index_md(wiki_dir, &registry)?;
+        append_log(wiki_dir, &format!("intake: {} items ingested", ingested.len()))?;
 
-    for mut item in all_content {
-        // subject_hint from CLI overrides per-item hint only if item has none
-        if item.subject_hint.is_none() {
-            item.subject_hint = subject_hint.clone();
-        }
-        match process_single_content(
-            &client,
-            config,
-            dry_run,
-            json_output,
-            &intake_page_id,
-            &registry_root_id,
-            &audit_root_id,
-            &item,
-            metadata_str,
-        )
-        .await
-        {
-            Ok(true) => handled_items += 1,
-            Ok(false) => duplicate_skipped += 1,
-            Err(err) => {
-                failed_items += 1;
-                if !json_output {
-                    eprintln!(
-                        "Skipping source {} after intake write failure: {}",
-                        item.source_id, err
-                    );
-                }
+        if config.wiki.auto_commit {
+            let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
+            crate::git_ops::git_add(repo_root, wiki_dir)?;
+            if crate::git_ops::git_has_staged(repo_root) {
+                crate::git_ops::git_commit(
+                    repo_root,
+                    &format!("curio: intake {} item(s)", ingested.len()),
+                )?;
             }
         }
     }
 
-    if json_output {
-        emit_json(
-            "intake-create",
+    if json {
+        let _ = emit_json(
+            "intake",
             true,
-            IntakeOutput {
-                source_items,
-                handled_items,
-                duplicate_skipped,
-                skipped_unavailable,
-                failed_items,
-                dry_run,
-            },
-        )?;
+            &serde_json::json!({
+                "ingested": ingested,
+                "skipped": skipped,
+                "dry_run": dry_run,
+            }),
+        );
     } else {
-        println!("Intake create command finished.");
+        for t in &ingested {
+            println!("  ingested: {}", t);
+        }
+        for t in &skipped {
+            println!("  skipped (duplicate): {}", t);
+        }
+        if !ingested.is_empty() || !skipped.is_empty() {
+            println!(
+                "{} item(s) ingested, {} skipped",
+                ingested.len(),
+                skipped.len()
+            );
+        }
     }
     Ok(())
 }
 
-async fn fetch_url_content(url: &str) -> Result<String> {
-    let client = reqwest::Client::builder()
-        .timeout(http_timeout_duration())
-        .connect_timeout(std::time::Duration::from_secs(15))
-        .build()
-        .context("Failed to build URL fetch client")?;
+// ─── Content collection ───────────────────────────────────────────────────
 
-    let response = client
+struct IntakeItem {
+    id: String,
+    title: String,
+    text: String,
+    source_ref: SourceRef,
+}
+
+async fn collect_items(
+    config: &Config,
+    url: &Option<String>,
+    file: &Option<PathBuf>,
+    folder: &Option<PathBuf>,
+    title: &Option<String>,
+    _subject_hint: &Option<String>,
+) -> Result<Vec<IntakeItem>> {
+    let mut items = Vec::new();
+
+    if let Some(url_str) = url {
+        if is_confluence_url(url_str, &config.connection.confluence_url) {
+            items.extend(collect_from_confluence(config, url_str, title).await?);
+        } else {
+            items.extend(collect_from_url(url_str, title).await?);
+        }
+    } else if let Some(file_path) = file {
+        items.extend(collect_from_file(file_path, title)?);
+    } else if let Some(folder_path) = folder {
+        items.extend(collect_from_folder(folder_path)?);
+    }
+
+    Ok(items)
+}
+
+fn is_confluence_url(url: &str, confluence_base: &str) -> bool {
+    !confluence_base.is_empty() && url.starts_with(confluence_base.trim_end_matches('/'))
+}
+
+async fn collect_from_url(url: &str, title_hint: &Option<String>) -> Result<Vec<IntakeItem>> {
+    let client = reqwest::Client::builder()
+        .user_agent("curio/0.1")
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
+
+    let html = client
         .get(url)
         .send()
         .await
-        .context(format!("Failed to fetch URL: {}", url))?;
-    let status = response.status();
-    let content_type = response
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|h| h.to_str().ok())
-        .unwrap_or("text/plain")
-        .to_string(); // Convert to owned String
-
-    let text = response
+        .with_context(|| format!("Failed to fetch {}", url))?
         .text()
-        .await
-        .context("Failed to read response body from URL")?;
+        .await?;
 
-    if status.is_success() {
-        // Simple HTML parsing for now
-        if content_type.contains("text/html") {
-            let document = Html::parse_document(&text);
-            let selector = Selector::parse("body").unwrap(); // Extract text from body
-            if let Some(body) = document.select(&selector).next() {
-                Ok(body.text().collect::<Vec<_>>().join(" "))
-            } else {
-                Ok(text) // Fallback to full HTML if body not found
-            }
-        } else {
-            Ok(text)
-        }
-    } else {
-        anyhow::bail!("Failed to fetch URL {} with status: {}", url, status);
-    }
-}
-
-async fn read_file_content(path: &Path) -> Result<String> {
-    let content = std::fs::read_to_string(path)
-        .context(format!("Failed to read file: {}", path.display()))?;
-    Ok(content
-        .strip_prefix('\u{feff}')
-        .unwrap_or(&content)
-        .to_string())
-}
-
-fn get_mime_type(filename: &str) -> String {
-    // Basic mime type detection based on extension
-    if filename.ends_with(".html") || filename.ends_with(".htm") {
-        "text/html".to_string()
-    } else if filename.ends_with(".md") {
-        "text/markdown".to_string()
-    } else if filename.ends_with(".json") {
-        "application/json".to_string()
-    } else if filename.ends_with(".txt") {
-        "text/plain".to_string()
-    } else {
-        "application/octet-stream".to_string()
-    }
-}
-
-async fn process_single_content(
-    client: &ConfluenceClient,
-    config: &Config,
-    dry_run: bool,
-    json_output: bool,
-    intake_page_id: &str,
-    registry_root_id: &str,
-    audit_root_id: &str,
-    item: &ContentItem,
-    metadata_str: &Option<String>,
-) -> Result<bool> {
-    let content = &item.text;
-    let source_id = &item.source_id;
-    let content_type = item.kind.content_type();
-    let subject_hint = &item.subject_hint;
-    let source_hash = format!("{:x}", Sha256::digest(content.as_bytes()));
-    let dedupe_key = format!("{}:{}", content_type, &source_hash);
-
-    let current_datetime = Utc::now().format("%Y%m%d%H%M%S").to_string();
-    let subject_key = subject_hint
-        .as_ref()
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| {
-            // Basic heuristic: first few words of content or source ID
-            content
-                .split_whitespace()
-                .take(5)
-                .collect::<Vec<&str>>()
-                .join(" ")
-        });
-
-    let page_title = if !subject_key.is_empty() {
-        subject_key.clone()
-    } else {
-        format!(
-            "[{}] {} - {}",
-            content_type.to_uppercase(),
-            source_id,
-            current_datetime
-        )
-    };
-
-    let label_namespace = &config.content_model.label_namespace;
-
-    // 1. Check for Duplicates
-    let cql_dedupe = format!(
-        "label = \"{}::dedupe-key::{}\"",
-        label_namespace, dedupe_key
-    );
-    if !json_output {
-        println!("Checking for duplicates with CQL: {}", cql_dedupe);
-    }
-    let existing_pages = client.execute_cql(&cql_dedupe).await?;
-
-    if !existing_pages.is_empty() {
-        if !json_output {
-            println!(
-                "Skipping ingestion: Duplicate content found with dedupe key '{}'. Existing page IDs: {:?}",
-                dedupe_key,
-                existing_pages
-                    .iter()
-                    .filter_map(|p| p["id"].as_str())
-                    .collect::<Vec<&str>>()
-            );
-        }
-        return Ok(false);
-    }
-
-    // 2. Create Page
-    let page_id = if dry_run {
-        if !json_output {
-            println!("(Dry run) Would create page: '{}' under Intake", page_title);
-        }
-        "dry_run_page_id".to_string()
-    } else {
-        if !json_output {
-            println!("Creating page: '{}' under Intake", page_title);
-        }
-        create_scoped_intake_page(
-            client,
-            &config.content_model.space_key,
-            intake_page_id,
-            &page_title,
-            item,
-            &config.connection.confluence_url,
-            json_output,
-        )
-        .await?
-    };
-
-    // 3. Set Metadata
-    let mut curio_metadata = json!({
-        "curio_version": "1.0",
-        "source_id": source_id,
-        "source_hash": source_hash,
-        "dedupe_key": dedupe_key,
-        "subject_key": subject_key,
-        "status": "intake",
-        "ingested_at": Utc::now().to_rfc3339(),
-        "source_metadata": {
-            "type": content_type,
-        }
+    let text = extract_text_from_html(&html);
+    let title = title_hint.clone().unwrap_or_else(|| {
+        extract_title_from_html(&html).unwrap_or_else(|| url.to_string())
     });
+    let id = generate_id(&format!("url:{}", url));
 
-    if let Some(meta_str) = metadata_str {
-        let user_metadata: serde_json::Value =
-            serde_json::from_str(meta_str).context("Failed to parse --metadata JSON string")?;
-        // Merge user provided metadata, user metadata will overwrite default fields
-        if let Some(obj) = curio_metadata.as_object_mut() {
-            if let Some(user_obj) = user_metadata.as_object() {
-                for (k, v) in user_obj {
-                    obj.insert(k.clone(), v.clone());
+    Ok(vec![IntakeItem {
+        id,
+        title,
+        text,
+        source_ref: SourceRef {
+            kind: "url".to_string(),
+            id: format!("url:{}", url),
+            origin_url: Some(url.to_string()),
+            summary: None,
+        },
+    }])
+}
+
+async fn collect_from_confluence(
+    config: &Config,
+    url: &str,
+    title_hint: &Option<String>,
+) -> Result<Vec<IntakeItem>> {
+    config.connection.require_confluence()?;
+    let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
+        .context("CURIO_CONFLUENCE_TOKEN not set")?;
+    let client = crate::confluence::ConfluenceClient::new(
+        config.connection.confluence_url.clone(),
+        config.connection.confluence_email.clone(),
+        token,
+        config.content_model.space_key.clone(),
+        None,
+    )?;
+
+    let page_id = extract_confluence_page_id(url)
+        .ok_or_else(|| anyhow::anyhow!("Could not extract page ID from Confluence URL: {}", url))?;
+
+    let page = client
+        .get_page_body(&page_id)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Confluence page not found: {}", page_id))?;
+
+    let title = title_hint.clone().unwrap_or_else(|| {
+        page["title"].as_str().unwrap_or("Untitled").to_string()
+    });
+    let html_body = page["body"]["storage"]["value"].as_str().unwrap_or("").to_string();
+    let text = extract_text_from_html(&html_body);
+    let id = generate_id(&format!("confluence-page:{}", page_id));
+
+    Ok(vec![IntakeItem {
+        id,
+        title,
+        text,
+        source_ref: SourceRef {
+            kind: "confluence_page".to_string(),
+            id: format!("confluence-page:{}", page_id),
+            origin_url: Some(url.to_string()),
+            summary: None,
+        },
+    }])
+}
+
+fn collect_from_file(path: &Path, title_hint: &Option<String>) -> Result<Vec<IntakeItem>> {
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let title = title_hint.clone().unwrap_or_else(|| {
+        path.file_stem()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| "Untitled".to_string())
+    });
+    let id = generate_id(&format!("file:{}", path.display()));
+
+    Ok(vec![IntakeItem {
+        id,
+        title,
+        text: content,
+        source_ref: SourceRef {
+            kind: "file".to_string(),
+            id: format!("file:{}", path.display()),
+            origin_url: None,
+            summary: None,
+        },
+    }])
+}
+
+fn collect_from_folder(folder: &Path) -> Result<Vec<IntakeItem>> {
+    let mut items = Vec::new();
+    for entry in WalkDir::new(folder)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_type().is_file()
+                && e.path().extension().map_or(false, |ext| {
+                    matches!(ext.to_str(), Some("md") | Some("txt"))
+                })
+        })
+    {
+        items.extend(collect_from_file(entry.path(), &None)?);
+    }
+    Ok(items)
+}
+
+// ─── HTML → Markdown conversion ───────────────────────────────────────────
+//
+// Recursive top-down walk: each element is processed exactly once, so there
+// are no duplicate lines from parent+child both being selected.
+
+fn extract_text_from_html(html: &str) -> String {
+    let doc = scraper::Html::parse_document(html);
+    // Confluence storage format has content under <body>; plain HTML pages too.
+    let body_sel = scraper::Selector::parse("body").unwrap();
+    let root = doc.select(&body_sel).next()
+        .map(|el| el.id())
+        .and_then(|id| scraper::ElementRef::wrap(doc.tree.get(id).unwrap()))
+        .unwrap_or_else(|| scraper::ElementRef::wrap(doc.tree.root()).unwrap());
+    let md = element_to_md(root, 0);
+    // Collapse runs of 3+ blank lines to 2
+    let re_blank = regex::Regex::new(r"\n{3,}").unwrap();
+    re_blank.replace_all(md.trim(), "\n\n").into_owned()
+}
+
+fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
+    let tag = el.value().name().to_lowercase();
+    match tag.as_str() {
+        // Skip non-content tags entirely
+        "script" | "style" | "head" | "meta" | "link" | "noscript" => String::new(),
+
+        // Headings
+        "h1" => format!("# {}\n\n", inline_text(el)),
+        "h2" => format!("## {}\n\n", inline_text(el)),
+        "h3" => format!("### {}\n\n", inline_text(el)),
+        "h4" => format!("#### {}\n\n", inline_text(el)),
+        "h5" | "h6" => format!("##### {}\n\n", inline_text(el)),
+
+        // Paragraphs
+        "p" => {
+            let t = inline_children(el, depth);
+            if t.trim().is_empty() { String::new() } else { format!("{}\n\n", t.trim()) }
+        }
+
+        // Lists
+        "ul" | "ol" => {
+            let mut out = String::new();
+            let mut idx = 1usize;
+            for child in el.children().filter_map(scraper::ElementRef::wrap) {
+                if child.value().name() == "li" {
+                    let bullet = if tag == "ol" {
+                        format!("{}{}. ", "   ".repeat(depth), idx)
+                    } else {
+                        format!("{}- ", "   ".repeat(depth))
+                    };
+                    let content = inline_children(child, depth + 1).trim().replace('\n', " ");
+                    if !content.is_empty() {
+                        out.push_str(&bullet);
+                        out.push_str(&content);
+                        out.push('\n');
+                        // Recurse into nested lists inside this li
+                        for sub in child.children().filter_map(scraper::ElementRef::wrap) {
+                            match sub.value().name() {
+                                "ul" | "ol" => out.push_str(&element_to_md(sub, depth + 1)),
+                                _ => {}
+                            }
+                        }
+                    }
+                    idx += 1;
                 }
             }
+            if out.is_empty() { String::new() } else { format!("{}\n", out) }
         }
-    }
+        "li" => String::new(), // handled by parent ul/ol
 
-    let route_hint_value = curio_metadata.clone();
-    let route_plan = infer_route_plan(Some(&page_title), content, Some(&route_hint_value));
-    let mut proposal: ChangeProposal = generate_change_proposal_with_agent(
-        Some(&page_title),
-        content,
-        &[source_id.to_string()],
-        Some(&route_hint_value),
-    )
-    .await?;
-    proposal.target_path = route_plan.target_path.clone();
-    proposal.registry_path = route_plan.registry_path.clone();
-    proposal.rationale = Some(route_plan.rationale.clone());
-    proposal.validation_requirements = route_plan.validation_requirements.clone();
-    proposal.sibling_context = route_plan.sibling_context.clone();
-    proposal.model_used = Some("curio-route-plan-v1".to_string());
-    curio_metadata["change_proposal"] = compact_change_proposal(&proposal);
-
-    if !dry_run {
-        if !json_output {
-            println!("Setting curio_metadata for page {}", page_id);
+        // Code blocks
+        "pre" | "code" if tag == "pre" => {
+            let code: String = el.text().collect();
+            if code.trim().is_empty() { String::new() }
+            else { format!("```\n{}\n```\n\n", code.trim_end()) }
         }
-        client
-            .set_content_property(&page_id, "curio_metadata", curio_metadata)
-            .await?;
-    } else {
-        if !json_output {
-            println!(
-                "(Dry run) Would set curio_metadata for page {}: {}",
-                page_id,
-                curio_metadata.to_string()
-            );
-        }
-    }
+        "code" => format!("`{}`", el.text().collect::<String>().trim()),
 
-    // 4. Add Labels
-    let mut labels = vec![
-        format!("{}-status-intake", label_namespace),
-        format!(
-            "{}-type-{}",
-            label_namespace,
-            content_type.replace("/", "-").replace(".", "-")
-        ), // Normalize type for labels
-        format!("{}-dedupe-key-{}", label_namespace, dedupe_key),
-    ];
-    if !subject_key.is_empty() {
-        let sanitized_subject_key = sanitize_label_segment(&subject_key);
-        if !sanitized_subject_key.is_empty() {
-            labels.push(format!(
-                "{}-subject-key-{}",
-                label_namespace, sanitized_subject_key
-            ));
-        }
-    }
+        // Inline formatting — return inline, parent adds paragraph breaks
+        "strong" | "b" => format!("**{}**", inline_text(el)),
+        "em" | "i" => format!("*{}*", inline_text(el)),
 
-    if !dry_run {
-        if !json_output {
-            println!("Adding labels to page {}: {:?}", page_id, labels);
-        }
-        client.add_labels(&page_id, labels).await?;
-
-        let registry_record = RegistryRecord {
-            key: page_id.clone(),
-            item_type: content_type.to_string(),
-            title: page_title.clone(),
-            page_id: page_id.clone(),
-            parent_id: intake_page_id.to_string(),
-            status: "intake".to_string(),
-            source_id: source_id.to_string(),
-            summary: format!(
-                "Created from {} and routed to Intake with subject '{}'",
-                source_id, subject_key
-            ),
-            updated_at: Utc::now().to_rfc3339(),
-        };
-        ensure_registry_record(
-            client,
-            &config.content_model.space_key,
-            registry_root_id,
-            &proposal.registry_path,
-            &registry_record,
-        )
-        .await?;
-
-        let audit_entry = AuditEntry {
-            actor: config.connection.confluence_email.clone(),
-            command: "intake-create".to_string(),
-            subject: page_title.clone(),
-            action: "Created intake page and indexed it in Curio".to_string(),
-            rationale: format!("Capture source {} for Curio processing", source_id),
-            source: source_id.to_string(),
-            result: "intake".to_string(),
-            detail_lines: vec![
-                format!("Page ID: {}", page_id),
-                format!("Content type: {}", content_type),
-                format!("Subject key: {}", subject_key),
-                format!("Dedupe key: {}", dedupe_key),
-            ],
-        };
-        let audit_stamp = Utc::now().format("%Y%m%dT%H%M%S%.3fZ").to_string();
-        append_audit_entry(
-            client,
-            &config.content_model.space_key,
-            audit_root_id,
-            &audit_bucket_path(&audit_stamp),
-            &audit_entry,
-        )
-        .await?;
-
-        let _ = update_branch_index(client, intake_page_id, "Intake", &[], "Intake", None).await;
-    } else {
-        if !json_output {
-            println!(
-                "(Dry run) Would add labels to page {}: {:?}",
-                page_id, labels
-            );
-        }
-    }
-
-    if !json_output {
-        println!("Successfully processed content from source: {}", source_id);
-    }
-    Ok(true)
-}
-
-async fn create_scoped_intake_page(
-    client: &ConfluenceClient,
-    space_key: &str,
-    intake_page_id: &str,
-    page_title: &str,
-    item: &ContentItem,
-    confluence_base_url: &str,
-    json_output: bool,
-) -> Result<String> {
-    let now = Utc::now().to_rfc3339();
-    let body = if item.kind.is_reference() {
-        let origin_url = item.kind.origin_url(confluence_base_url);
-        build_reference_card_adf(
-            page_title,
-            &item.source_id,
-            origin_url.as_deref(),
-            item.summary.as_deref(),
-            "Intake",
-            &now,
-            &[
-                ("source_id", &item.source_id),
-                ("content_type", item.kind.content_type()),
-            ],
-            &[],
-        )
-    } else {
-        let mime = match &item.kind {
-            SourceKind::File { mime, .. } => mime.as_str(),
-            _ => "application/octet-stream",
-        };
-        build_capture_intake_adf(
-            page_title,
-            &item.source_id,
-            "Intake",
-            &now,
-            &item.text,
-            mime,
-        )
-    };
-
-    match client
-        .create_or_update_page(space_key, Some(intake_page_id), page_title, "atlas_doc_format", &body)
-        .await
-    {
-        Ok(page_id) => Ok(page_id),
-        Err(err) if err.to_string().contains("same TITLE in this space") => {
-            let unique_title = build_unique_intake_title(page_title, &item.source_id);
-            if !json_output {
-                println!(
-                    "Title collision for '{}'; retrying with unique title '{}'",
-                    page_title, unique_title
-                );
+        // Links
+        "a" => {
+            let href = el.value().attr("href").unwrap_or("#");
+            let text = inline_text(el);
+            if text.trim().is_empty() || text.trim() == href {
+                format!("<{}>", href)
+            } else {
+                format!("[{}]({})", text.trim(), href)
             }
-            client
-                .create_or_update_page(space_key, Some(intake_page_id), &unique_title, "atlas_doc_format", &body)
-                .await
-                .with_context(|| {
-                    format!(
-                        "Failed to create intake page '{}' from source {} after title collision retry",
-                        page_title, &item.source_id
-                    )
-                })
         }
-        Err(err) => Err(err).with_context(|| {
-            format!(
-                "Failed to create intake page '{}' from source {}",
-                page_title, &item.source_id
-            )
-        }),
+
+        // Horizontal rules / breaks
+        "hr" => "---\n\n".to_string(),
+        "br" => "\n".to_string(),
+
+        // Tables — simple: header row from <th>, body rows from <td>
+        "table" => {
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            let tr_sel = scraper::Selector::parse("tr").unwrap();
+            for tr in el.select(&tr_sel) {
+                let cells: Vec<String> = tr.children()
+                    .filter_map(scraper::ElementRef::wrap)
+                    .filter(|c| matches!(c.value().name(), "td" | "th"))
+                    .map(|c| inline_text(c).replace('|', "\\|").trim().to_string())
+                    .collect();
+                if !cells.is_empty() {
+                    rows.push(cells);
+                }
+            }
+            if rows.is_empty() { return String::new(); }
+            let cols = rows.iter().map(|r| r.len()).max().unwrap_or(1);
+            let separator = format!("| {} |", vec!["---"; cols].join(" | "));
+            let mut out = String::new();
+            for (i, row) in rows.iter().enumerate() {
+                let padded: Vec<String> = (0..cols)
+                    .map(|j| row.get(j).cloned().unwrap_or_default())
+                    .collect();
+                out.push_str(&format!("| {} |\n", padded.join(" | ")));
+                if i == 0 {
+                    out.push_str(&separator);
+                    out.push('\n');
+                }
+            }
+            format!("{}\n", out)
+        }
+        "tr" | "td" | "th" | "thead" | "tbody" => String::new(), // handled by table
+
+        // Block-level containers — recurse into children
+        "div" | "section" | "article" | "main" | "body"
+        | "html" | "span" | "figure" | "figcaption"
+        | "header" | "footer" | "nav" | "aside" => children_to_md(el, depth),
+
+        // Confluence macros: extract text from rich/plain body
+        "ac:structured-macro" => {
+            // info/note/warning → blockquote-style callout
+            let macro_name = el.value().attr("ac:name").unwrap_or("");
+            let body_sel = scraper::Selector::parse("ac\\:rich-text-body, ac\\:plain-text-body").unwrap();
+            let body = el.select(&body_sel)
+                .map(|b| element_to_md(b, depth))
+                .collect::<String>();
+            if body.trim().is_empty() { return String::new(); }
+            match macro_name {
+                "info" | "note" | "warning" | "tip" => {
+                    let label = match macro_name {
+                        "warning" => "⚠️ Warning",
+                        "note"    => "📝 Note",
+                        "tip"     => "💡 Tip",
+                        _         => "ℹ️ Info",
+                    };
+                    // Indent each line of the body with "> "
+                    let indented = body.trim().lines()
+                        .map(|l| format!("> {}", l))
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    format!("> **{}**\n>\n{}\n\n", label, indented)
+                }
+                "code" => {
+                    let lang = el.select(&scraper::Selector::parse("ac\\:parameter[ac\\:name=language]").unwrap())
+                        .next()
+                        .map(|p| p.text().collect::<String>())
+                        .unwrap_or_default();
+                    format!("```{}\n{}\n```\n\n", lang, body.trim())
+                }
+                _ => format!("{}\n", body.trim()),
+            }
+        }
+        "ac:rich-text-body" | "ac:plain-text-body" => children_to_md(el, depth),
+        "ac:task-list" => children_to_md(el, depth),
+        "ac:task" => {
+            let status_sel = scraper::Selector::parse("ac\\:task-status").unwrap();
+            let body_sel   = scraper::Selector::parse("ac\\:task-body").unwrap();
+            let done = el.select(&status_sel).next()
+                .map(|s| s.text().collect::<String>().trim().to_lowercase() == "complete")
+                .unwrap_or(false);
+            let body = el.select(&body_sel).next()
+                .map(|b| inline_text(b))
+                .unwrap_or_default();
+            format!("- [{}] {}\n", if done { "x" } else { " " }, body.trim())
+        }
+        "ac:task-status" | "ac:task-body" => String::new(), // handled by ac:task
+
+        // Default: recurse
+        _ => children_to_md(el, depth),
     }
 }
 
-fn build_unique_intake_title(page_title: &str, source_id: &str) -> String {
-    let source_tail = source_id
-        .rsplit(':')
+/// Collect inline text from an element's children without adding block structure.
+fn inline_text(el: scraper::ElementRef<'_>) -> String {
+    el.text().collect::<String>()
+}
+
+/// Collect inline children, handling inline tags like <a>, <strong>, <em>, <code>.
+fn inline_children(el: scraper::ElementRef<'_>, depth: usize) -> String {
+    let mut out = String::new();
+    for child in el.children() {
+        match child.value() {
+            scraper::node::Node::Text(t) => {
+                let s = t.trim_matches('\n');
+                if !s.is_empty() { out.push_str(s); }
+            }
+            scraper::node::Node::Element(_) => {
+                if let Some(child_el) = scraper::ElementRef::wrap(child) {
+                    let tag = child_el.value().name();
+                    // Only recurse into inline elements; block elements are skipped here
+                    match tag {
+                        "a" | "strong" | "b" | "em" | "i" | "code" | "span"
+                        | "br" | "sup" | "sub" | "u" | "s" | "del" => {
+                            out.push_str(&element_to_md(child_el, depth));
+                        }
+                        // Block elements inside inline context: just grab text
+                        _ => {
+                            let t = child_el.text().collect::<String>();
+                            out.push_str(t.trim());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+/// Recurse into all children and concatenate their markdown output.
+fn children_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
+    let mut out = String::new();
+    for child in el.children() {
+        match child.value() {
+            scraper::node::Node::Text(t) => {
+                let s = t.trim_matches('\n').trim();
+                if !s.is_empty() { out.push_str(s); out.push(' '); }
+            }
+            scraper::node::Node::Element(_) => {
+                if let Some(child_el) = scraper::ElementRef::wrap(child) {
+                    out.push_str(&element_to_md(child_el, depth));
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+fn extract_title_from_html(html: &str) -> Option<String> {
+    let doc = scraper::Html::parse_document(html);
+    let sel = scraper::Selector::parse("title, h1").ok()?;
+    doc.select(&sel)
         .next()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("source");
-    format!("{} [{}]", page_title, source_tail)
+        .map(|el| el.text().collect::<String>().trim().to_string())
 }
 
-fn sanitize_label_segment(input: &str) -> String {
-    let mut cleaned = input
-        .replace(['/', '\\', ':', '|', '[', ']', '{', '}', '(', ')'], " ")
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
-    cleaned = cleaned.trim().trim_matches('-').trim().to_string();
-    if cleaned.len() > 120 {
-        cleaned.truncate(120);
-    }
-    cleaned
-}
-
-fn extract_confluence_folder_id(url: &str) -> Option<String> {
-    let marker = "/folder/";
-    let start = url.find(marker)? + marker.len();
-    let tail = &url[start..];
-    let folder_id: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
-
-    if folder_id.is_empty() {
-        None
-    } else {
-        Some(folder_id)
-    }
-}
-
-fn extract_confluence_space_key_from_url(url: &str) -> Option<String> {
-    let marker = "/spaces/";
-    let start = url.find(marker)? + marker.len();
-    let tail = &url[start..];
-    let space_key: String = tail
-        .chars()
-        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-')
-        .collect();
-
-    if space_key.is_empty() {
-        return None;
-    }
-
-    if url.contains("/overview") {
-        Some(space_key)
-    } else {
-        None
-    }
-}
-
-fn extract_confluence_page_id_from_url(url: &str) -> Option<String> {
-    if let Some(marker) = url.find("/pages/") {
-        let tail = &url[(marker + "/pages/".len())..];
-        let page_id: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
-        if !page_id.is_empty() {
-            return Some(page_id);
+fn extract_confluence_page_id(url: &str) -> Option<String> {
+    if let Some(idx) = url.find("/pages/") {
+        let rest = &url[idx + 7..];
+        let id: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
+        if !id.is_empty() {
+            return Some(id);
         }
     }
-
-    if let Some(marker) = url.find("homepageId=") {
-        let tail = &url[(marker + "homepageId=".len())..];
-        let page_id: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
-        if !page_id.is_empty() {
-            return Some(page_id);
+    if let Some(idx) = url.find("pageId=") {
+        let rest = &url[idx + 7..];
+        let id: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
+        if !id.is_empty() {
+            return Some(id);
         }
     }
-
     None
 }

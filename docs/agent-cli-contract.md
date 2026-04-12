@@ -36,7 +36,8 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `list-plugins` data includes a `plugins` array.
 - `print-env` data includes `provider` and an `env` map.
 - `search` data includes the CQL query, a result count, and the raw Confluence result array.
-- `bootstrap` data includes the managed root folder ID, the README landing page ID, the structural roots (`_templates`, `_registry`, `_audit`), and the ensured base pages.
+- `bootstrap` data includes the configured space key, the README landing page ID, the NORTHSTAR charter page ID, the structural roots (`_templates`, `_registry`, `_audit`), and the ensured base pages.
+- `onboard` ensures `NORTHSTAR.md` exists, then offers a repair bootstrap for missing required structure pages.
 - `intake-create` data includes source item counts, handled items, duplicate skips, and unavailable skips.
 - `process-intake` data includes the intake count, handled count, staged count, and review-required count.
 - `agent-analyze` data includes the requested page count and analyzed page count.

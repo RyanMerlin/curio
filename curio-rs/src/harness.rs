@@ -106,7 +106,7 @@ fn find_repo_root(start: &Path) -> Result<PathBuf> {
     }
 
     bail!(
-        "Could not find the Curio repo root. Run this command from C:\\code\\agents\\curio or a child path."
+        "Could not find the Curio repo root. Run this command from the Curio repository root or set CURIO_REPO_ROOT."
     )
 }
 
@@ -308,6 +308,18 @@ pub fn build_launch_plan(
         "CURIO_BOOTSTRAP_SUMMARY".to_string(),
         profile.bootstrap_summary.clone(),
     );
+    // Expose wiki directory so launched agents can discover it without parsing .curio.yaml
+    if let Ok(wiki_dir) = std::env::var("CURIO_WIKI_DIR") {
+        if !wiki_dir.is_empty() {
+            env.insert("CURIO_WIKI_DIR".to_string(), wiki_dir);
+        }
+    } else {
+        // Default: wiki/ relative to repo root
+        env.insert(
+            "CURIO_WIKI_DIR".to_string(),
+            paths.repo_root.join("wiki").display().to_string(),
+        );
+    }
     for (key, value) in profile.env {
         env.insert(key, value);
     }

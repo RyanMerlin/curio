@@ -2,37 +2,19 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(name = "curio", version, about = "A CLI for Curio")]
+#[command(name = "curio", version, about = "Git-native enterprise knowledge store")]
 pub struct Cli {
     #[arg(long, global = true, help = "Path to the configuration file")]
     pub config: Option<PathBuf>,
 
-    #[arg(
-        long,
-        global = true,
-        help = "If true, print what would be done without making changes"
-    )]
+    #[arg(long, global = true, help = "Print what would be done without making changes")]
     pub dry_run: bool,
 
-    #[arg(long, global = true, help = "Confluence space key to operate within")]
-    pub space: Option<String>,
-
-    #[arg(long, global = true, help = "Working directory for ephemeral files")]
-    pub workdir: Option<PathBuf>,
-
-    #[arg(
-        long,
-        global = true,
-        help = "Set the logging level (e.g., INFO, DEBUG, TRACE)"
-    )]
-    pub log_level: Option<String>,
-
-    #[arg(
-        long,
-        global = true,
-        help = "Emit machine-readable JSON for helper commands"
-    )]
+    #[arg(long, global = true, help = "Emit machine-readable JSON output")]
     pub json: bool,
+
+    #[arg(long, global = true, help = "Set the logging level (e.g. INFO, DEBUG)")]
+    pub log_level: Option<String>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -41,11 +23,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Inspect and synchronize the Curio onboarding state.
-    ///
-    /// By default, Curio prompts to install the user-level shim and treats
-    /// Enter as yes so `curio` works from any terminal.
     Onboard {
-        /// Force install or update the user-level Curio shim without prompting.
         #[arg(long)]
         install: bool,
     },
@@ -56,133 +34,166 @@ pub enum Commands {
         provider: Option<AgentProvider>,
     },
 
-    /// Create and verify the core Confluence structure (folders, templates).
-    Bootstrap {
-        /// Remove existing CURIO pages in the target space before rebuilding.
+    /// Create the wiki/ directory scaffold and seed index files.
+    ///
+    /// Idempotent — safe to run on an existing wiki.
+    Init {
+        /// Recreate all scaffold files from scratch (preserves existing pages).
         #[arg(long)]
-        overwrite: bool,
-
-        /// Confirm the destructive wipe of existing CURIO pages.
-        #[arg(long)]
-        confirm_nuke: bool,
+        reset: bool,
     },
 
-    /// Ingest content from various sources into Confluence.
-    IntakeCreate {
-        /// URL of a web page, Confluence page, or Confluence folder to ingest.
-        #[arg(long, group = "source", help_heading = "Input Source (choose one)")]
+    /// Ingest content from a URL, file, or Confluence page into wiki/intake/.
+    Intake {
+        /// Web URL or Confluence page URL to ingest.
+        #[arg(long, group = "source")]
         url: Option<String>,
 
         /// Path to a local file to ingest.
-        #[arg(long, group = "source", help_heading = "Input Source (choose one)")]
-        file: Option<std::path::PathBuf>,
+        #[arg(long, group = "source")]
+        file: Option<PathBuf>,
 
         /// Path to a local folder to ingest recursively.
-        #[arg(long, group = "source", help_heading = "Input Source (choose one)")]
-        folder: Option<std::path::PathBuf>,
+        #[arg(long, group = "source")]
+        folder: Option<PathBuf>,
 
-        /// (Optional) A hint for the subject of the content.
-        #[arg(long, help_heading = "Options")]
-        subject_hint: Option<String>,
-
-        /// (Optional) JSON string of initial metadata to merge.
-        #[arg(long, help_heading = "Options")]
-        metadata: Option<String>,
-    },
-
-    /// Processes content from the Intake stage, moving it to Staged or Review.
-    ProcessIntake {
-        /// The maximum number of intake items to process in one run.
-        #[arg(
-            long,
-            default_value = "10",
-            help = "The maximum number of intake items to process in one run."
-        )]
-        limit: u32,
-    },
-
-    /// Searches Confluence for content based on various criteria.
-    Search {
-        /// Labels to filter by (e.g., "curio-status-staged"). Can be specified multiple times.
+        /// Optional title hint.
         #[arg(long)]
-        labels: Vec<String>,
+        title: Option<String>,
 
-        /// Free-text search query.
+        /// Optional subject or category hint.
+        #[arg(long)]
+        subject_hint: Option<String>,
+    },
+
+    /// Route intake pages to staged/ or review/ using heuristics or agent decisions.
+    Process {
+        /// Maximum number of intake items to process.
+        #[arg(long, default_value = "10")]
+        limit: u32,
+
+        /// If set, use only heuristics (no agent).
+        #[arg(long)]
+        auto: bool,
+
+        /// Apply a pre-computed routing decision JSON file.
+        #[arg(long)]
+        route_file: Option<PathBuf>,
+
+        /// Route a specific page by its slug.
+        #[arg(long)]
+        slug: Option<String>,
+
+        /// Category path for the routed page (e.g. "by-account/acme").
+        #[arg(long)]
+        category: Option<String>,
+
+        /// Status to route to: staged or review.
+        #[arg(long)]
+        status: Option<String>,
+
+        /// Comma-separated keywords.
+        #[arg(long)]
+        keywords: Option<String>,
+
+        /// Confidence score (0.0–1.0).
+        #[arg(long)]
+        confidence: Option<f32>,
+
+        /// Short summary of the content.
+        #[arg(long)]
+        summary: Option<String>,
+    },
+
+    /// List items in review/ and staged/ with status summaries.
+    Review {
+        /// Filter to only show items in a specific lane: review, staged, or all (default).
+        #[arg(long, default_value = "all")]
+        lane: String,
+    },
+
+    /// Move a review/ item to staged/ after human judgment.
+    Resolve {
+        /// Slug of the page to resolve.
+        slug: String,
+
+        /// Optional: override category on resolve (e.g. "by-account/acme").
+        #[arg(long)]
+        category: Option<String>,
+    },
+
+    /// Publish a staged/ page to published/.
+    Publish {
+        /// Slug of the staged page to publish.
+        slug: String,
+
+        /// Target category path within published/ (e.g. "by-account/acme").
+        /// Defaults to the category stored in the page's frontmatter.
+        #[arg(long)]
+        category: Option<String>,
+    },
+
+    /// Search the wiki registry by keyword, category, or status.
+    Search {
+        /// Keywords to search for.
+        #[arg(long)]
+        keywords: Option<String>,
+
+        /// Filter by category (e.g. "by-account").
+        #[arg(long)]
+        category: Option<String>,
+
+        /// Filter by status (intake | staged | review | published).
+        #[arg(long)]
+        status: Option<String>,
+
+        /// Free-text search across page bodies.
         #[arg(long)]
         text: Option<String>,
 
-        /// Content type to filter by (e.g., "page", "blogpost").
-        #[arg(long)]
-        content_type: Option<String>,
-
-        /// Maximum number of results to return.
+        /// Maximum results.
         #[arg(long, default_value = "20")]
         limit: u32,
     },
 
-    /// Command for an external agent to analyze content in Confluence.
-    AgentAnalyze {
-        /// Optional: Process a specific page by its ID.
-        #[arg(long)]
-        page_id: Option<String>,
-
-        /// Optional: Process pages with a specific status (e.g., "intake", "analyzing").
-        #[arg(long)]
-        status: Option<String>,
-
-        /// The maximum number of items to analyze in one run.
-        #[arg(long, default_value = "10")]
-        limit: u32,
-    },
-
-    /// Finds or creates a canonical "gold" page for a given subject.
-    GoldResolve {
-        /// The ID of the page to resolve (e.g., a page from the "Staged" or "Review" areas).
-        #[arg(long)]
-        page_id: String,
-    },
-
-    /// Publishes resolved content to its canonical "gold" page.
-    GoldPublish {
-        /// The ID of the resolved page (which contains the link to the "gold" page).
-        #[arg(long)]
-        page_id: String,
-    },
-
-    /// Rebuild branch indexes on all Curio branch pages.
-    ///
-    /// Walks the Published, Intake, Staged, Review, and _registry trees and
-    /// refreshes the curio_branch_index content property on every branch page.
-    /// Use this to fix stale navigation indexes after bulk operations.
+    /// Rebuild all wiki/_index/ files by walking wiki/**/*.md.
     Reindex,
 
-    /// A group of commands for reviewing content.
-    #[command(subcommand)]
-    Review(ReviewCommands),
+    /// Sync wiki/published/ directory structure to match the NORTHSTAR blueprint.
+    /// Run this after editing NORTHSTAR to create new tree/subtree dirs and remove empty stale ones.
+    Tree,
 
-    /// Harness commands for launching supported agent providers in the Curio repo.
+    /// Push wiki/published/ to Confluence (one-way sync).
+    Sync {
+        /// Override the Confluence parent page ID from config.
+        #[arg(long)]
+        parent_page_id: Option<String>,
+
+        /// Show what would be pushed without making Confluence API calls.
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Scan the wiki for contradictions, stale claims, and orphaned cross-references.
+    Lint {
+        /// Auto-fix orphaned cross-references.
+        #[arg(long)]
+        fix: bool,
+    },
+
+    /// Answer a natural-language question by querying the wiki.
+    Query {
+        /// The question to answer.
+        question: String,
+
+        /// File the synthesized answer back into the wiki.
+        #[arg(long)]
+        save: bool,
+    },
+
+    /// Harness commands for launching supported agent providers.
     #[command(subcommand)]
     Agent(AgentCommands),
-}
-
-// New enum for the review subcommand
-#[derive(Subcommand, Debug)]
-pub enum ReviewCommands {
-    /// Approves a staged item or a change proposal for publishing.
-    Approve {
-        /// The ID of the page to approve.
-        #[arg(long)]
-        page_id: String,
-    },
-    /// Rejects a staged item or a change proposal.
-    Reject {
-        /// The ID of the page to reject.
-        #[arg(long)]
-        page_id: String,
-        /// The reason for the rejection.
-        #[arg(long)]
-        reason: String,
-    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]

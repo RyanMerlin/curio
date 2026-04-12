@@ -560,6 +560,7 @@ fn build_onboard_config(state: &OnboardState) -> Config {
             temp_dir,
             log_level: None,
         },
+        wiki: Default::default(),
     }
 }
 

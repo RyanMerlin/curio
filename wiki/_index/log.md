@@ -20,3 +20,8 @@
 - **2026-04-12T19:46:09Z** intake: 1 items ingested
 - **2026-04-12T19:46:26Z** process: intake items routed
 - **2026-04-12T19:46:26Z** publish: rollback-downgrade-a-failed-server-upgrade published to published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md
+- **2026-04-12T19:46:36Z** sync: 7 upserted, 3 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T20:12:01Z** sync: 10 upserted, 3 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T20:26:56Z** sync: 13 upserted, 6 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T20:30:04Z** sync: 12 upserted, 7 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T20:36:30Z** sync: 13 upserted, 6 skipped, 0 stale deleted, 0 errors

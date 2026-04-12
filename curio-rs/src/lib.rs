@@ -2,180 +2,104 @@ pub mod cli;
 pub mod commands;
 pub mod config;
 pub mod confluence;
-pub mod curio_docs;
 pub mod error;
+pub mod git_ops;
 pub mod harness;
 pub mod northstar;
 pub mod output;
+pub mod reconcile;
+pub mod wiki_fs;
+pub mod wiki_index;
 
-use anyhow::Result as AnyhowResult;
 pub use error::Result;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use sha2::{Digest, Sha256};
 
-// --- Shared Placeholder for External Agent Integration ---
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AgentAnalysis {
-    pub summary: String,
-    pub keywords: Vec<String>,
-    pub confidence_score: f32, // 0.0 to 1.0
-                               // potentially embedding vectors for semantic search
+// ─── Wiki core types ───────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PageStatus {
+    Intake,
+    Staged,
+    Review,
+    Published,
 }
 
-pub async fn analyze_content_with_agent(_content: &str) -> AnyhowResult<AgentAnalysis> {
-    // This is a placeholder. In a real scenario, this would make an HTTP call
-    // to an external AI agent service.
-
-    // Simulate some analysis results
-    Ok(AgentAnalysis {
-        summary: "This is a simulated summary of the content.".to_string(),
-        keywords: vec![
-            "simulated".to_string(),
-            "analysis".to_string(),
-            "curio".to_string(),
-        ],
-        confidence_score: 0.85, // Simulate high confidence
-    })
+impl PageStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            PageStatus::Intake => "intake",
+            PageStatus::Staged => "staged",
+            PageStatus::Review => "review",
+            PageStatus::Published => "published",
+        }
+    }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Change {
-    pub target_page_id: String,
-    pub target_page_title: String,
-    pub change_type: String, // e.g., "update_section", "add_note"
-    pub summary_of_change: String,
-    pub proposed_content_diff: String, // A diff or the full new section content
+impl std::fmt::Display for PageStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
 }
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ChangeProposal {
-    pub summary: String,
-    #[serde(default)]
-    pub target_path: Vec<String>,
-    #[serde(default)]
-    pub registry_path: Vec<String>,
-    #[serde(default)]
-    pub source_refs: Vec<String>,
-    #[serde(default)]
-    pub validation_requirements: Vec<String>,
-    #[serde(default)]
-    pub sibling_context: Vec<String>,
-    pub rationale: Option<String>,
-    pub rollback_plan: Option<String>,
-    pub model_used: Option<String>,
-    pub pre_change_snapshot_hash: Option<String>,
-    pub proposed_changes: Vec<Change>,
-}
-
-pub async fn generate_change_proposal_with_agent(
-    title: Option<&str>,
-    content: &str,
-    source_refs: &[String],
-    hints: Option<&Value>,
-) -> AnyhowResult<ChangeProposal> {
-    // This is a placeholder. In a real scenario, this would make an HTTP call
-    // to an external AI agent service to get change proposals.
-
-    let route_plan = crate::curio_docs::infer_route_plan(title, content, hints);
-    let snapshot_hash = format!("{:x}", Sha256::digest(content.as_bytes()));
-    let summary = title
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .unwrap_or("Curio change proposal")
-        .to_string();
-
-    Ok(ChangeProposal {
-        summary,
-        target_path: route_plan.target_path,
-        registry_path: route_plan.registry_path,
-        source_refs: source_refs.to_vec(),
-        validation_requirements: route_plan.validation_requirements,
-        sibling_context: route_plan.sibling_context,
-        rationale: Some(route_plan.rationale),
-        rollback_plan: Some(
-            "Return the page to Staged and preserve the proposal metadata.".to_string(),
-        ),
-        model_used: Some("curio-route-plan-v1".to_string()),
-        pre_change_snapshot_hash: Some(snapshot_hash),
-        proposed_changes: vec![Change {
-            target_page_id: source_refs.first().cloned().unwrap_or_default(),
-            target_page_title: title.unwrap_or("Curio Page").to_string(),
-            change_type: "update_section".to_string(),
-            summary_of_change: "Creates or updates the staged/publish route proposal.".to_string(),
-            proposed_content_diff: content.to_string(),
-        }],
-    })
-}
-
-pub fn compact_change_proposal(proposal: &ChangeProposal) -> Value {
-    serde_json::json!({
-        "summary": proposal.summary,
-        "target_path": proposal.target_path,
-        "registry_path": proposal.registry_path,
-        "source_refs": proposal.source_refs,
-        "validation_requirements": proposal.validation_requirements,
-        "sibling_context": proposal.sibling_context,
-        "rationale": proposal.rationale,
-        "rollback_plan": proposal.rollback_plan,
-        "model_used": proposal.model_used,
-        "pre_change_snapshot_hash": proposal.pre_change_snapshot_hash,
-        "proposed_change_count": proposal.proposed_changes.len(),
-    })
-}
-
-// --- Branch index data structures for agent-efficient navigation ---
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BranchChildEntry {
-    pub page_id: String,
+pub struct SourceRef {
+    pub kind: String, // "url" | "file" | "confluence_page"
+    pub id: String,
+    pub origin_url: Option<String>,
+    pub summary: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Frontmatter {
+    pub id: String,
     pub title: String,
-    /// "branch" | "leaf" | "record"
-    pub child_type: String,
-    /// 1-2 sentence routing hint for agents, max ~200 chars
-    pub summary: String,
-    /// 0 for leaves, N for branches; tells agent whether to drill down
-    pub child_count: u32,
-    pub status: String,
-    pub labels: Vec<String>,
+    pub status: PageStatus,
+    pub source: SourceRef,
+    #[serde(default)]
+    pub category: Vec<String>,
+    #[serde(default)]
+    pub keywords: Vec<String>,
+    pub created_at: String,
     pub updated_at: String,
+    pub confidence: Option<f32>,
+    #[serde(default)]
+    pub cross_refs: Vec<String>,
+    pub content_hash: String,
+    pub confluence_page_id: Option<String>,
+    pub model_used: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct WikiPage {
+    /// Absolute path on disk.
+    pub path: std::path::PathBuf,
+    pub frontmatter: Frontmatter,
+    /// Markdown body (without frontmatter).
+    pub body: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct WikiIndex {
+    pub pages: Vec<WikiIndexEntry>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BranchIndex {
-    pub branch_page_id: String,
-    pub branch_title: String,
-    pub branch_path: Vec<String>,
-    pub parent_page_id: Option<String>,
-    pub children: Vec<BranchChildEntry>,
-    pub total_descendants: u32,
-    pub index_updated_at: String,
-    pub index_version: u32,
+pub struct WikiIndexEntry {
+    pub path: String,
+    pub title: String,
+    pub category: Vec<String>,
+    pub keywords: Vec<String>,
+    pub status: String,
+    pub summary: String,
+    pub confidence: Option<f32>,
+    pub updated_at: String,
+    pub id: String,
 }
 
-// Helper to get page ID (moved from commands)
-pub async fn get_page_id_by_title(
-    client: &crate::confluence::ConfluenceClient,
-    space_key: &str,
-    parent_id: Option<&str>,
-    title: &str,
-    page_type: &str,
-) -> AnyhowResult<String> {
-    client
-        .get_page_by_title(space_key, parent_id, title)
-        .await?
-        .and_then(|page| page["id"].as_str().map(|s| s.to_string()))
-        .ok_or_else(|| {
-            anyhow::anyhow!(format!(
-                "Could not find {} page '{}' in space '{}'",
-                page_type, title, space_key
-            ))
-        })
-}
+// ─── Source kind (retained for intake pipeline) ───────────────────────────
 
 /// Discriminates the three source types that drive pipeline branching.
-/// Confluence pages and URLs are reference sources — Curio stores a reference card, not a copy.
-/// Files are capture sources — Curio becomes the canonical home for the content.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SourceKind {
     ConfluencePage {
@@ -279,31 +203,6 @@ pub struct ContentItem {
     /// Short summary extracted at collection time before the raw body is discarded.
     /// Max ~300 chars. Used in reference card bodies and curio_metadata.
     pub summary: Option<String>,
-}
-
-pub async fn resolve_or_create_scoped_child_page_id(
-    client: &crate::confluence::ConfluenceClient,
-    space_key: &str,
-    parent_id: &str,
-    title: &str,
-    body_content: &str,
-) -> AnyhowResult<String> {
-    if let Some(page) = client
-        .get_page_by_title(space_key, Some(parent_id), title)
-        .await?
-    {
-        if let Some(page_id) = page["id"].as_str() {
-            if client.page_is_descendant_of(page_id, parent_id).await? {
-                return Ok(page_id.to_string());
-            }
-            client.migrate_page_to_parent(page_id, parent_id).await?;
-            return Ok(page_id.to_string());
-        }
-    }
-
-    client
-        .create_or_update_page(space_key, Some(parent_id), title, "storage", body_content)
-        .await
 }
 
 #[cfg(test)]

@@ -1,204 +1,134 @@
-use crate::curio_docs::{
-    AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, build_audit_root_body,
-    build_registry_root_body, ensure_registry_record, ensure_scoped_page,
-};
-use crate::output::emit_json;
+/// Resolve command: move a review/ page to staged/.
+use anyhow::Result;
+use chrono::Utc;
+use std::path::PathBuf;
+
 use crate::{
-    ChangeProposal, Result, config::Config, confluence::ConfluenceClient,
-    generate_change_proposal_with_agent, resolve_managed_root_folder_id,
+    config::Config,
+    output::emit_json,
+    wiki_fs::{parse_wiki_page, update_frontmatter},
+    wiki_index::{
+        append_log, load_registry, rebuild_index_md, save_registry,
+        update_entry_path, update_entry_status,
+    },
+    PageStatus,
 };
-use anyhow::Context;
-use serde::Serialize;
-use serde_json::json;
 
-#[derive(Debug, Serialize)]
-struct GoldResolveOutput {
-    page_id: String,
-    change_count: usize,
-    dry_run: bool,
-}
-
-pub async fn run_gold_resolve(
+pub async fn run_resolve(
     config: &Config,
     dry_run: bool,
-    json_output: bool,
-    page_id_arg: String, // The page to resolve
+    json: bool,
+    slug: String,
+    category: Option<String>,
 ) -> Result<()> {
-    if !json_output {
-        println!("Running gold-resolve command for page ID: {}", page_id_arg);
+    let wiki_dir = &config.wiki.wiki_dir;
+    let review_dir = wiki_dir.join("review");
+
+    let src_path = review_dir.join(format!("{}.md", slug));
+    if !src_path.exists() {
+        // Also check review subdirs
+        let found = find_in_dir(&review_dir, &slug)?;
+        let src_path = found.ok_or_else(|| {
+            anyhow::anyhow!("No review page found for slug: {}", slug)
+        })?;
+
+        return do_resolve(config, &src_path, &slug, category, dry_run, json).await;
     }
 
-    let auth_token = std::env::var("CURIO_CONFLUENCE_TOKEN")
-        .context("CURIO_CONFLUENCE_TOKEN environment variable not set")?;
+    do_resolve(config, &src_path, &slug, category, dry_run, json).await
+}
 
-    let client = ConfluenceClient::new(
-        config.connection.confluence_url.clone(),
-        config.connection.confluence_email.clone(),
-        auth_token,
-        config.content_model.output_root_folder_id.clone(),
-    )?;
+async fn do_resolve(
+    config: &Config,
+    src_path: &std::path::Path,
+    slug: &str,
+    category: Option<String>,
+    dry_run: bool,
+    json: bool,
+) -> Result<()> {
+    let wiki_dir = &config.wiki.wiki_dir;
 
-    let space_key = &config.content_model.space_key;
-    let label_namespace = &config.content_model.label_namespace;
-    let root_folder_id = resolve_managed_root_folder_id(
-        &client,
-        space_key,
-        &config.content_model.root_folder_name,
-        config.content_model.output_root_folder_id.as_deref(),
-        json_output,
-    )
-    .await?;
-    let registry_root_id = ensure_scoped_page(
-        &client,
-        space_key,
-        &root_folder_id,
-        "_registry",
-        &build_registry_root_body(),
-    )
-    .await?;
-    let audit_root_id = ensure_scoped_page(
-        &client,
-        space_key,
-        &root_folder_id,
-        AUDIT_TITLE,
-        &build_audit_root_body(),
-    )
-    .await?;
+    let mut page = parse_wiki_page(src_path)?;
 
-    // 1. Fetch Source Page Content and Metadata
-    let source_page = client
-        .get_page_by_id_v2(&page_id_arg)
-        .await?
-        .context(format!("Source page with ID {} not found", page_id_arg))?;
-    let source_page_content = source_page["body"]["storage"]["value"]
-        .as_str()
-        .unwrap_or_default()
-        .to_string();
-    let current_metadata_json = client
-        .get_content_property(&page_id_arg, "curio_metadata")
-        .await?;
-    let mut curio_metadata_mut = if let Some(metadata) = current_metadata_json {
-        metadata["value"].clone()
-    } else {
-        json!({})
-    };
+    let cat_segments: Vec<String> = category
+        .as_deref()
+        .map(|c| c.split('/').map(|s| s.to_string()).collect())
+        .unwrap_or_else(|| {
+            if page.frontmatter.category.is_empty() {
+                vec!["by-topic".to_string()]
+            } else {
+                page.frontmatter.category.clone()
+            }
+        });
 
-    // Ensure page is in 'analyzed' status
-    if curio_metadata_mut["status"].as_str() != Some("analyzed") {
-        anyhow::bail!(
-            "Page {} is not in 'analyzed' status. It must be analyzed to be resolved.",
-            page_id_arg
-        );
-    }
-
-    // 2. [Integration Point] Trigger Analysis Agent to Generate Change Proposal
-    if !json_output {
-        println!(
-            "Triggering agent to generate change proposal for page {}...",
-            page_id_arg
-        );
-    }
-    let change_proposal: ChangeProposal =
-        generate_change_proposal_with_agent(&source_page_content).await?;
-    if !json_output {
-        println!(
-            "  - Generated proposal summary: {}",
-            change_proposal.summary
-        );
-        println!(
-            "  - Proposed changes for {} target pages.",
-            change_proposal.proposed_changes.len()
-        );
-    }
-
-    // 3. Store the Change Proposal in Source Page Metadata
-    curio_metadata_mut["status"] = json!("resolved");
-    curio_metadata_mut["change_proposal"] = json!(change_proposal);
+    let cat_path: PathBuf = cat_segments.iter().collect();
+    let filename = format!("{}.md", slug);
+    let dest_dir = wiki_dir.join("staged").join(&cat_path);
+    let dest_path = dest_dir.join(&filename);
 
     if dry_run {
-        if !json_output {
-            println!(
-                "(Dry run) Would update curio_metadata for page {} with status 'resolved' and change proposal: {:?}",
-                page_id_arg, curio_metadata_mut["change_proposal"]
-            );
-            println!(
-                "(Dry run) Would remove labels like `curio-status-staged` and add `curio-status-resolved`."
-            );
+        let msg = format!("Would move {} → staged/{}/{}", slug, cat_path.display(), filename);
+        if json {
+            let _ = emit_json("resolve", true, &serde_json::json!({ "slug": slug, "would_move_to": dest_path, "dry_run": true }));
+        } else {
+            println!("{}", msg);
         }
-    } else {
-        if !json_output {
-            println!("Updating curio_metadata for page {}", page_id_arg);
-        }
-        client
-            .set_content_property(&page_id_arg, "curio_metadata", curio_metadata_mut.clone())
-            .await?;
-
-        // Update Labels
-        if !json_output {
-            println!("Updating labels for page {}", page_id_arg);
-        }
-        let old_status_label = format!("{}-status-analyzed", label_namespace);
-        client.remove_label(&page_id_arg, &old_status_label).await?;
-        client
-            .add_labels(
-                &page_id_arg,
-                vec![format!("{}-status-resolved", label_namespace)],
-            )
-            .await?;
-
-        let registry_record = RegistryRecord {
-            key: page_id_arg.clone(),
-            item_type: "gold-source-page".to_string(),
-            title: source_page["title"]
-                .as_str()
-                .unwrap_or(&page_id_arg)
-                .to_string(),
-            page_id: page_id_arg.clone(),
-            parent_id: source_page["parentId"]
-                .as_str()
-                .unwrap_or_default()
-                .to_string(),
-            status: "resolved".to_string(),
-            source_id: page_id_arg.clone(),
-            summary: change_proposal.summary.clone(),
-            updated_at: chrono::Utc::now().to_rfc3339(),
-        };
-        ensure_registry_record(&client, space_key, &registry_root_id, &registry_record).await?;
-
-        let audit_entry = AuditEntry {
-            actor: config.connection.confluence_email.clone(),
-            command: "gold-resolve".to_string(),
-            subject: source_page["title"]
-                .as_str()
-                .unwrap_or(&page_id_arg)
-                .to_string(),
-            action: "Generated a change proposal and marked the page resolved".to_string(),
-            rationale: change_proposal.summary.clone(),
-            source: page_id_arg.clone(),
-            result: "resolved".to_string(),
-            detail_lines: vec![
-                format!("Page ID: {}", page_id_arg),
-                format!(
-                    "Proposed changes: {}",
-                    change_proposal.proposed_changes.len()
-                ),
-            ],
-        };
-        append_audit_entry(&client, space_key, &audit_root_id, &audit_entry).await?;
+        return Ok(());
     }
 
-    if json_output {
-        emit_json(
-            "gold-resolve",
-            true,
-            GoldResolveOutput {
-                page_id: page_id_arg,
-                change_count: change_proposal.proposed_changes.len(),
-                dry_run,
-            },
-        )?;
+    // Update frontmatter
+    let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    page.frontmatter.status = PageStatus::Staged;
+    page.frontmatter.category = cat_segments;
+    page.frontmatter.updated_at = now;
+    update_frontmatter(src_path, &page.frontmatter)?;
+
+    // git mv
+    let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
+    let rel_src = src_path.strip_prefix(repo_root).unwrap_or(src_path);
+    let rel_dest = dest_path.strip_prefix(repo_root).unwrap_or(&dest_path);
+    crate::git_ops::git_mv(repo_root, rel_src, rel_dest)?;
+
+    // Update registry
+    let new_rel = dest_path
+        .strip_prefix(wiki_dir)
+        .unwrap_or(&dest_path)
+        .to_string_lossy()
+        .replace('\\', "/");
+    update_entry_path(wiki_dir, &page.frontmatter.id, &new_rel)?;
+    update_entry_status(wiki_dir, &page.frontmatter.id, &PageStatus::Staged)?;
+
+    let registry = load_registry(wiki_dir)?;
+    save_registry(wiki_dir, &registry)?;
+    rebuild_index_md(wiki_dir, &registry)?;
+    append_log(wiki_dir, &format!("resolve: {} moved to staged", slug))?;
+
+    if config.wiki.auto_commit {
+        crate::git_ops::git_add(repo_root, wiki_dir)?;
+        if crate::git_ops::git_has_staged(repo_root) {
+            crate::git_ops::git_commit(repo_root, &format!("curio: resolve {}", slug))?;
+        }
+    }
+
+    if json {
+        let _ = emit_json("resolve", true, &serde_json::json!({ "slug": slug, "moved_to": new_rel }));
     } else {
-        println!("Gold resolve command finished for page: {}", page_id_arg);
+        println!("Resolved: {} → staged/{}", slug, new_rel);
     }
     Ok(())
+}
+
+fn find_in_dir(dir: &std::path::Path, slug: &str) -> Result<Option<std::path::PathBuf>> {
+    if !dir.exists() {
+        return Ok(None);
+    }
+    for entry in walkdir::WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+        let path = entry.path();
+        if path.extension().map_or(false, |e| e == "md") {
+            if path.file_stem().map_or(false, |s| s == slug) {
+                return Ok(Some(path.to_path_buf()));
+            }
+        }
+    }
+    Ok(None)
 }

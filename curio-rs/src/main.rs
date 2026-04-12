@@ -1,22 +1,25 @@
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
 use curio::{
-    cli::{AgentCommands, Cli, Commands, ReviewCommands},
+    cli::{AgentCommands, Cli, Commands},
     commands::{
         agent::{
             run_agent_doctor, run_agent_launch, run_agent_list_plugins, run_agent_list_providers,
             run_agent_list_skills, run_agent_prepare, run_agent_print_env,
         },
-        agent_analyze::run_agent_analyze,
-        bootstrap::run_bootstrap,
-        gold_publish::run_gold_publish,
-        gold_resolve::run_gold_resolve,
-        intake::run_intake_create,
+        gold_publish::run_publish,
+        gold_resolve::run_resolve,
+        init::run_init,
+        intake::run_intake,
+        lint::run_lint,
         onboard::run_onboard,
-        process_intake::run_process_intake,
+        process_intake::run_process,
+        query::run_query,
         reindex::run_reindex,
-        review::{run_review_approve, run_review_reject}, // Import review functions
+        review::run_review,
         search::run_search,
+        sync::run_sync,
+        tree::run_tree,
     },
     config::load_config,
 };
@@ -24,6 +27,7 @@ use curio::{
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+    let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
 
     match cli.command {
         Some(Commands::Onboard { install }) => {
@@ -55,94 +59,67 @@ async fn main() -> Result<()> {
                 run_agent_print_env(provider, cli.json)?;
             }
         },
-        Some(Commands::Bootstrap {
-            overwrite,
-            confirm_nuke,
-        }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
+        Some(Commands::Init { reset }) => {
             let config = load_config(config_path_str)?;
-            run_bootstrap(&config, cli.dry_run, cli.json, overwrite, confirm_nuke).await?;
+            run_init(&config, cli.dry_run, cli.json, reset).await?;
         }
-        Some(Commands::IntakeCreate {
-            url,
-            file,
-            folder,
-            subject_hint,
-            metadata,
-        }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
+        Some(Commands::Intake { url, file, folder, title, subject_hint }) => {
             let config = load_config(config_path_str)?;
-            run_intake_create(
-                &config,
-                cli.dry_run,
-                cli.json,
-                &url,
-                &file,
-                &folder,
-                &subject_hint,
-                &metadata,
-            )
-            .await?;
+            run_intake(&config, cli.dry_run, cli.json, &url, &file, &folder, &title, &subject_hint).await?;
         }
-        Some(Commands::ProcessIntake { limit }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
-            let config = load_config(config_path_str)?;
-            run_process_intake(&config, cli.dry_run, cli.json, limit).await?;
-        }
-        Some(Commands::Search {
-            labels,
-            text,
-            content_type,
+        Some(Commands::Process {
             limit,
-        }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
-            let config = load_config(config_path_str)?;
-            run_search(
-                &config,
-                cli.dry_run,
-                cli.json,
-                labels,
-                text,
-                content_type,
-                limit,
-            )
-            .await?;
-        }
-        Some(Commands::AgentAnalyze {
-            page_id,
+            auto,
+            route_file,
+            slug,
+            category,
             status,
-            limit,
+            keywords,
+            confidence,
+            summary,
         }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_agent_analyze(&config, cli.dry_run, cli.json, &page_id, &status, limit).await?;
+            run_process(
+                &config, cli.dry_run, cli.json,
+                limit, auto, route_file,
+                slug, category, status, keywords, confidence, summary,
+            ).await?;
         }
-        Some(Commands::GoldResolve { page_id }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
+        Some(Commands::Review { lane }) => {
             let config = load_config(config_path_str)?;
-            run_gold_resolve(&config, cli.dry_run, cli.json, page_id).await?;
+            run_review(&config, cli.dry_run, cli.json, &lane).await?;
         }
-        Some(Commands::GoldPublish { page_id }) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
+        Some(Commands::Resolve { slug, category }) => {
             let config = load_config(config_path_str)?;
-            run_gold_publish(&config, cli.dry_run, cli.json, page_id).await?;
+            run_resolve(&config, cli.dry_run, cli.json, slug, category).await?;
+        }
+        Some(Commands::Publish { slug, category }) => {
+            let config = load_config(config_path_str)?;
+            run_publish(&config, cli.dry_run, cli.json, slug, category).await?;
+        }
+        Some(Commands::Search { keywords, category, status, text, limit }) => {
+            let config = load_config(config_path_str)?;
+            run_search(&config, cli.dry_run, cli.json, keywords, category, status, text, limit).await?;
         }
         Some(Commands::Reindex) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_reindex(&config, cli.dry_run, cli.json).await?;
         }
-        Some(Commands::Review(review_commands)) => {
-            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
+        Some(Commands::Tree) => {
             let config = load_config(config_path_str)?;
-            match review_commands {
-                ReviewCommands::Approve { page_id } => {
-                    run_review_approve(&config, cli.dry_run, cli.json, page_id).await?;
-                }
-                ReviewCommands::Reject { page_id, reason } => {
-                    run_review_reject(&config, cli.dry_run, cli.json, page_id, reason).await?;
-                }
-            }
+            run_tree(&config, cli.dry_run, cli.json).await?;
+        }
+        Some(Commands::Sync { parent_page_id, dry_run }) => {
+            let config = load_config(config_path_str)?;
+            run_sync(&config, dry_run || cli.dry_run, cli.json, parent_page_id).await?;
+        }
+        Some(Commands::Lint { fix }) => {
+            let config = load_config(config_path_str)?;
+            run_lint(&config, cli.dry_run, cli.json, fix).await?;
+        }
+        Some(Commands::Query { question, save }) => {
+            let config = load_config(config_path_str)?;
+            run_query(&config, cli.dry_run, cli.json, question, save).await?;
         }
         None => {
             Cli::command().print_help()?;
