@@ -1,7 +1,7 @@
 ---
 id: 30510ba5c9a25977
 title: Installation and Upgrade
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1640793153
@@ -14,7 +14,7 @@ keywords:
 - upgrade
 - installation
 created_at: 2026-04-12T20:57:04Z
-updated_at: 2026-04-12T21:05:13Z
+updated_at: 2026-04-12T21:05:50Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b
