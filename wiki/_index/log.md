@@ -27,3 +27,4 @@
 - **2026-04-12T21:06:01Z** publish: pre-upgrade-checks published to published/product-tree/alteryx-server/pre-upgrade-checks.md
 - **2026-04-12T21:06:02Z** publish: server-health-check published to published/product-tree/alteryx-server/server-health-check.md
 - **2026-04-12T21:06:04Z** publish: server-upgrade-issues-by-version published to published/product-tree/alteryx-server/server-upgrade-issues-by-version.md
+- **2026-04-12T21:06:06Z** publish: server-upgrade-version-paths-what-version-can-upgrade-to-what-versions published to published/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md
