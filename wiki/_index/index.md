@@ -3,5 +3,5 @@
 
 ## uncategorized (2 pages)
 - **published/by-topic/curio-readme.md** — Curio
-- **staged/by-use-case/rollback-downgrade-a-failed-server-upgrade.md** — 
+- **published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md** — 
 

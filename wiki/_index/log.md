@@ -6,3 +6,4 @@
 - **2026-04-12T18:37:05Z** publish: curio-readme published to published/by-topic/curio-readme.md
 - **2026-04-12T19:04:32Z** intake: 1 items ingested
 - **2026-04-12T19:04:38Z** process: intake items routed
+- **2026-04-12T19:04:42Z** publish: rollback-downgrade-a-failed-server-upgrade published to published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md
