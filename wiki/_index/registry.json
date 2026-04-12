@@ -77,11 +77,11 @@
     "id": "deff7614f4369c04"
   },
   {
-    "path": "staged/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md",
+    "path": "published/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md",
     "title": "Mongo Database Upgrade Error - Failed to backup the folder:C:\\ProgramData\\Alteryx\\Service\\Persistence\\MongoDB_Backup. Access to the path 'C:\\ProgramData\\Alteryx\\Service\\Persistence\\MongoDB' is denied",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| Context | MongoDB Migration when performing an upgrade |",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",

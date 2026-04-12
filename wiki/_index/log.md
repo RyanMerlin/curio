@@ -20,3 +20,4 @@
 - **2026-04-12T21:05:51Z** publish: installation-and-upgrade published to published/product-tree/alteryx-server/installation-and-upgrade.md
 - **2026-04-12T21:05:52Z** publish: issues-cryptomigration-log published to published/product-tree/alteryx-server/issues-cryptomigration-log.md
 - **2026-04-12T21:05:53Z** publish: issues-installation-and-upgrade published to published/product-tree/alteryx-server/issues-installation-and-upgrade.md
+- **2026-04-12T21:05:55Z** publish: mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied published to published/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md
