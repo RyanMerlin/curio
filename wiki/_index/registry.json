@@ -286,11 +286,11 @@
     "id": "c3fff7762fbe4739"
   },
   {
-    "path": "staged/product-tree/alteryx-server/errors-host-recovery.md",
+    "path": "published/product-tree/alteryx-server/errors-host-recovery.md",
     "title": "Errors (Host Recovery)",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "Errors",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",

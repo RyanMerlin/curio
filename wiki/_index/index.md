@@ -28,7 +28,7 @@
 - **staged/product-tree/alteryx-server/errors-pre-upgrade-checks.md** — Errors
 - **staged/product-tree/intelligence-suite/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/host-recovery.md** — ---
-- **staged/product-tree/alteryx-server/errors-host-recovery.md** — Errors
+- **published/product-tree/alteryx-server/errors-host-recovery.md** — Errors
 - **staged/product-tree/alteryx-server/host-recovery-encryption-key-transfer-process.md** — ---
 - **staged/by-audience/2021-4-patch-6-to-2022-3-upgrade-defects.md** — TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)
 - **staged/by-account/controller-token-length-transition-from-21-4-to-22-3.md** — > **ℹ️ Info**
