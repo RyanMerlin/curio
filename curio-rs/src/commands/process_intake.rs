@@ -1,12 +1,13 @@
 use crate::curio_docs::{
-    AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, build_audit_root_body,
-    build_registry_root_body, ensure_registry_record, ensure_scoped_page,
+    ADMIN_TITLE, AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, audit_bucket_path,
+    build_admin_root_body, build_audit_root_body, build_registry_root_body, ensure_registry_record,
+    ensure_scoped_page, ensure_scoped_structure_page, extract_page_text, infer_route_plan,
 };
 use crate::output::emit_json;
 #[allow(unused_imports)]
 use crate::{
-    AgentAnalysis, Result, analyze_content_with_agent, config::Config,
-    confluence::ConfluenceClient, resolve_managed_root_folder_id,
+    AgentAnalysis, ChangeProposal, Result, analyze_content_with_agent, compact_change_proposal,
+    config::Config, confluence::ConfluenceClient, generate_change_proposal_with_agent,
     resolve_or_create_scoped_child_page_id,
 };
 use anyhow::Context;
@@ -41,58 +42,58 @@ pub async fn run_process_intake(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
-        config.content_model.output_root_folder_id.clone(),
+        config.content_model.space_key.clone(),
+        None,
     )?;
 
     let space_key = &config.content_model.space_key;
-    let root_folder_name = &config.content_model.root_folder_name;
     let label_namespace = &config.content_model.label_namespace;
 
     // Fetch required page IDs for stage transitions
-    let root_folder_id = resolve_managed_root_folder_id(
+    let _intake_page_id = ensure_scoped_structure_page(
         &client,
         space_key,
-        root_folder_name,
-        config.content_model.output_root_folder_id.as_deref(),
-        json_output,
-    )
-    .await?;
-    let _intake_page_id = resolve_or_create_scoped_child_page_id(
-        &client,
-        space_key,
-        &root_folder_id,
+        "",
         "Intake",
         "<p>This page holds raw, unprocessed content that has been ingested.</p>",
     )
     .await?;
-    let staged_page_id: String = resolve_or_create_scoped_child_page_id(
+    let staged_page_id: String = ensure_scoped_structure_page(
         &client,
         space_key,
-        &root_folder_id,
+        "",
         "Staged",
         "<p>Content on this page is high-confidence, conflict-free, and ready for publishing or final review.</p>",
     )
     .await?;
-    let review_page_id: String = resolve_or_create_scoped_child_page_id(
+    let review_page_id: String = ensure_scoped_structure_page(
         &client,
         space_key,
-        &root_folder_id,
+        "",
         "Review",
         "<p>Content on this page requires manual human intervention due to conflicts, missing information, or low confidence.</p>",
     )
     .await?;
-    let _published_page_id = resolve_or_create_scoped_child_page_id(
+    let _published_page_id = ensure_scoped_structure_page(
         &client,
         space_key,
-        &root_folder_id,
+        "",
         "Published",
         "<p>This page contains the final, published 'gold' content, optimized for agent consumption.</p>",
+    )
+    .await?;
+    let admin_page_id = ensure_scoped_structure_page(
+        &client,
+        space_key,
+        "",
+        ADMIN_TITLE,
+        &build_admin_root_body(),
     )
     .await?;
     let registry_root_id = ensure_scoped_page(
         &client,
         space_key,
-        &root_folder_id,
+        &admin_page_id,
         "_registry",
         &build_registry_root_body(),
     )
@@ -100,7 +101,7 @@ pub async fn run_process_intake(
     let audit_root_id = ensure_scoped_page(
         &client,
         space_key,
-        &root_folder_id,
+        &admin_page_id,
         AUDIT_TITLE,
         &build_audit_root_body(),
     )
@@ -116,15 +117,7 @@ pub async fn run_process_intake(
     }
     let intake_pages = client.execute_cql(&cql_query).await?;
     let mut scoped_intake_pages = Vec::new();
-    for page in intake_pages {
-        let page_id = page["id"].as_str().unwrap_or_default();
-        if client
-            .page_is_descendant_of(page_id, &root_folder_id)
-            .await?
-        {
-            scoped_intake_pages.push(page);
-        }
-    }
+    scoped_intake_pages.extend(intake_pages);
 
     if scoped_intake_pages.is_empty() {
         if !json_output {
@@ -180,10 +173,7 @@ pub async fn run_process_intake(
             .context("Page title not found")?
             .to_string();
         // Assuming body content can be directly read from page_json
-        let page_body = page_json["body"]["storage"]["value"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let page_body = extract_page_text(&page_json);
 
         if !json_output {
             println!("Processing intake item: {} (ID: {})", page_title, page_id);
@@ -204,6 +194,21 @@ pub async fn run_process_intake(
                 analysis_result.confidence_score, analysis_result.keywords
             );
         }
+
+        let route_plan = infer_route_plan(Some(&page_title), &page_body, Some(&curio_metadata));
+        let mut proposal: ChangeProposal = generate_change_proposal_with_agent(
+            Some(&page_title),
+            &page_body,
+            &[page_id.clone()],
+            Some(&curio_metadata),
+        )
+        .await?;
+        proposal.target_path = route_plan.target_path.clone();
+        proposal.registry_path = route_plan.registry_path.clone();
+        proposal.rationale = Some(route_plan.rationale.clone());
+        proposal.validation_requirements = route_plan.validation_requirements.clone();
+        proposal.sibling_context = route_plan.sibling_context.clone();
+        proposal.model_used = Some("curio-route-plan-v1".to_string());
 
         // 3. Semantic Conflict Detection (Conceptual)
         let mut has_conflict = false;
@@ -242,7 +247,16 @@ pub async fn run_process_intake(
         let mut labels_to_add = Vec::new();
         let labels_to_remove = vec![format!("{}-status-intake", label_namespace)];
 
-        if !has_conflict && analysis_result.confidence_score >= 0.7 {
+        let route_confident = proposal
+            .validation_requirements
+            .iter()
+            .any(|req| req == "pre_change_snapshot")
+            && proposal
+                .sibling_context
+                .iter()
+                .any(|item| item.starts_with("confidence="));
+
+        if !has_conflict && analysis_result.confidence_score >= 0.7 && route_confident {
             new_status_label = format!("{}-status-staged", label_namespace);
             new_parent_id = &staged_page_id;
             target_page_name = "Staged";
@@ -253,6 +267,14 @@ pub async fn run_process_intake(
             labels_to_add.push(format!("{}-needs-review", label_namespace));
         }
         labels_to_add.push(new_status_label.clone());
+
+        proposal.rationale = Some(
+            conflict_details
+                .as_ref()
+                .and_then(|value| value["message"].as_str())
+                .map(|message| format!("{}; {}", route_plan.rationale, message))
+                .unwrap_or_else(|| route_plan.rationale.clone()),
+        );
 
         // 5. Perform Stage Transition
         if dry_run {
@@ -279,6 +301,23 @@ pub async fn run_process_intake(
             }
             client.move_page(&page_id, new_parent_id).await?;
 
+            let updated_page_body = build_stage_artifact_body(
+                &page_title,
+                &page_json,
+                &page_body,
+                &analysis_result,
+                &proposal,
+                target_page_name,
+                conflict_details.as_ref(),
+                &config.connection.confluence_url,
+            );
+            if !json_output {
+                println!("Updating page body for {}", page_id);
+            }
+            client
+                .update_page_body_by_id(&page_id, "atlas_doc_format", &updated_page_body)
+                .await?;
+
             // Update curio_metadata
             let updated_metadata = json!({
                 "curio_version": "1.0", // Maintain version
@@ -295,6 +334,7 @@ pub async fn run_process_intake(
                     "keywords": analysis_result.keywords,
                     "confidence_score": analysis_result.confidence_score,
                 }),
+                "change_proposal": compact_change_proposal(&proposal),
                 "review_details": conflict_details,
             });
             if !json_output {
@@ -331,7 +371,14 @@ pub async fn run_process_intake(
                 summary: analysis_result.summary.clone(),
                 updated_at: Utc::now().to_rfc3339(),
             };
-            ensure_registry_record(&client, space_key, &registry_root_id, &registry_record).await?;
+            ensure_registry_record(
+                &client,
+                space_key,
+                &registry_root_id,
+                &proposal.registry_path,
+                &registry_record,
+            )
+            .await?;
 
             let audit_entry = AuditEntry {
                 actor: config.connection.confluence_email.clone(),
@@ -358,7 +405,15 @@ pub async fn run_process_intake(
                     format!("Confidence: {:.2}", analysis_result.confidence_score),
                 ],
             };
-            append_audit_entry(&client, space_key, &audit_root_id, &audit_entry).await?;
+            let audit_stamp = Utc::now().format("%Y%m%dT%H%M%S%.3fZ").to_string();
+            append_audit_entry(
+                &client,
+                space_key,
+                &audit_root_id,
+                &audit_bucket_path(&audit_stamp),
+                &audit_entry,
+            )
+            .await?;
 
             if !json_output {
                 println!(
@@ -393,4 +448,289 @@ pub async fn run_process_intake(
         println!("Process-intake command finished.");
     }
     Ok(())
+}
+
+fn build_stage_artifact_body(
+    title: &str,
+    source_page: &serde_json::Value,
+    source_body: &str,
+    analysis_result: &AgentAnalysis,
+    proposal: &ChangeProposal,
+    lane_name: &str,
+    conflict_details: Option<&serde_json::Value>,
+    confluence_url: &str,
+) -> String {
+    let target_path = if proposal.target_path.is_empty() {
+        "Unresolved".to_string()
+    } else {
+        proposal.target_path.join(" / ")
+    };
+    let registry_path = if proposal.registry_path.is_empty() {
+        "Unresolved".to_string()
+    } else {
+        proposal.registry_path.join(" / ")
+    };
+    let validation_requirements = if proposal.validation_requirements.is_empty() {
+        "None".to_string()
+    } else {
+        proposal.validation_requirements.join(", ")
+    };
+    let sibling_context = if proposal.sibling_context.is_empty() {
+        "None".to_string()
+    } else {
+        proposal.sibling_context.join(" | ")
+    };
+    let conflict_text = conflict_details
+        .and_then(|value| value["message"].as_str())
+        .unwrap_or("No conflict detected");
+    let proposal_summary = proposal.summary.clone();
+    let proposal_rationale = proposal
+        .rationale
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or("No route rationale was produced.");
+    let proposed_changes = if proposal.proposed_changes.is_empty() {
+        vec!["No proposed content changes were generated.".to_string()]
+    } else {
+        proposal
+            .proposed_changes
+            .iter()
+            .map(|change| {
+                format!(
+                    "{} -> {} ({})",
+                    change.target_page_title, change.target_page_id, change.summary_of_change
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+    let commands = [
+        "curio review approve <page-id>",
+        "curio review reject <page-id>",
+        "curio gold-resolve <page-id>",
+        "curio gold-publish <page-id>",
+    ]
+    .iter()
+    .map(|command| command.to_string())
+    .collect::<Vec<_>>();
+    let source_reference = proposal
+        .source_refs
+        .first()
+        .cloned()
+        .unwrap_or_else(|| "Unknown source".to_string());
+    let source_page_title = source_page["title"].as_str().unwrap_or(title);
+    let source_page_url = source_page["_links"]["webui"]
+        .as_str()
+        .map(|webui| format!("{}{}", confluence_url.trim_end_matches('/'), webui));
+    let source_excerpt_nodes = build_source_excerpt_nodes(source_page, source_body, 8);
+    let quick_facts_rows = vec![
+        vec!["Source reference".to_string(), source_reference.clone()],
+        vec![
+            "Source length".to_string(),
+            if source_body.trim().is_empty() {
+                "No source body was available.".to_string()
+            } else {
+                format!("{} line(s)", source_body.lines().count())
+            },
+        ],
+        vec!["Target path".to_string(), target_path.clone()],
+        vec!["Registry path".to_string(), registry_path.clone()],
+        vec![
+            "Confidence".to_string(),
+            format!("{:.2}", analysis_result.confidence_score),
+        ],
+        vec!["Validation".to_string(), validation_requirements.clone()],
+        vec!["Sibling context".to_string(), sibling_context.clone()],
+        vec!["Review note".to_string(), conflict_text.to_string()],
+    ];
+    let routing_rows = vec![
+        vec!["Target path".to_string(), target_path.clone()],
+        vec!["Registry path".to_string(), registry_path.clone()],
+        vec![
+            "Confidence".to_string(),
+            format!("{:.2}", analysis_result.confidence_score),
+        ],
+        vec!["Validation".to_string(), validation_requirements.clone()],
+        vec!["Sibling context".to_string(), sibling_context.clone()],
+        vec!["Review note".to_string(), conflict_text.to_string()],
+    ];
+    let adf = json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            adf_heading(1, title),
+            adf_paragraph_text(&format!("Curio lane: {}", lane_name)),
+            adf_paragraph_text(&format!("Summary: {}", analysis_result.summary)),
+            adf_paragraph_text(&format!("Rationale: {}", proposal_rationale)),
+            adf_heading(2, "Quick Facts"),
+            adf_table(quick_facts_rows),
+            adf_heading(2, "Proposal Detail"),
+            adf_paragraph_text(&proposal_summary),
+            adf_heading(2, "Proposed Changes"),
+            adf_bullet_list(proposed_changes),
+            adf_heading(2, "Commands"),
+            adf_bullet_list(commands),
+            adf_heading(2, "Routing Proposal"),
+            adf_table(routing_rows),
+            adf_heading(2, "Source"),
+            adf_paragraph_mixed(vec![
+                adf_text("Original page: "),
+                match source_page_url {
+                    Some(ref url) => adf_link_text(source_page_title, url),
+                    None => adf_text(source_page_title),
+                }
+            ]),
+            adf_paragraph_text(&format!("Captured as ADF with {} top-level node(s) preserved.", source_excerpt_nodes.len())),
+            adf_heading(2, "Source Excerpt"),
+            adf_nodes(source_excerpt_nodes),
+        ]
+    });
+
+    serde_json::to_string(&adf).unwrap_or_else(|_| {
+        json!({
+            "type": "doc",
+            "version": 1,
+            "content": [
+                adf_heading(1, title),
+                adf_paragraph_text("Curio was unable to build the staged artifact body.")
+            ]
+        })
+        .to_string()
+    })
+}
+
+fn adf_heading(level: u8, text: &str) -> serde_json::Value {
+    json!({
+        "type": "heading",
+        "attrs": { "level": level },
+        "content": [adf_text(text)]
+    })
+}
+
+fn adf_paragraph_text(text: &str) -> serde_json::Value {
+    json!({
+        "type": "paragraph",
+        "content": [adf_text(text)]
+    })
+}
+
+fn adf_paragraph_from_lines(lines: Vec<String>) -> serde_json::Value {
+    let mut content = Vec::new();
+    for (index, line) in lines.into_iter().enumerate() {
+        if index > 0 {
+            content.push(json!({ "type": "hardBreak" }));
+        }
+        content.push(adf_text(&line));
+    }
+    json!({
+        "type": "paragraph",
+        "content": content
+    })
+}
+
+fn adf_paragraph_mixed(runs: Vec<serde_json::Value>) -> serde_json::Value {
+    json!({
+        "type": "paragraph",
+        "content": runs
+    })
+}
+
+fn adf_text(text: &str) -> serde_json::Value {
+    json!({
+        "type": "text",
+        "text": text
+    })
+}
+
+fn adf_link_text(text: &str, href: &str) -> serde_json::Value {
+    json!({
+        "type": "text",
+        "text": text,
+        "marks": [
+            {
+                "type": "link",
+                "attrs": {
+                    "href": href
+                }
+            }
+        ]
+    })
+}
+
+fn adf_nodes(nodes: Vec<serde_json::Value>) -> serde_json::Value {
+    json!({
+        "type": "expand",
+        "attrs": {
+            "title": "Open source excerpt"
+        },
+        "content": nodes
+    })
+}
+
+fn adf_bullet_list(items: Vec<String>) -> serde_json::Value {
+    json!({
+        "type": "bulletList",
+        "content": items.into_iter().map(|item| json!({
+            "type": "listItem",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [adf_text(&item)]
+                }
+            ]
+        })).collect::<Vec<_>>()
+    })
+}
+
+fn adf_table(rows: Vec<Vec<String>>) -> serde_json::Value {
+    json!({
+        "type": "table",
+        "content": rows.into_iter().map(|row| json!({
+            "type": "tableRow",
+            "content": row.into_iter().map(|cell| json!({
+                "type": "tableCell",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [adf_text(&cell)]
+                    }
+                ]
+            })).collect::<Vec<_>>()
+        })).collect::<Vec<_>>()
+    })
+}
+
+fn build_source_excerpt_nodes(
+    source_page: &serde_json::Value,
+    source_body: &str,
+    max_nodes: usize,
+) -> Vec<serde_json::Value> {
+    let mut nodes = Vec::new();
+    if let Some(adf_value) = source_page["body"]["atlas_doc_format"]["value"].as_str() {
+        if let Ok(adf_json) = serde_json::from_str::<serde_json::Value>(adf_value) {
+            if let Some(content) = adf_json["content"].as_array() {
+                nodes.extend(content.iter().take(max_nodes).cloned());
+            }
+        }
+    }
+
+    if nodes.is_empty() {
+        let lines = if source_body.trim().is_empty() {
+            vec!["No source body was available.".to_string()]
+        } else {
+            source_body
+                .lines()
+                .take(40)
+                .map(|line| line.to_string())
+                .collect::<Vec<_>>()
+        };
+        nodes.push(adf_paragraph_from_lines(lines));
+    }
+
+    if nodes.len() >= max_nodes {
+        nodes.push(adf_paragraph_text(
+            "Excerpt truncated. Open the source page for the full structured body.",
+        ));
+    }
+
+    nodes
 }
