@@ -15,3 +15,4 @@
 - **2026-04-12T19:22:10Z** intake: 1 items ingested
 - **2026-04-12T19:27:15Z** reindex: rebuilt index from 2 pages
 - **2026-04-12T19:27:15Z** process: intake items routed
+- **2026-04-12T19:27:16Z** publish: rollback-downgrade-a-failed-server-upgrade published to published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md
