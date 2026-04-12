@@ -54,10 +54,13 @@ async fn main() -> Result<()> {
                 run_agent_print_env(provider, cli.json)?;
             }
         },
-        Some(Commands::Bootstrap) => {
+        Some(Commands::Bootstrap {
+            overwrite,
+            confirm_nuke,
+        }) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
-            run_bootstrap(&config, cli.dry_run, cli.json).await?;
+            run_bootstrap(&config, cli.dry_run, cli.json, overwrite, confirm_nuke).await?;
         }
         Some(Commands::IntakeCreate {
             url,

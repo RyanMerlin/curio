@@ -17,13 +17,6 @@ pub struct Cli {
     #[arg(long, global = true, help = "Confluence space key to operate within")]
     pub space: Option<String>,
 
-    #[arg(
-        long,
-        global = true,
-        help = "Confluence output root folder ID to operate within"
-    )]
-    pub root_folder_id: Option<String>,
-
     #[arg(long, global = true, help = "Working directory for ephemeral files")]
     pub workdir: Option<PathBuf>,
 
@@ -64,7 +57,15 @@ pub enum Commands {
     },
 
     /// Create and verify the core Confluence structure (folders, templates).
-    Bootstrap,
+    Bootstrap {
+        /// Remove existing CURIO pages in the target space before rebuilding.
+        #[arg(long)]
+        overwrite: bool,
+
+        /// Confirm the destructive wipe of existing CURIO pages.
+        #[arg(long)]
+        confirm_nuke: bool,
+    },
 
     /// Ingest content from various sources into Confluence.
     IntakeCreate {

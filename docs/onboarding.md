@@ -9,13 +9,13 @@ Pass `--install` to force shim installation without prompting.
 
 - Rust toolchain for `curio-rs`
 - provider launcher on `PATH`, or provider command override via environment variable
-- run commands from `C:\code\agents\curio`
+- run commands from the repo root
 
-## Content Root Contract
+## Content Boundary Contract
 
-Curio writes only within the configured Confluence output folder:
+Curio writes only within the configured Confluence space:
 
-- `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the primary setting
+- `CURIO_SPACE_KEY` is the primary write boundary
 - `.env` and `.env.example` must contain the same Curio keys
 
 The onboarding command will:
@@ -24,12 +24,14 @@ The onboarding command will:
 - keep existing `.env` values when the shell does not override them
 - install or update the `curio` shim in the user cargo bin when approved
 - validate Confluence auth with the current token
-- check the managed output folder and lifecycle pages
+- check the configured space and lifecycle pages
 - report provider launcher availability as warnings or failures
 
-The bootstrap command will create or refresh the README landing page, the hero image, and the base lifecycle pages so the documentation layer is ready for human and agent use.
+The bootstrap command will create or refresh the README landing page, the NORTHSTAR charter, the hero image, and the base lifecycle pages so the documentation layer is ready for human and agent use. If you need to wipe an existing managed tree, Curio now requires `--overwrite --confirm-nuke` so destructive resets are explicit.
+`NORTHSTAR.md` is the editable source for the charter text; `curio onboard` ensures it exists and uses it before it offers a repair bootstrap.
 It also builds the Curio operating layers:
 
+- `NORTHSTAR` for the project intent and Published tree charter
 - `_templates` for reusable page blueprints and examples
 - `_registry` for the master index of Curio-managed pages and records
 - `_audit` for the append-only action history and rationale trail
@@ -61,20 +63,20 @@ Curio merges launch settings in this order:
 ## Verification
 
 ```powershell
-.\curio.ps1 onboard
-.\curio.ps1 onboard --install
-.\curio.ps1 doctor
-.\curio.ps1 agent doctor
-.\curio.ps1 agent list-providers
-.\curio.ps1 agent prepare codex
-.\curio.ps1 agent prepare claude
-.\curio.ps1 agent prepare gemini
+curio onboard
+curio onboard --install
+curio doctor
+curio agent doctor
+curio agent list-providers
+curio agent prepare codex
+curio agent prepare claude
+curio agent prepare gemini
 ```
 
 ## Launch
 
 ```powershell
-.\curio.ps1 agent launch codex
-.\curio.ps1 agent launch claude
-.\curio.ps1 agent launch gemini
+curio agent launch codex
+curio agent launch claude
+curio agent launch gemini
 ```

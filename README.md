@@ -16,18 +16,20 @@ The split is deliberate:
 
 All three providers are launched from the same Curio workspace contract:
 
-- repo root: `C:\code\agents\curio`
+- repo root: the Curio repository root
 - authored skills: `skills/`
 - compatibility skills: `.agents/skills/`
 - plugin catalog: `.agents/plugins/marketplace.json`
 - provider entrypoints: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
 - provider profiles: `providers/*.json`
 
-Curio content writes are scoped by Confluence folder ID:
+Curio content writes are scoped by Confluence space:
 
-- `CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID` is the authoritative write root
-- Curio's onboarding flow keeps `.env` and `.env.example` aligned on the six Curio keys
-- Bootstrap creates a single `README` landing page plus the structural Confluence layers:
+- `CURIO_SPACE_KEY` is the authoritative write boundary
+- `NORTHSTAR.md` seeds the charter page with the project intent text
+- Curio's onboarding flow keeps `.env` and `.env.example` aligned on the Curio keys
+- Bootstrap creates the `README` landing page plus the structural Confluence layers:
+  - `NORTHSTAR`
   - `Intake`
   - `Staged`
   - `Review`
@@ -38,12 +40,12 @@ Curio content writes are scoped by Confluence folder ID:
 
 For agent integrations, use `--json` on the helper commands and search:
 
-- `.\curio.ps1 doctor --json`
-- `.\curio.ps1 agent doctor --json`
-- `.\curio.ps1 agent list-providers --json`
-- `.\curio.ps1 agent list-skills --json`
-- `.\curio.ps1 agent print-env codex --json`
-- `.\curio.ps1 search --json`
+- `curio doctor --json`
+- `curio agent doctor --json`
+- `curio agent list-providers --json`
+- `curio agent list-skills --json`
+- `curio agent print-env codex --json`
+- `curio search --json`
 
 The JSON shape uses a simple envelope:
 
@@ -54,22 +56,23 @@ The JSON shape uses a simple envelope:
 Run onboarding with:
 
 ```powershell
-.\curio.ps1 onboard
+curio onboard
 ```
 
-`curio bootstrap` lays down the README landing page, hero artwork, the lifecycle documentation, the template playbook, the registry index, and the audit log under the managed Confluence write root.
+`curio bootstrap` lays down the README landing page, NORTHSTAR charter, hero artwork, the lifecycle documentation, the Published blueprint tree, the template playbook, the registry index, and the audit log inside the configured Curio space. Destructive rebuilds require `--overwrite --confirm-nuke`.
+`curio onboard` will prompt for NORTHSTAR intent when the corresponding env value is blank, then offer to repair the tree if required pages are missing.
 
 ## Quickstart
 
-From `C:\code\agents\curio`:
+From the repo root:
 
 ```powershell
-.\curio.ps1 onboard
-.\curio.ps1 onboard --install
-.\curio.ps1 doctor
-.\curio.ps1 agent doctor
-.\curio.ps1 agent list-providers
-.\curio.ps1 agent launch codex
+curio onboard
+curio onboard --install
+curio doctor
+curio agent doctor
+curio agent list-providers
+curio agent launch codex
 ```
 
 If the provider binary is not on `PATH`, set one of:

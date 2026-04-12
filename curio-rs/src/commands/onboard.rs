@@ -1,7 +1,9 @@
 use crate::{
+    commands::bootstrap::run_bootstrap,
     config::{Config, ConnectionConfig, ContentModelConfig, RuntimeConfig},
     confluence::ConfluenceClient,
     harness::{HarnessPaths, run_checks},
+    northstar::ensure_northstar_markdown,
 };
 use anyhow::{Context, Result, bail};
 use std::collections::{BTreeMap, BTreeSet};
@@ -15,19 +17,27 @@ const CURIO_ENV_KEYS: &[&str] = &[
     "CURIO_CONFLUENCE_EMAIL",
     "CURIO_CONFLUENCE_TOKEN",
     "CURIO_SPACE_KEY",
-    "CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID",
     "CURIO_TEMP_DIR",
 ];
 
-const CURIO_STRUCTURE_PAGES: &[&str] = &[
+const CURIO_ROOT_STRUCTURE_PAGES: &[&str] = &[
     "README",
+    "NORTHSTAR",
     "Intake",
     "Staged",
     "Review",
     "Published",
-    "_templates",
-    "_registry",
-    "_audit",
+    "Admin",
+];
+
+const CURIO_ADMIN_STRUCTURE_PAGES: &[&str] = &["_templates", "_registry", "_audit"];
+
+const CURIO_PUBLISHED_TREE_PAGES: &[&str] = &[
+    "By Account",
+    "By Product",
+    "By Audience",
+    "By Use Case",
+    "By Topic",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -91,6 +101,7 @@ pub async fn run_onboard(dry_run: bool, force_install: bool) -> Result<()> {
 
     let state = load_onboard_state(&paths)?;
     report_env_alignment(&state, dry_run, &mut critical_issues)?;
+    ensure_northstar_markdown(&paths.repo_root, dry_run)?;
 
     let config = build_onboard_config(&state);
     report_runtime_defaults(&config);
@@ -99,7 +110,33 @@ pub async fn run_onboard(dry_run: bool, force_install: bool) -> Result<()> {
         .get("CURIO_CONFLUENCE_TOKEN")
         .map(|resolved| resolved.value.as_str())
         .unwrap_or("");
-    validate_confluence(&config, token, &mut critical_issues, &mut warning_issues).await?;
+    let mut repair_required = false;
+    validate_confluence(
+        &config,
+        token,
+        &mut critical_issues,
+        &mut warning_issues,
+        &mut repair_required,
+    )
+    .await?;
+
+    if repair_required {
+        let should_repair = if dry_run {
+            false
+        } else {
+            prompt_repair_bootstrap()?
+        };
+        if should_repair {
+            println!(
+                "[OK] bootstrap_repair :: running `curio bootstrap --overwrite --confirm-nuke`"
+            );
+            run_bootstrap(&config, false, false, true, true).await?;
+        } else {
+            println!(
+                "[WARN] bootstrap_repair :: skipped; run `curio bootstrap --overwrite --confirm-nuke` to repair the Curio tree"
+            );
+        }
+    }
 
     if !dry_run {
         write_env_file(&state)?;
@@ -261,21 +298,69 @@ async fn validate_structure_pages(
     client: &ConfluenceClient,
     config: &Config,
     warning_issues: &mut usize,
+    repair_required: &mut bool,
 ) -> Result<()> {
-    let Some(folder_id) = config.content_model.output_root_folder_id.as_deref() else {
-        return Ok(());
-    };
-
     let space_key = config.content_model.space_key.as_str();
-    for page_name in CURIO_STRUCTURE_PAGES {
-        let page = client
-            .get_page_by_title(space_key, Some(folder_id), page_name)
-            .await?;
+    for page_name in CURIO_ROOT_STRUCTURE_PAGES {
+        let page = client.get_page_by_title(space_key, None, page_name).await?;
         if page.is_some() {
             println!("[OK] structure_page :: {}", page_name);
         } else {
             *warning_issues += 1;
+            *repair_required = true;
             println!("[WARN] structure_page :: {} is missing", page_name);
+            println!("  hint :: run `curio bootstrap` to create or repair Curio structure pages");
+        }
+    }
+
+    let admin_page = client.get_page_by_title(space_key, None, "Admin").await?;
+    let Some(admin_page) = admin_page else {
+        *warning_issues += 1;
+        *repair_required = true;
+        println!("[WARN] structure_page :: Admin branch is missing");
+        println!("  hint :: run `curio bootstrap` to create or repair Curio structure pages");
+        return Ok(());
+    };
+
+    let admin_page_id = admin_page["id"].as_str().unwrap_or_default();
+    for page_name in CURIO_ADMIN_STRUCTURE_PAGES {
+        let page = client
+            .get_page_by_title(space_key, Some(admin_page_id), page_name)
+            .await?;
+        if page.is_some() {
+            println!("[OK] structure_page :: Admin/{}", page_name);
+        } else {
+            *warning_issues += 1;
+            *repair_required = true;
+            println!("[WARN] structure_page :: Admin/{} is missing", page_name);
+            println!("  hint :: run `curio bootstrap` to create or repair Curio structure pages");
+        }
+    }
+
+    let published_page = client
+        .get_page_by_title(space_key, None, "Published")
+        .await?;
+    let Some(published_page) = published_page else {
+        *warning_issues += 1;
+        *repair_required = true;
+        println!("[WARN] structure_page :: Published branch is missing");
+        println!("  hint :: run `curio bootstrap` to create or repair Curio structure pages");
+        return Ok(());
+    };
+    let published_page_id = published_page["id"].as_str().unwrap_or_default();
+    for page_name in CURIO_PUBLISHED_TREE_PAGES {
+        let page = client
+            .get_page_by_title(space_key, Some(published_page_id), page_name)
+            .await?;
+        if page.is_some() {
+            println!("[OK] structure_page :: Published/{}", page_name);
+        } else {
+            *warning_issues += 1;
+            *repair_required = true;
+            println!(
+                "[WARN] structure_page :: Published/{} is missing",
+                page_name
+            );
             println!("  hint :: run `curio bootstrap` to create or repair Curio structure pages");
         }
     }
@@ -469,11 +554,6 @@ fn build_onboard_config(state: &OnboardState) -> Config {
         },
         content_model: ContentModelConfig {
             space_key: get("CURIO_SPACE_KEY"),
-            root_folder_name: String::new(),
-            output_root_folder_id: {
-                let v = get("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
-                if v.trim().is_empty() { None } else { Some(v) }
-            },
             label_namespace: "curio".to_string(),
         },
         runtime: RuntimeConfig {
@@ -489,11 +569,34 @@ fn report_runtime_defaults(config: &Config) {
     }
 }
 
+fn prompt_repair_bootstrap() -> Result<bool> {
+    if !io::stdin().is_terminal() {
+        println!("[WARN] bootstrap_repair :: non-interactive session, defaulting to no");
+        return Ok(false);
+    }
+
+    print!(
+        "Missing Curio structure detected. Run `curio bootstrap --overwrite --confirm-nuke` now to repair it? [y/N] "
+    );
+    io::stdout()
+        .flush()
+        .context("Failed to flush bootstrap repair prompt")?;
+
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .context("Failed to read bootstrap repair prompt response")?;
+
+    let answer = input.trim().to_ascii_lowercase();
+    Ok(matches!(answer.as_str(), "y" | "yes"))
+}
+
 async fn validate_confluence(
     config: &Config,
     auth_token: &str,
     critical_issues: &mut usize,
     warning_issues: &mut usize,
+    repair_required: &mut bool,
 ) -> Result<()> {
     let missing = missing_core_fields(config, auth_token);
     if !missing.is_empty() {
@@ -510,7 +613,8 @@ async fn validate_confluence(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token.to_string(),
-        config.content_model.output_root_folder_id.clone(),
+        config.content_model.space_key.clone(),
+        None,
     )?;
 
     match client.get_current_user().await {
@@ -528,32 +632,7 @@ async fn validate_confluence(
         }
     }
 
-    if let Some(folder_id) = config.content_model.output_root_folder_id.as_deref() {
-        match client.get_folder_by_id_v2(folder_id).await? {
-            Some(folder) => {
-                let title = folder["title"].as_str().unwrap_or(folder_id);
-                println!("[OK] output_root_folder :: {} ({})", folder_id, title);
-            }
-            None => {
-                *critical_issues += 1;
-                println!(
-                    "[FAIL] output_root_folder :: {} was not found in Confluence",
-                    folder_id
-                );
-                println!(
-                    "  hint :: set CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID to an existing folder ID"
-                );
-            }
-        }
-    } else {
-        *critical_issues += 1;
-        println!("[FAIL] output_root_folder :: CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID is missing");
-        println!(
-            "  hint :: use the folder ID from your managed output folder URL, then rerun onboarding"
-        );
-    }
-
-    validate_structure_pages(&client, config, warning_issues).await?;
+    validate_structure_pages(&client, config, warning_issues, repair_required).await?;
 
     Ok(())
 }
@@ -571,9 +650,6 @@ fn missing_core_fields(config: &Config, auth_token: &str) -> Vec<&'static str> {
     }
     if config.content_model.space_key.trim().is_empty() {
         missing.push("CURIO_SPACE_KEY");
-    }
-    if config.content_model.output_root_folder_id.is_none() {
-        missing.push("CURIO_CONFLUENCE_OUTPUT_ROOT_FOLDER_ID");
     }
     missing
 }
