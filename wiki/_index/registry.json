@@ -15,11 +15,11 @@
     "id": "42c59af8a4bae559"
   },
   {
-    "path": "intake/rollback-downgrade-a-failed-server-upgrade.md",
+    "path": "staged/by-use-case/rollback-downgrade-a-failed-server-upgrade.md",
     "title": "Rollback / Downgrade a Failed Server Upgrade",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-12T19:46:09Z",

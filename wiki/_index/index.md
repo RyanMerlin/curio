@@ -3,5 +3,5 @@
 
 ## uncategorized (2 pages)
 - **published/curio-readme.md** — Curio [confidence:80%] | keywords: readme, documentation, overview
-- **intake/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
+- **staged/by-use-case/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
 
