@@ -1,21 +1,27 @@
 ---
 id: 36b557ee678b5cbc
 title: Cloud / VM Server Deployment
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1698109505
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1698109505
   summary: null
-category: []
-keywords: []
+category:
+- by-account
+keywords:
+- azure
+- support
+- alteryx
+- server
+- migrate
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T20:59:51Z
-confidence: null
+updated_at: 2026-04-12T20:59:57Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:fc05b588cab53273c579968a24537626d01b1101fd1777ea100da5c06340a564
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 | AWS | Best Practices for Deploying Alteryx Server on AWS (PDF) <== Tim R link |

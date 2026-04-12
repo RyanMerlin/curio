@@ -1,21 +1,27 @@
 ---
 id: d54a8c85f7706f28
 title: Controller Token Length Transition from 21.4 to 22.3
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1778614404
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1778614404
   summary: null
-category: []
-keywords: []
+category:
+- by-account
+keywords:
+- token
+- controller
+- length
+- upgrade
+- recovery
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T20:59:51Z
-confidence: null
+updated_at: 2026-04-12T20:59:57Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:c4ab83977e12084996e671b27dae7a8dd4ae717650b64dcd3f04997b4f042e58
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 > **ℹ️ Info**

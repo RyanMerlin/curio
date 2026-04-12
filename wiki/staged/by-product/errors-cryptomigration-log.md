@@ -1,21 +1,27 @@
 ---
 id: d8b45be104aeaaf8
 title: Errors (CryptoMigration Log)
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1640760350
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640760350
   summary: null
-category: []
-keywords: []
+category:
+- by-product
+keywords:
+- errors
+- error
+- cryptomigration
+- more
+- page
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T20:59:51Z
-confidence: null
+updated_at: 2026-04-12T20:59:58Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:f64d8463939d7f05c48257f2bcd8eaa4f5eb963f850c52c5b73b52e92bb222d9
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 # CryptoMigration Errors

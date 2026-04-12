@@ -1,21 +1,27 @@
 ---
 id: 0d51911641ce3fc2
 title: 2021.4 Patch 6 to 2022.3 Upgrade Defects
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1868234983
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1868234983
   summary: null
-category: []
-keywords: []
+category:
+- by-audience
+keywords:
+- jira
+- server
+- recovery
+- tgal
+- upgrade
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T20:59:51Z
-confidence: null
+updated_at: 2026-04-12T20:59:57Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:1cf1e487df05472765c0f5a716474a3ac1f74fd0417df7649523b34cbcd3d8d8
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)
