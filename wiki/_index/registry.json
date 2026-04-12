@@ -209,11 +209,11 @@
     "id": "aeb68099f66cc0e8"
   },
   {
-    "path": "staged/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md",
+    "path": "published/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md",
     "title": "How to build remove() queries from CryptoMigration logs",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
