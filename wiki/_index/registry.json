@@ -66,11 +66,11 @@
     "id": "2dafa898f910632a"
   },
   {
-    "path": "staged/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md",
+    "path": "published/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md",
     "title": "Install/Upgrade Error - Service ‘AlteryxService' (AlteryxService) could not be installed.",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| Context | When upgrading Alteryx Server an error occurs “AlteryxService” could not be installed. |",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
