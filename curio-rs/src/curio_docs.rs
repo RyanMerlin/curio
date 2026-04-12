@@ -945,7 +945,8 @@ fn title_emoji_values(title: &str) -> (Option<&'static str>, Option<&'static str
 // --- Summary helpers ---
 
 /// Extracts a short summary from Confluence storage HTML.
-/// Strips all tags, collapses whitespace, skips spans < 20 chars, truncates to `max_chars`.
+/// Strips all tags, collapses whitespace into a single string, and returns None if the
+/// total extracted text is shorter than 20 chars. Truncates to `max_chars`.
 pub fn extract_summary_from_html(html: &str, max_chars: usize) -> Option<String> {
     let fragment = Html::parse_fragment(html);
     let raw = fragment
@@ -966,18 +967,23 @@ pub fn extract_summary_from_text(text: &str, max_chars: usize) -> Option<String>
     let line = text
         .lines()
         .map(|l| l.trim())
-        .find(|l| l.len() >= 20)?;
+        .find(|l| l.chars().count() >= 20)?;
     Some(truncate_summary(line, max_chars))
 }
 
 fn truncate_summary(s: &str, max_chars: usize) -> String {
-    if s.len() <= max_chars {
-        s.to_string()
-    } else {
-        let cut = &s[..max_chars];
-        let trimmed = cut.rfind(' ').map(|i| &cut[..i]).unwrap_or(cut);
-        format!("{}…", trimmed)
+    let char_count = s.chars().count();
+    if char_count <= max_chars {
+        return s.to_string();
     }
+    // Collect to max_chars chars
+    let cut: String = s.chars().take(max_chars).collect();
+    // Trim to last word boundary
+    let trimmed = match cut.rfind(' ') {
+        Some(i) => &cut[..i],
+        None => &cut,
+    };
+    format!("{}…", trimmed)
 }
 
 // --- ADF helper primitives ---
@@ -1018,13 +1024,17 @@ fn rc_table(rows: &[(&str, &str)]) -> serde_json::Value {
             json!({
                 "type": "tableRow",
                 "content": [
-                    { "type": "tableCell", "content": [rc_paragraph(k)] },
-                    { "type": "tableCell", "content": [rc_paragraph(v)] }
+                    { "type": "tableCell", "attrs": {}, "content": [rc_paragraph(k)] },
+                    { "type": "tableCell", "attrs": {}, "content": [rc_paragraph(v)] }
                 ]
             })
         })
         .collect();
-    json!({ "type": "table", "content": table_rows })
+    json!({
+        "type": "table",
+        "attrs": { "isNumberColumnEnabled": false, "layout": "default" },
+        "content": table_rows
+    })
 }
 
 fn rc_bullet_list(items: &[&str]) -> serde_json::Value {
@@ -1254,5 +1264,39 @@ mod body_builder_tests {
             "text/plain",
         );
         assert!(body.contains("truncated"));
+    }
+
+    #[test]
+    fn truncate_summary_respects_word_boundary() {
+        let s = "hello world foo bar baz";
+        // max_chars=11 → cut="hello world", rfind(' ')=5 → "hello…"
+        let result = truncate_summary(s, 11);
+        assert!(result.starts_with("hello"));
+        assert!(result.ends_with('…'));
+    }
+
+    #[test]
+    fn truncate_summary_handles_unicode() {
+        // "café" is 4 chars but 5 bytes — truncating at 3 chars should not panic
+        let s = "café is a nice place to sit and work";
+        let result = truncate_summary(s, 3);
+        assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn reference_card_adf_with_no_origin_url() {
+        let body = build_reference_card_adf(
+            "Unknown Source",
+            "file:/tmp/unknown",
+            None,
+            None,
+            "Intake",
+            "2026-04-11",
+            &[],
+            &[],
+        );
+        assert!(body.contains("file:/tmp/unknown"));
+        let parsed: serde_json::Value = serde_json::from_str(&body).expect("valid JSON");
+        assert_eq!(parsed["type"], "doc");
     }
 }
