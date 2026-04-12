@@ -1,7 +1,7 @@
 ---
 id: 9d22c624772bb143
 title: Host Recovery Encryption Key Transfer Process
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2971599161
@@ -17,7 +17,7 @@ keywords:
 - process
 - source
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:12Z
+updated_at: 2026-04-12T21:05:42Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:9dee756716df5a597fc70dd1347dcbdaceb80aea363714e0315a4f2b37aaf1f1

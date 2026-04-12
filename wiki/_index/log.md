@@ -11,3 +11,4 @@
 - **2026-04-12T21:05:39Z** publish: errors-pre-upgrade-checks published to published/product-tree/alteryx-server/errors-pre-upgrade-checks.md
 - **2026-04-12T21:05:40Z** publish: example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0 published to published/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md
 - **2026-04-12T21:05:41Z** publish: faq-help-cryptomigration published to published/product-tree/alteryx-server/faq-help-cryptomigration.md
+- **2026-04-12T21:05:42Z** publish: host-recovery-encryption-key-transfer-process published to published/product-tree/alteryx-server/host-recovery-encryption-key-transfer-process.md
