@@ -1,7 +1,7 @@
 ---
 id: bd5cb6609fa82250
 title: FAQ / Help - CryptoMigration
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1640793183
@@ -17,7 +17,7 @@ keywords:
 - upgrade
 - service
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:11Z
+updated_at: 2026-04-12T21:05:41Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:a4fea0557829743ef9cd3e9caa6dd0dccead375893cad2e8af728b7d227298e7
