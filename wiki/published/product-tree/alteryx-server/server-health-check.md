@@ -1,7 +1,7 @@
 ---
 id: 3eea4a24505d9806
 title: Server Health Check
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2002419792
@@ -17,7 +17,7 @@ keywords:
 - mongodb
 - sharepoint
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:15Z
+updated_at: 2026-04-12T21:06:02Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:c9d8168074be07759847493c62b8c9fa71d87fa4f5734f750d63cd49c6195bca
