@@ -1,7 +1,7 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1709050604
@@ -16,7 +16,7 @@ keywords:
 - upgrade
 - disaster-recovery
 created_at: 2026-04-12T19:46:09Z
-updated_at: 2026-04-12T19:46:25Z
+updated_at: 2026-04-12T19:46:26Z
 confidence: 0.8
 cross_refs: []
 content_hash: sha256:6c647c42758ecc4c4ffcafcb6ea7cdb1c2f56fd101e6f1cf44a2e48e40ddbfe9
