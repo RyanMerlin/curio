@@ -1,11 +1,13 @@
+use crate::confluence::http_timeout_duration;
 use crate::curio_docs::{
-    AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, build_audit_root_body,
-    build_registry_root_body, ensure_registry_record, ensure_scoped_page,
+    ADMIN_TITLE, AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, audit_bucket_path,
+    build_admin_root_body, build_audit_root_body, build_registry_root_body, ensure_registry_record,
+    ensure_scoped_page, ensure_scoped_structure_page, extract_page_text, infer_route_plan,
 };
 use crate::output::emit_json;
 use crate::{
-    Result, config::Config, confluence::ConfluenceClient, resolve_managed_root_folder_id,
-    resolve_or_create_scoped_child_page_id,
+    ChangeProposal, Result, compact_change_proposal, config::Config, confluence::ConfluenceClient,
+    generate_change_proposal_with_agent,
 };
 use anyhow::Context;
 use chrono::Utc;
@@ -22,6 +24,7 @@ struct IntakeOutput {
     handled_items: usize,
     duplicate_skipped: usize,
     skipped_unavailable: usize,
+    failed_items: usize,
     dry_run: bool,
 }
 
@@ -46,33 +49,31 @@ pub async fn run_intake_create(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
-        config.content_model.output_root_folder_id.clone(),
+        config.content_model.space_key.clone(),
+        None,
     )?;
 
     let space_key = &config.content_model.space_key;
-    let root_folder_name = &config.content_model.root_folder_name;
-
-    // Fetch managed root and Intake page IDs
-    let root_folder_id = resolve_managed_root_folder_id(
+    let intake_page_id = ensure_scoped_structure_page(
         &client,
         space_key,
-        root_folder_name,
-        config.content_model.output_root_folder_id.as_deref(),
-        json_output,
-    )
-    .await?;
-    let intake_page_id = resolve_or_create_scoped_child_page_id(
-        &client,
-        space_key,
-        &root_folder_id,
+        "",
         "Intake",
         "<p>This page holds raw, unprocessed content that has been ingested.</p>",
+    )
+    .await?;
+    let admin_page_id = ensure_scoped_structure_page(
+        &client,
+        space_key,
+        "",
+        ADMIN_TITLE,
+        &build_admin_root_body(),
     )
     .await?;
     let registry_root_id = ensure_scoped_page(
         &client,
         space_key,
-        &root_folder_id,
+        &admin_page_id,
         "_registry",
         &build_registry_root_body(),
     )
@@ -80,7 +81,7 @@ pub async fn run_intake_create(
     let audit_root_id = ensure_scoped_page(
         &client,
         space_key,
-        &root_folder_id,
+        &admin_page_id,
         AUDIT_TITLE,
         &build_audit_root_body(),
     )
@@ -151,10 +152,7 @@ pub async fn run_intake_create(
                     .or_else(|| descendant["title"].as_str())
                     .unwrap_or("Untitled Confluence Page")
                     .to_string();
-                let content = page["body"]["storage"]["value"]
-                    .as_str()
-                    .unwrap_or("")
-                    .to_string();
+                let content = extract_page_text(&page);
 
                 if !json_output {
                     println!("  - Queuing page from folder: {} ({})", page_title, page_id);
@@ -163,6 +161,148 @@ pub async fn run_intake_create(
                 all_content.push((
                     content,
                     format!("confluence-folder:{}:page:{}", folder_id, page_id),
+                    "confluence_page".to_string(),
+                    Some(page_title),
+                ));
+            }
+        } else if let Some(page_id) = extract_confluence_page_id_from_url(u) {
+            if !json_output {
+                println!("Ingesting from Confluence page tree: {}", u);
+            }
+
+            let root_page = client
+                .get_page_by_id_with_body_v1(&page_id)
+                .await?
+                .context(format!("Confluence page not found: {}", page_id))?;
+            let root_title = root_page["title"].as_str().unwrap_or(&page_id).to_string();
+            let root_content = extract_page_text(&root_page);
+
+            if !json_output {
+                println!("  - Queuing page from tree: {} ({})", root_title, page_id);
+            }
+            source_items += 1;
+            all_content.push((
+                root_content,
+                format!("confluence-page:{}:page:{}", page_id, page_id),
+                "confluence_page".to_string(),
+                Some(root_title.clone()),
+            ));
+
+            let descendants = client.get_page_descendants_v2(&page_id).await?;
+            if !json_output {
+                println!(
+                    "Found {} descendant items under page '{}'",
+                    descendants.len(),
+                    root_title
+                );
+            }
+
+            for descendant in descendants {
+                let content_type = descendant["type"].as_str().unwrap_or_default();
+                if content_type != "page" {
+                    continue;
+                }
+                source_items += 1;
+
+                let child_page_id = descendant["id"]
+                    .as_str()
+                    .context("Page descendant is missing an ID")?;
+                let page = match client.get_page_by_id_with_body_v1(child_page_id).await {
+                    Ok(Some(page)) => page,
+                    Ok(None) => {
+                        skipped_unavailable += 1;
+                        if !json_output {
+                            println!(
+                                "  - Skipping inaccessible descendant page {} (not found)",
+                                child_page_id
+                            );
+                        }
+                        continue;
+                    }
+                    Err(err) => {
+                        skipped_unavailable += 1;
+                        if !json_output {
+                            println!(
+                                "  - Skipping descendant page {} because it could not be loaded: {}",
+                                child_page_id, err
+                            );
+                        }
+                        continue;
+                    }
+                };
+
+                let page_title = page["title"]
+                    .as_str()
+                    .or_else(|| descendant["title"].as_str())
+                    .unwrap_or("Untitled Confluence Page")
+                    .to_string();
+                let content = extract_page_text(&page);
+
+                if !json_output {
+                    println!(
+                        "  - Queuing descendant page from tree: {} ({})",
+                        page_title, child_page_id
+                    );
+                }
+
+                all_content.push((
+                    content,
+                    format!("confluence-page:{}:page:{}", page_id, child_page_id),
+                    "confluence_page".to_string(),
+                    Some(page_title),
+                ));
+            }
+        } else if let Some(space_key) = extract_confluence_space_key_from_url(u) {
+            if !json_output {
+                println!("Ingesting from Confluence space: {}", space_key);
+            }
+            let pages = client
+                .execute_cql(&format!(
+                    "space = \"{}\" AND type = page ORDER BY created ASC",
+                    space_key
+                ))
+                .await?;
+            source_items = pages.len();
+            for page in pages {
+                let page_id = page["id"].as_str().context("Space page is missing an ID")?;
+                let loaded = match client.get_page_by_id_with_body_v1(page_id).await {
+                    Ok(Some(page)) => page,
+                    Ok(None) => {
+                        skipped_unavailable += 1;
+                        if !json_output {
+                            println!(
+                                "  - Skipping inaccessible space page {} (not found)",
+                                page_id
+                            );
+                        }
+                        continue;
+                    }
+                    Err(err) => {
+                        skipped_unavailable += 1;
+                        if !json_output {
+                            println!(
+                                "  - Skipping space page {} because it could not be loaded: {}",
+                                page_id, err
+                            );
+                        }
+                        continue;
+                    }
+                };
+
+                let page_title = loaded["title"]
+                    .as_str()
+                    .or_else(|| page["title"].as_str())
+                    .unwrap_or("Untitled Confluence Page")
+                    .to_string();
+                let content = extract_page_text(&loaded);
+
+                if !json_output {
+                    println!("  - Queuing page from space: {} ({})", page_title, page_id);
+                }
+
+                all_content.push((
+                    content,
+                    format!("confluence-space:{}:page:{}", space_key, page_id),
                     "confluence_page".to_string(),
                     Some(page_title),
                 ));
@@ -235,10 +375,11 @@ pub async fn run_intake_create(
 
     let mut handled_items = 0usize;
     let mut duplicate_skipped = 0usize;
+    let mut failed_items = 0usize;
 
     for (content, source_id, content_type, item_subject_hint) in all_content {
         let effective_subject_hint = item_subject_hint.or_else(|| subject_hint.clone());
-        let handled = process_single_content(
+        match process_single_content(
             &client,
             config,
             dry_run,
@@ -252,11 +393,19 @@ pub async fn run_intake_create(
             &effective_subject_hint,
             metadata_str,
         )
-        .await?;
-        if handled {
-            handled_items += 1;
-        } else {
-            duplicate_skipped += 1;
+        .await
+        {
+            Ok(true) => handled_items += 1,
+            Ok(false) => duplicate_skipped += 1,
+            Err(err) => {
+                failed_items += 1;
+                if !json_output {
+                    eprintln!(
+                        "Skipping source {} after intake write failure: {}",
+                        source_id, err
+                    );
+                }
+            }
         }
     }
 
@@ -269,6 +418,7 @@ pub async fn run_intake_create(
                 handled_items,
                 duplicate_skipped,
                 skipped_unavailable,
+                failed_items,
                 dry_run,
             },
         )?;
@@ -279,7 +429,15 @@ pub async fn run_intake_create(
 }
 
 async fn fetch_url_content(url: &str) -> Result<String> {
-    let response = reqwest::get(url)
+    let client = reqwest::Client::builder()
+        .timeout(http_timeout_duration())
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .build()
+        .context("Failed to build URL fetch client")?;
+
+    let response = client
+        .get(url)
+        .send()
         .await
         .context(format!("Failed to fetch URL: {}", url))?;
     let status = response.status();
@@ -414,15 +572,16 @@ async fn process_single_content(
         if !json_output {
             println!("Creating page: '{}' under Intake", page_title);
         }
-        client
-            .create_or_update_page(
-                &config.content_model.space_key,
-                Some(intake_page_id),
-                &page_title,
-                "storage", // Assuming storage format for simplicity
-                content,
-            )
-            .await?
+        create_scoped_intake_page(
+            client,
+            &config.content_model.space_key,
+            intake_page_id,
+            &page_title,
+            content,
+            source_id,
+            json_output,
+        )
+        .await?
     };
 
     // 3. Set Metadata
@@ -452,6 +611,23 @@ async fn process_single_content(
         }
     }
 
+    let route_hint_value = curio_metadata.clone();
+    let route_plan = infer_route_plan(Some(&page_title), content, Some(&route_hint_value));
+    let mut proposal: ChangeProposal = generate_change_proposal_with_agent(
+        Some(&page_title),
+        content,
+        &[source_id.to_string()],
+        Some(&route_hint_value),
+    )
+    .await?;
+    proposal.target_path = route_plan.target_path.clone();
+    proposal.registry_path = route_plan.registry_path.clone();
+    proposal.rationale = Some(route_plan.rationale.clone());
+    proposal.validation_requirements = route_plan.validation_requirements.clone();
+    proposal.sibling_context = route_plan.sibling_context.clone();
+    proposal.model_used = Some("curio-route-plan-v1".to_string());
+    curio_metadata["change_proposal"] = compact_change_proposal(&proposal);
+
     if !dry_run {
         if !json_output {
             println!("Setting curio_metadata for page {}", page_id);
@@ -480,7 +656,13 @@ async fn process_single_content(
         format!("{}-dedupe-key-{}", label_namespace, dedupe_key),
     ];
     if !subject_key.is_empty() {
-        labels.push(format!("{}-subject-key-{}", label_namespace, subject_key));
+        let sanitized_subject_key = sanitize_label_segment(&subject_key);
+        if !sanitized_subject_key.is_empty() {
+            labels.push(format!(
+                "{}-subject-key-{}",
+                label_namespace, sanitized_subject_key
+            ));
+        }
     }
 
     if !dry_run {
@@ -507,6 +689,7 @@ async fn process_single_content(
             client,
             &config.content_model.space_key,
             registry_root_id,
+            &proposal.registry_path,
             &registry_record,
         )
         .await?;
@@ -526,10 +709,12 @@ async fn process_single_content(
                 format!("Dedupe key: {}", dedupe_key),
             ],
         };
+        let audit_stamp = Utc::now().format("%Y%m%dT%H%M%S%.3fZ").to_string();
         append_audit_entry(
             client,
             &config.content_model.space_key,
             audit_root_id,
+            &audit_bucket_path(&audit_stamp),
             &audit_entry,
         )
         .await?;
@@ -548,6 +733,195 @@ async fn process_single_content(
     Ok(true)
 }
 
+async fn create_scoped_intake_page(
+    client: &ConfluenceClient,
+    space_key: &str,
+    intake_page_id: &str,
+    page_title: &str,
+    content: &str,
+    source_id: &str,
+    json_output: bool,
+) -> Result<String> {
+    let body = build_safe_intake_body(page_title, source_id, content);
+    match client
+        .create_or_update_page(
+            space_key,
+            Some(intake_page_id),
+            page_title,
+            "atlas_doc_format",
+            &body,
+        )
+        .await
+    {
+        Ok(page_id) => Ok(page_id),
+        Err(err) => {
+            let err_text = err.to_string();
+            if err_text.contains("same TITLE in this space") {
+                let unique_title = build_unique_intake_title(page_title, source_id);
+                if !json_output {
+                    println!(
+                        "Title collision detected for '{}'; retrying with unique title '{}'",
+                        page_title, unique_title
+                    );
+                }
+                match client
+                    .create_or_update_page(
+                        space_key,
+                        Some(intake_page_id),
+                        &unique_title,
+                        "atlas_doc_format",
+                        &build_safe_intake_body(&unique_title, source_id, content),
+                    )
+                    .await
+                {
+                    Ok(page_id) => return Ok(page_id),
+                    Err(unique_err) => {
+                        let fallback_body =
+                            build_safe_intake_body(&unique_title, source_id, content);
+                        if !json_output {
+                            println!(
+                                "Primary and unique-title writes failed for '{}'; retrying with sanitized fallback body: {}",
+                                unique_title, unique_err
+                            );
+                        }
+                        return client
+                            .create_or_update_page(
+                                space_key,
+                                Some(intake_page_id),
+                                &unique_title,
+                                "atlas_doc_format",
+                                &fallback_body,
+                            )
+                            .await
+                            .with_context(|| {
+                                format!(
+                                    "Failed to create intake page '{}' from source {} even after unique-title fallback and body sanitization",
+                                    page_title, source_id
+                                )
+                            });
+                    }
+                }
+            }
+            let fallback_body = build_safe_intake_body(page_title, source_id, content);
+            if !json_output {
+                println!(
+                    "Primary page write failed for '{}'; retrying with sanitized fallback body: {}",
+                    page_title, err
+                );
+            }
+            client
+                .create_or_update_page(
+                    space_key,
+                    Some(intake_page_id),
+                    page_title,
+                    "atlas_doc_format",
+                    &fallback_body,
+                )
+                .await
+                .with_context(|| {
+                    format!(
+                        "Failed to create intake page '{}' from source {} even after fallback sanitization",
+                        page_title, source_id
+                    )
+                })
+        }
+    }
+}
+
+fn build_safe_intake_body(page_title: &str, source_id: &str, content: &str) -> String {
+    let excerpt_lines = content.lines().take(120).collect::<Vec<_>>();
+    let excerpt_blocks = excerpt_lines
+        .into_iter()
+        .map(adf_text_line)
+        .collect::<Vec<_>>();
+
+    let adf = json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            adf_heading(1, page_title),
+            adf_paragraph_text(&format!("Source: {}", source_id)),
+            adf_paragraph_text("Curio stored a sanitized intake copy because the original page body could not be written cleanly."),
+            adf_heading(2, "Captured Text"),
+            adf_paragraph_from_lines(excerpt_blocks),
+        ]
+    });
+
+    serde_json::to_string(&adf).unwrap_or_else(|_| {
+        json!({
+            "type": "doc",
+            "version": 1,
+            "content": [
+                adf_heading(1, page_title),
+                adf_paragraph_text(&format!("Source: {}", source_id))
+            ]
+        })
+        .to_string()
+    })
+}
+
+fn adf_heading(level: u8, text: &str) -> serde_json::Value {
+    json!({
+        "type": "heading",
+        "attrs": { "level": level },
+        "content": [adf_text(text)]
+    })
+}
+
+fn adf_paragraph_text(text: &str) -> serde_json::Value {
+    json!({
+        "type": "paragraph",
+        "content": [adf_text(text)]
+    })
+}
+
+fn adf_paragraph_from_lines(lines: Vec<serde_json::Value>) -> serde_json::Value {
+    let mut content = Vec::new();
+    for (index, line) in lines.into_iter().enumerate() {
+        if index > 0 {
+            content.push(json!({ "type": "hardBreak" }));
+        }
+        content.push(line);
+    }
+    json!({
+        "type": "paragraph",
+        "content": content
+    })
+}
+
+fn adf_text(text: &str) -> serde_json::Value {
+    json!({
+        "type": "text",
+        "text": text
+    })
+}
+
+fn adf_text_line(text: &str) -> serde_json::Value {
+    adf_text(text)
+}
+
+fn build_unique_intake_title(page_title: &str, source_id: &str) -> String {
+    let source_tail = source_id
+        .rsplit(':')
+        .next()
+        .filter(|value| !value.is_empty())
+        .unwrap_or("source");
+    format!("{} [{}]", page_title, source_tail)
+}
+
+fn sanitize_label_segment(input: &str) -> String {
+    let mut cleaned = input
+        .replace(['/', '\\', ':', '|', '[', ']', '{', '}', '(', ')'], " ")
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    cleaned = cleaned.trim().trim_matches('-').trim().to_string();
+    if cleaned.len() > 120 {
+        cleaned.truncate(120);
+    }
+    cleaned
+}
+
 fn extract_confluence_folder_id(url: &str) -> Option<String> {
     let marker = "/folder/";
     let start = url.find(marker)? + marker.len();
@@ -559,4 +933,44 @@ fn extract_confluence_folder_id(url: &str) -> Option<String> {
     } else {
         Some(folder_id)
     }
+}
+
+fn extract_confluence_space_key_from_url(url: &str) -> Option<String> {
+    let marker = "/spaces/";
+    let start = url.find(marker)? + marker.len();
+    let tail = &url[start..];
+    let space_key: String = tail
+        .chars()
+        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-')
+        .collect();
+
+    if space_key.is_empty() {
+        return None;
+    }
+
+    if url.contains("/overview") {
+        Some(space_key)
+    } else {
+        None
+    }
+}
+
+fn extract_confluence_page_id_from_url(url: &str) -> Option<String> {
+    if let Some(marker) = url.find("/pages/") {
+        let tail = &url[(marker + "/pages/".len())..];
+        let page_id: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
+        if !page_id.is_empty() {
+            return Some(page_id);
+        }
+    }
+
+    if let Some(marker) = url.find("homepageId=") {
+        let tail = &url[(marker + "homepageId=".len())..];
+        let page_id: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
+        if !page_id.is_empty() {
+            return Some(page_id);
+        }
+    }
+
+    None
 }
