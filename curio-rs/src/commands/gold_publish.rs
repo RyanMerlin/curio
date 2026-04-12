@@ -1,16 +1,18 @@
 use crate::curio_docs::{
-    AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, build_audit_root_body,
-    build_registry_root_body, ensure_registry_record, ensure_scoped_page,
+    ADMIN_TITLE, AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, audit_bucket_path,
+    build_admin_root_body, build_audit_root_body, build_reference_card_adf, build_registry_root_body,
+    ensure_registry_record, ensure_scoped_page, ensure_scoped_structure_page, update_branch_index,
 };
 use crate::output::emit_json;
 use crate::{
-    Change, ChangeProposal, Result, config::Config, confluence::ConfluenceClient,
-    resolve_managed_root_folder_id,
+    Change, ChangeProposal, Result, SourceKind, config::Config, confluence::ConfluenceClient,
+    resolve_or_create_scoped_child_page_id,
 };
 use anyhow::Context;
 use chrono::Utc;
 use serde::Serialize;
 use serde_json::json;
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Serialize)]
 struct GoldPublishOutput {
@@ -36,31 +38,48 @@ pub async fn run_gold_publish(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         auth_token,
-        config.content_model.output_root_folder_id.clone(),
+        config.content_model.space_key.clone(),
+        None,
     )?;
 
     let space_key = &config.content_model.space_key;
     let label_namespace = &config.content_model.label_namespace;
-    let root_folder_id = resolve_managed_root_folder_id(
+    let admin_page_id = ensure_scoped_structure_page(
         &client,
         space_key,
-        &config.content_model.root_folder_name,
-        config.content_model.output_root_folder_id.as_deref(),
-        json_output,
+        "",
+        ADMIN_TITLE,
+        &build_admin_root_body(),
     )
     .await?;
     let registry_root_id = ensure_scoped_page(
         &client,
         space_key,
-        &root_folder_id,
+        &admin_page_id,
         "_registry",
         &build_registry_root_body(),
+    )
+    .await?;
+    let published_root_id = ensure_scoped_structure_page(
+        &client,
+        space_key,
+        "",
+        "Published",
+        "<p>This page contains the final, published Curio content tree.</p>",
+    )
+    .await?;
+    let staged_page_id = ensure_scoped_structure_page(
+        &client,
+        space_key,
+        "",
+        "Staged",
+        "<p>Curio returns here when publish-time validation fails or needs a new pass.</p>",
     )
     .await?;
     let audit_root_id = ensure_scoped_page(
         &client,
         space_key,
-        &root_folder_id,
+        &admin_page_id,
         AUDIT_TITLE,
         &build_audit_root_body(),
     )
@@ -84,6 +103,11 @@ pub async fn run_gold_publish(
         json!({})
     };
 
+    let source_kind = {
+        let source_id = curio_metadata_mut["source_id"].as_str().unwrap_or(&page_id_arg);
+        SourceKind::from_source_id(source_id)
+    };
+
     // Ensure page is in 'resolved' status
     if curio_metadata_mut["status"].as_str() != Some("resolved") {
         anyhow::bail!(
@@ -96,6 +120,7 @@ pub async fn run_gold_publish(
     let change_proposal: ChangeProposal =
         serde_json::from_value(curio_metadata_mut["change_proposal"].clone())
             .context("Change proposal missing or invalid in metadata")?;
+    let source_snapshot_hash = change_proposal.pre_change_snapshot_hash.clone();
 
     if !json_output {
         println!(
@@ -114,21 +139,136 @@ pub async fn run_gold_publish(
             );
         }
 
-        // Fetch target page
+        let mut target_parent_id = published_root_id.clone();
+        for segment in &change_proposal.target_path {
+            target_parent_id = resolve_or_create_scoped_child_page_id(
+                &client,
+                space_key,
+                &target_parent_id,
+                segment,
+                "<p>Curio route branch.</p>",
+            )
+            .await?;
+        }
+
         let target_page_current = client
-            .get_page_by_id_v2(&change.target_page_id)
-            .await?
-            .context(format!(
-                "Target gold page with ID {} not found",
-                change.target_page_id
-            ))?;
-        let target_page_current_body = target_page_current["body"]["storage"]["value"]
+            .get_page_by_title(
+                space_key,
+                Some(&target_parent_id),
+                &change.target_page_title,
+            )
+            .await?;
+        let target_page_current_body = if let Some(page) = target_page_current.as_ref() {
+            page["body"]["storage"]["value"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string()
+        } else {
+            String::new()
+        };
+
+        let current_source_body = source_page["body"]["storage"]["value"]
             .as_str()
             .unwrap_or_default()
             .to_string();
+        let current_source_hash = format!("{:x}", Sha256::digest(current_source_body.as_bytes()));
+        let sibling_pages = client.get_page_descendants_v2(&target_parent_id).await?;
+        let sibling_collision = sibling_pages.iter().any(|page| {
+            let title = page["title"].as_str().unwrap_or_default();
+            let page_id = page["id"].as_str().unwrap_or_default();
+            title == change.target_page_title && page_id != change.target_page_id
+        });
+
+        let snapshot_mismatch = source_snapshot_hash
+            .as_ref()
+            .map(|expected| expected != &current_source_hash)
+            .unwrap_or(false);
+        if sibling_collision || snapshot_mismatch {
+            let reason = if sibling_collision {
+                "target branch contains a conflicting sibling page"
+            } else {
+                "source page changed after the proposal was created"
+            };
+            if !json_output {
+                println!("  - Publish validation failed: {}", reason);
+            }
+            if !dry_run {
+                curio_metadata_mut["status"] = json!("staged");
+                curio_metadata_mut["publish_validation"] = json!({
+                    "status": "failed",
+                    "reason": reason,
+                    "checked_at": Utc::now().to_rfc3339(),
+                });
+                client
+                    .set_content_property(
+                        &page_id_arg,
+                        "curio_metadata",
+                        curio_metadata_mut.clone(),
+                    )
+                    .await?;
+                client
+                    .remove_label(
+                        &page_id_arg,
+                        &format!("{}-status-resolved", label_namespace),
+                    )
+                    .await?;
+                client
+                    .add_labels(
+                        &page_id_arg,
+                        vec![
+                            format!("{}-status-staged", label_namespace),
+                            format!("{}-publish-validation-failed", label_namespace),
+                        ],
+                    )
+                    .await?;
+                client.move_page(&page_id_arg, &staged_page_id).await?;
+            }
+            continue;
+        }
+
+        let target_page_current_body = target_page_current_body;
 
         // [Integration Point] Apply Change (Placeholder)
-        let updated_target_body = apply_content_change(&target_page_current_body, &change).await?;
+        let (updated_target_body, body_format) = if source_kind.is_reference() {
+            let origin_url = {
+                let webui = curio_metadata_mut["source_page_webui"]
+                    .as_str()
+                    .map(|p| format!("{}{}", config.connection.confluence_url.trim_end_matches('/'), p));
+                webui.or_else(|| source_kind.origin_url(&config.connection.confluence_url))
+            };
+            let summary = curio_metadata_mut["agent_analysis"]["summary"]
+                .as_str()
+                .or_else(|| curio_metadata_mut["subject_key"].as_str())
+                .unwrap_or(&change.target_page_title)
+                .to_string();
+            let now = Utc::now().to_rfc3339();
+            let source_id_str = curio_metadata_mut["source_id"]
+                .as_str()
+                .unwrap_or(&page_id_arg)
+                .to_string();
+            let metadata_rows: Vec<(String, String)> = vec![
+                ("Source ID".to_string(), source_id_str.clone()),
+                ("Last verified".to_string(), now.clone()),
+            ];
+            let metadata_ref: Vec<(&str, &str)> = metadata_rows
+                .iter()
+                .map(|(k, v)| (k.as_str(), v.as_str()))
+                .collect();
+            let body = build_reference_card_adf(
+                &change.target_page_title,
+                &source_id_str,
+                origin_url.as_deref(),
+                Some(&summary),
+                "Published",
+                &now,
+                &metadata_ref,
+                &[],
+            );
+            (body, "atlas_doc_format")
+        } else {
+            let body = apply_content_change(&target_page_current_body, &change).await?;
+            (body, "storage")
+        };
 
         if !dry_run {
             if !json_output {
@@ -137,9 +277,9 @@ pub async fn run_gold_publish(
             client
                 .create_or_update_page(
                     space_key,
-                    None, // Parent will be determined by the existing page
+                    Some(&target_parent_id),
                     &change.target_page_title,
-                    "storage",
+                    body_format,
                     &updated_target_body,
                 )
                 .await?;
@@ -158,6 +298,19 @@ pub async fn run_gold_publish(
                     target_metadata_mut.clone(),
                 )
                 .await?;
+
+            // Update the Published branch index so agents see the new page immediately.
+            // Safety: all writes go through assert_within_write_root inside update_branch_index.
+            let branch_label = change_proposal.target_path.last().map(|s| s.as_str()).unwrap_or("Published");
+            let _ = update_branch_index(
+                &client,
+                &target_parent_id,
+                branch_label,
+                &change_proposal.target_path,
+                "Published",
+                None,
+            )
+            .await;
         } else {
             if !json_output {
                 println!(
@@ -208,7 +361,14 @@ pub async fn run_gold_publish(
             summary: change_proposal.summary.clone(),
             updated_at: Utc::now().to_rfc3339(),
         };
-        ensure_registry_record(&client, space_key, &registry_root_id, &registry_record).await?;
+        ensure_registry_record(
+            &client,
+            space_key,
+            &registry_root_id,
+            &change_proposal.registry_path,
+            &registry_record,
+        )
+        .await?;
 
         let audit_entry = AuditEntry {
             actor: config.connection.confluence_email.clone(),
@@ -226,7 +386,15 @@ pub async fn run_gold_publish(
                 format!("Changes applied: {}", changes_applied),
             ],
         };
-        append_audit_entry(&client, space_key, &audit_root_id, &audit_entry).await?;
+        let audit_stamp = Utc::now().format("%Y%m%dT%H%M%S%.3fZ").to_string();
+        append_audit_entry(
+            &client,
+            space_key,
+            &audit_root_id,
+            &audit_bucket_path(&audit_stamp),
+            &audit_entry,
+        )
+        .await?;
 
         // (Optional) Move source page to _archive
         // Not implemented in initial version
