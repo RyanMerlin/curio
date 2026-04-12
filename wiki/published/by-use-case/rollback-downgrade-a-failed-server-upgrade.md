@@ -1,7 +1,7 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1709050604
