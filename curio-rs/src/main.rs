@@ -14,6 +14,7 @@ use curio::{
         intake::run_intake_create,
         onboard::run_onboard,
         process_intake::run_process_intake,
+        reindex::run_reindex,
         review::{run_review_approve, run_review_reject}, // Import review functions
         search::run_search,
     },
@@ -125,6 +126,11 @@ async fn main() -> Result<()> {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
             let config = load_config(config_path_str)?;
             run_gold_publish(&config, cli.dry_run, cli.json, page_id).await?;
+        }
+        Some(Commands::Reindex) => {
+            let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());
+            let config = load_config(config_path_str)?;
+            run_reindex(&config, cli.dry_run, cli.json).await?;
         }
         Some(Commands::Review(review_commands)) => {
             let config_path_str = cli.config.as_ref().and_then(|p| p.to_str());

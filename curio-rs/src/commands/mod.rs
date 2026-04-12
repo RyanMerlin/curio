@@ -7,4 +7,5 @@ pub mod intake;
 pub mod onboard;
 pub mod process_intake;
 pub mod review;
+pub mod reindex;
 pub mod search;

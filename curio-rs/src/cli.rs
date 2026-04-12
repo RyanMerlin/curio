@@ -149,6 +149,13 @@ pub enum Commands {
         page_id: String,
     },
 
+    /// Rebuild branch indexes on all Curio branch pages.
+    ///
+    /// Walks the Published, Intake, Staged, Review, and _registry trees and
+    /// refreshes the curio_branch_index content property on every branch page.
+    /// Use this to fix stale navigation indexes after bulk operations.
+    Reindex,
+
     /// A group of commands for reviewing content.
     #[command(subcommand)]
     Review(ReviewCommands),
