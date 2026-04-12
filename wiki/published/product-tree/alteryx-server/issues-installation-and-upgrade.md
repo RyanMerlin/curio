@@ -1,7 +1,7 @@
 ---
 id: b8eca716f67136cc
 title: Issues (Installation and Upgrade)
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1679328213
@@ -17,7 +17,7 @@ keywords:
 - gcsedcfcfffefeeffsystem
 - jira
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:13Z
+updated_at: 2026-04-12T21:05:53Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:fdd56bfc61c26736a7e1872e73c72a0cac47564ca288e2c33f4dc442a40f3914
