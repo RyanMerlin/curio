@@ -1,7 +1,7 @@
 ---
 id: 1053cc0d7e5753dc
 title: Server Version Build Number vs Patch for Older Versions
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1964933786
@@ -17,7 +17,7 @@ keywords:
 - patch
 - uptodate
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:16Z
+updated_at: 2026-04-12T21:06:07Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:a99687dab0a902ee06aac1302346bd082cc3b248e59da89768c5573a729d6fb2
