@@ -9,5 +9,16 @@
     "confidence": null,
     "updated_at": "2026-04-12T18:33:36Z",
     "id": "42c59af8a4bae559"
+  },
+  {
+    "path": "intake/rollback-downgrade-a-failed-server-upgrade.md",
+    "title": "Rollback / Downgrade a Failed Server Upgrade",
+    "category": [],
+    "keywords": [],
+    "status": "intake",
+    "summary": "",
+    "confidence": null,
+    "updated_at": "2026-04-12T19:04:32Z",
+    "id": "564f90efd2a29dbe"
   }
 ]
