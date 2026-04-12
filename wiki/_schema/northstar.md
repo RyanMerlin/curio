@@ -51,21 +51,6 @@ The filesystem slug is derived from the tree name: `Account-tree` → `wiki/publ
 > AI/ML tooling guidance, AutoML patterns, and integration playbooks.
 
 **Icon:** 1f9e0
-### Audience-tree
-> Knowledge framed for a specific reader or operator group.
-> Not duplicated copies of the same page without a purpose.
-
-**Icon:** 1f465
-**Metadata to track:** audience, intent, reading level
-
-#### Technical / CSE
-> Deep technical content for customer-facing engineers and support escalation.
-
-**Icon:** 1f527
-#### Executive / Business
-> Business-value summaries, ROI narratives, and decision-support content.
-
-**Icon:** 1f4ca
 ### Use-Case-tree
 > Repeatable workflows, scenarios, and operating playbooks.
 > Not a random bucket for one-off content.
