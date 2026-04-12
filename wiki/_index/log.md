@@ -18,3 +18,4 @@
 - **2026-04-12T21:05:48Z** publish: how-to-upgrade-embedded-mongodb-version-manually published to published/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md
 - **2026-04-12T21:05:49Z** publish: install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed published to published/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md
 - **2026-04-12T21:05:51Z** publish: installation-and-upgrade published to published/product-tree/alteryx-server/installation-and-upgrade.md
+- **2026-04-12T21:05:52Z** publish: issues-cryptomigration-log published to published/product-tree/alteryx-server/issues-cryptomigration-log.md
