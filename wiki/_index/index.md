@@ -1,7 +1,4 @@
 # Curio Wiki Index
-> Last updated: 2026-04-12 19:46 UTC | Pages: 2
+> Last updated: 2026-04-12 20:56 UTC | Pages: 0
 
-## uncategorized (2 pages)
-- **published/curio-readme.md** — Curio [confidence:80%] | keywords: readme, documentation, overview
-- **published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
-
+_No pages yet. Run `curio intake` to add content._

@@ -1,14 +1,4 @@
 # Curio Wiki Configuration
 
-categories:
-  - name: by-account
-    description: Customer- and account-specific intelligence
-  - name: by-product
-    description: Product-centric guidance and reference content
-  - name: by-audience
-    description: Knowledge framed for a specific reader group
-  - name: by-use-case
-    description: Repeatable workflows and operating playbooks
-  - name: by-topic
-    description: Subject matter pages when no stronger route applies
+# Tree structure is defined in _schema/northstar.md
 auto_commit: true
