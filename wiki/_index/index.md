@@ -34,7 +34,7 @@
 - **staged/by-account/controller-token-length-transition-from-21-4-to-22-3.md** — > **ℹ️ Info**
 - **staged/by-account/cloud-vm-server-deployment.md** — | AWS | Best Practices for Deploying Alteryx Server on AWS (PDF) <== Tim R link |
 - **staged/by-account/embedded-mongodb-upgrade-migration.md** — ---
-- **staged/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md** — > **📝 Note**
+- **published/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md** — > **📝 Note**
 - **staged/product-tree/alteryx-server/mongodb-upgrade-folder-structure.md** — ---
 - **staged/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/server-health-check.md** — > **ℹ️ Info**

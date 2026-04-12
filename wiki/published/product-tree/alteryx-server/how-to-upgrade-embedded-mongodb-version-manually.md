@@ -1,7 +1,7 @@
 ---
 id: 9c496c5d7999b435
 title: How to upgrade Embedded MongoDB version manually
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2438889832
@@ -17,7 +17,7 @@ keywords:
 - service
 - embedded
 created_at: 2026-04-12T20:59:51Z
-updated_at: 2026-04-12T21:05:13Z
+updated_at: 2026-04-12T21:05:48Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:7ee1e4f99ca2ca8490c46b9cde8647cdf7eab44acba2df9b73eccb37e973ec2b
