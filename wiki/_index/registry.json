@@ -11,14 +11,14 @@
     "id": "42c59af8a4bae559"
   },
   {
-    "path": "published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md",
+    "path": "intake/rollback-downgrade-a-failed-server-upgrade.md",
     "title": "Rollback / Downgrade a Failed Server Upgrade",
     "category": [],
     "keywords": [],
-    "status": "published",
-    "summary": "Rolling back a failed Server upgrade is typically quick and successful",
+    "status": "intake",
+    "summary": "> **Info:** > Rolling back a failed Server upgrade is typically quick and successful",
     "confidence": null,
-    "updated_at": "2026-04-12T19:11:43Z",
+    "updated_at": "2026-04-12T19:22:10Z",
     "id": "564f90efd2a29dbe"
   }
 ]
