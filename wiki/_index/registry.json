@@ -396,11 +396,11 @@
     "id": "3eea4a24505d9806"
   },
   {
-    "path": "staged/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md",
+    "path": "published/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md",
     "title": "Example: Alteryx Server Upgrade 22.1 to 23.2 (MongoDB Upgrade: 4.2 to 6.0)",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
