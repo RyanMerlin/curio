@@ -10,7 +10,7 @@
 - **staged/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md** — | Context |  |
 - **published/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md** — | Context | When upgrading Alteryx Server an error occurs “AlteryxService” could not be installed. |
 - **published/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md** — | Context | MongoDB Migration when performing an upgrade |
-- **staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-attempting-to-upgrade-from-an-unsupported-version-upgrade-to-alteryx-server-version-2018-1-or-later-to-attempt-to-upgrade-to-your-desired-version.md** — | Context |  |
+- **published/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-attempting-to-upgrade-from-an-unsupported-version-upgrade-to-alteryx-server-version-2018-1-or-later-to-attempt-to-upgrade-to-your-desired-version.md** — | Context |  |
 - **staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-upgrading-from-a-version-of-server-that-utilizes-mongodb-version-older-than-6-0.md** — | Context | Upgrading Server to a version using MongoDB 7.0 from a version using an earlier database |
 - **staged/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md** — > **ℹ️ Info**

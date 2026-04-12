@@ -88,11 +88,11 @@
     "id": "91337d4e259e2352"
   },
   {
-    "path": "staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-attempting-to-upgrade-from-an-unsupported-version-upgrade-to-alteryx-server-version-2018-1-or-later-to-attempt-to-upgrade-to-your-desired-version.md",
+    "path": "published/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-attempting-to-upgrade-from-an-unsupported-version-upgrade-to-alteryx-server-version-2018-1-or-later-to-attempt-to-upgrade-to-your-desired-version.md",
     "title": "Mongo Database Upgrade Error - You are attempting to upgrade from an unsupported version. Upgrade to Alteryx Server version 2018.1 or later to attempt to upgrade to your desired version.",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| Context |  |",
     "confidence": null,
     "updated_at": "2026-04-12T20:59:51Z",
