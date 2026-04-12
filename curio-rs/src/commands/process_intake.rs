@@ -1,8 +1,11 @@
 use crate::curio_docs::{
     ADMIN_TITLE, AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, audit_bucket_path,
-    build_admin_root_body, build_audit_root_body, build_registry_root_body, ensure_registry_record,
+    build_admin_root_body, build_audit_root_body, build_capture_intake_adf,
+    build_reference_card_adf, build_registry_root_body, ensure_registry_record,
     ensure_scoped_page, ensure_scoped_structure_page, extract_page_text, infer_route_plan,
+    update_branch_index,
 };
+use crate::SourceKind;
 use crate::output::emit_json;
 #[allow(unused_imports)]
 use crate::{
@@ -415,6 +418,11 @@ pub async fn run_process_intake(
             )
             .await?;
 
+            // Update branch indexes for both old parent (Intake) and new parent (Staged/Review).
+            // Safety: all writes inside update_branch_index go through assert_within_write_root.
+            let _ = update_branch_index(&client, &_intake_page_id, "Intake", &[], "Intake", None).await;
+            let _ = update_branch_index(&client, new_parent_id, target_page_name, &[], target_page_name, None).await;
+
             if !json_output {
                 println!(
                     "Successfully transitioned page '{}' to '{}'",
@@ -460,277 +468,83 @@ fn build_stage_artifact_body(
     conflict_details: Option<&serde_json::Value>,
     confluence_url: &str,
 ) -> String {
+    let source_id = proposal
+        .source_refs
+        .first()
+        .map(|s| s.as_str())
+        .unwrap_or_default();
+    let kind = SourceKind::from_source_id(source_id);
+
     let target_path = if proposal.target_path.is_empty() {
         "Unresolved".to_string()
     } else {
         proposal.target_path.join(" / ")
     };
-    let registry_path = if proposal.registry_path.is_empty() {
-        "Unresolved".to_string()
-    } else {
-        proposal.registry_path.join(" / ")
-    };
-    let validation_requirements = if proposal.validation_requirements.is_empty() {
-        "None".to_string()
-    } else {
-        proposal.validation_requirements.join(", ")
-    };
-    let sibling_context = if proposal.sibling_context.is_empty() {
-        "None".to_string()
-    } else {
-        proposal.sibling_context.join(" | ")
-    };
     let conflict_text = conflict_details
-        .and_then(|value| value["message"].as_str())
+        .and_then(|v| v["message"].as_str())
         .unwrap_or("No conflict detected");
-    let proposal_summary = proposal.summary.clone();
-    let proposal_rationale = proposal
-        .rationale
-        .as_deref()
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or("No route rationale was produced.");
-    let proposed_changes = if proposal.proposed_changes.is_empty() {
-        vec!["No proposed content changes were generated.".to_string()]
-    } else {
-        proposal
-            .proposed_changes
-            .iter()
-            .map(|change| {
-                format!(
-                    "{} -> {} ({})",
-                    change.target_page_title, change.target_page_id, change.summary_of_change
-                )
-            })
-            .collect::<Vec<_>>()
-    };
+    let now = chrono::Utc::now().to_rfc3339();
+
     let commands = [
         "curio review approve <page-id>",
         "curio review reject <page-id>",
         "curio gold-resolve <page-id>",
         "curio gold-publish <page-id>",
-    ]
-    .iter()
-    .map(|command| command.to_string())
-    .collect::<Vec<_>>();
-    let source_reference = proposal
-        .source_refs
-        .first()
-        .cloned()
-        .unwrap_or_else(|| "Unknown source".to_string());
-    let source_page_title = source_page["title"].as_str().unwrap_or(title);
-    let source_page_url = source_page["_links"]["webui"]
-        .as_str()
-        .map(|webui| format!("{}{}", confluence_url.trim_end_matches('/'), webui));
-    let source_excerpt_nodes = build_source_excerpt_nodes(source_page, source_body, 8);
-    let quick_facts_rows = vec![
-        vec!["Source reference".to_string(), source_reference.clone()],
-        vec![
-            "Source length".to_string(),
-            if source_body.trim().is_empty() {
-                "No source body was available.".to_string()
-            } else {
-                format!("{} line(s)", source_body.lines().count())
-            },
-        ],
-        vec!["Target path".to_string(), target_path.clone()],
-        vec!["Registry path".to_string(), registry_path.clone()],
-        vec![
-            "Confidence".to_string(),
-            format!("{:.2}", analysis_result.confidence_score),
-        ],
-        vec!["Validation".to_string(), validation_requirements.clone()],
-        vec!["Sibling context".to_string(), sibling_context.clone()],
-        vec!["Review note".to_string(), conflict_text.to_string()],
     ];
-    let routing_rows = vec![
-        vec!["Target path".to_string(), target_path.clone()],
-        vec!["Registry path".to_string(), registry_path.clone()],
-        vec![
-            "Confidence".to_string(),
-            format!("{:.2}", analysis_result.confidence_score),
-        ],
-        vec!["Validation".to_string(), validation_requirements.clone()],
-        vec!["Sibling context".to_string(), sibling_context.clone()],
-        vec!["Review note".to_string(), conflict_text.to_string()],
-    ];
-    let adf = json!({
-        "type": "doc",
-        "version": 1,
-        "content": [
-            adf_heading(1, title),
-            adf_paragraph_text(&format!("Curio lane: {}", lane_name)),
-            adf_paragraph_text(&format!("Summary: {}", analysis_result.summary)),
-            adf_paragraph_text(&format!("Rationale: {}", proposal_rationale)),
-            adf_heading(2, "Quick Facts"),
-            adf_table(quick_facts_rows),
-            adf_heading(2, "Proposal Detail"),
-            adf_paragraph_text(&proposal_summary),
-            adf_heading(2, "Proposed Changes"),
-            adf_bullet_list(proposed_changes),
-            adf_heading(2, "Commands"),
-            adf_bullet_list(commands),
-            adf_heading(2, "Routing Proposal"),
-            adf_table(routing_rows),
-            adf_heading(2, "Source"),
-            adf_paragraph_mixed(vec![
-                adf_text("Original page: "),
-                match source_page_url {
-                    Some(ref url) => adf_link_text(source_page_title, url),
-                    None => adf_text(source_page_title),
-                }
-            ]),
-            adf_paragraph_text(&format!("Captured as ADF with {} top-level node(s) preserved.", source_excerpt_nodes.len())),
-            adf_heading(2, "Source Excerpt"),
-            adf_nodes(source_excerpt_nodes),
-        ]
-    });
 
-    serde_json::to_string(&adf).unwrap_or_else(|_| {
-        json!({
-            "type": "doc",
-            "version": 1,
-            "content": [
-                adf_heading(1, title),
-                adf_paragraph_text("Curio was unable to build the staged artifact body.")
-            ]
-        })
-        .to_string()
-    })
-}
-
-fn adf_heading(level: u8, text: &str) -> serde_json::Value {
-    json!({
-        "type": "heading",
-        "attrs": { "level": level },
-        "content": [adf_text(text)]
-    })
-}
-
-fn adf_paragraph_text(text: &str) -> serde_json::Value {
-    json!({
-        "type": "paragraph",
-        "content": [adf_text(text)]
-    })
-}
-
-fn adf_paragraph_from_lines(lines: Vec<String>) -> serde_json::Value {
-    let mut content = Vec::new();
-    for (index, line) in lines.into_iter().enumerate() {
-        if index > 0 {
-            content.push(json!({ "type": "hardBreak" }));
-        }
-        content.push(adf_text(&line));
-    }
-    json!({
-        "type": "paragraph",
-        "content": content
-    })
-}
-
-fn adf_paragraph_mixed(runs: Vec<serde_json::Value>) -> serde_json::Value {
-    json!({
-        "type": "paragraph",
-        "content": runs
-    })
-}
-
-fn adf_text(text: &str) -> serde_json::Value {
-    json!({
-        "type": "text",
-        "text": text
-    })
-}
-
-fn adf_link_text(text: &str, href: &str) -> serde_json::Value {
-    json!({
-        "type": "text",
-        "text": text,
-        "marks": [
-            {
-                "type": "link",
-                "attrs": {
-                    "href": href
-                }
-            }
-        ]
-    })
-}
-
-fn adf_nodes(nodes: Vec<serde_json::Value>) -> serde_json::Value {
-    json!({
-        "type": "expand",
-        "attrs": {
-            "title": "Open source excerpt"
-        },
-        "content": nodes
-    })
-}
-
-fn adf_bullet_list(items: Vec<String>) -> serde_json::Value {
-    json!({
-        "type": "bulletList",
-        "content": items.into_iter().map(|item| json!({
-            "type": "listItem",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [adf_text(&item)]
-                }
-            ]
-        })).collect::<Vec<_>>()
-    })
-}
-
-fn adf_table(rows: Vec<Vec<String>>) -> serde_json::Value {
-    json!({
-        "type": "table",
-        "content": rows.into_iter().map(|row| json!({
-            "type": "tableRow",
-            "content": row.into_iter().map(|cell| json!({
-                "type": "tableCell",
-                "content": [
-                    {
-                        "type": "paragraph",
-                        "content": [adf_text(&cell)]
-                    }
-                ]
-            })).collect::<Vec<_>>()
-        })).collect::<Vec<_>>()
-    })
-}
-
-fn build_source_excerpt_nodes(
-    source_page: &serde_json::Value,
-    source_body: &str,
-    max_nodes: usize,
-) -> Vec<serde_json::Value> {
-    let mut nodes = Vec::new();
-    if let Some(adf_value) = source_page["body"]["atlas_doc_format"]["value"].as_str() {
-        if let Ok(adf_json) = serde_json::from_str::<serde_json::Value>(adf_value) {
-            if let Some(content) = adf_json["content"].as_array() {
-                nodes.extend(content.iter().take(max_nodes).cloned());
-            }
-        }
-    }
-
-    if nodes.is_empty() {
-        let lines = if source_body.trim().is_empty() {
-            vec!["No source body was available.".to_string()]
-        } else {
-            source_body
-                .lines()
-                .take(40)
-                .map(|line| line.to_string())
-                .collect::<Vec<_>>()
+    if kind.is_reference() {
+        // Reference pipeline: reference card + routing panel
+        let origin_url = {
+            let webui = source_page["_links"]["webui"]
+                .as_str()
+                .map(|p| format!("{}{}", confluence_url.trim_end_matches('/'), p));
+            webui.or_else(|| kind.origin_url(confluence_url))
         };
-        nodes.push(adf_paragraph_from_lines(lines));
-    }
+        let source_page_title = source_page["title"].as_str().unwrap_or(title);
 
-    if nodes.len() >= max_nodes {
-        nodes.push(adf_paragraph_text(
-            "Excerpt truncated. Open the source page for the full structured body.",
-        ));
-    }
+        let metadata_rows: Vec<(String, String)> = vec![
+            ("Source ID".to_string(), source_id.to_string()),
+            ("Target path".to_string(), target_path.clone()),
+            ("Confidence".to_string(), format!("{:.2}", analysis_result.confidence_score)),
+            ("Keywords".to_string(), analysis_result.keywords.join(", ")),
+            ("Review note".to_string(), conflict_text.to_string()),
+        ];
+        let metadata_ref: Vec<(&str, &str)> = metadata_rows
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
 
-    nodes
+        build_reference_card_adf(
+            source_page_title,
+            source_id,
+            origin_url.as_deref(),
+            Some(&analysis_result.summary),
+            lane_name,
+            &now,
+            &metadata_ref,
+            &commands.iter().map(|c| *c).collect::<Vec<_>>(),
+        )
+    } else {
+        // Capture pipeline: Curio analysis panel + content body
+        let mime = match &kind {
+            SourceKind::File { mime, .. } => mime.clone(),
+            _ => "application/octet-stream".to_string(),
+        };
+        let content_with_header = format!(
+            "Curio analysis: {} | Confidence: {:.2} | Target: {} | {}\n\n{}",
+            analysis_result.summary,
+            analysis_result.confidence_score,
+            target_path,
+            conflict_text,
+            source_body
+        );
+        build_capture_intake_adf(
+            title,
+            source_id,
+            lane_name,
+            &now,
+            &content_with_header,
+            &mime,
+        )
+    }
 }
