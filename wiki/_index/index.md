@@ -3,5 +3,5 @@
 
 ## uncategorized (2 pages)
 - **published/by-topic/curio-readme.md** — Curio
-- **intake/rollback-downgrade-a-failed-server-upgrade.md** — Rolling back a failed Server upgrade is typically quick and successful
+- **staged/by-use-case/rollback-downgrade-a-failed-server-upgrade.md** — Rolling back a failed Server upgrade is typically quick and successful
 
