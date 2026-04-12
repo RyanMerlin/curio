@@ -1,13 +1,15 @@
 use crate::confluence::http_timeout_duration;
 use crate::curio_docs::{
     ADMIN_TITLE, AUDIT_TITLE, AuditEntry, RegistryRecord, append_audit_entry, audit_bucket_path,
-    build_admin_root_body, build_audit_root_body, build_registry_root_body, ensure_registry_record,
-    ensure_scoped_page, ensure_scoped_structure_page, extract_page_text, infer_route_plan,
+    build_admin_root_body, build_audit_root_body, build_capture_intake_adf,
+    build_reference_card_adf, build_registry_root_body, ensure_registry_record, ensure_scoped_page,
+    ensure_scoped_structure_page, extract_page_text, extract_summary_from_html,
+    extract_summary_from_text, infer_route_plan, update_branch_index,
 };
 use crate::output::emit_json;
 use crate::{
-    ChangeProposal, Result, compact_change_proposal, config::Config, confluence::ConfluenceClient,
-    generate_change_proposal_with_agent,
+    ChangeProposal, ContentItem, Result, SourceKind, compact_change_proposal, config::Config,
+    confluence::ConfluenceClient, generate_change_proposal_with_agent,
 };
 use anyhow::Context;
 use chrono::Utc;
@@ -87,10 +89,9 @@ pub async fn run_intake_create(
     )
     .await?;
 
-    let mut all_content: Vec<(String, String, String, Option<String>)> = Vec::new();
+    let mut all_content: Vec<ContentItem> = Vec::new();
     let mut source_items = 0usize;
     let mut skipped_unavailable = 0usize;
-    // (content, source_id, content_type, subject_hint)
 
     if let Some(u) = url {
         if let Some(folder_id) = extract_confluence_folder_id(u) {
@@ -158,12 +159,18 @@ pub async fn run_intake_create(
                     println!("  - Queuing page from folder: {} ({})", page_title, page_id);
                 }
 
-                all_content.push((
-                    content,
-                    format!("confluence-folder:{}:page:{}", folder_id, page_id),
-                    "confluence_page".to_string(),
-                    Some(page_title),
-                ));
+                let webui_path = page["_links"]["webui"].as_str().map(|s| s.to_string());
+                let summary = page["body"]["storage"]["value"]
+                    .as_str()
+                    .and_then(|html| extract_summary_from_html(html, 300))
+                    .or_else(|| extract_summary_from_text(&content, 300));
+                all_content.push(ContentItem {
+                    text: content,
+                    source_id: format!("confluence-folder:{}:page:{}", folder_id, page_id),
+                    subject_hint: Some(page_title),
+                    kind: SourceKind::ConfluencePage { page_id: page_id.to_string(), webui_path },
+                    summary,
+                });
             }
         } else if let Some(page_id) = extract_confluence_page_id_from_url(u) {
             if !json_output {
@@ -181,12 +188,18 @@ pub async fn run_intake_create(
                 println!("  - Queuing page from tree: {} ({})", root_title, page_id);
             }
             source_items += 1;
-            all_content.push((
-                root_content,
-                format!("confluence-page:{}:page:{}", page_id, page_id),
-                "confluence_page".to_string(),
-                Some(root_title.clone()),
-            ));
+            let root_webui_path = root_page["_links"]["webui"].as_str().map(|s| s.to_string());
+            let root_summary = root_page["body"]["storage"]["value"]
+                .as_str()
+                .and_then(|html| extract_summary_from_html(html, 300))
+                .or_else(|| extract_summary_from_text(&root_content, 300));
+            all_content.push(ContentItem {
+                text: root_content,
+                source_id: format!("confluence-page:{}:page:{}", page_id, page_id),
+                subject_hint: Some(root_title.clone()),
+                kind: SourceKind::ConfluencePage { page_id: page_id.to_string(), webui_path: root_webui_path },
+                summary: root_summary,
+            });
 
             let descendants = client.get_page_descendants_v2(&page_id).await?;
             if !json_output {
@@ -245,12 +258,18 @@ pub async fn run_intake_create(
                     );
                 }
 
-                all_content.push((
-                    content,
-                    format!("confluence-page:{}:page:{}", page_id, child_page_id),
-                    "confluence_page".to_string(),
-                    Some(page_title),
-                ));
+                let webui_path = page["_links"]["webui"].as_str().map(|s| s.to_string());
+                let summary = page["body"]["storage"]["value"]
+                    .as_str()
+                    .and_then(|html| extract_summary_from_html(html, 300))
+                    .or_else(|| extract_summary_from_text(&content, 300));
+                all_content.push(ContentItem {
+                    text: content,
+                    source_id: format!("confluence-page:{}:page:{}", page_id, child_page_id),
+                    subject_hint: Some(page_title),
+                    kind: SourceKind::ConfluencePage { page_id: child_page_id.to_string(), webui_path },
+                    summary,
+                });
             }
         } else if let Some(space_key) = extract_confluence_space_key_from_url(u) {
             if !json_output {
@@ -300,12 +319,18 @@ pub async fn run_intake_create(
                     println!("  - Queuing page from space: {} ({})", page_title, page_id);
                 }
 
-                all_content.push((
-                    content,
-                    format!("confluence-space:{}:page:{}", space_key, page_id),
-                    "confluence_page".to_string(),
-                    Some(page_title),
-                ));
+                let webui_path = loaded["_links"]["webui"].as_str().map(|s| s.to_string());
+                let summary = loaded["body"]["storage"]["value"]
+                    .as_str()
+                    .and_then(|html| extract_summary_from_html(html, 300))
+                    .or_else(|| extract_summary_from_text(&content, 300));
+                all_content.push(ContentItem {
+                    text: content,
+                    source_id: format!("confluence-space:{}:page:{}", space_key, page_id),
+                    subject_hint: Some(page_title),
+                    kind: SourceKind::ConfluencePage { page_id: page_id.to_string(), webui_path },
+                    summary,
+                });
             }
         } else {
             if !json_output {
@@ -313,12 +338,14 @@ pub async fn run_intake_create(
             }
             let content = fetch_url_content(u).await?;
             source_items += 1;
-            all_content.push((
-                content,
-                format!("url:{}", u),
-                "web_page".to_string(),
-                subject_hint.clone(),
-            ));
+            let summary = extract_summary_from_text(&content, 300);
+            all_content.push(ContentItem {
+                text: content,
+                source_id: format!("url:{}", u),
+                subject_hint: subject_hint.clone(),
+                kind: SourceKind::Url { url: u.clone() },
+                summary,
+            });
         }
     } else if let Some(f) = file {
         if !json_output {
@@ -335,12 +362,15 @@ pub async fn run_intake_create(
                 .map(|(_, subject)| subject.to_string())
                 .unwrap_or_else(|| name.to_string())
         });
-        all_content.push((
-            content,
-            format!("file:{}", f.display()),
-            get_mime_type(filename),
-            derived_subject_hint.or_else(|| subject_hint.clone()),
-        ));
+        let mime = get_mime_type(filename);
+        let summary = extract_summary_from_text(&content, 300);
+        all_content.push(ContentItem {
+            text: content,
+            source_id: format!("file:{}", f.display()),
+            subject_hint: derived_subject_hint.or_else(|| subject_hint.clone()),
+            kind: SourceKind::File { path: f.display().to_string(), mime },
+            summary,
+        });
     } else if let Some(f) = folder {
         println!("Ingesting from folder: {}", f.display());
         for entry in WalkDir::new(f).into_iter().filter_map(|e| e.ok()) {
@@ -361,12 +391,15 @@ pub async fn run_intake_create(
                             .map(|(_, subject)| subject.to_string())
                             .unwrap_or_else(|| name.to_string())
                     });
-                all_content.push((
-                    content,
-                    format!("file:{}", path.display()),
-                    get_mime_type(filename),
-                    derived_subject_hint.or_else(|| subject_hint.clone()),
-                ));
+                let mime = get_mime_type(filename);
+                let summary = extract_summary_from_text(&content, 300);
+                all_content.push(ContentItem {
+                    text: content,
+                    source_id: format!("file:{}", path.display()),
+                    subject_hint: derived_subject_hint.or_else(|| subject_hint.clone()),
+                    kind: SourceKind::File { path: path.display().to_string(), mime },
+                    summary,
+                });
             }
         }
     } else {
@@ -377,8 +410,11 @@ pub async fn run_intake_create(
     let mut duplicate_skipped = 0usize;
     let mut failed_items = 0usize;
 
-    for (content, source_id, content_type, item_subject_hint) in all_content {
-        let effective_subject_hint = item_subject_hint.or_else(|| subject_hint.clone());
+    for mut item in all_content {
+        // subject_hint from CLI overrides per-item hint only if item has none
+        if item.subject_hint.is_none() {
+            item.subject_hint = subject_hint.clone();
+        }
         match process_single_content(
             &client,
             config,
@@ -387,10 +423,7 @@ pub async fn run_intake_create(
             &intake_page_id,
             &registry_root_id,
             &audit_root_id,
-            &content,
-            &source_id,
-            &content_type,
-            &effective_subject_hint,
+            &item,
             metadata_str,
         )
         .await
@@ -402,7 +435,7 @@ pub async fn run_intake_create(
                 if !json_output {
                     eprintln!(
                         "Skipping source {} after intake write failure: {}",
-                        source_id, err
+                        item.source_id, err
                     );
                 }
             }
@@ -503,12 +536,13 @@ async fn process_single_content(
     intake_page_id: &str,
     registry_root_id: &str,
     audit_root_id: &str,
-    content: &str,
-    source_id: &str,
-    content_type: &str,
-    subject_hint: &Option<String>,
+    item: &ContentItem,
     metadata_str: &Option<String>,
 ) -> Result<bool> {
+    let content = &item.text;
+    let source_id = &item.source_id;
+    let content_type = item.kind.content_type();
+    let subject_hint = &item.subject_hint;
     let source_hash = format!("{:x}", Sha256::digest(content.as_bytes()));
     let dedupe_key = format!("{}:{}", content_type, &source_hash);
 
@@ -577,8 +611,8 @@ async fn process_single_content(
             &config.content_model.space_key,
             intake_page_id,
             &page_title,
-            content,
-            source_id,
+            item,
+            &config.connection.confluence_url,
             json_output,
         )
         .await?
@@ -718,6 +752,8 @@ async fn process_single_content(
             &audit_entry,
         )
         .await?;
+
+        let _ = update_branch_index(client, intake_page_id, "Intake", &[], "Intake", None).await;
     } else {
         if !json_output {
             println!(
@@ -738,190 +774,71 @@ async fn create_scoped_intake_page(
     space_key: &str,
     intake_page_id: &str,
     page_title: &str,
-    content: &str,
-    source_id: &str,
+    item: &ContentItem,
+    confluence_base_url: &str,
     json_output: bool,
 ) -> Result<String> {
-    let body = build_safe_intake_body(page_title, source_id, content);
-    match client
-        .create_or_update_page(
-            space_key,
-            Some(intake_page_id),
+    let now = Utc::now().to_rfc3339();
+    let body = if item.kind.is_reference() {
+        let origin_url = item.kind.origin_url(confluence_base_url);
+        build_reference_card_adf(
             page_title,
-            "atlas_doc_format",
-            &body,
+            &item.source_id,
+            origin_url.as_deref(),
+            item.summary.as_deref(),
+            "Intake",
+            &now,
+            &[
+                ("source_id", &item.source_id),
+                ("content_type", item.kind.content_type()),
+            ],
+            &[],
         )
+    } else {
+        let mime = match &item.kind {
+            SourceKind::File { mime, .. } => mime.as_str(),
+            _ => "application/octet-stream",
+        };
+        build_capture_intake_adf(
+            page_title,
+            &item.source_id,
+            "Intake",
+            &now,
+            &item.text,
+            mime,
+        )
+    };
+
+    match client
+        .create_or_update_page(space_key, Some(intake_page_id), page_title, "atlas_doc_format", &body)
         .await
     {
         Ok(page_id) => Ok(page_id),
-        Err(err) => {
-            let err_text = err.to_string();
-            if err_text.contains("same TITLE in this space") {
-                let unique_title = build_unique_intake_title(page_title, source_id);
-                if !json_output {
-                    println!(
-                        "Title collision detected for '{}'; retrying with unique title '{}'",
-                        page_title, unique_title
-                    );
-                }
-                match client
-                    .create_or_update_page(
-                        space_key,
-                        Some(intake_page_id),
-                        &unique_title,
-                        "atlas_doc_format",
-                        &build_safe_intake_body(&unique_title, source_id, content),
-                    )
-                    .await
-                {
-                    Ok(page_id) => return Ok(page_id),
-                    Err(unique_err) => {
-                        let fallback_body =
-                            build_safe_intake_body(&unique_title, source_id, content);
-                        if !json_output {
-                            println!(
-                                "Primary and unique-title writes failed for '{}'; retrying with sanitized fallback body: {}",
-                                unique_title, unique_err
-                            );
-                        }
-                        return client
-                            .create_or_update_page(
-                                space_key,
-                                Some(intake_page_id),
-                                &unique_title,
-                                "atlas_doc_format",
-                                &fallback_body,
-                            )
-                            .await
-                            .with_context(|| {
-                                format!(
-                                    "Failed to create intake page '{}' from source {} even after unique-title fallback and body sanitization",
-                                    page_title, source_id
-                                )
-                            });
-                    }
-                }
-            }
-            let fallback_body = build_safe_intake_body(page_title, source_id, content);
+        Err(err) if err.to_string().contains("same TITLE in this space") => {
+            let unique_title = build_unique_intake_title(page_title, &item.source_id);
             if !json_output {
                 println!(
-                    "Primary page write failed for '{}'; retrying with sanitized fallback body: {}",
-                    page_title, err
+                    "Title collision for '{}'; retrying with unique title '{}'",
+                    page_title, unique_title
                 );
             }
             client
-                .create_or_update_page(
-                    space_key,
-                    Some(intake_page_id),
-                    page_title,
-                    "atlas_doc_format",
-                    &fallback_body,
-                )
+                .create_or_update_page(space_key, Some(intake_page_id), &unique_title, "atlas_doc_format", &body)
                 .await
                 .with_context(|| {
                     format!(
-                        "Failed to create intake page '{}' from source {} even after fallback sanitization",
-                        page_title, source_id
+                        "Failed to create intake page '{}' from source {} after title collision retry",
+                        page_title, &item.source_id
                     )
                 })
         }
+        Err(err) => Err(err).with_context(|| {
+            format!(
+                "Failed to create intake page '{}' from source {}",
+                page_title, &item.source_id
+            )
+        }),
     }
-}
-
-fn build_safe_intake_body(page_title: &str, source_id: &str, content: &str) -> String {
-    let excerpt_lines = content
-        .lines()
-        .take(80)
-        .map(|line| line.trim())
-        .filter(|line| !line.is_empty())
-        .collect::<Vec<_>>();
-    let excerpt_nodes = if excerpt_lines.is_empty() {
-        vec![adf_paragraph_text("No readable source body was available.")]
-    } else {
-        excerpt_lines
-            .into_iter()
-            .map(adf_paragraph_text)
-            .collect::<Vec<_>>()
-    };
-
-    let adf = json!({
-        "type": "doc",
-        "version": 1,
-        "content": [
-            adf_heading(1, page_title),
-            adf_paragraph_text(&format!("Source: {}", source_id)),
-            adf_paragraph_text("Curio stored a sanitized intake copy because the original page body could not be written cleanly."),
-            adf_heading(2, "Captured Preview"),
-            adf_table(vec![
-                vec!["Source".to_string(), source_id.to_string()],
-                vec!["Lines Captured".to_string(), format!("{}", excerpt_nodes.len())],
-            ]),
-            adf_heading(2, "Captured Text"),
-            adf_expand("Open sanitized excerpt", excerpt_nodes),
-        ]
-    });
-
-    serde_json::to_string(&adf).unwrap_or_else(|_| {
-        json!({
-            "type": "doc",
-            "version": 1,
-            "content": [
-                adf_heading(1, page_title),
-                adf_paragraph_text(&format!("Source: {}", source_id))
-            ]
-        })
-        .to_string()
-    })
-}
-
-fn adf_heading(level: u8, text: &str) -> serde_json::Value {
-    json!({
-        "type": "heading",
-        "attrs": { "level": level },
-        "content": [adf_text(text)]
-    })
-}
-
-fn adf_paragraph_text(text: &str) -> serde_json::Value {
-    json!({
-        "type": "paragraph",
-        "content": [adf_text(text)]
-    })
-}
-
-fn adf_expand(title: &str, content: Vec<serde_json::Value>) -> serde_json::Value {
-    json!({
-        "type": "expand",
-        "attrs": {
-            "title": title
-        },
-        "content": content
-    })
-}
-
-fn adf_table(rows: Vec<Vec<String>>) -> serde_json::Value {
-    json!({
-        "type": "table",
-        "content": rows.into_iter().map(|row| json!({
-            "type": "tableRow",
-            "content": row.into_iter().map(|cell| json!({
-                "type": "tableCell",
-                "content": [
-                    {
-                        "type": "paragraph",
-                        "content": [adf_text(&cell)]
-                    }
-                ]
-            })).collect::<Vec<_>>()
-        })).collect::<Vec<_>>()
-    })
-}
-
-fn adf_text(text: &str) -> serde_json::Value {
-    json!({
-        "type": "text",
-        "text": text
-    })
 }
 
 fn build_unique_intake_title(page_title: &str, source_id: &str) -> String {
