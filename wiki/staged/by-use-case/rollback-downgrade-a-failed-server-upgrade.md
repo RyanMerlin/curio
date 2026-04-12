@@ -1,20 +1,26 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1709050604
   origin_url: https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1709050604/Rollback+Downgrade+a+Failed+Server+Upgrade
   summary: null
-category: []
-keywords: []
+category:
+- by-use-case
+keywords:
+- rollback
+- downgrade
+- server
+- upgrade
+- disaster-recovery
 created_at: 2026-04-12T19:04:32Z
-updated_at: 2026-04-12T19:04:32Z
-confidence: null
+updated_at: 2026-04-12T19:04:38Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 confluence_page_id: null
-model_used: null
+model_used: manual
 ---
 
