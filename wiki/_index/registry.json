@@ -1,16 +1,5 @@
 [
   {
-    "path": "published/by-use-case/rollback-downgrade-a-failed-server-upgrade.md",
-    "title": "Rollback / Downgrade a Failed Server Upgrade",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **Info:** > Rolling back a failed Server upgrade is typically quick and successful",
-    "confidence": null,
-    "updated_at": "2026-04-12T19:22:10Z",
-    "id": "564f90efd2a29dbe"
-  },
-  {
     "path": "published/curio-readme.md",
     "title": "Curio README",
     "category": [],
@@ -24,5 +13,16 @@
     "confidence": 0.8,
     "updated_at": "2026-04-12T18:37:05Z",
     "id": "42c59af8a4bae559"
+  },
+  {
+    "path": "intake/rollback-downgrade-a-failed-server-upgrade.md",
+    "title": "Rollback / Downgrade a Failed Server Upgrade",
+    "category": [],
+    "keywords": [],
+    "status": "intake",
+    "summary": "> **ℹ️ Info**",
+    "confidence": null,
+    "updated_at": "2026-04-12T19:46:09Z",
+    "id": "564f90efd2a29dbe"
   }
 ]

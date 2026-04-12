@@ -1,33 +1,29 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: published
+status: intake
 source:
   kind: confluence_page
   id: confluence-page:1709050604
   origin_url: https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1709050604/Rollback+Downgrade+a+Failed+Server+Upgrade
   summary: null
-category:
-- by-use-case
-keywords:
-- rollback
-- downgrade
-- server
-- upgrade
-- disaster-recovery
-created_at: 2026-04-12T19:22:10Z
-updated_at: 2026-04-12T19:27:16Z
-confidence: 0.8
+category: []
+keywords: []
+created_at: 2026-04-12T19:46:09Z
+updated_at: 2026-04-12T19:46:09Z
+confidence: null
 cross_refs: []
-content_hash: sha256:ef67dd84769e58eef7b0e75c5c8f8dda56b4b19d104c39cb7065399babd53854
+content_hash: sha256:6c647c42758ecc4c4ffcafcb6ea7cdb1c2f56fd101e6f1cf44a2e48e40ddbfe9
 confluence_page_id: null
-model_used: manual
+model_used: null
 ---
 
-> **Info:** > Rolling back a failed Server upgrade is typically quick and successful
+> **ℹ️ Info**
+>
+> Rolling back a failed Server upgrade is typically quick and successful
 
 | Key Articles | https://help.alteryx.com/current/en/server/install/downgrade-alteryx-server.html (Help)How To: Downgrade Alteryx Server (KB) |
-| --- | --- ||
+| --- | --- |
 
 ---
 
@@ -36,7 +32,7 @@ model_used: manual
 # How to Rollback a Server Upgrade
 
 |  | Task | Steps |
-| --- | --- | --- ||
+| --- | --- | --- |
 | 1 | Prepare | Review the Questions section below to prepare for edge cases |
 | 2 | Get a copy of logs for review for why an upgrade failed | Service logGallery logGallery schema migration log (alteryx-migration.csv from Gallery log folder)Service schema migration log  (alteryx-migration.csv from service log folder)Embedded Mongo DB version upgrade log, if one occurred as part of the upgrade (migration.log in PreUpgrade sister folder to the Persistence folder)If embedded Mongo was restored from another machine, grab the mongoDump.log and mongoRestore.log from backup and restore folders, respectivelyCryptomigration logs (AlteryxServiceMigrator_#.log)C:\ProgramData\Alteryx\Service                                                       <== Prep Tool logs hereAlteryx System Settings > Controller > General > Logging folder                                                        <== Service start logs hereMore log info Logs and Traces |
 | 3 | Stop the Service | Order:  Workers … Gallery … Controller [... user-managed Mongo] |
@@ -51,7 +47,7 @@ model_used: manual
 # Questions to Prepare for Rollback
 
 |  | Question | Details |
-| --- | --- | --- ||
+| --- | --- | --- |
 | 1 | Q. What is the current Server’s installation folder?  Ex: D:\Alteryx | Customers often install to D: drive. To find the installation folder, right-click Designer desktop icon > Properties > Target. |
 | 2 | Q. Is upgrade failing on CryptoMigration in 2022.3? | If so, MongoDB does NOT need to be restored since the original Collections have not changed (ie, no Schema Migration has occurred).  The CryptoMigration simply created staging Collections of CryptoMigrated data and these will be ignored by the original Server version. |
 | 3 | Q. Does the customer have a MongoDB backup prior to upgrade? | If not:  Does their IT do snapshot backups of the Server?  Great!  Have IT restore the snapshot and you do not need to do anything else in this article.noteRed If the snapshot was taken while the Service was Running (ie not Stopped) there is a small chance the Snapshot caught MongoDB while it was in the process of writing data and will restore a corrupt database.Did the upgrade include a MongoDB version upgrade?  If so, the last step would have asked the customer to upgrade MongoDB and would have created a Pre_Upgrade MongoDB backup folder before upgrading.  Use this after recreating ASMongoDBVersion.bin with a single line containing the mongo version matching the rollback Server version, see:  ASMongoDBVersion.bin  If there is no Mongo backup then, a Rollback requires renaming schema migration collections in AlteryxGallery. Request assistance from E3T. |
