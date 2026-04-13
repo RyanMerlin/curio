@@ -20,7 +20,7 @@
 - **published/product-tree/alteryx-server/faq-help-cryptomigration.md** — Overview
 - **published/product-tree/alteryx-server/cryptomigration-log-alteryxservicemigrator-log-note-there-are-two.md** — ---
 - **published/product-tree/alteryx-server/defects-cryptomigration.md** — - TGAL-1018477dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira
-- **staged/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md** — > **ℹ️ Info**
+- **published/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md** — > **ℹ️ Info**
 - **published/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md** — > **ℹ️ Info**
 - **staged/topic-tree/admin-ignore-this-page.md** — 
 - **staged/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md** — > **ℹ️ Info**
