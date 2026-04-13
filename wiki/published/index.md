@@ -1,5 +1,5 @@
 # Curio Knowledge Index
-> 28 pages | updated 2026-04-13 21:28 UTC
+> 26 pages | updated 2026-04-13 23:17 UTC
 
 ## Trees
 
@@ -10,9 +10,9 @@
 
 ### [Product-tree](product-tree/index.md)
 > Product-centric guidance, playbooks, and reference content. Not temporary workspace for raw feature notes or launch scraps. Metadata to track: product owner, canonical source, related pages
-> **28** pages
+> **26** pages
 
-- [Alteryx Server](product-tree/alteryx-server/index.md) — _Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns._ (28 pages)
+- [Alteryx Server](product-tree/alteryx-server/index.md) — _Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns._ (26 pages)
 - [Alteryx Designer](product-tree/alteryx-designer/index.md) — _Designer-specific guidance: workflow patterns, best practices, and troubleshooting._ (0 pages)
 - [Intelligence Suite](product-tree/intelligence-suite/index.md) — _AI/ML tooling guidance, AutoML patterns, and integration playbooks._ (0 pages)
 

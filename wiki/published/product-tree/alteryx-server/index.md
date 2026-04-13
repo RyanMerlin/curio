@@ -1,12 +1,10 @@
 # Alteryx Server
 > Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns.
-> **28** pages | updated 2026-04-13 21:28 UTC
+> **26** pages | updated 2026-04-13 23:17 UTC
 
 | Title | Summary | Keywords | Updated |
 |-------|---------|----------|--------|
-| [Errors (Host Recovery)](errors-host-recovery.md) | Errors | errors, host, recovery | 2026-04-13 |
 | [Errors (Installation and Upgrade)](errors-installation-and-upgrade.md) | Installation and Upgrade Errors | mongodb, upgrade, start, installation, failed | 2026-04-13 |
-| [Errors (Pre-Upgrade Checks)](errors-pre-upgrade-checks.md) | Errors | errors, checks, preupgrade | 2026-04-13 |
 | [Example: Alteryx Server Upgrade 22.1 to 23.2 (MongoDB Upgrade: 4.2 to 6.0)](example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md) | > **ℹ️ Info** | migration, logs, alteryx, service, schema | 2026-04-13 |
 | [FAQ / Help - CryptoMigration](faq-help-cryptomigration.md) | Overview | cryptomigration, tool, prep, upgrade, will | 2026-04-13 |
 | [Host Recovery](host-recovery.md) | --- | tgal, host, recovery, tgaldcfcfffefeeffsystem, jira | 2026-04-13 |
