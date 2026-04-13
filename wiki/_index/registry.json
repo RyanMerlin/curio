@@ -330,11 +330,11 @@
     "id": "d54a8c85f7706f28"
   },
   {
-    "path": "staged/product-tree/alteryx-server/cloud-vm-server-deployment.md",
+    "path": "published/product-tree/alteryx-server/cloud-vm-server-deployment.md",
     "title": "Cloud / VM Server Deployment",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| AWS | Best Practices for Deploying Alteryx Server on AWS (PDF) <== Tim R link |",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",

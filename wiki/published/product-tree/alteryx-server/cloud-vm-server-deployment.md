@@ -1,7 +1,7 @@
 ---
 id: 36b557ee678b5cbc
 title: Cloud / VM Server Deployment
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1698109505
@@ -17,7 +17,7 @@ keywords:
 - server
 - will
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:04Z
+updated_at: 2026-04-13T01:58:42Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:fc05b588cab53273c579968a24537626d01b1101fd1777ea100da5c06340a564
