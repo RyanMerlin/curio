@@ -1140,7 +1140,7 @@ impl ConfluenceClient {
         let response = self
             .client
             .get(&format!(
-                "{}/rest/api/content/{}?expand=version,body,space",
+                "{}/rest/api/content/{}?expand=version,body.storage,space",
                 self.base_url, page_id
             ))
             .basic_auth(&self.email, Some(&self.auth_token))
@@ -1246,7 +1246,7 @@ impl ConfluenceClient {
         let response = self
             .client
             .get(&format!(
-                "{}/rest/api/content/{}?expand=version,body,space",
+                "{}/rest/api/content/{}?expand=version,body.storage,space",
                 self.base_url, page_id
             ))
             .basic_auth(&self.email, Some(&self.auth_token))
