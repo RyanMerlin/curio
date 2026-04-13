@@ -20,7 +20,7 @@ use crate::{
     wiki_index::append_log,
 };
 
-const CHILDREN_MACRO: &str = r#"<ac:structured-macro ac:name="children" ac:schema-version="2"/>"#;
+const CHILDREN_MACRO: &str = "";
 const SYNC_PROP_KEY: &str = "curio-sync";
 const ICON_PROP_KEY: &str = "emoji-title-published";
 
@@ -263,7 +263,7 @@ pub async fn run_sync(
                 // Top-level tree dir: use NORTHSTAR title, description, and icon
                 if let Some((ns_title, ns_desc, icon, _)) = tree_info.get(&name) {
                     let body = format!(
-                        "{}<ac:structured-macro ac:name=\"children\" ac:schema-version=\"2\"/>",
+                        "{}",
                         if ns_desc.trim().is_empty() { String::new() } else { ns_desc.clone() }
                     );
                     (ns_title.clone(), body, icon.clone())
@@ -279,7 +279,7 @@ pub async fn run_sync(
                     .map(|(t, d, i)| (t.clone(), d.clone(), i.clone()));
                 if let Some((sub_title, sub_desc, sub_icon)) = sub_info {
                     let body = format!(
-                        "{}<ac:structured-macro ac:name=\"children\" ac:schema-version=\"2\"/>",
+                        "{}",
                         if sub_desc.trim().is_empty() { String::new() } else { sub_desc }
                     );
                     (sub_title, body, sub_icon)
