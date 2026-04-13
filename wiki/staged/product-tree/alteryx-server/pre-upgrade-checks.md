@@ -1,21 +1,28 @@
 ---
 id: 3ace91393a47ef5d
 title: Pre-Upgrade Checks
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1831112050
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1831112050
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- preupgrade
+- checks
+- upgrade
+- during
+- they
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:16Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:f820c46d999615444317e23b31bab6ff96964d61b0f5a72ed042a7c0bd8071f0
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 ---

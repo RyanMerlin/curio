@@ -1,21 +1,28 @@
 ---
 id: 91337d4e259e2352
 title: Mongo Database Upgrade Error - Failed to backup the folder:C:\ProgramData\Alteryx\Service\Persistence\MongoDB_Backup. Access to the path 'C:\ProgramData\Alteryx\Service\Persistence\MongoDB' is denied
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2660237315
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2660237315
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- antivirus
+- upgrade
+- mongo
+- error
+- folder
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:15Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:b2fd50975c9aea35f629df23a35c274dfeece5b5f767b15902a74c46fbaef074
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 | Context | MongoDB Migration when performing an upgrade |

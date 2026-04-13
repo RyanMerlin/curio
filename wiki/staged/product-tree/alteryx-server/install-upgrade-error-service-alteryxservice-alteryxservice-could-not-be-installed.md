@@ -1,21 +1,28 @@
 ---
 id: deff7614f4369c04
 title: Install/Upgrade Error - Service ‘AlteryxService' (AlteryxService) could not be installed.
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2497511586
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2497511586
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- alteryxservice
+- could
+- system
+- administrator
+- installation
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:14Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:f558318f4c29d6b75e11160846ffd74cd1847f9d8c45c6a1bb7af839201e00ed
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 | Context | When upgrading Alteryx Server an error occurs “AlteryxService” could not be installed. |

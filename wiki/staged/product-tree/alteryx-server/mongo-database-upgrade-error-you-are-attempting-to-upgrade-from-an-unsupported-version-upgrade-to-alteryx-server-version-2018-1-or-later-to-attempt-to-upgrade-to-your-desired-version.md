@@ -1,21 +1,28 @@
 ---
 id: 8cb2a8060c1e486a
 title: Mongo Database Upgrade Error - You are attempting to upgrade from an unsupported version. Upgrade to Alteryx Server version 2018.1 or later to attempt to upgrade to your desired version.
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2730393723
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2730393723
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- version
+- upgrade
+- mongodb
+- server
+- versions
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:15Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:54b63d828bbb4dbd42cf6efc91bc4348855806a41e90db85e33221ed773583a4
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 | Context |  |

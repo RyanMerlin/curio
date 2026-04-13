@@ -1,21 +1,28 @@
 ---
 id: 58848bbf6262533b
 title: MongoDB Upgrade Folder Structure
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2979693181
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2979693181
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- folder
+- mongodb
+- mongo
+- upgrade
+- persistence
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:16Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:e5b3a5831b4ca1d6977101937af7f238f1fee60475851ee4e0a4f2af78ccba14
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 ---
