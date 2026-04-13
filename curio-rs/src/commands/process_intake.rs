@@ -1,3 +1,15 @@
+/// Process command — agent-native routing for intake pages.
+///
+/// Flow:
+///   1. `curio process --prepare [--limit=N|--all]`
+///        → reads intake pages, outputs a routing manifest JSON to stdout, exits
+///        → the agent (Claude / Gemini) reads the manifest, reasons over NORTHSTAR,
+///          and produces a decisions JSON
+///   2. `curio process --route-file decisions.json`
+///        → applies the agent's routing decisions: git mv, frontmatter update, sidecar write
+///
+/// Manual single-page routing (no LLM needed):
+///   `curio process --slug <s> --category product-tree/alteryx-server --status staged`
 use anyhow::{Context, Result};
 use chrono::Utc;
 use std::path::{Path, PathBuf};
@@ -5,7 +17,7 @@ use std::path::{Path, PathBuf};
 use crate::{
     config::Config,
     output::emit_json,
-    reconcile::{ReconcileDecision, RoutingAnalysis, route_with_llm},
+    reconcile::{ReconcileDecision, RoutingAnalysis},
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{
         append_log, load_registry, rebuild_index_md, save_registry,
@@ -19,7 +31,8 @@ pub async fn run_process(
     dry_run: bool,
     json: bool,
     limit: u32,
-    _auto_mode: bool,
+    all: bool,
+    prepare: bool,
     route_file: Option<PathBuf>,
     slug: Option<String>,
     category: Option<String>,
@@ -52,7 +65,7 @@ pub async fn run_process(
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect();
-        let conf = confidence.unwrap_or(0.8);
+        let conf = confidence.unwrap_or(0.9);
 
         let decision = ReconcileDecision::manual(
             cat_segments,
@@ -70,8 +83,9 @@ pub async fn run_process(
         return Ok(());
     }
 
-    // ── Batch routing ──────────────────────────────────────────────────────
-    let intake_pages = collect_intake_pages(&intake_dir, limit)?;
+    // ── Collect intake pages ───────────────────────────────────────────────
+    let effective_limit = if all { u32::MAX } else { limit };
+    let intake_pages = collect_intake_pages(&intake_dir, effective_limit)?;
 
     if intake_pages.is_empty() {
         let msg = "No intake pages to process";
@@ -83,106 +97,107 @@ pub async fn run_process(
         return Ok(());
     }
 
-    // ── Pre-compute decisions (file-based or LLM) ─────────────────────────
-    let decisions: Vec<(String, ReconcileDecision, Option<RoutingAnalysis>)> = if let Some(rf) = route_file {
-        // Manual route file — no LLM, no sidecar
+    // ── Prepare mode: output manifest and exit ─────────────────────────────
+    // The agent reads this manifest, makes routing decisions, then calls
+    // `curio process --route-file <path>` to apply them.
+    if prepare {
+        return output_routing_manifest(config, &intake_pages, json);
+    }
+
+    // ── Apply route-file decisions ─────────────────────────────────────────
+    if let Some(rf) = route_file {
         let raw = std::fs::read_to_string(&rf)
             .with_context(|| format!("Failed to read route file {}", rf.display()))?;
-        let pairs: Vec<(String, ReconcileDecision)> = serde_json::from_str(&raw)
-            .context("Failed to parse route file")?;
-        pairs.into_iter().map(|(s, d)| (s, d, None)).collect()
+        let decisions: Vec<(String, ReconcileDecision)> = serde_json::from_str(&raw)
+            .context("Failed to parse route file — expected [{\"slug\": ..., \"decision\": {...}}, ...]")?;
+
+        return apply_decisions(config, &intake_pages, decisions, dry_run, json);
+    }
+
+    // ── No flags: emit manifest as the agent prompt ────────────────────────
+    // This is the default agent-native path. Output the manifest so the agent
+    // can reason over it and call back with --route-file.
+    output_routing_manifest(config, &intake_pages, json)
+}
+
+// ─── Manifest output ──────────────────────────────────────────────────────
+
+fn output_routing_manifest(
+    config: &Config,
+    intake_pages: &[(String, crate::WikiPage)],
+    json: bool,
+) -> Result<()> {
+    let wiki_dir = &config.wiki.wiki_dir;
+
+    // Load NORTHSTAR for routing context
+    let ns_path = wiki_dir.join("_schema/northstar.md");
+    let northstar_md = if ns_path.exists() {
+        std::fs::read_to_string(&ns_path).unwrap_or_default()
     } else {
-        // LLM routing — one call per page, concurrent
-        let api_key = config.llm.require_api_key()?;
-        let model = config.llm.effective_model();
-
-        // Load NORTHSTAR trees for routing context
-        let ns_path = wiki_dir.join("_schema/northstar.md");
-        let trees = if ns_path.exists() {
-            let md = std::fs::read_to_string(&ns_path).unwrap_or_default();
-            crate::commands::sync::parse_northstar_blueprint(&md)
-        } else {
-            vec![]
-        };
-
-        if trees.is_empty() {
-            eprintln!("Warning: no NORTHSTAR blueprint found — routing context will be minimal. Run `curio init` to seed _schema/northstar.md.");
-        }
-
-        // Spawn concurrent LLM calls
-        let mut handles = Vec::new();
-        for (slug, page) in intake_pages.iter() {
-            let api_key = api_key.clone();
-            let model = model.clone();
-            let slug = slug.clone();
-            let title = page.frontmatter.title.clone();
-            let body = page.body.clone();
-            let source_url = page.frontmatter.source.origin_url.clone();
-            let content_hash = page.frontmatter.content_hash.clone();
-            let trees = trees.clone();
-
-            let handle = tokio::spawn(async move {
-                let result = route_with_llm(
-                    &api_key,
-                    &model,
-                    &title,
-                    &body,
-                    source_url.as_deref(),
-                    &content_hash,
-                    &trees,
-                )
-                .await;
-                (slug, result)
-            });
-            handles.push(handle);
-        }
-
-        let mut decisions = Vec::new();
-        for handle in handles {
-            let (slug, result) = handle.await.context("LLM routing task panicked")?;
-            match result {
-                Ok((decision, analysis)) => {
-                    decisions.push((slug, decision, Some(analysis)));
-                }
-                Err(e) => {
-                    eprintln!("  warning: LLM routing failed for '{}': {} — routing to review", slug, e);
-                    // Fallback: route to review with error flag
-                    let fallback = ReconcileDecision {
-                        category: vec!["topic-tree".to_string()],
-                        keywords: vec![],
-                        confidence: 0.0,
-                        status: "review".to_string(),
-                        summary: format!("LLM routing failed: {}", e),
-                        cross_refs: vec![],
-                        review_reason: Some(format!("LLM error: {}", e)),
-                        merge_target: None,
-                        model_used: "error-fallback".to_string(),
-                    };
-                    decisions.push((slug, fallback, None));
-                }
-            }
-        }
-        decisions
+        String::new()
     };
 
+    // Load root index for quick orientation
+    let index_md = crate::wiki_index::read_index_md(wiki_dir).unwrap_or_default();
+
+    let pages: Vec<serde_json::Value> = intake_pages
+        .iter()
+        .map(|(slug, page)| {
+            serde_json::json!({
+                "slug": slug,
+                "title": page.frontmatter.title,
+                "source_url": page.frontmatter.source.origin_url,
+                "content_hash": page.frontmatter.content_hash,
+                "body_preview": page.body.chars().take(1000).collect::<String>(),
+            })
+        })
+        .collect();
+
+    let manifest = serde_json::json!({
+        "action": "route_intake_pages",
+        "page_count": pages.len(),
+        "northstar_context": northstar_md,
+        "index_summary": index_md,
+        "pages": pages,
+        "instructions": {
+            "task": "Route each page to exactly one wiki subtree.",
+            "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null}",
+            "confidence_rule": "confidence >= 0.75 → staged. confidence < 0.75 → review.",
+            "apply_command": "curio process --route-file <path-to-decisions.json>"
+        }
+    });
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&manifest)?);
+    } else {
+        println!("{}", serde_json::to_string_pretty(&manifest)?);
+    }
+
+    Ok(())
+}
+
+// ─── Apply decisions ──────────────────────────────────────────────────────
+
+fn apply_decisions(
+    config: &Config,
+    intake_pages: &[(String, crate::WikiPage)],
+    decisions: Vec<(String, ReconcileDecision)>,
+    dry_run: bool,
+    json: bool,
+) -> Result<()> {
+    let wiki_dir = &config.wiki.wiki_dir;
+    let intake_dir = wiki_dir.join("intake");
     let mut processed = Vec::new();
     let mut errors: Vec<String> = Vec::new();
 
-    for (slug, page) in &intake_pages {
-        let (decision, analysis) = decisions
-            .iter()
-            .find(|(s, _, _)| s == slug)
-            .map(|(_, d, a)| (d.clone(), a.clone()))
-            .unwrap_or_else(|| {
-                // Shouldn't happen but safe fallback
-                (ReconcileDecision::manual(
-                    vec!["topic-tree".to_string()],
-                    vec![],
-                    0.5,
-                    "review".to_string(),
-                    String::new(),
-                ), None)
-            });
+    for (slug, page) in intake_pages {
+        let decision = match decisions.iter().find(|(s, _)| s == slug) {
+            Some((_, d)) => d.clone(),
+            None => {
+                eprintln!("  warning: no decision for '{}' — skipping", slug);
+                continue;
+            }
+        };
 
         let src_path = intake_dir.join(format!("{}.md", slug));
         if dry_run {
@@ -193,10 +208,12 @@ pub async fn run_process(
                 "would_route_to": &decision.status,
                 "category": &decision.category,
                 "confidence": conf_pct,
-                "rationale": analysis.as_ref().map(|a| &a.routing.rationale),
             }));
         } else {
-            match apply_routing(config, &src_path, slug, decision.clone(), analysis.as_ref(), false) {
+            // Build a RoutingAnalysis sidecar from the decision
+            let analysis = build_analysis_from_decision(&decision, &page.frontmatter.title, &page.body, page.frontmatter.source.origin_url.as_deref(), &page.frontmatter.content_hash);
+
+            match apply_routing(config, &src_path, slug, decision.clone(), Some(&analysis), false) {
                 Ok(()) => {
                     let conf_pct = (decision.confidence * 100.0) as u32;
                     processed.push(serde_json::json!({
@@ -226,10 +243,7 @@ pub async fn run_process(
     } else {
         for item in &processed {
             let title = item["title"].as_str().unwrap_or("?");
-            let to = item["routed_to"]
-                .as_str()
-                .or_else(|| item["would_route_to"].as_str())
-                .unwrap_or("?");
+            let to = item["routed_to"].as_str().or_else(|| item["would_route_to"].as_str()).unwrap_or("?");
             let cat = item["category"]
                 .as_array()
                 .map(|a| a.iter().map(|v| v.as_str().unwrap_or("")).collect::<Vec<_>>().join("/"))
@@ -249,6 +263,8 @@ pub async fn run_process(
     }
     Ok(())
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
 
 fn collect_intake_pages(intake_dir: &Path, limit: u32) -> Result<Vec<(String, crate::WikiPage)>> {
     if !intake_dir.exists() {
@@ -292,11 +308,7 @@ fn apply_routing(
 
     let mut page = parse_wiki_page(src_path)?;
     let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
-    page.frontmatter.status = if target_status == "staged" {
-        PageStatus::Staged
-    } else {
-        PageStatus::Review
-    };
+    page.frontmatter.status = if target_status == "staged" { PageStatus::Staged } else { PageStatus::Review };
     page.frontmatter.category = decision.category.clone();
     page.frontmatter.keywords = decision.keywords.clone();
     page.frontmatter.confidence = Some(decision.confidence);
@@ -315,7 +327,7 @@ fn apply_routing(
     let rel_dest = dest_path.strip_prefix(repo_root).unwrap_or(&dest_path);
     crate::git_ops::git_mv(repo_root, rel_src, rel_dest)?;
 
-    // Move analysis sidecar alongside the content file
+    // Move analysis sidecar alongside content
     let analysis_src = src_path.with_extension("analysis.json");
     if analysis_src.exists() {
         let analysis_dest = dest_path.with_extension("analysis.json");
@@ -335,9 +347,49 @@ fn apply_routing(
     Ok(())
 }
 
-/// Write a routing analysis sidecar file alongside `content_path`.
-/// The sidecar has the same stem with `.analysis.json` extension.
-/// e.g. `intake/my-page.md` → `intake/my-page.analysis.json`
+/// Build a RoutingAnalysis sidecar from a ReconcileDecision (for --route-file path).
+fn build_analysis_from_decision(
+    decision: &ReconcileDecision,
+    title: &str,
+    body: &str,
+    source_url: Option<&str>,
+    content_hash: &str,
+) -> RoutingAnalysis {
+    use crate::reconcile::{AnalysisInputs, AnalysisRouting, AnalysisSignals};
+
+    let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    let content_preview: String = body.chars().take(500).collect();
+    let title_tokens = title.split_whitespace().map(|w| w.to_lowercase()).collect();
+    let keywords_extracted = crate::reconcile::extract_keywords(&format!("{} {}", title, body), 8);
+    let pre_signal = crate::reconcile::heuristic_pre_signal(title, body);
+
+    RoutingAnalysis {
+        schema_version: 1,
+        analyzed_at: now,
+        model: decision.model_used.clone(),
+        inputs: AnalysisInputs {
+            title: title.to_string(),
+            source_url: source_url.map(|s| s.to_string()),
+            content_hash: content_hash.to_string(),
+            content_preview,
+        },
+        routing: AnalysisRouting {
+            decision: decision.category.clone(),
+            confidence: decision.confidence,
+            rationale: String::new(), // populated by agent via --route-file if provided
+            alternatives_considered: vec![],
+            flags: vec![],
+            review_reason: decision.review_reason.clone(),
+        },
+        signals: AnalysisSignals {
+            heuristic_pre_signal: pre_signal,
+            title_tokens,
+            keywords_extracted,
+        },
+    }
+}
+
+/// Write a routing analysis sidecar alongside `content_path`.
 pub fn write_analysis_sidecar(content_path: &Path, analysis: &RoutingAnalysis) -> Result<()> {
     let sidecar_path = content_path.with_extension("analysis.json");
     let json = serde_json::to_string_pretty(analysis)
@@ -376,10 +428,7 @@ fn commit_if_needed(config: &Config, count: usize) -> Result<()> {
     let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
     crate::git_ops::git_add(repo_root, wiki_dir)?;
     if crate::git_ops::git_has_staged(repo_root) {
-        crate::git_ops::git_commit(
-            repo_root,
-            &format!("curio: process {} intake item(s)", count),
-        )?;
+        crate::git_ops::git_commit(repo_root, &format!("curio: process {} intake item(s)", count))?;
     }
     Ok(())
 }

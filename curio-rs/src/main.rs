@@ -18,6 +18,7 @@ use curio::{
         reindex::run_reindex,
         review::run_review,
         search::run_search,
+        status::run_status,
         sync::run_sync,
         tree::run_tree,
     },
@@ -69,7 +70,8 @@ async fn main() -> Result<()> {
         }
         Some(Commands::Process {
             limit,
-            auto,
+            all,
+            prepare,
             route_file,
             slug,
             category,
@@ -81,9 +83,13 @@ async fn main() -> Result<()> {
             let config = load_config(config_path_str)?;
             run_process(
                 &config, cli.dry_run, cli.json,
-                limit, auto, route_file,
+                limit, all, prepare, route_file,
                 slug, category, status, keywords, confidence, summary,
             ).await?;
+        }
+        Some(Commands::Status) => {
+            let config = load_config(config_path_str)?;
+            run_status(&config, cli.json).await?;
         }
         Some(Commands::Review { lane }) => {
             let config = load_config(config_path_str)?;

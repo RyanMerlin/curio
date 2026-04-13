@@ -14,15 +14,46 @@ Curio is the Claude harness for `curio-rs`. Git is the canonical knowledge store
 
 ```
 curio intake --url <url>     # ingest → wiki/intake/
-curio process                # auto-route via heuristics (or agent-guided)
-curio process --slug <s> --category by-account --status staged
+curio process                # Phase 1: output routing manifest (agent reads + decides)
+curio process --route-file routes.json   # Phase 2: apply routing decisions, write .analysis.json sidecars
+curio process --slug <s> --category by-account --status staged   # direct override
 curio publish <slug>         # staged → published
 curio tree                   # sync wiki/published/ dirs after NORTHSTAR changes
-curio reindex                # rebuild wiki/_index/ from filesystem
+curio reindex                # rebuild co-located index.md files + _index/ artifacts
 curio sync                   # push wiki/published/ → Confluence (requires creds)
+curio status                 # show intake/staged/review/published counts + staleness hint
 curio lint                   # find contradictions, stale claims, orphan refs
 curio query "question"       # LLM-powered wiki query
 ```
+
+## Agent-Native Routing (Two-Phase)
+
+`curio process` is agent-native — no LLM calls in the Rust binary. You (Claude) are the router.
+
+**Phase 1 — Manifest:**
+Run `curio process` (or `curio process --prepare`). It outputs a JSON manifest with:
+- All pages in `wiki/intake/` (slug, title, source, body preview)
+- NORTHSTAR tree context (categories, route-here rules, exclude rules)
+- Root index summary
+- An `apply_command` template to use in Phase 2
+
+**Phase 2 — Apply:**
+Read the manifest. For each page, decide: `category` (e.g. `by-product/alteryx-server`), `status` (`staged` or `review`), `confidence` (0–1), `rationale`, `alternatives_considered`.
+
+Build a route file and run:
+```
+curio process --route-file /tmp/routes.json
+```
+
+Each routed page gets:
+- `git mv` from `intake/` to `staged/{category}/` or `review/`
+- `.analysis.json` sidecar with full routing provenance
+- Frontmatter updated (category, status, keywords, confidence)
+
+**Disambiguation rules (from NORTHSTAR):**
+- Use exact route/exclude signals in each tree's index.md
+- When confidence < 0.75, route to `review/` — don't guess
+- Alteryx Server ≠ Intelligence Suite — check product name carefully
 
 ## Boundaries
 
@@ -38,4 +69,5 @@ curio query "question"       # LLM-powered wiki query
 - `NORTHSTAR.md`
 - `docs/onboarding.md`
 - `docs/where-things-live.md`
-- `wiki/_index/index.md` (runtime wiki state)
+- `wiki/published/index.md` (root wiki index — co-located, replaces `_index/index.md`)
+- `wiki/published/{tree}/index.md` (per-tree navigation index)

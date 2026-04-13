@@ -70,25 +70,33 @@ pub enum Commands {
         recursive: bool,
     },
 
-    /// Route intake pages to staged/ or review/ using heuristics or agent decisions.
+    /// Route intake pages to staged/ or review/.
+    ///
+    /// Agent-native: outputs a routing manifest for the agent to reason over,
+    /// then applies decisions via --route-file. Default cap: 10 pages.
     Process {
-        /// Maximum number of intake items to process.
+        /// Maximum number of intake items to process. Ignored when --all is set.
         #[arg(long, default_value = "10")]
         limit: u32,
 
-        /// If set, use only heuristics (no agent).
+        /// Process all intake pages, removing the default limit cap.
         #[arg(long)]
-        auto: bool,
+        all: bool,
 
-        /// Apply a pre-computed routing decision JSON file.
+        /// Output a routing manifest JSON to stdout and exit (no routing applied).
+        /// The agent reads this, makes decisions, then calls --route-file.
+        #[arg(long)]
+        prepare: bool,
+
+        /// Apply a pre-computed routing decision JSON file produced by the agent.
         #[arg(long)]
         route_file: Option<PathBuf>,
 
-        /// Route a specific page by its slug.
+        /// Route a specific page by its slug (manual single-page routing).
         #[arg(long)]
         slug: Option<String>,
 
-        /// Category path for the routed page (e.g. "by-account/acme").
+        /// Category path for manual routing (e.g. "product-tree/alteryx-server").
         #[arg(long)]
         category: Option<String>,
 
@@ -108,6 +116,9 @@ pub enum Commands {
         #[arg(long)]
         summary: Option<String>,
     },
+
+    /// Show pipeline status: intake/staged/review/published counts and index freshness.
+    Status,
 
     /// List items in review/ and staged/ with status summaries.
     Review {

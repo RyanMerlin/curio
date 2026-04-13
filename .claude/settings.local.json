@@ -1,4 +1,17 @@
 {
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd C:/code/agents/curio && ./curio-rs/target/debug/curio status 2>/dev/null || echo '  (curio status unavailable — run: cargo build in curio-rs/)'"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(cargo build:*)",
@@ -75,7 +88,8 @@
       "Bash(ls wiki/staged/product-tree/alteryx-server/*.md)",
       "Bash(find wiki/published/product-tree/alteryx-server -name \"*.md\" -exec git rm {} \\\\;)",
       "Bash(xargs head:*)",
-      "Bash(./curio-rs/target/debug/curio reindex:*)"
+      "Bash(./curio-rs/target/debug/curio reindex:*)",
+      "Bash(./curio-rs/target/debug/curio status:*)"
     ],
     "defaultMode": "bypassPermissions"
   }
