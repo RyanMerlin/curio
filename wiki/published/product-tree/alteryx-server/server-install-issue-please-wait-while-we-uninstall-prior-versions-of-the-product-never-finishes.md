@@ -9,7 +9,7 @@ source:
   summary: null
 category:
 - product-tree
-- intelligence-suite
+- alteryx-server
 keywords:
 - uninstall
 - server
@@ -17,7 +17,7 @@ keywords:
 - versions
 - issue
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T02:03:03Z
+updated_at: 2026-04-13T02:04:55Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:6328abc5f435e9f4605240461227bfa187babf37ac12e711ee43311839e3d817
