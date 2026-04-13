@@ -97,3 +97,4 @@
 - **2026-04-13T02:03:04Z** publish: server-upgrade-issues-by-version published to published/product-tree/alteryx-server/server-upgrade-issues-by-version.md
 - **2026-04-13T02:03:05Z** publish: server-upgrade-version-paths-what-version-can-upgrade-to-what-versions published to published/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md
 - **2026-04-13T02:03:07Z** publish: server-version-build-number-vs-patch-for-older-versions published to published/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md
+- **2026-04-13T02:03:08Z** publish: servicedata-blob-removal-in-23-2 published to published/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md
