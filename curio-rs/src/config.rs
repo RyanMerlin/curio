@@ -20,25 +20,33 @@ pub struct Config {
 }
 
 /// LLM inference settings — required for `curio process` (routing) and `curio query`.
+///
+/// **Recommended:** Set `OPENAI_API_KEY` in your environment (via OAuth token exchange,
+/// your org's SSO-issued key, or a shared team secret). Do not commit API keys to .curio.yaml.
+///
+/// The `api_key` field in config is supported for compatibility but discouraged for
+/// personal/org use — prefer environment variables managed via your auth flow.
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct LlmConfig {
-    /// Anthropic API key. Reads from ANTHROPIC_API_KEY env var if not set here.
+    /// OpenAI API key. Prefer OPENAI_API_KEY env var over setting this directly in config.
+    /// See: https://platform.openai.com/docs/guides/authentication
+    #[serde(default)]
     pub api_key: String,
-    /// Model to use for routing/analysis. Default: claude-sonnet-4-6.
+    /// Model to use for routing/analysis. Default: gpt-4o.
     #[serde(default = "LlmConfig::default_model")]
     pub model: String,
 }
 
 impl LlmConfig {
     fn default_model() -> String {
-        "claude-sonnet-4-6".to_string()
+        "gpt-4o".to_string()
     }
 
     pub fn effective_api_key(&self) -> String {
         if !self.api_key.is_empty() {
             return self.api_key.clone();
         }
-        std::env::var("ANTHROPIC_API_KEY").unwrap_or_default()
+        std::env::var("OPENAI_API_KEY").unwrap_or_default()
     }
 
     pub fn effective_model(&self) -> String {
@@ -52,7 +60,7 @@ impl LlmConfig {
         let key = self.effective_api_key();
         if key.is_empty() {
             anyhow::bail!(
-                "Anthropic API key not configured. Set ANTHROPIC_API_KEY env var or add to .curio.yaml under llm.api_key."
+                "OpenAI API key not configured. Set OPENAI_API_KEY env var or add to .curio.yaml under llm.api_key."
             );
         }
         Ok(key)
@@ -230,7 +238,7 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
             config.wiki.wiki_dir = PathBuf::from(wiki_dir);
         }
     }
-    // ANTHROPIC_API_KEY is read by LlmConfig::effective_api_key() at call time — no caching needed.
+    // OPENAI_API_KEY is read by LlmConfig::effective_api_key() at call time — no caching needed.
 
     if config.runtime.temp_dir.is_none() {
         config.runtime.temp_dir = Some(default_temp_dir());

@@ -1,16 +1,15 @@
-/// Anthropic Messages API client for LLM-driven wiki operations.
+/// OpenAI Chat Completions API client for LLM-driven wiki operations.
 ///
-/// Provides a thin, focused wrapper around the Anthropic REST API.
 /// Used by reconcile (routing), query, and lint commands.
+/// Auth: OPENAI_API_KEY environment variable or llm.api_key in .curio.yaml.
 use anyhow::{Context, Result, bail};
 use serde_json::Value;
 
-const ANTHROPIC_API_URL: &str = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_VERSION: &str = "2023-06-01";
+const OPENAI_API_URL: &str = "https://api.openai.com/v1/chat/completions";
 const DEFAULT_MAX_TOKENS: u32 = 2048;
 
-/// Call the Anthropic Messages API with a single user message.
-/// Returns the text content of the first response content block.
+/// Call the OpenAI Chat Completions API with a system + user message.
+/// Returns the text content of the first choice.
 pub async fn call(api_key: &str, model: &str, system: &str, user: &str) -> Result<String> {
     call_with_max_tokens(api_key, model, system, user, DEFAULT_MAX_TOKENS).await
 }
@@ -23,44 +22,45 @@ pub async fn call_with_max_tokens(
     max_tokens: u32,
 ) -> Result<String> {
     if api_key.is_empty() {
-        bail!("Anthropic API key is empty — set ANTHROPIC_API_KEY or configure llm.api_key in .curio.yaml");
+        bail!("OpenAI API key is empty — set OPENAI_API_KEY or configure llm.api_key in .curio.yaml");
     }
 
     let body = serde_json::json!({
         "model": model,
         "max_tokens": max_tokens,
-        "system": system,
-        "messages": [{"role": "user", "content": user}]
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user}
+        ]
     });
 
     let client = reqwest::Client::new();
     let response = client
-        .post(ANTHROPIC_API_URL)
-        .header("x-api-key", api_key)
-        .header("anthropic-version", ANTHROPIC_VERSION)
-        .header("content-type", "application/json")
+        .post(OPENAI_API_URL)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
         .json(&body)
         .send()
         .await
-        .context("Failed to reach Anthropic API")?;
+        .context("Failed to reach OpenAI API")?;
 
     let status = response.status();
-    let text = response.text().await.context("Failed to read Anthropic response")?;
+    let text = response.text().await.context("Failed to read OpenAI response")?;
 
     if !status.is_success() {
-        bail!("Anthropic API error {}: {}", status, text);
+        bail!("OpenAI API error {}: {}", status, text);
     }
 
     let json: Value = serde_json::from_str(&text)
-        .with_context(|| format!("Failed to parse Anthropic response: {}", text))?;
+        .with_context(|| format!("Failed to parse OpenAI response: {}", text))?;
 
-    // Extract text from content[0].text
-    json["content"]
+    // Extract text from choices[0].message.content
+    json["choices"]
         .as_array()
         .and_then(|arr| arr.first())
-        .and_then(|block| block["text"].as_str())
+        .and_then(|choice| choice["message"]["content"].as_str())
         .map(|s| s.to_string())
-        .ok_or_else(|| anyhow::anyhow!("Unexpected Anthropic response shape: {}", text))
+        .ok_or_else(|| anyhow::anyhow!("Unexpected OpenAI response shape: {}", text))
 }
 
 /// Extract a JSON object from an LLM response that may include prose before/after the JSON.
