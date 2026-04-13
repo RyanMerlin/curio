@@ -264,11 +264,11 @@
     "id": "65fd815a0e3bd72b"
   },
   {
-    "path": "staged/product-tree/intelligence-suite/rollback-downgrade-a-failed-server-upgrade.md",
+    "path": "published/product-tree/alteryx-server/rollback-downgrade-a-failed-server-upgrade.md",
     "title": "Rollback / Downgrade a Failed Server Upgrade",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
