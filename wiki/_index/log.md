@@ -98,3 +98,4 @@
 - **2026-04-13T02:03:05Z** publish: server-upgrade-version-paths-what-version-can-upgrade-to-what-versions published to published/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md
 - **2026-04-13T02:03:07Z** publish: server-version-build-number-vs-patch-for-older-versions published to published/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md
 - **2026-04-13T02:03:08Z** publish: servicedata-blob-removal-in-23-2 published to published/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md
+- **2026-04-13T02:03:10Z** publish: upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786 published to published/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md
