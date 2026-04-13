@@ -6,8 +6,8 @@ use walkdir::WalkDir;
 use crate::{
     config::Config,
     output::emit_json,
-    wiki_fs::{content_hash, generate_id, slug_from_title, write_wiki_page, first_line_summary},
-    wiki_index::{append_log, load_registry, rebuild_index_md, save_registry, entry_from_frontmatter},
+    wiki_fs::{content_hash, generate_id, slug_from_title, write_wiki_page},
+    wiki_index::{append_log, load_registry, rebuild_index_md},
     Frontmatter, PageStatus, SourceRef, WikiPage,
 };
 
@@ -32,7 +32,7 @@ pub async fn run_intake(
 
     let mut ingested: Vec<String> = Vec::new();
     let mut skipped: Vec<String> = Vec::new();
-    let mut registry = load_registry(wiki_dir)?;
+    let registry = load_registry(wiki_dir)?;
 
     for item in items {
         let hash = content_hash(&item.text);
@@ -69,19 +69,12 @@ pub async fn run_intake(
             model_used: None,
         };
 
-        let summary = first_line_summary(&item.text, 200);
         let page = WikiPage { path: dest.clone(), frontmatter: fm.clone(), body: item.text.clone() };
         write_wiki_page(&dest, &page)?;
-
-        let rel = format!("intake/{}", filename);
-        let entry = entry_from_frontmatter(&fm, &rel, &summary);
-        registry.pages.push(entry);
-
         ingested.push(item.title.clone());
     }
 
     if !dry_run && !ingested.is_empty() {
-        save_registry(wiki_dir, &registry)?;
         rebuild_index_md(wiki_dir, &registry)?;
         append_log(wiki_dir, &format!("intake: {} items ingested", ingested.len()))?;
 
@@ -210,7 +203,6 @@ async fn collect_from_confluence(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
         token,
-        config.content_model.space_key.clone(),
         None,
     )?;
 

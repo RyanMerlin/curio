@@ -1,26 +1,3 @@
----
-id: 42c59af8a4bae559
-title: Curio README
-status: published
-source:
-  kind: file
-  id: file:README.md
-  origin_url: null
-  summary: null
-category:
-keywords:
-- readme
-- documentation
-- overview
-created_at: 2026-04-12T18:33:36Z
-updated_at: 2026-04-12T18:37:05Z
-confidence: 0.8
-cross_refs: []
-content_hash: sha256:bc73f6918b22feac7b076865326674bda81b5d768e1e1ecac14151faa200acda
-confluence_page_id: null
-model_used: manual
----
-
 # Curio
 
 Curio is the harness and orchestration repo for `curio-rs`.
@@ -52,14 +29,11 @@ Curio content writes are scoped by Confluence space:
 - `NORTHSTAR.md` seeds the charter page with the project intent text
 - Curio's onboarding flow keeps `.env` and `.env.example` aligned on the Curio keys
 - Bootstrap creates the `README` landing page plus the structural Confluence layers:
-  - `NORTHSTAR`
+  - `Config`
   - `Intake`
   - `Staged`
   - `Review`
   - `Published`
-  - `_templates`
-  - `_registry`
-  - `_audit`
 
 For agent integrations, use `--json` on the helper commands and search:
 
@@ -82,7 +56,7 @@ Run onboarding with:
 curio onboard
 ```
 
-`curio bootstrap` lays down the README landing page, NORTHSTAR charter, hero artwork, the lifecycle documentation, the Published blueprint tree, the template playbook, the registry index, and the audit log inside the configured Curio space. Destructive rebuilds require `--overwrite --confirm-nuke`.
+`curio bootstrap` lays down the README landing page, the Config charter branch, hero artwork, the lifecycle documentation, and the Published blueprint tree inside the configured Curio space. Destructive rebuilds require `--overwrite --confirm-nuke`.
 `curio onboard` will prompt for NORTHSTAR intent when the corresponding env value is blank, then offer to repair the tree if required pages are missing.
 
 ## Quickstart

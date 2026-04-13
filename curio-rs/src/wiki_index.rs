@@ -1,37 +1,22 @@
-use crate::{Frontmatter, PageStatus, WikiIndex, WikiIndexEntry, WikiPage};
+use crate::{audit_store, Frontmatter, PageStatus, WikiIndex, WikiIndexEntry, WikiPage};
 use anyhow::{Context, Result};
 use chrono::Utc;
 use std::collections::BTreeMap;
 use std::path::Path;
 use walkdir::WalkDir;
 
-const REGISTRY_FILE: &str = "_index/registry.json";
-const LOG_MD_FILE: &str = "_index/log.md";
-
 // ─── Registry (registry.json) ────────────────────────────────────────────
 
-/// Load the wiki registry from disk. Returns an empty index if the file doesn't exist.
+/// Load the wiki catalog from disk by walking the wiki tree.
 pub fn load_registry(wiki_dir: &Path) -> Result<WikiIndex> {
-    let path = wiki_dir.join(REGISTRY_FILE);
-    if !path.exists() {
-        return Ok(WikiIndex::default());
-    }
-    let raw = std::fs::read_to_string(&path)
-        .with_context(|| format!("Failed to read {}", path.display()))?;
-    let pages: Vec<WikiIndexEntry> = serde_json::from_str(&raw)
-        .with_context(|| format!("Failed to parse {}", path.display()))?;
-    Ok(WikiIndex { pages })
+    reindex_from_filesystem(wiki_dir)
 }
 
-/// Save the wiki registry to disk.
+/// Save the wiki catalog to disk.
+///
+/// The catalog is filesystem-derived, so this is a compatibility no-op.
 pub fn save_registry(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
-    let path = wiki_dir.join(REGISTRY_FILE);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let json = serde_json::to_string_pretty(&index.pages)?;
-    std::fs::write(&path, json)
-        .with_context(|| format!("Failed to write {}", path.display()))?;
+    let _ = (wiki_dir, index);
     Ok(())
 }
 
@@ -56,7 +41,7 @@ pub fn remove_registry_entry(wiki_dir: &Path, id: &str) -> Result<()> {
 // ─── Reindex from filesystem ─────────────────────────────────────────────
 
 /// Walk `wiki_dir/**/*.md`, parse frontmatter, and rebuild `WikiIndex`.
-/// Skips `_index/`, `_audit/`, `_schema/` directories and `index.md` files.
+/// Skips `_config/`, `.curio/`, and generated `index.md` files.
 pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
     let mut pages = Vec::new();
 
@@ -78,7 +63,7 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
         let first = rel.components().next()
             .map(|c| c.as_os_str().to_string_lossy().into_owned())
             .unwrap_or_default();
-        if matches!(first.as_str(), "_index" | "_audit" | "_schema") {
+        if matches!(first.as_str(), "_config" | ".curio") {
             continue;
         }
 
@@ -118,8 +103,8 @@ pub fn entry_from_page(page: &WikiPage, rel_path: &Path) -> WikiIndexEntry {
 
 // ─── Hierarchical co-located index.md files ──────────────────────────────
 
-/// Rebuild all co-located `index.md` files in `wiki/published/` from the registry
-/// and NORTHSTAR blueprint. Also removes the legacy `_index/index.md` if it exists.
+/// Rebuild all co-located `index.md` files in `wiki/published/` from the catalog
+/// and NORTHSTAR blueprint.
 ///
 /// Generates:
 ///   wiki/published/index.md                        — root navigation
@@ -130,12 +115,6 @@ pub fn rebuild_colocated_indexes(
     index: &WikiIndex,
     trees: &[crate::commands::sync::TreeNode],
 ) -> Result<()> {
-    // Remove legacy monolithic index if it exists
-    let legacy = wiki_dir.join("_index/index.md");
-    if legacy.exists() {
-        std::fs::remove_file(&legacy)?;
-    }
-
     let published_dir = wiki_dir.join("published");
     if !published_dir.exists() {
         return Ok(());
@@ -260,6 +239,12 @@ pub fn rebuild_colocated_indexes(
             ));
         }
         std::fs::write(unc_dir.join("index.md"), md)?;
+    } else {
+        let unc_dir = published_dir.join("uncategorized");
+        if unc_dir.exists() {
+            let _ = std::fs::remove_file(unc_dir.join("index.md"));
+            let _ = std::fs::remove_dir(&unc_dir);
+        }
     }
 
     Ok(())
@@ -362,58 +347,40 @@ fn short_date(ts: &str) -> &str {
 }
 
 /// Read the root navigation index for passing to LLM context.
-/// Reads from `wiki/published/index.md` (new location).
 pub fn read_index_md(wiki_dir: &Path) -> Result<String> {
-    // Prefer new co-located root index
     let new_path = wiki_dir.join("published/index.md");
     if new_path.exists() {
         return std::fs::read_to_string(&new_path)
             .with_context(|| format!("Failed to read {}", new_path.display()));
-    }
-    // Legacy fallback
-    let legacy = wiki_dir.join("_index/index.md");
-    if legacy.exists() {
-        return std::fs::read_to_string(&legacy)
-            .with_context(|| format!("Failed to read {}", legacy.display()));
     }
     Ok(String::new())
 }
 
 // ─── Backwards-compat shim ───────────────────────────────────────────────
 
-/// Legacy monolithic index rebuild — retained as a shim for callers that haven't
-/// migrated. Delegates to rebuild_colocated_indexes with an empty tree list,
-/// which writes minimal indexes and removes the old _index/index.md.
+/// Rebuild the filesystem-derived catalog and regenerate the co-located indexes.
 pub fn rebuild_index_md(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
     // Try to load NORTHSTAR trees for richer output
-    let ns_path = wiki_dir.join("_schema/northstar.md");
+    let ns_path = wiki_dir.join("_config/northstar.md");
     let trees = if ns_path.exists() {
         let md = std::fs::read_to_string(&ns_path).unwrap_or_default();
         crate::commands::sync::parse_northstar_blueprint(&md)
     } else {
         vec![]
     };
-    rebuild_colocated_indexes(wiki_dir, index, &trees)
+    let catalog = if index.pages.is_empty() {
+        reindex_from_filesystem(wiki_dir)?
+    } else {
+        index.clone()
+    };
+    rebuild_colocated_indexes(wiki_dir, &catalog, &trees)
 }
 
-// ─── log.md ──────────────────────────────────────────────────────────────
+// ─── audit.jsonl ─────────────────────────────────────────────────────────
 
-/// Append an entry to `wiki/_index/log.md`.
+/// Append an entry to the Git-tracked audit log.
 pub fn append_log(wiki_dir: &Path, entry: &str) -> Result<()> {
-    let path = wiki_dir.join(LOG_MD_FILE);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
-    let line = format!("- **{}** {}\n", now, entry);
-    let mut content = if path.exists() {
-        std::fs::read_to_string(&path)?
-    } else {
-        "# Curio Operation Log\n\n".to_string()
-    };
-    content.push_str(&line);
-    std::fs::write(&path, content)?;
-    Ok(())
+    audit_store::append_entry(wiki_dir, entry)
 }
 
 // ─── Lookup helpers ──────────────────────────────────────────────────────
@@ -444,18 +411,12 @@ pub fn entry_from_frontmatter(fm: &Frontmatter, rel_path: &str, summary: &str) -
 
 /// Update an entry's path in the registry (after a git mv).
 pub fn update_entry_path(wiki_dir: &Path, id: &str, new_path: &str) -> Result<()> {
-    let mut index = load_registry(wiki_dir)?;
-    if let Some(e) = index.pages.iter_mut().find(|e| e.id == id) {
-        e.path = new_path.replace('\\', "/");
-    }
-    save_registry(wiki_dir, &index)
+    let _ = (wiki_dir, id, new_path);
+    Ok(())
 }
 
 /// Update an entry's status in the registry.
 pub fn update_entry_status(wiki_dir: &Path, id: &str, status: &PageStatus) -> Result<()> {
-    let mut index = load_registry(wiki_dir)?;
-    if let Some(e) = index.pages.iter_mut().find(|e| e.id == id) {
-        e.status = status.to_string();
-    }
-    save_registry(wiki_dir, &index)
+    let _ = (wiki_dir, id, status);
+    Ok(())
 }

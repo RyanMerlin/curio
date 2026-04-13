@@ -27,14 +27,15 @@ The onboarding command will:
 - check the configured space and lifecycle pages
 - report provider launcher availability as warnings or failures
 
-The bootstrap command will create or refresh the README landing page, the NORTHSTAR charter, the hero image, and the base lifecycle pages so the documentation layer is ready for human and agent use. If you need to wipe an existing managed tree, Curio now requires `--overwrite --confirm-nuke` so destructive resets are explicit.
+The bootstrap command will create or refresh the README landing page, the Config branch, the hero image, and the base lifecycle pages so the documentation layer is ready for human and agent use. If you need to wipe an existing managed tree, Curio now requires `--overwrite --confirm-nuke` so destructive resets are explicit.
 `NORTHSTAR.md` is the editable source for the charter text; `curio onboard` ensures it exists and uses it before it offers a repair bootstrap.
 It also builds the Curio operating layers:
 
-- `NORTHSTAR` for the project intent and Published tree charter
-- `_templates` for reusable page blueprints and examples
-- `_registry` for the master index of Curio-managed pages and records
-- `_audit` for the append-only action history and rationale trail
+- `Config` for the project intent and config-source pages
+- `Intake` for raw capture
+- `Staged` for high-confidence content
+- `Review` for ambiguity and human arbitration
+- `Published` for canonical output
 
 ## Provider Overrides
 

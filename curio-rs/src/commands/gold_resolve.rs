@@ -7,10 +7,7 @@ use crate::{
     config::Config,
     output::emit_json,
     wiki_fs::{parse_wiki_page, update_frontmatter},
-    wiki_index::{
-        append_log, load_registry, rebuild_index_md, save_registry,
-        update_entry_path, update_entry_status,
-    },
+    wiki_index::{append_log, rebuild_index_md},
     PageStatus,
 };
 
@@ -54,12 +51,14 @@ async fn do_resolve(
         .as_deref()
         .map(|c| c.split('/').map(|s| s.to_string()).collect())
         .unwrap_or_else(|| {
-            if page.frontmatter.category.is_empty() {
-                vec!["by-topic".to_string()]
-            } else {
-                page.frontmatter.category.clone()
-            }
+            page.frontmatter.category.clone()
         });
+    if cat_segments.is_empty() {
+        anyhow::bail!(
+            "Cannot resolve '{}' to staged without a category. Keep it in review and attach a subtree proposal instead.",
+            slug
+        );
+    }
 
     let cat_path: PathBuf = cat_segments.iter().collect();
     let filename = format!("{}.md", slug);
@@ -89,18 +88,13 @@ async fn do_resolve(
     let rel_dest = dest_path.strip_prefix(repo_root).unwrap_or(&dest_path);
     crate::git_ops::git_mv(repo_root, rel_src, rel_dest)?;
 
-    // Update registry
     let new_rel = dest_path
         .strip_prefix(wiki_dir)
         .unwrap_or(&dest_path)
         .to_string_lossy()
         .replace('\\', "/");
-    update_entry_path(wiki_dir, &page.frontmatter.id, &new_rel)?;
-    update_entry_status(wiki_dir, &page.frontmatter.id, &PageStatus::Staged)?;
 
-    let registry = load_registry(wiki_dir)?;
-    save_registry(wiki_dir, &registry)?;
-    rebuild_index_md(wiki_dir, &registry)?;
+    rebuild_index_md(wiki_dir, &crate::WikiIndex::default())?;
     append_log(wiki_dir, &format!("resolve: {} moved to staged", slug))?;
 
     if config.wiki.auto_commit {

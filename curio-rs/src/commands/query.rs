@@ -71,7 +71,7 @@ pub async fn run_query(
                 "index_md": index_md,
                 "top_pages": page_contexts,
                 "save_answer": save,
-                "instruction": "Use the index_md and top_pages to synthesise an answer to the question. If save_answer is true, write the answer as a new page in wiki/published/by-topic/.",
+                "instruction": "Use the index_md and top_pages to synthesise an answer to the question. If save_answer is true, write the answer as a new page in wiki/published/topic-tree/.",
             }),
         );
     } else {

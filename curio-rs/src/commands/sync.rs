@@ -13,16 +13,25 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use crate::{
-    config::Config,
+    config::{Config, upsert_repo_env_var},
     confluence::ConfluenceClient,
     output::emit_json,
-    wiki_fs::{content_hash, strip_frontmatter},
+    wiki_fs::{content_hash, parse_wiki_page, strip_frontmatter},
     wiki_index::append_log,
 };
 
 const CHILDREN_MACRO: &str = "";
 const SYNC_PROP_KEY: &str = "curio-sync";
 const ICON_PROP_KEY: &str = "emoji-title-published";
+pub const CURIO_ROOT_TITLE: &str = "CURIO";
+const CURIO_HERO_FILENAME: &str = "Curio_curated_intelligence_operator.png";
+
+#[derive(Debug, Clone)]
+pub struct CurioConfluenceTree {
+    pub root_id: String,
+    pub published_id: String,
+    pub config_id: String,
+}
 
 /// Emoji icon for each well-known page title slug.
 fn page_icon(slug: &str) -> Option<&'static str> {
@@ -34,11 +43,11 @@ fn page_icon(slug: &str) -> Option<&'static str> {
         "staged"                     => Some("atlassian-logo_projects"),
         "review"                     => Some("atlassian-logo_opsgenie"),
         "published"                  => Some("atlassian-check_mark"),
-        "accounts" | "by-account" | "account-tree" => Some("1f3e2"),   // 🏢
-        "by-product" | "product-tree"             => Some("1f4e6"),   // 📦
-        "by-audience" | "audience-tree"           => Some("1f465"),   // 👥
-        "by-use-case" | "use-case-tree"           => Some("1f527"),   // 🔧
-        "by-topic" | "topic-tree"                 => Some("1f4da"),   // 📚
+        "accounts" | "account-tree" => Some("1f3e2"),   // 🏢
+        "product-tree"              => Some("1f4e6"),   // 📦
+        "audience-tree"             => Some("1f465"),   // 👥
+        "use-case-tree"             => Some("1f527"),   // 🔧
+        "topic-tree"                => Some("1f4da"),   // 📚
         "alteryx-server"   => Some("1f5a5"),   // 🖥️
         "alteryx-designer" => Some("1f3a8"),   // 🎨
         "intelligence-suite" => Some("1f9e0"), // 🧠
@@ -56,20 +65,6 @@ pub async fn run_sync(
 ) -> Result<()> {
     config.connection.require_confluence()?;
 
-    // parent_page_id is optional — None means sync to the space root
-    let parent_page_id: Option<String> = parent_page_id_override
-        .or_else(|| config.wiki.sync.confluence_parent_page_id.clone());
-
-    let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
-        .context("CURIO_CONFLUENCE_TOKEN not set")?;
-    let client = ConfluenceClient::new(
-        config.connection.confluence_url.clone(),
-        config.connection.confluence_email.clone(),
-        token,
-        config.content_model.space_key.clone(),
-        None,
-    )?;
-
     let wiki_dir = &config.wiki.wiki_dir;
     let published_dir = wiki_dir.join("published");
 
@@ -78,43 +73,50 @@ pub async fn run_sync(
     }
 
     let space_key = &config.content_model.space_key;
+    let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
+        .context("CURIO_CONFLUENCE_TOKEN not set")?;
+    let bootstrap_client = ConfluenceClient::new(
+        config.connection.confluence_url.clone(),
+        config.connection.confluence_email.clone(),
+        token.clone(),
+        None,
+    )?;
+    let tree = ensure_curio_confluence_tree(
+        config,
+        &bootstrap_client,
+        parent_page_id_override
+            .or_else(|| config.wiki.sync.confluence_parent_page_id.clone()),
+        !dry_run,
+    )
+    .await?;
+    let client = ConfluenceClient::new(
+        config.connection.confluence_url.clone(),
+        config.connection.confluence_email.clone(),
+        token,
+        Some(tree.root_id.clone()),
+    )?;
 
     let mut upserted: Vec<String> = Vec::new();
     let mut skipped: Vec<String> = Vec::new();
     let mut errors: Vec<String> = Vec::new();
     let mut synced_page_ids: HashSet<String> = HashSet::new();
 
-    // Sync top-level schema pages first (NORTHSTAR, config) at the space root
-    let schema_dir = wiki_dir.join("_schema");
-    if schema_dir.exists() && !dry_run {
+    // Sync top-level config pages first (settings, northstar, readme) under CURIO/Config
+    let config_dir = wiki_dir.join("_config");
+    if config_dir.exists() && !dry_run {
         // Sort entries so config is processed first (alphabetically: config < northstar < readme)
-        let mut schema_entries: Vec<_> = std::fs::read_dir(&schema_dir)
+        let mut config_entries: Vec<_> = std::fs::read_dir(&config_dir)
             .into_iter().flatten().filter_map(|e| e.ok()).collect();
-        schema_entries.sort_by_key(|e| e.file_name());
+        config_entries.sort_by_key(|e| e.file_name());
 
-        let mut config_page_id: Option<String> = None;
-
-        for entry in schema_entries {
+        for entry in config_entries {
             let path = entry.path();
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
             if ext != "md" && ext != "yaml" && ext != "yml" { continue; }
             let stem = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
             if stem.starts_with('_') { continue; }
 
-            // Readme and Northstar live under Config; everything else at the parent level
-            let needs_config_parent = matches!(stem, "northstar" | "readme");
-            let schema_parent: Option<&str> = if needs_config_parent {
-                config_page_id.as_deref().or(parent_page_id.as_deref())
-            } else {
-                parent_page_id.as_deref()
-            };
-
-            // Readme uses a custom title
-            let page_title = if stem == "readme" {
-                "CURIO Readme".to_string()
-            } else {
-                to_title(stem)
-            };
+            let page_title = config_page_title(stem);
 
             let raw = std::fs::read_to_string(&path)
                 .with_context(|| format!("Failed to read {}", path.display()))?;
@@ -129,37 +131,23 @@ pub async fn run_sync(
             };
             let hash = content_hash(body_md);
 
-            // Space-wide lookup so we find the page regardless of where it currently lives
-            let existing = client.get_page_by_title(space_key, None, &page_title).await.ok().flatten();
+            let existing = client
+                .get_page_by_title(space_key, Some(tree.config_id.as_str()), &page_title)
+                .await
+                .ok()
+                .flatten();
 
             if let Some(ref page) = existing {
                 let page_id = page["id"].as_str().unwrap_or_default().to_string();
-
-                // Get v2 details to check parentId and current title
                 let page_v2 = client.get_page_by_id_v2(&page_id).await.ok().flatten();
-                let current_parent = page_v2.as_ref()
-                    .and_then(|p| p["parentId"].as_str())
-                    .unwrap_or("");
                 let current_title = page_v2.as_ref()
                     .and_then(|p| p["title"].as_str())
                     .unwrap_or("");
-
-                // Move the page under Config only if it's not already there
-                if needs_config_parent {
-                    if let Some(ref config_id) = config_page_id {
-                        if current_parent != config_id.as_str() {
-                            let _ = client.move_page(&page_id, config_id).await;
-                        }
-                    }
-                }
-
-                // Skip only if hash AND title both match (title mismatch forces a rename update)
                 let title_matches = current_title == page_title;
                 if title_matches {
                     if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
                         if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
-                            skipped.push(format!("[schema] {}", page_title));
-                            if stem == "config" { config_page_id = Some(page_id.clone()); }
+                            skipped.push(format!("[config] {}", page_title));
                             synced_page_ids.insert(page_id);
                             continue;
                         }
@@ -167,58 +155,27 @@ pub async fn run_sync(
                 }
             }
 
-            match client.create_or_update_page(space_key, schema_parent, &page_title, "storage", &html_body).await {
+            match client.create_or_update_page(space_key, Some(tree.config_id.as_str()), &page_title, "storage", &html_body).await {
                 Ok(page_id) => {
                     let _ = set_sync_prop(&client, &page_id, &hash).await;
                     set_page_icon(&client, &page_id, stem).await;
-                    if stem == "config" { config_page_id = Some(page_id.clone()); }
                     synced_page_ids.insert(page_id);
-                    upserted.push(format!("[schema] {}", page_title));
+                    upserted.push(format!("[config] {}", page_title));
                 }
-                Err(e) => errors.push(format!("[schema] {}: {}", page_title, e)),
-            }
-        }
-    }
-
-    // Sync pipeline visibility pages (Intake, Staged, Review) at the space root
-    if !dry_run {
-        for (slug, title, desc) in &[
-            ("intake", "Intake", "Incoming content captured for processing. Items here are awaiting analysis and routing into the wiki."),
-            ("staged", "Staged", "Content analyzed and routed, awaiting human review or approval before publishing."),
-            ("review", "Review", "Items that need human judgment before they can move forward in the pipeline."),
-        ] {
-            let body = format!("<p>{}</p><p>This page is maintained automatically by Curio. Manage content via <code>curio process</code>, <code>curio resolve</code>, and <code>curio publish</code>.</p>", desc);
-            let hash = content_hash(slug);
-            if let Ok(Some(ref page)) = client.get_page_by_title(space_key, parent_page_id.as_deref(), title).await {
-                let page_id = page["id"].as_str().unwrap_or_default().to_string();
-                if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
-                    if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
-                        skipped.push(format!("[pipeline] {}", title));
-                        synced_page_ids.insert(page_id);
-                        continue;
-                    }
-                }
-            }
-            match client.create_or_update_page(space_key, parent_page_id.as_deref(), title, "storage", &body).await {
-                Ok(page_id) => {
-                    let _ = set_sync_prop(&client, &page_id, &hash).await;
-                    set_page_icon(&client, &page_id, slug).await;
-                    synced_page_ids.insert(page_id);
-                    upserted.push(format!("[pipeline] {}", title));
-                }
-                Err(e) => errors.push(format!("[pipeline] {}: {}", title, e)),
+                Err(e) => errors.push(format!("[config] {}: {}", page_title, e)),
             }
         }
     }
 
     // Parse NORTHSTAR blueprint for tree descriptions
-    let northstar_path = wiki_dir.join("_schema").join("northstar.md");
+    let northstar_path = wiki_dir.join("_config").join("northstar.md");
     let northstar_trees: Vec<TreeNode> = if northstar_path.exists() {
         let ns_md = std::fs::read_to_string(&northstar_path).unwrap_or_default();
         parse_northstar_blueprint(&ns_md)
     } else {
         Vec::new()
     };
+    validate_published_sync_inputs(&published_dir, &northstar_trees)?;
     // Build slug → (title, description_html, icon, subtree_slug → (title, desc_html, icon)) lookup
     type SubMap = HashMap<String, (String, String, Option<String>)>;
     type TreeMap = HashMap<String, (String, String, Option<String>, SubMap)>;
@@ -231,9 +188,9 @@ pub async fn run_sync(
         tree_info.insert(t.slug.clone(), (t.title.clone(), t.description_html.clone(), t.icon.clone(), sub_map));
     }
 
-    // Map from relative directory path → confluence page id (None = parent_page_id).
+    // Map from relative directory path → confluence page id (root = CURIO/Published).
     let mut dir_to_page_id: HashMap<PathBuf, Option<String>> = HashMap::new();
-    dir_to_page_id.insert(PathBuf::new(), parent_page_id.clone());
+    dir_to_page_id.insert(PathBuf::new(), Some(tree.published_id.clone()));
 
     // Walk in sorted order so parent dirs are always processed before children.
     let entries = collect_sorted_entries(&published_dir)?;
@@ -254,7 +211,7 @@ pub async fn run_sync(
         let parent_conf_id: Option<String> = dir_to_page_id
             .get(&parent_rel)
             .cloned()
-            .unwrap_or_else(|| parent_page_id.clone());
+            .unwrap_or_else(|| Some(tree.published_id.clone()));
 
         if *is_dir {
             // Look up NORTHSTAR title + description + icon for this dir slug
@@ -309,18 +266,18 @@ pub async fn run_sync(
                 }
             }
         } else if rel_path.extension().map_or(false, |ext| ext == "md") {
-            let page_title = to_title(rel_path.file_stem().unwrap_or_default().to_str().unwrap_or(""));
             if dry_run {
+                let page_title = published_page_title(&abs_path)?;
                 upserted.push(format!("[page] {}", page_title));
             } else {
                 match sync_page(
-                    &client, space_key, parent_conf_id.as_deref(), &abs_path, &page_title,
+                    &client, space_key, parent_conf_id.as_deref(), &abs_path,
                     &mut synced_page_ids, &mut skipped,
                 )
                 .await
                 {
-                    Ok(()) => upserted.push(format!("[page] {}", page_title)),
-                    Err(e) => errors.push(format!("[page] {}: {}", page_title, e)),
+                    Ok(page_title) => upserted.push(format!("[page] {}", page_title)),
+                    Err(e) => errors.push(format!("[page] {}: {}", abs_path.display(), e)),
                 }
             }
         }
@@ -329,7 +286,7 @@ pub async fn run_sync(
     // Delete stale pages
     if !dry_run {
         let stale =
-            find_stale_pages(&client, space_key, parent_page_id.as_deref(), &synced_page_ids).await?;
+            find_stale_pages(&client, space_key, Some(tree.published_id.as_str()), &synced_page_ids).await?;
         for page_id in &stale {
             match client.delete_page(page_id).await {
                 Ok(()) => upserted.push(format!("[deleted] {}", page_id)),
@@ -337,13 +294,23 @@ pub async fn run_sync(
             }
         }
 
+        let legacy_pages =
+            find_legacy_sync_pages(&client, tree.published_id.as_str(), &northstar_trees).await?;
+        for page_id in &legacy_pages {
+            match client.delete_page(page_id).await {
+                Ok(()) => upserted.push(format!("[deleted legacy] {}", page_id)),
+                Err(e) => errors.push(format!("delete legacy {} failed: {}", page_id, e)),
+            }
+        }
+
         append_log(
             wiki_dir,
             &format!(
-                "sync: {} upserted, {} skipped, {} stale deleted, {} errors",
+                "sync: {} upserted, {} skipped, {} stale deleted, {} legacy deleted, {} errors",
                 upserted.len(),
                 skipped.len(),
                 stale.len(),
+                legacy_pages.len(),
                 errors.len()
             ),
         )?;
@@ -375,6 +342,334 @@ pub async fn run_sync(
     Ok(())
 }
 
+pub async fn ensure_curio_confluence_tree(
+    config: &Config,
+    client: &ConfluenceClient,
+    preferred_root_id: Option<String>,
+    persist_root_id: bool,
+) -> Result<CurioConfluenceTree> {
+    let space_key = config.content_model.space_key.as_str();
+    let root_id = ensure_curio_root_page(config, client, space_key, preferred_root_id.as_deref()).await?;
+
+    let published_id = upsert_static_page(
+        client,
+        space_key,
+        Some(root_id.as_str()),
+        "Published",
+        &published_root_body(),
+        "published",
+        Some(page_icon("published").unwrap_or("atlassian-check_mark")),
+    )
+    .await?;
+    let _ = upsert_static_page(
+        client,
+        space_key,
+        Some(root_id.as_str()),
+        "Intake",
+        &pipeline_body(
+            "Incoming content captured for processing.",
+            "Items here are awaiting analysis and routing into the wiki.",
+        ),
+        "intake",
+        None,
+    )
+    .await?;
+    let _ = upsert_static_page(
+        client,
+        space_key,
+        Some(root_id.as_str()),
+        "Staged",
+        &pipeline_body(
+            "Content analyzed and routed, awaiting human review or approval before publishing.",
+            "Manage staged content with <code>curio resolve</code> and <code>curio publish</code>.",
+        ),
+        "staged",
+        None,
+    )
+    .await?;
+    let _ = upsert_static_page(
+        client,
+        space_key,
+        Some(root_id.as_str()),
+        "Review",
+        &pipeline_body(
+            "Items that need human judgment before they can move forward in the pipeline.",
+            "Use <code>curio review</code> to inspect them and <code>curio resolve</code> to route them.",
+        ),
+        "review",
+        None,
+    )
+    .await?;
+    let config_id = upsert_static_page(
+        client,
+        space_key,
+        Some(root_id.as_str()),
+        "Config",
+        &config_root_body(),
+        "config",
+        None,
+    )
+    .await?;
+
+    let config_dir = config.wiki.wiki_dir.join("_config");
+    if config_dir.exists() {
+        let mut config_entries: Vec<_> = std::fs::read_dir(&config_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|entry| entry.ok())
+            .collect();
+        config_entries.sort_by_key(|entry| entry.file_name());
+        for entry in config_entries {
+            let path = entry.path();
+            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            if ext != "md" && ext != "yaml" && ext != "yml" {
+                continue;
+            }
+            let stem = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
+            if stem.starts_with('_') {
+                continue;
+            }
+
+            let raw = std::fs::read_to_string(&path)
+                .with_context(|| format!("Failed to read {}", path.display()))?;
+            let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
+            let html_body = if stem == "northstar" {
+                let trees = parse_northstar_blueprint(body_md);
+                render_northstar_for_confluence(body_md, &trees)
+            } else if ext == "md" {
+                markdown_to_html(body_md)
+            } else {
+                format!("<pre><code>{}</code></pre>", html_escape(body_md))
+            };
+            let page_title = config_page_title(stem);
+            let _ = upsert_static_page(
+                client,
+                space_key,
+                Some(config_id.as_str()),
+                &page_title,
+                &html_body,
+                stem,
+                None,
+            )
+            .await?;
+        }
+    }
+
+    let northstar_path = config.wiki.wiki_dir.join("_config").join("northstar.md");
+    let northstar_md = std::fs::read_to_string(&northstar_path).unwrap_or_default();
+    let trees = if northstar_md.is_empty() {
+        Vec::new()
+    } else {
+        parse_northstar_blueprint(&northstar_md)
+    };
+    for tree in &trees {
+        let body = if tree.description_html.trim().is_empty() {
+            CHILDREN_MACRO.to_string()
+        } else {
+            tree.description_html.clone()
+        };
+        let _ = upsert_static_page(
+            client,
+            space_key,
+            Some(published_id.as_str()),
+            &tree.title,
+            &body,
+            &tree.slug,
+            tree.icon.as_deref(),
+        )
+        .await?;
+    }
+
+    upload_root_hero(config, client, &root_id).await?;
+    let root_body = curio_root_body(space_key);
+    let root_page_id = upsert_static_page(
+        client,
+        space_key,
+        None,
+        CURIO_ROOT_TITLE,
+        &root_body,
+        "curio",
+        None,
+    )
+    .await?;
+
+    if persist_root_id {
+        upsert_repo_env_var("CURIO_CONFLUENCE_PARENT_PAGE_ID", &root_page_id)?;
+    }
+
+    Ok(CurioConfluenceTree {
+        root_id: root_page_id,
+        published_id,
+        config_id,
+    })
+}
+
+async fn ensure_curio_root_page(
+    config: &Config,
+    client: &ConfluenceClient,
+    space_key: &str,
+    preferred_root_id: Option<&str>,
+) -> Result<String> {
+    if let Some(root_id) = preferred_root_id {
+        if let Some(page) = client.get_page_by_id_v2(root_id).await? {
+            let title_matches = page["title"].as_str() == Some(CURIO_ROOT_TITLE);
+            let space_matches = page["spaceId"].as_str().is_some();
+            if title_matches && space_matches {
+                return Ok(root_id.to_string());
+            }
+        }
+    }
+
+    if let Some(page) = client.get_page_by_title(space_key, None, CURIO_ROOT_TITLE).await? {
+        return Ok(page["id"].as_str().unwrap_or_default().to_string());
+    }
+
+    let root_id = client
+        .create_or_update_page(
+            space_key,
+            None,
+            CURIO_ROOT_TITLE,
+            "storage",
+            "<p>Initializing CURIO workspace…</p>",
+        )
+        .await?;
+
+    let _ = upload_root_hero(config, client, &root_id).await;
+    Ok(root_id)
+}
+
+async fn upload_root_hero(config: &Config, client: &ConfluenceClient, root_id: &str) -> Result<()> {
+    let repo_root = config
+        .wiki
+        .wiki_dir
+        .parent()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| crate::config::repo_root());
+    let hero_path = repo_root.join("docs").join("assets").join(CURIO_HERO_FILENAME);
+    if !hero_path.exists() {
+        return Ok(());
+    }
+    let bytes = std::fs::read(&hero_path)
+        .with_context(|| format!("Failed to read hero image: {}", hero_path.display()))?;
+    client
+        .upload_attachment(root_id, CURIO_HERO_FILENAME, "image/png", bytes)
+        .await
+}
+
+fn curio_root_body(space_key: &str) -> String {
+    format!(
+        concat!(
+            "<ac:image ac:layout=\"center\" ac:width=\"230\"><ri:attachment ri:filename=\"{hero}\" /></ac:image>",
+            "<h1>CURIO</h1>",
+            "<p>Curated Intelligence Operator is the Confluence-facing workspace for intake, review, publication, and operating configuration.</p>",
+            "<ac:structured-macro ac:name=\"info\"><ac:rich-text-body>",
+            "<p>Use CURIO as the landing page for teams who need a clear view of what is published, what is in-flight, and how the workspace is configured.</p>",
+            "</ac:rich-text-body></ac:structured-macro>",
+            "<table><tbody>",
+            "<tr><th>Section</th><th>Purpose</th></tr>",
+            "<tr><td>{published}</td><td>Published knowledge organized into explicit tree structures.</td></tr>",
+            "<tr><td>{intake}</td><td>Fresh source material collected for processing.</td></tr>",
+            "<tr><td>{staged}</td><td>Routed content awaiting final publication.</td></tr>",
+            "<tr><td>{review}</td><td>Items needing human judgment.</td></tr>",
+            "<tr><td>{config}</td><td>Northstar, readme, and runtime settings that define the workspace.</td></tr>",
+            "</tbody></table>"
+        ),
+        hero = CURIO_HERO_FILENAME,
+        published = page_link(space_key, "Published", "Published"),
+        intake = page_link(space_key, "Intake", "Intake"),
+        staged = page_link(space_key, "Staged", "Staged"),
+        review = page_link(space_key, "Review", "Review"),
+        config = page_link(space_key, "Config", "Config"),
+    )
+}
+
+fn published_root_body() -> String {
+    "<p>Published knowledge from the Curio workspace. Tree pages below mirror the filesystem and NORTHSTAR blueprint.</p>".to_string()
+}
+
+fn config_root_body() -> String {
+    "<p>Configuration and workspace reference pages for Curio. This branch is machine-maintained from <code>wiki/_config</code>.</p>".to_string()
+}
+
+fn pipeline_body(summary: &str, detail: &str) -> String {
+    format!(
+        "<p>{}</p><p>{}</p><p>This page is maintained automatically by Curio.</p>",
+        summary, detail
+    )
+}
+
+fn page_link(space_key: &str, title: &str, label: &str) -> String {
+    format!(
+        "<ac:link><ri:page ri:space-key=\"{}\" ri:content-title=\"{}\" /><ac:plain-text-link-body><![CDATA[{}]]></ac:plain-text-link-body></ac:link>",
+        html_escape(space_key),
+        html_escape(title),
+        label
+    )
+}
+
+fn config_page_title(stem: &str) -> String {
+    match stem {
+        "readme" => "CURIO Readme".to_string(),
+        "settings" => "Settings".to_string(),
+        _ => to_title(stem),
+    }
+}
+
+async fn upsert_static_page(
+    client: &ConfluenceClient,
+    space_key: &str,
+    parent_id: Option<&str>,
+    title: &str,
+    body: &str,
+    slug: &str,
+    icon_override: Option<&str>,
+) -> Result<String> {
+    let hash = content_hash(body);
+    if let Some(page) = find_existing_page_for_sync(client, space_key, parent_id, title).await? {
+        let page_id = page["id"].as_str().unwrap_or_default().to_string();
+        if let Some(target_parent_id) = parent_id {
+            if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
+                let current_parent_id = current_page["parentId"].as_str();
+                if current_parent_id != Some(target_parent_id) {
+                    let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                }
+            }
+        }
+        if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
+            if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
+                if let Some(icon_val) = icon_override {
+                    set_page_icon_value(client, &page_id, icon_val).await;
+                } else {
+                    set_page_icon(client, &page_id, slug).await;
+                }
+                return Ok(page_id);
+            }
+        }
+
+        client
+            .update_page_body_by_id(&page_id, "storage", body)
+            .await?;
+        set_sync_prop(client, &page_id, &hash).await?;
+        if let Some(icon_val) = icon_override {
+            set_page_icon_value(client, &page_id, icon_val).await;
+        } else {
+            set_page_icon(client, &page_id, slug).await;
+        }
+        return Ok(page_id);
+    }
+
+    let page_id = client
+        .create_or_update_page(space_key, parent_id, title, "storage", body)
+        .await?;
+    set_sync_prop(client, &page_id, &hash).await?;
+    if let Some(icon_val) = icon_override {
+        set_page_icon_value(client, &page_id, icon_val).await;
+    } else {
+        set_page_icon(client, &page_id, slug).await;
+    }
+    Ok(page_id)
+}
+
 // ─── Entry collection ─────────────────────────────────────────────────────
 
 /// Return all entries under `root` as (relative_path, is_dir) in sorted BFS order.
@@ -398,6 +693,9 @@ fn collect_sorted_entries(root: &Path) -> Result<Vec<(PathBuf, bool)>> {
             if name == ".gitkeep" {
                 continue;
             }
+            if name == "index.md" {
+                continue;
+            }
             // Skip *.analysis.json — machine provenance, never synced
             if name.ends_with(".analysis.json") {
                 continue;
@@ -408,9 +706,89 @@ fn collect_sorted_entries(root: &Path) -> Result<Vec<(PathBuf, bool)>> {
             .strip_prefix(root)
             .map(PathBuf::from)
             .unwrap_or_default();
+        if rel
+            .components()
+            .next()
+            .and_then(|c| c.as_os_str().to_str())
+            == Some("uncategorized")
+        {
+            continue;
+        }
         entries.push((rel, e.file_type().is_dir()));
     }
     Ok(entries)
+}
+
+fn validate_published_sync_inputs(root: &Path, trees: &[TreeNode]) -> Result<()> {
+    use walkdir::WalkDir;
+
+    let valid_routes = valid_published_routes(trees);
+    let mut errors = Vec::new();
+
+    for entry in WalkDir::new(root).into_iter().filter_map(|entry| entry.ok()) {
+        let path = entry.path();
+        if !entry.file_type().is_file() || path.extension().and_then(|ext| ext.to_str()) != Some("md") {
+            continue;
+        }
+
+        let name = path.file_name().unwrap_or_default().to_string_lossy();
+        if name == "index.md" || name == ".gitkeep" || name.ends_with(".analysis.json") {
+            continue;
+        }
+
+        let rel = path.strip_prefix(root).unwrap_or(path);
+        if rel
+            .components()
+            .next()
+            .and_then(|component| component.as_os_str().to_str())
+            == Some("uncategorized")
+        {
+            errors.push(format!(
+                "{} is under published/uncategorized, which is invalid. Send it to review with a subtree proposal instead.",
+                rel.display()
+            ));
+            continue;
+        }
+
+        let page = parse_wiki_page(path)
+            .with_context(|| format!("Failed to parse {}", path.display()))?;
+        if page.frontmatter.title.trim().is_empty() {
+            errors.push(format!("{} is missing a frontmatter title", rel.display()));
+        }
+        if page.frontmatter.category.is_empty() {
+            errors.push(format!(
+                "{} has no category. Published content must already be curated into a NORTHSTAR route.",
+                rel.display()
+            ));
+            continue;
+        }
+
+        let route = page.frontmatter.category.join("/");
+        if !valid_routes.contains(&route) {
+            errors.push(format!(
+                "{} uses invalid published route '{}'. Update NORTHSTAR or move the page back to review.",
+                rel.display(),
+                route
+            ));
+        }
+    }
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        anyhow::bail!("Published sync validation failed:\n- {}", errors.join("\n- "));
+    }
+}
+
+fn valid_published_routes(trees: &[TreeNode]) -> HashSet<String> {
+    let mut routes = HashSet::new();
+    for tree in trees {
+        routes.insert(tree.slug.clone());
+        for subtree in &tree.subtrees {
+            routes.insert(format!("{}/{}", tree.slug, subtree.slug));
+        }
+    }
+    routes
 }
 
 // ─── Page operations ──────────────────────────────────────────────────────
@@ -420,38 +798,85 @@ async fn sync_page(
     space_key: &str,
     parent_id: Option<&str>,
     path: &Path,
-    page_title: &str,
     synced_ids: &mut HashSet<String>,
     skipped: &mut Vec<String>,
-) -> Result<()> {
-    let raw = std::fs::read_to_string(path)
-        .with_context(|| format!("Failed to read {}", path.display()))?;
-    let body_md = strip_frontmatter(&raw);
+) -> Result<String> {
+    let page = parse_wiki_page(path)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let page_title = page.frontmatter.title.trim().to_string();
+    if page_title.is_empty() {
+        anyhow::bail!("Page title is empty for {}", path.display());
+    }
+    let body_md = page.body.as_str();
     let hash = content_hash(body_md);
     let html_body = markdown_to_html(body_md);
 
     // Check if page already exists and content hasn't changed
-    if let Some(ref page) = client.get_page_by_title(space_key, parent_id, page_title).await? {
-        let page_id = page["id"].as_str().unwrap_or_default().to_string();
+    if let Some(ref existing_page) = client.get_page_by_title(space_key, parent_id, &page_title).await? {
+        let page_id = existing_page["id"].as_str().unwrap_or_default().to_string();
         if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
             if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
                 skipped.push(page_title.to_string());
                 synced_ids.insert(page_id);
-                return Ok(());
+                return Ok(page_title);
             }
         }
-        // Content changed — use create_or_update_page which handles versioning
+        let slug = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
+        let page_id = client
+            .create_or_update_page(space_key, parent_id, &page_title, "storage", &html_body)
+            .await?;
+        set_sync_prop(client, &page_id, &hash).await?;
+        set_page_icon(client, &page_id, slug).await;
+        synced_ids.insert(page_id);
+        return Ok(page_title);
     }
 
-    // create_or_update_page handles both create and update
+    if let Some(conflicting_page) = client.get_page_by_title(space_key, None, &page_title).await? {
+        let conflicting_id = conflicting_page["id"].as_str().unwrap_or_default().to_string();
+        let duplicate_title = format!("{} (dup)", page_title);
+        let duplicate_html = duplicate_notice_body(client, &conflicting_id, &page_title, &html_body);
+        if let Some(existing_dup_page) =
+            find_existing_page_for_sync(client, space_key, parent_id, &duplicate_title).await?
+        {
+            let page_id = existing_dup_page["id"].as_str().unwrap_or_default().to_string();
+            if let Some(target_parent_id) = parent_id {
+                if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
+                    let current_parent_id = current_page["parentId"].as_str();
+                    if current_parent_id != Some(target_parent_id) {
+                        let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                    }
+                }
+            }
+            client
+                .update_page_body_by_id(&page_id, "storage", &duplicate_html)
+                .await?;
+            set_sync_prop(client, &page_id, &hash).await?;
+            set_page_icon(
+                client,
+                &page_id,
+                path.file_stem().unwrap_or_default().to_str().unwrap_or(""),
+            )
+            .await;
+            synced_ids.insert(page_id);
+            return Ok(duplicate_title);
+        }
+        let page_id = client
+            .create_or_update_page(space_key, parent_id, &duplicate_title, "storage", &duplicate_html)
+            .await?;
+        set_sync_prop(client, &page_id, &hash).await?;
+        set_page_icon(client, &page_id, path.file_stem().unwrap_or_default().to_str().unwrap_or("")).await;
+        synced_ids.insert(page_id);
+        return Ok(duplicate_title);
+    }
+
     let slug = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
     let page_id = client
-        .create_or_update_page(space_key, parent_id, page_title, "storage", &html_body)
+        .create_or_update_page(space_key, parent_id, &page_title, "storage", &html_body)
         .await?;
     set_sync_prop(client, &page_id, &hash).await?;
     set_page_icon(client, &page_id, slug).await;
     synced_ids.insert(page_id);
-    Ok(())
+    Ok(page_title)
 }
 
 async fn upsert_page(
@@ -464,6 +889,28 @@ async fn upsert_page(
     icon_override: Option<&str>,
 ) -> Result<String> {
     let hash = content_hash(slug);
+    if let Some(page) = find_existing_page_for_sync(client, space_key, parent_id, title).await? {
+        let page_id = page["id"].as_str().unwrap_or_default().to_string();
+        if let Some(target_parent_id) = parent_id {
+            if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
+                let current_parent_id = current_page["parentId"].as_str();
+                if current_parent_id != Some(target_parent_id) {
+                    let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                }
+            }
+        }
+        client
+            .update_page_body_by_id(&page_id, "storage", body)
+            .await?;
+        set_sync_prop(client, &page_id, &hash).await?;
+        if let Some(icon_val) = icon_override {
+            set_page_icon_value(client, &page_id, icon_val).await;
+        } else {
+            set_page_icon(client, &page_id, slug).await;
+        }
+        return Ok(page_id);
+    }
+
     let page_id = client
         .create_or_update_page(space_key, parent_id, title, "storage", body)
         .await?;
@@ -474,6 +921,18 @@ async fn upsert_page(
         set_page_icon(client, &page_id, slug).await;
     }
     Ok(page_id)
+}
+
+async fn find_existing_page_for_sync(
+    client: &ConfluenceClient,
+    space_key: &str,
+    parent_id: Option<&str>,
+    title: &str,
+) -> Result<Option<serde_json::Value>> {
+    if let Some(page) = client.get_page_by_title(space_key, parent_id, title).await? {
+        return Ok(Some(page));
+    }
+    client.get_page_by_title(space_key, None, title).await
 }
 
 async fn set_sync_prop(client: &ConfluenceClient, page_id: &str, hash: &str) -> Result<()> {
@@ -507,6 +966,39 @@ async fn find_stale_pages(
         }
     }
     Ok(stale)
+}
+
+async fn find_legacy_sync_pages(
+    client: &ConfluenceClient,
+    published_root_id: &str,
+    trees: &[TreeNode],
+) -> Result<Vec<String>> {
+    let descendants = client
+        .get_page_descendants_v2(published_root_id)
+        .await
+        .unwrap_or_default();
+    let tree_titles: HashSet<String> = trees.iter().map(|tree| tree.title.clone()).collect();
+    let mut legacy = Vec::new();
+
+    for page in descendants {
+        let page_id = page["id"].as_str().unwrap_or_default().to_string();
+        let title = page["title"].as_str().unwrap_or_default();
+        if !is_legacy_sync_title(title, &tree_titles) {
+            continue;
+        }
+        legacy.push(page_id);
+    }
+
+    Ok(legacy)
+}
+
+fn is_legacy_sync_title(title: &str, tree_titles: &HashSet<String>) -> bool {
+    if title.ends_with(" Index") {
+        return true;
+    }
+    tree_titles
+        .iter()
+        .any(|tree_title| title.starts_with(&format!("{} - ", tree_title)))
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -556,6 +1048,33 @@ fn to_title(name: &str) -> String {
         // "Account Tree" → "Account-tree" etc. is handled by the slug naming convention
         // We want "Account-tree" not "Account Tree" for tree nodes
         .replace(" Tree", "-tree")
+}
+
+fn published_page_title(path: &Path) -> Result<String> {
+    let page = parse_wiki_page(path)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let title = page.frontmatter.title.trim().to_string();
+    if title.is_empty() {
+        anyhow::bail!("Published page {} is missing a title", path.display());
+    }
+    Ok(title)
+}
+
+fn duplicate_notice_body(client: &ConfluenceClient, conflicting_page_id: &str, original_title: &str, html_body: &str) -> String {
+    let conflicting_url = client.page_web_url(conflicting_page_id);
+    format!(
+        concat!(
+            "<ac:structured-macro ac:name=\"info\"><ac:rich-text-body>",
+            "<p>This page was published with a duplicate-title fallback because another CURIO page already used the title <strong>{title}</strong>.</p>",
+            "<p>Conflicting page reference: <a href=\"{url}\">{title}</a> (pageId {page_id}).</p>",
+            "</ac:rich-text-body></ac:structured-macro>",
+            "{body}"
+        ),
+        title = html_escape(original_title),
+        url = html_escape(&conflicting_url),
+        page_id = html_escape(conflicting_page_id),
+        body = html_body
+    )
 }
 
 // ─── NORTHSTAR rich Confluence renderer ──────────────────────────────────
@@ -660,16 +1179,6 @@ fn inline_desc(html: &str) -> String {
         .replace("<br/>", " ").replace("<br />", " ");
     // Collapse runs of whitespace / newlines
     text.split_whitespace().collect::<Vec<_>>().join(" ")
-}
-
-fn strip_outer_p(html: &str) -> &str {
-    let s = html.trim();
-    // Only strip the outer <p>...</p> when the entire string is a single paragraph —
-    // i.e. it starts with <p>, ends with </p>, and has no other </p> inside.
-    if s.starts_with("<p>") && s.ends_with("</p>") && s[3..s.len()-4].find("</p>").is_none() {
-        return s[3..s.len()-4].trim();
-    }
-    s
 }
 
 fn html_escape(s: &str) -> String {

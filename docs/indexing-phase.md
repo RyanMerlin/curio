@@ -44,15 +44,11 @@ Instead, each branch page should summarize its direct children and provide links
 
 Recommended branch layout:
 
-- `Admin/_registry`
-  - root registry contract and navigation
-- `Admin/_registry/Index - Templates`
-- `Admin/_registry/Index - Published`
-- `Admin/_registry/Index - By Account`
-- `Admin/_registry/Index - By Product`
-- `Admin/_registry/Index - By Audience`
-- `Admin/_registry/Index - By Use Case`
-- `Admin/_registry/Index - By Topic`
+- `Config`
+  - branch root for `NORTHSTAR`, `CURIO Readme`, and `settings.yaml`
+- `Published/index.md`
+- `Published/{tree}/index.md`
+- `Published/{tree}/{subtree}/index.md`
 
 Each branch page should include:
 
@@ -75,6 +71,5 @@ Prefer:
 
 - A single branch page gives enough context to navigate downward.
 - A staged page can be read without losing the source link or the structure of the original page.
-- Registry pages act like indexes, not just metadata records.
+- Co-located `index.md` pages act like indexes, not just metadata records.
 - Confluence becomes the datastore and the navigation layer at the same time.
-

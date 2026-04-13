@@ -19,10 +19,7 @@ use crate::{
     output::emit_json,
     reconcile::{ReconcileDecision, RoutingAnalysis},
     wiki_fs::{parse_wiki_page, update_frontmatter},
-    wiki_index::{
-        append_log, load_registry, rebuild_index_md, save_registry,
-        update_entry_path, update_entry_status,
-    },
+    wiki_index::{append_log, rebuild_index_md},
     PageStatus,
 };
 
@@ -53,7 +50,7 @@ pub async fn run_process(
 
         let cat_segments = category
             .as_deref()
-            .unwrap_or("topic-tree")
+            .context("Manual routing requires --category; Curio must not invent a published route")?
             .split('/')
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
@@ -130,7 +127,7 @@ fn output_routing_manifest(
     let wiki_dir = &config.wiki.wiki_dir;
 
     // Load NORTHSTAR for routing context
-    let ns_path = wiki_dir.join("_schema/northstar.md");
+    let ns_path = wiki_dir.join("_config/northstar.md");
     let northstar_md = if ns_path.exists() {
         std::fs::read_to_string(&ns_path).unwrap_or_default()
     } else {
@@ -161,8 +158,9 @@ fn output_routing_manifest(
         "pages": pages,
         "instructions": {
             "task": "Route each page to exactly one wiki subtree.",
-            "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null}",
-            "confidence_rule": "confidence >= 0.75 → staged. confidence < 0.75 → review.",
+                "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null}",
+            "confidence_rule": "confidence >= 0.75 and a valid existing subtree fit → staged. Otherwise → review.",
+            "new_subtree_rule": "If no existing subtree fits confidently, do not force publication. Route to review, provide the closest category path you can justify, and fill proposed_new_subtree plus proposal_rationale.",
             "apply_command": "curio process --route-file <path-to-decisions.json>"
         }
     });
@@ -300,6 +298,9 @@ fn apply_routing(
 ) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
     let target_status = if decision.status == "staged" { "staged" } else { "review" };
+    if decision.category.is_empty() {
+        anyhow::bail!("Routing decision for '{}' is missing a category path", slug);
+    }
     let cat_path: PathBuf = decision.category.iter().collect();
     let dest_dir = wiki_dir.join(target_status).join(&cat_path);
     let dest_path = dest_dir.join(format!("{}.md", slug));
@@ -335,14 +336,6 @@ fn apply_routing(
         let rel_adest = analysis_dest.strip_prefix(repo_root).unwrap_or(&analysis_dest);
         crate::git_ops::git_mv(repo_root, rel_asrc, rel_adest)?;
     }
-
-    let new_rel = dest_path
-        .strip_prefix(wiki_dir)
-        .unwrap_or(&dest_path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    update_entry_path(wiki_dir, &page.frontmatter.id, &new_rel)?;
-    update_entry_status(wiki_dir, &page.frontmatter.id, &page.frontmatter.status)?;
 
     Ok(())
 }
@@ -380,6 +373,8 @@ fn build_analysis_from_decision(
             alternatives_considered: vec![],
             flags: vec![],
             review_reason: decision.review_reason.clone(),
+            proposed_new_subtree: decision.proposed_new_subtree.clone(),
+            proposal_rationale: decision.proposal_rationale.clone(),
         },
         signals: AnalysisSignals {
             heuristic_pre_signal: pre_signal,
@@ -413,8 +408,7 @@ pub fn write_analysis_sidecar(content_path: &Path, analysis: &RoutingAnalysis) -
 
 fn finalize_indexes(config: &Config) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
-    let registry = load_registry(wiki_dir)?;
-    save_registry(wiki_dir, &registry)?;
+    let registry = crate::WikiIndex::default();
     rebuild_index_md(wiki_dir, &registry)?;
     append_log(wiki_dir, "process: intake items routed")?;
     Ok(())

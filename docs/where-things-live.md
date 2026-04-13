@@ -13,7 +13,7 @@
 - onboarding docs
 - harness-only skills
 - local plugin catalog
-- Confluence bootstrap docs and structural pages (`README`, `Intake`, `Staged`, `Review`, `Published`, `_templates`, `_registry`, `_audit`)
+- Confluence bootstrap docs and structural pages (`README`, `Config`, `Intake`, `Staged`, `Review`, `Published`)
 
 ## `plugins/`
 

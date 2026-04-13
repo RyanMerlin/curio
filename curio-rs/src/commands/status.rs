@@ -2,13 +2,13 @@
 ///
 /// Shows:
 ///  - Page counts per pipeline stage (intake / staged / review / published)
-///  - Last sync timestamp (from _index/log.md)
-///  - Index freshness warning when published pages are newer than registry.json
+///  - Last sync timestamp (from `wiki/.curio/audit.jsonl`)
+///  - Index freshness warning when published pages are newer than published/index.md
 use anyhow::Result;
 use std::path::Path;
 use walkdir::WalkDir;
 
-use crate::{config::Config, output::emit_json};
+use crate::{audit_store, config::Config, output::emit_json};
 
 pub async fn run_status(config: &Config, json: bool) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
@@ -111,32 +111,20 @@ fn count_md_content(wiki_dir: &Path, subdir: &str) -> usize {
         .count()
 }
 
-/// Read the last sync timestamp from _index/log.md.
+/// Read the last sync timestamp from the Git-tracked audit log.
 fn read_last_sync(wiki_dir: &Path) -> Option<String> {
-    let log = wiki_dir.join("_index/log.md");
-    let content = std::fs::read_to_string(&log).ok()?;
-    // Find last line containing "sync:"
-    content
-        .lines()
-        .filter(|l| l.contains("sync:"))
-        .last()
-        .and_then(|l| {
-            // Format: "- **2026-04-13T02:03:24Z** sync: ..."
-            let ts_start = l.find("**")? + 2;
-            let ts_end   = l[ts_start..].find("**")? + ts_start;
-            Some(l[ts_start..ts_end].to_string())
-        })
+    audit_store::read_last_sync(wiki_dir).ok().flatten()
 }
 
-/// Returns true if any published .md file is newer than registry.json.
+/// Returns true if any published .md file is newer than `published/index.md`.
 /// A simple staleness signal — doesn't guarantee full accuracy.
 fn is_index_stale(wiki_dir: &Path) -> bool {
-    let registry = wiki_dir.join("_index/registry.json");
-    let registry_mtime = match std::fs::metadata(&registry)
+    let index_md = wiki_dir.join("published/index.md");
+    let index_mtime = match std::fs::metadata(&index_md)
         .and_then(|m| m.modified())
     {
         Ok(t) => t,
-        Err(_) => return false, // no registry → not stale (not initialised)
+        Err(_) => return false, // no index yet → not stale (not initialised)
     };
 
     let published_dir = wiki_dir.join("published");
@@ -153,7 +141,7 @@ fn is_index_stale(wiki_dir: &Path) -> bool {
         .any(|e| {
             std::fs::metadata(e.path())
                 .and_then(|m| m.modified())
-                .map(|mtime| mtime > registry_mtime)
+                .map(|mtime| mtime > index_mtime)
                 .unwrap_or(false)
         })
 }

@@ -16,7 +16,7 @@ Curio is the Claude harness for `curio-rs`. Git is the canonical knowledge store
 curio intake --url <url>     # ingest → wiki/intake/
 curio process                # Phase 1: output routing manifest (agent reads + decides)
 curio process --route-file routes.json   # Phase 2: apply routing decisions, write .analysis.json sidecars
-curio process --slug <s> --category by-account --status staged   # direct override
+curio process --slug <s> --category account-tree --status staged   # direct override
 curio publish <slug>         # staged → published
 curio tree                   # sync wiki/published/ dirs after NORTHSTAR changes
 curio reindex                # rebuild co-located index.md files + _index/ artifacts
@@ -38,7 +38,7 @@ Run `curio process` (or `curio process --prepare`). It outputs a JSON manifest w
 - An `apply_command` template to use in Phase 2
 
 **Phase 2 — Apply:**
-Read the manifest. For each page, decide: `category` (e.g. `by-product/alteryx-server`), `status` (`staged` or `review`), `confidence` (0–1), `rationale`, `alternatives_considered`.
+Read the manifest. For each page, decide: `category` (e.g. `product-tree/alteryx-server`), `status` (`staged` or `review`), `confidence` (0–1), `rationale`, `alternatives_considered`.
 
 Build a route file and run:
 ```

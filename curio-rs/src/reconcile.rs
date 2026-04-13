@@ -29,6 +29,12 @@ pub struct ReconcileDecision {
     pub cross_refs: Vec<String>,
     /// Reason for routing to `review` (if applicable).
     pub review_reason: Option<String>,
+    /// Proposed new subtree slug when no existing subtree fits confidently.
+    #[serde(default)]
+    pub proposed_new_subtree: Option<String>,
+    /// Rationale for creating the proposed subtree.
+    #[serde(default)]
+    pub proposal_rationale: Option<String>,
     /// The id of a published page this content should be merged into, if any.
     pub merge_target: Option<String>,
     /// The LLM model that produced this decision (or `"manual"`).
@@ -56,6 +62,8 @@ impl ReconcileDecision {
             summary,
             cross_refs: vec![],
             review_reason: None,
+            proposed_new_subtree: None,
+            proposal_rationale: None,
             merge_target: None,
             model_used: "manual".to_string(),
         }
@@ -92,6 +100,10 @@ pub struct AnalysisRouting {
     pub alternatives_considered: Vec<RoutingAlternative>,
     pub flags: Vec<String>,
     pub review_reason: Option<String>,
+    #[serde(default)]
+    pub proposed_new_subtree: Option<String>,
+    #[serde(default)]
+    pub proposal_rationale: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,29 +125,64 @@ pub struct AnalysisSignals {
 /// Returns a suggested subtree slug based on title/body keyword scan.
 /// This is a HINT fed into the LLM prompt — not a routing decision.
 pub fn heuristic_pre_signal(title: &str, body: &str) -> Option<String> {
-    let text = format!("{} {}", title, body).to_lowercase();
+    let title_text = title.to_lowercase();
+    let body_text = body.to_lowercase();
 
-    // Specificity order: more specific signals first to avoid false positives.
-    if text.contains("intelligence suite") || text.contains("automl") || text.contains("machine learning") {
-        Some("intelligence-suite".to_string())
-    } else if text.contains("server")
-        || text.contains("mongodb")
-        || text.contains("cryptomigration")
-        || text.contains("servicedata")
-        || text.contains("host recovery")
-        || text.contains("pre-upgrade")
-        || text.contains("alteryxservice")
+    // Title and the dominant content topic outrank incidental mentions in the body.
+    if title_text.contains("server")
+        || title_text.contains("mongodb")
+        || title_text.contains("cryptomigration")
+        || title_text.contains("host recovery")
+        || title_text.contains("pre-upgrade")
+        || title_text.contains("alteryxservice")
     {
         Some("alteryx-server".to_string())
-    } else if text.contains("designer")
-        || text.contains("canvas")
-        || text.contains("tool palette")
-        || (text.contains("workflow") && !text.contains("server"))
+    } else if title_text.contains("designer")
+        || title_text.contains("canvas")
+        || title_text.contains("workflow")
+        || title_text.contains("tool palette")
     {
         Some("alteryx-designer".to_string())
-    } else if text.contains("playbook") || text.contains("use case") || text.contains("runbook") {
+    } else if title_text.contains("intelligence suite")
+        || title_text.contains("automl")
+        || title_text.contains("machine learning")
+        || title_text.contains("ai/ml")
+    {
+        Some("intelligence-suite".to_string())
+    } else if body_text.contains("server")
+        || body_text.contains("mongodb")
+        || body_text.contains("cryptomigration")
+        || body_text.contains("servicedata")
+        || body_text.contains("host recovery")
+        || body_text.contains("pre-upgrade")
+        || body_text.contains("alteryxservice")
+    {
+        Some("alteryx-server".to_string())
+    } else if body_text.contains("designer")
+        || body_text.contains("canvas")
+        || body_text.contains("tool palette")
+        || (body_text.contains("workflow") && !body_text.contains("server"))
+    {
+        Some("alteryx-designer".to_string())
+    } else if body_text.contains("intelligence suite")
+        || body_text.contains("automl")
+        || body_text.contains("machine learning")
+        || body_text.contains("ai/ml")
+    {
+        Some("intelligence-suite".to_string())
+    } else if title_text.contains("playbook")
+        || title_text.contains("use case")
+        || title_text.contains("runbook")
+        || body_text.contains("playbook")
+        || body_text.contains("use case")
+        || body_text.contains("runbook")
+    {
         Some("use-case-tree".to_string())
-    } else if text.contains("account") || text.contains("customer") {
+    } else if title_text.contains("account")
+        || title_text.contains("customer")
+        || body_text.contains("account")
+        || body_text.contains("customer")
+    {
         Some("account-tree".to_string())
     } else {
         None
@@ -248,8 +295,11 @@ Your job: classify an article into exactly one route from the Available Routes b
 ## Routing Rules
 - Choose the MOST SPECIFIC matching route. Prefer a subtree (e.g. product-tree/alteryx-server) over a top-level tree.
 - If confidence < 0.75 OR the article genuinely matches multiple routes equally, set status to "review".
-- "upgrade", "install", "server", "mongodb", "cryptomigration" → alteryx-server, NOT intelligence-suite.
-- "automl", "machine learning", "AI/ML pipeline", "Intelligence Suite" → intelligence-suite.
+- If no existing subtree fits confidently, set status to "review", propose a new subtree slug, and explain why existing routes are insufficient.
+- Route names are workspace-specific examples from the current NORTHSTAR, not permanent universal labels. Use the CURRENT route descriptions, not stale assumptions from another project.
+- Prioritize the dominant content topic and title wording over incidental mentions in the body.
+- A passing mention of another product, dependency, or uninstall step does NOT make that other product the route.
+- If a page is primarily about one system's install, upgrade, rollback, recovery, architecture, usage, migration, policy, or operations, keep it with that dominant system even if the body mentions related products.
 - When in doubt, route to review rather than guess.
 
 ## Output Format
@@ -264,7 +314,9 @@ Return ONLY a valid JSON object with these exact fields:
   "keywords": ["up to 8 domain keywords"],
   "summary": "max 200 chars describing page content",
   "status": "staged or review",
-  "review_reason": null
+  "review_reason": null,
+  "proposed_new_subtree": null,
+  "proposal_rationale": null
 }}"#
     )
 }
@@ -279,7 +331,7 @@ fn build_user_prompt(title: &str, body: &str, pre_signal: Option<&str>) -> Strin
     };
 
     format!(
-        "## Article to Route\nTitle: {title}\n{hint}\nBody:\n{body_preview}"
+            "## Article to Route\nTitle: {title}\n{hint}\nFocus on the dominant topic and the main content subject. Treat secondary product mentions in the body as weak evidence.\nBody:\n{body_preview}"
     )
 }
 
@@ -339,6 +391,14 @@ fn parse_llm_response(
         .as_str()
         .map(|s| s.chars().take(200).collect::<String>())
         .unwrap_or_else(|| title.chars().take(200).collect());
+    let proposed_new_subtree = json["proposed_new_subtree"]
+        .as_str()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+    let proposal_rationale = json["proposal_rationale"]
+        .as_str()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
 
     let alternatives: Vec<RoutingAlternative> = json["alternatives_considered"]
         .as_array()
@@ -369,6 +429,8 @@ fn parse_llm_response(
         summary: summary.clone(),
         cross_refs: vec![],
         review_reason: review_reason.clone(),
+        proposed_new_subtree: proposed_new_subtree.clone(),
+        proposal_rationale: proposal_rationale.clone(),
         merge_target: None,
         model_used: model.to_string(),
     };
@@ -390,6 +452,8 @@ fn parse_llm_response(
             alternatives_considered: alternatives,
             flags: vec![],
             review_reason,
+            proposed_new_subtree,
+            proposal_rationale,
         },
         signals: AnalysisSignals {
             heuristic_pre_signal: pre_signal,

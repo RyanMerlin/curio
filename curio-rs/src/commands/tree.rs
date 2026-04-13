@@ -10,7 +10,7 @@ use crate::{commands::sync::parse_northstar_blueprint, config::Config, git_ops, 
 /// - Auto-commits if `wiki.auto_commit` is enabled.
 pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
-    let northstar_path = wiki_dir.join("_schema").join("northstar.md");
+    let northstar_path = wiki_dir.join("_config").join("northstar.md");
 
     if !northstar_path.exists() {
         anyhow::bail!(
@@ -75,7 +75,7 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
             let path = entry.path();
             if !path.is_dir() { continue; }
             let slug = path.file_name().unwrap_or_default().to_string_lossy().to_string();
-            if slug.starts_with('_') { continue; } // skip _schema etc.
+            if slug.starts_with('_') { continue; } // skip hidden workspace folders
 
             if !expected.contains(&slug) {
                 let is_empty = std::fs::read_dir(&path)?.next().is_none();
@@ -121,7 +121,7 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
         }
     }
 
-    // Also sync wiki/_schema/northstar.md ← NORTHSTAR.md if repo root copy is newer
+    // Also sync wiki/_config/northstar.md ← NORTHSTAR.md if repo root copy is newer
     let repo_northstar = wiki_dir.parent().map(|p| p.join("NORTHSTAR.md")).filter(|p| p.exists());
     if let Some(src) = repo_northstar {
         let src_mtime = src.metadata().and_then(|m| m.modified()).ok();
@@ -130,7 +130,7 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
             if !dry_run {
                 std::fs::copy(&src, &northstar_path)?;
             }
-            created.push("_schema/northstar.md (refreshed from NORTHSTAR.md)".to_string());
+            created.push("_config/northstar.md (refreshed from NORTHSTAR.md)".to_string());
         }
     }
 

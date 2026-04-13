@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use reqwest::{Client, StatusCode, header::HeaderMap};
+use reqwest::{Client, StatusCode, header::HeaderMap, header::HeaderValue, multipart};
 use std::time::Duration as StdDuration;
 use tokio::time::{sleep, Duration};
 
@@ -9,7 +9,6 @@ pub struct ConfluenceClient {
     auth_token: String,
     email: String,
     write_root_folder_id: Option<String>,
-    space_key: String,
 }
 
 fn is_retryable_status(status: StatusCode) -> bool {
@@ -87,7 +86,6 @@ impl ConfluenceClient {
         base_url: String,
         email: String,
         auth_token: String,
-        space_key: String,
         write_root_folder_id: Option<String>,
     ) -> Result<Self> {
         let client = Client::builder()
@@ -101,7 +99,6 @@ impl ConfluenceClient {
             auth_token,
             email,
             write_root_folder_id,
-            space_key,
         })
     }
 
@@ -149,7 +146,7 @@ impl ConfluenceClient {
             Ok(())
         } else {
             anyhow::bail!(
-                "Refusing to write page {} because it is outside the configured CURIO output root folder {}",
+                "Refusing to write page {} because it is outside the configured CURIO output root page {}",
                 page_id,
                 write_root_folder_id
             );
@@ -313,28 +310,9 @@ impl ConfluenceClient {
             } else if status == StatusCode::BAD_REQUEST
                 && response_text.contains("A page already exists with the same TITLE")
             {
-                let direct_match = self.get_page_by_title(space_key, parent_id, title).await?;
-                // Only do a space-wide fallback when no parent was specified.
-                // If a parent_id was given but the page isn't under that parent, surface
-                // the collision error so the caller can retry with a unique title.
-                let fallback_match = if direct_match.is_none() && parent_id.is_none() {
-                    self.get_page_by_title(space_key, None, title).await?
-                } else {
-                    None
-                };
-                if let Some(existing_page) = direct_match.or(fallback_match) {
-                    if let Some(page_id) = existing_page["id"].as_str() {
-                        println!(
-                            "Duplicate page detected, updating existing page via v1: {} (ID: {})",
-                            title, page_id
-                        );
-                        self.update_page_body_by_id(page_id, body_storage_format, body_content)
-                            .await?;
-                        return Ok(page_id.to_string());
-                    }
-                }
                 anyhow::bail!(
-                    "Confluence API request failed with status {}: {}",
+                    "Confluence title collision for '{}': {} {}",
+                    title,
                     status,
                     response_text
                 );
@@ -458,7 +436,7 @@ impl ConfluenceClient {
             let mut pairs = url_builder.query_pairs_mut();
             pairs.append_pair("spaceKey", space_key);
             pairs.append_pair("title", title);
-            pairs.append_pair("expand", "version");
+            pairs.append_pair("expand", "version,ancestors");
             if let Some(p_id) = parent_id {
                 pairs.append_pair("ancestor", p_id);
             }
@@ -484,18 +462,17 @@ impl ConfluenceClient {
                 .context("Failed to parse Confluence API response for page by title")?;
 
             if let Some(results) = json["results"].as_array() {
-                // If parent_id is used, filter by ancestors as the API's 'ancestor' query parameter
-                // might not strictly enforce direct parentage in all Confluence versions/configurations.
-                // A more robust check might be needed if direct parent is a strict requirement.
-                if let Some(_p_id) = parent_id {
-                    // Filter logic if needed, but for now, if title and space match, it's sufficient.
-                    // Confluence API search can be tricky with parentage.
-                }
-
-                if results.len() > 0 {
-                    // Assuming the first result is the one we want if title and space match
-                    // This might need refinement if multiple pages can have the same title under different parents.
-                    Ok(Some(results[0].clone()))
+                if let Some(p_id) = parent_id {
+                    let matched = results.iter().find(|page| {
+                        page["ancestors"]
+                            .as_array()
+                            .and_then(|ancestors| ancestors.last())
+                            .and_then(|ancestor| ancestor["id"].as_str())
+                            == Some(p_id)
+                    });
+                    Ok(matched.cloned())
+                } else if let Some(first) = results.first() {
+                    Ok(Some(first.clone()))
                 } else {
                     Ok(None)
                 }
@@ -507,6 +484,131 @@ impl ConfluenceClient {
         } else {
             anyhow::bail!(
                 "Confluence API request failed with status {}: {}",
+                status,
+                response_text
+            );
+        }
+    }
+
+    pub async fn get_attachment_by_filename(
+        &self,
+        page_id: &str,
+        filename: &str,
+    ) -> Result<Option<serde_json::Value>> {
+        let base = format!("{}/rest/api/content/{}/child/attachment", self.base_url, page_id);
+        let mut url_builder = reqwest::Url::parse(&base)
+            .unwrap_or_else(|_| reqwest::Url::parse("http://invalid").unwrap());
+        {
+            let mut pairs = url_builder.query_pairs_mut();
+            pairs.append_pair("filename", filename);
+            pairs.append_pair("expand", "version");
+        }
+        let url = url_builder.to_string();
+
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to send Confluence API request for attachment lookup")?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body for attachment lookup")?;
+
+        if status.is_success() {
+            let json: serde_json::Value = serde_json::from_str(&response_text)
+                .context("Failed to parse Confluence attachment lookup response")?;
+            if let Some(results) = json["results"].as_array() {
+                Ok(results.first().cloned())
+            } else {
+                Ok(None)
+            }
+        } else if status == StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            anyhow::bail!(
+                "Confluence attachment lookup failed with status {}: {}",
+                status,
+                response_text
+            );
+        }
+    }
+
+    pub async fn upload_attachment(
+        &self,
+        page_id: &str,
+        filename: &str,
+        content_type: &str,
+        bytes: Vec<u8>,
+    ) -> Result<()> {
+        self.assert_within_write_root(page_id).await?;
+
+        let part = multipart::Part::bytes(bytes)
+            .file_name(filename.to_string())
+            .mime_str(content_type)
+            .context("Invalid attachment content type")?;
+        let form = multipart::Form::new().part("file", part);
+
+        if let Some(existing) = self.get_attachment_by_filename(page_id, filename).await? {
+            let attachment_id = existing["id"]
+                .as_str()
+                .context("Attachment ID missing from attachment lookup")?;
+            let url = format!(
+                "{}/rest/api/content/{}/child/attachment/{}/data",
+                self.base_url, page_id, attachment_id
+            );
+            let response = self
+                .client
+                .post(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+                .header("X-Atlassian-Token", HeaderValue::from_static("no-check"))
+                .multipart(form)
+                .send()
+                .await
+                .context("Failed to send Confluence attachment update request")?;
+
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body for attachment update")?;
+
+            if !status.is_success() {
+                anyhow::bail!(
+                    "Confluence attachment update failed with status {}: {}",
+                    status,
+                    response_text
+                );
+            }
+            return Ok(());
+        }
+
+        let url = format!("{}/rest/api/content/{}/child/attachment", self.base_url, page_id);
+        let response = self
+            .client
+            .post(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .header("X-Atlassian-Token", HeaderValue::from_static("no-check"))
+            .multipart(form)
+            .send()
+            .await
+            .context("Failed to send Confluence attachment create request")?;
+
+        let status = response.status();
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body for attachment create")?;
+
+        if status.is_success() {
+            Ok(())
+        } else {
+            anyhow::bail!(
+                "Confluence attachment create failed with status {}: {}",
                 status,
                 response_text
             );
@@ -754,13 +856,13 @@ impl ConfluenceClient {
     pub async fn get_page_body(&self, page_id: &str) -> Result<Option<serde_json::Value>> {
         let url = format!("{}/api/v2/pages/{}?body-format=storage", self.base_url, page_id);
 
-        let response = self
-            .client
-            .get(&url)
-            .basic_auth(&self.email, Some(&self.auth_token))
-            .send()
-            .await
-            .context(format!("Failed to fetch body for Confluence page {}", page_id))?;
+        let response = send_with_retry("get page body", || {
+            self.client
+                .get(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+        })
+        .await
+        .with_context(|| format!("Failed to fetch body for Confluence page {}", page_id))?;
 
         let status = response.status();
         let response_text = response.text().await.context("Failed to read response body")?;
@@ -783,16 +885,15 @@ impl ConfluenceClient {
     pub async fn get_page_by_id_v2(&self, page_id: &str) -> Result<Option<serde_json::Value>> {
         let url = format!("{}/api/v2/pages/{}", self.base_url, page_id);
 
-        let response = self
-            .client
-            .get(&url)
-            .basic_auth(&self.email, Some(&self.auth_token))
-            .send()
-            .await
-            .context(format!(
-                "Failed to send Confluence API request for page ID: {}",
-                page_id
-            ))?;
+        let response = send_with_retry("get page by id v2", || {
+            self.client
+                .get(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+        })
+        .await
+        .with_context(|| {
+            format!("Failed to send Confluence API request for page ID: {}", page_id)
+        })?;
 
         let status = response.status();
         let response_text = response
@@ -1118,6 +1219,14 @@ impl ConfluenceClient {
 
             current_page_id = parent_id.to_string();
         }
+    }
+
+    pub fn page_web_url(&self, page_id: &str) -> String {
+        format!(
+            "{}/wiki/pages/viewpage.action?pageId={}",
+            self.base_url.trim_end_matches('/'),
+            page_id
+        )
     }
 
     /// Moves a Confluence page to a new parent page.

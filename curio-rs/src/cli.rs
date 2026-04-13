@@ -132,7 +132,7 @@ pub enum Commands {
         /// Slug of the page to resolve.
         slug: String,
 
-        /// Optional: override category on resolve (e.g. "by-account/acme").
+        /// Optional: override category on resolve (e.g. "account-tree/acme").
         #[arg(long)]
         category: Option<String>,
     },
@@ -142,7 +142,7 @@ pub enum Commands {
         /// Slug of the staged page to publish.
         slug: String,
 
-        /// Target category path within published/ (e.g. "by-account/acme").
+        /// Target category path within published/ (e.g. "account-tree/acme").
         /// Defaults to the category stored in the page's frontmatter.
         #[arg(long)]
         category: Option<String>,
@@ -154,7 +154,7 @@ pub enum Commands {
         #[arg(long)]
         keywords: Option<String>,
 
-        /// Filter by category (e.g. "by-account").
+        /// Filter by category (e.g. "account-tree").
         #[arg(long)]
         category: Option<String>,
 
@@ -171,7 +171,22 @@ pub enum Commands {
         limit: u32,
     },
 
-    /// Rebuild all wiki/_index/ files by walking wiki/**/*.md.
+    /// Prepare or store proposal-only knowledge-sharpening reviews.
+    Sharpen {
+        /// Emit an agent-facing sharpening manifest.
+        #[arg(long)]
+        prepare: bool,
+
+        /// Persist an agent-authored proposal JSON file under wiki/.curio/sharpening-proposals/.
+        #[arg(long)]
+        proposal_file: Option<PathBuf>,
+
+        /// Maximum number of pages to include in the manifest page listing.
+        #[arg(long, default_value = "50")]
+        limit: u32,
+    },
+
+    /// Rebuild all co-located `index.md` files by walking `wiki/**/*.md`.
     Reindex,
 
     /// Sync wiki/published/ directory structure to match the NORTHSTAR blueprint.

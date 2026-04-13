@@ -18,6 +18,7 @@ use curio::{
         reindex::run_reindex,
         review::run_review,
         search::run_search,
+        sharpen::run_sharpen,
         status::run_status,
         sync::run_sync,
         tree::run_tree,
@@ -106,6 +107,10 @@ async fn main() -> Result<()> {
         Some(Commands::Search { keywords, category, status, text, limit }) => {
             let config = load_config(config_path_str)?;
             run_search(&config, cli.dry_run, cli.json, keywords, category, status, text, limit).await?;
+        }
+        Some(Commands::Sharpen { prepare, proposal_file, limit }) => {
+            let config = load_config(config_path_str)?;
+            run_sharpen(&config, cli.dry_run, cli.json, prepare, proposal_file, limit).await?;
         }
         Some(Commands::Reindex) => {
             let config = load_config(config_path_str)?;

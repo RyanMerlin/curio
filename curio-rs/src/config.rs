@@ -238,6 +238,11 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
             config.wiki.wiki_dir = PathBuf::from(wiki_dir);
         }
     }
+    if let Ok(parent_page_id) = env::var("CURIO_CONFLUENCE_PARENT_PAGE_ID") {
+        if !parent_page_id.trim().is_empty() {
+            config.wiki.sync.confluence_parent_page_id = Some(parent_page_id);
+        }
+    }
     // OPENAI_API_KEY is read by LlmConfig::effective_api_key() at call time — no caching needed.
 
     if config.runtime.temp_dir.is_none() {
@@ -259,6 +264,47 @@ fn default_temp_dir() -> PathBuf {
 fn repo_root_override() -> Option<PathBuf> {
     let value = env::var_os("CURIO_REPO_ROOT")?;
     if value.is_empty() { None } else { Some(PathBuf::from(value)) }
+}
+
+pub fn repo_root() -> PathBuf {
+    repo_root_override()
+        .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+}
+
+pub fn upsert_repo_env_var(key: &str, value: &str) -> Result<()> {
+    let env_path = repo_root().join(".env");
+    let mut lines: Vec<String> = if env_path.exists() {
+        fs::read_to_string(&env_path)
+            .with_context(|| format!("Failed to read env file: {}", env_path.display()))?
+            .lines()
+            .map(|line| line.to_string())
+            .collect()
+    } else {
+        vec!["# Curio harness config".to_string()]
+    };
+
+    let mut replaced = false;
+    for line in &mut lines {
+        if let Some((existing_key, _)) = line.split_once('=') {
+            if existing_key.trim() == key {
+                *line = format!("{}={}", key, value);
+                replaced = true;
+                break;
+            }
+        }
+    }
+
+    if !replaced {
+        if !lines.is_empty() && !lines.last().map(|l| l.is_empty()).unwrap_or(false) {
+            lines.push(String::new());
+        }
+        lines.push(format!("{}={}", key, value));
+    }
+
+    let content = lines.join("\n") + "\n";
+    fs::write(&env_path, content)
+        .with_context(|| format!("Failed to write env file: {}", env_path.display()))?;
+    Ok(())
 }
 
 #[cfg(test)]

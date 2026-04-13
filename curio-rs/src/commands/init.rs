@@ -1,10 +1,11 @@
 use anyhow::Result;
 
 use crate::{
-    commands::sync::parse_northstar_blueprint,
+    commands::sync::{ensure_curio_confluence_tree, parse_northstar_blueprint},
     config::Config,
+    confluence::ConfluenceClient,
     output::emit_json,
-    wiki_index::{append_log, rebuild_index_md, save_registry},
+    wiki_index::{append_log, rebuild_index_md},
     WikiIndex,
 };
 
@@ -29,9 +30,7 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
 
     // Create top-level directories
     let dirs = [
-        wiki_dir.join("_schema"),
-        wiki_dir.join("_index"),
-        wiki_dir.join("_audit"),
+        wiki_dir.join("_config"),
         wiki_dir.join("intake"),
         wiki_dir.join("staged"),
         wiki_dir.join("review"),
@@ -42,8 +41,8 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
         std::fs::create_dir_all(dir)?;
     }
 
-    // Seed _schema/northstar.md first — published tree dirs are derived from it
-    let northstar_path = wiki_dir.join("_schema/northstar.md");
+    // Seed _config/northstar.md first — published tree dirs are derived from it
+    let northstar_path = wiki_dir.join("_config/northstar.md");
     if !northstar_path.exists() || reset {
         let repo_northstar = wiki_dir
             .parent()
@@ -84,41 +83,35 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
         }
     }
 
-    // Seed _schema/readme.md from repo README.md
-    let schema_readme = wiki_dir.join("_schema/readme.md");
-    if !schema_readme.exists() || reset {
+    // Seed _config/readme.md from repo README.md
+    let config_readme = wiki_dir.join("_config/readme.md");
+    if !config_readme.exists() || reset {
         let repo_readme = wiki_dir
             .parent()
             .map(|p| p.join("README.md"))
             .filter(|p| p.exists());
         if let Some(src) = repo_readme {
-            std::fs::copy(&src, &schema_readme)?;
+            std::fs::copy(&src, &config_readme)?;
         } else {
             std::fs::write(
-                &schema_readme,
+                &config_readme,
                 "# CURIO Readme\n\nCurio is a Git-native enterprise intelligence workspace.\n",
             )?;
         }
     }
 
-    // Seed _schema/config.yaml
-    let schema_config = wiki_dir.join("_schema/config.yaml");
-    if !schema_config.exists() || reset {
+    // Seed _config/settings.yaml
+    let config_settings = wiki_dir.join("_config/settings.yaml");
+    if !config_settings.exists() || reset {
         std::fs::write(
-            &schema_config,
-            "# Curio Wiki Configuration\n\n# Tree structure is defined in _schema/northstar.md\nauto_commit: true\n",
+            &config_settings,
+            "# Curio Wiki Configuration\n\n# Tree structure is defined in _config/northstar.md\nauto_commit: true\n",
         )?;
     }
 
-    // Seed _index files
+    // Generate co-located indexes from the seeded tree structure.
     let empty_index = WikiIndex::default();
-    save_registry(wiki_dir, &empty_index)?;
     rebuild_index_md(wiki_dir, &empty_index)?;
-
-    let log_path = wiki_dir.join("_index/log.md");
-    if !log_path.exists() || reset {
-        std::fs::write(&log_path, "# Curio Operation Log\n\n")?;
-    }
 
     // .gitkeep only in pipeline staging dirs (not in published/ — content is the placeholder)
     for dir in &[
@@ -133,6 +126,25 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
     }
 
     append_log(wiki_dir, "init: wiki scaffold created")?;
+
+    if config.connection.require_confluence().is_ok() {
+        if let Ok(token) = std::env::var("CURIO_CONFLUENCE_TOKEN") {
+            let client = ConfluenceClient::new(
+                config.connection.confluence_url.clone(),
+                config.connection.confluence_email.clone(),
+                token,
+                None,
+            )?;
+            let tree = ensure_curio_confluence_tree(
+                config,
+                &client,
+                config.wiki.sync.confluence_parent_page_id.clone(),
+                true,
+            )
+            .await?;
+            println!("  confluence root: {} ({})", crate::commands::sync::CURIO_ROOT_TITLE, tree.root_id);
+        }
+    }
 
     if json {
         let _ = emit_json("init", true, &serde_json::json!({ "wiki_dir": wiki_dir, "trees": created_trees }));

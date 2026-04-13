@@ -73,12 +73,11 @@ The filesystem slug is derived from the tree name: `Account-tree` → `wiki/publ
 | Stage | Role | Description |
 |-------|------|-------------|
 | `README` | Human entry point | Landing page; start here for orientation and usage |
-| `NORTHSTAR` | Charter | Project charter and routing contract; source of truth for the Published tree shape |
+| `Config` | Machine-managed | Internal structure: `_config/northstar.md`, `_config/readme.md`, `_config/settings.yaml` |
 | `Intake` | Pipeline: Stage 1 | Raw capture lane for incoming content not yet normalized or fully understood |
 | `Staged` | Pipeline: Stage 2 | High-confidence content prepared for human review or publish |
 | `Review` | Pipeline: Stage 2b | Human arbitration lane for ambiguity, conflict, or risk |
 | `Published` | Output surface | Canonical wiki organized by the tree blueprint above |
-| `Admin` | Machine-managed | Internal structure: `_templates`, `_registry`, `_audit` |
 
 ## Helpful Guidance
 
@@ -86,11 +85,8 @@ The filesystem slug is derived from the tree name: `Account-tree` → `wiki/publ
 - Keep provenance visible.
 - Keep published content intentional and narrow.
 - Git is the source of truth. Confluence is a mirror.
-- Use `wiki/_index/index.md` as the LLM navigation index (~5K tokens for hundreds of pages).
+- Use co-located `index.md` files as the LLM navigation index.
 - Prefer stable routes and explicit frontmatter over ad hoc reorganization.
 - If a page cannot be routed cleanly, keep it in `Review`.
 - Pipeline transitions are `git mv` operations. Every state change is a commit.
 :::
-
-
-
