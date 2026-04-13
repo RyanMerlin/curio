@@ -723,12 +723,16 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
             let slug = title.to_lowercase().replace(' ', "-");
             current_tree = Some(TreeNode { title, slug, ..Default::default() });
         } else if line.starts_with("#### ") {
-            // Flush previous subtree
+            // Flush previous subtree (or tree description if this is the first subtree)
             if let Some(mut sub) = current_sub.take() {
                 sub.description_html = flush_desc(&mut desc_lines);
                 if let Some(ref mut t) = current_tree { t.subtrees.push(sub); }
             } else {
-                flush_desc(&mut desc_lines); // discard — pre-subtree desc already flushed or belongs to tree
+                // First subtree — flush accumulated lines as the parent tree's description
+                let html = flush_desc(&mut desc_lines);
+                if let Some(ref mut t) = current_tree {
+                    if t.description_html.is_empty() { t.description_html = html; }
+                }
             }
             let title = line[5..].trim().to_string();
             // "Technical / CSE" → "technical-cse", collapsing runs of non-alpha chars
