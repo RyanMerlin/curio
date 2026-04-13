@@ -15,7 +15,7 @@
 - **staged/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md** — > **ℹ️ Info**
 - **published/product-tree/alteryx-server/cryptomigration-in-22-3.md** — ---
-- **staged/product-tree/alteryx-server/issues-cryptomigration-log.md** — Issues
+- **published/product-tree/alteryx-server/issues-cryptomigration-log.md** — Issues
 - **published/product-tree/alteryx-server/errors-cryptomigration-log.md** — CryptoMigration Errors
 - **published/product-tree/alteryx-server/faq-help-cryptomigration.md** — Overview
 - **published/product-tree/alteryx-server/cryptomigration-log-alteryxservicemigrator-log-note-there-are-two.md** — ---
