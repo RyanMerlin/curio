@@ -94,3 +94,4 @@
 - **2026-04-13T02:02:59Z** publish: mongodb-upgrade-folder-structure published to published/product-tree/alteryx-server/mongodb-upgrade-folder-structure.md
 - **2026-04-13T02:03:00Z** publish: pre-upgrade-checks published to published/product-tree/alteryx-server/pre-upgrade-checks.md
 - **2026-04-13T02:03:02Z** publish: server-health-check published to published/product-tree/alteryx-server/server-health-check.md
+- **2026-04-13T02:03:04Z** publish: server-upgrade-issues-by-version published to published/product-tree/alteryx-server/server-upgrade-issues-by-version.md
