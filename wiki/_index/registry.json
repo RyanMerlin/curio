@@ -154,11 +154,11 @@
     "id": "5bdfd11f2aacf2c7"
   },
   {
-    "path": "staged/product-tree/alteryx-server/errors-cryptomigration-log.md",
+    "path": "published/product-tree/alteryx-server/errors-cryptomigration-log.md",
     "title": "Errors (CryptoMigration Log)",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "CryptoMigration Errors",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
