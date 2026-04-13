@@ -1,7 +1,7 @@
 ---
 id: 827c78a1e03b548e
 title: _DRAFT for Server Upgrade Guide in Community
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:3589931151
@@ -17,7 +17,7 @@ keywords:
 - version
 - plan
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:05Z
+updated_at: 2026-04-13T01:58:48Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:4e5e54c8491fbe068af24b36d6ce7cafc1d5b709f9493fe8889c2aef4eeeb12f
