@@ -22,11 +22,11 @@
     "id": "b8eca716f67136cc"
   },
   {
-    "path": "intake/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md",
+    "path": "staged/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md",
     "title": "Server Install Issue - \"Please wait while we uninstall prior versions of the product\" never finishes",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "| Issue | \"Please wait while we uninstall prior versions of the product\" never finishes |",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
@@ -44,22 +44,22 @@
     "id": "0cfb0e96ee956763"
   },
   {
-    "path": "intake/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md",
+    "path": "staged/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md",
     "title": "Upgrade Error - mongod.exe - Entry Point Not Found | The procedure entry point BCryptHash could not be located in the dynamic link library \\Alteryx\\bin\\mongod.exe",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "| Context | Upgrading Server |",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
     "id": "591975c0cc4d7d3f"
   },
   {
-    "path": "intake/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
+    "path": "staged/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
     "title": "Upgrade Error - Failed to open XML file C:\\ProgramData\\Alteryx\\Engine\\202#.#\\InstallInfo.xml, system error: -2147024786",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "| Context |  |",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
@@ -110,22 +110,22 @@
     "id": "8036d36f5b34bfa8"
   },
   {
-    "path": "intake/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md",
+    "path": "staged/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md",
     "title": "Server Upgrade Version Paths - What version can upgrade to what versions?",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
     "id": "b9ac518153229f71"
   },
   {
-    "path": "intake/server-upgrade-issues-by-version.md",
+    "path": "staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md",
     "title": "Server Upgrade Issues-by-Version",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
@@ -231,11 +231,11 @@
     "id": "8f2710a925a4d02a"
   },
   {
-    "path": "intake/servicedata-blob-removal-in-23-2.md",
+    "path": "staged/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md",
     "title": "ServiceData Blob Removal in 23.2",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
@@ -374,22 +374,22 @@
     "id": "58848bbf6262533b"
   },
   {
-    "path": "intake/server-version-build-number-vs-patch-for-older-versions.md",
+    "path": "staged/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md",
     "title": "Server Version Build Number vs Patch for Older Versions",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
     "id": "1053cc0d7e5753dc"
   },
   {
-    "path": "intake/server-health-check.md",
+    "path": "staged/product-tree/alteryx-server/server-health-check.md",
     "title": "Server Health Check",
     "category": [],
     "keywords": [],
-    "status": "intake",
+    "status": "staged",
     "summary": "> **ℹ️ Info**",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",

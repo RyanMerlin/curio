@@ -1,21 +1,28 @@
 ---
 id: b9ac518153229f71
 title: Server Upgrade Version Paths - What version can upgrade to what versions?
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2843344956
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2843344956
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- mongo
+- upgrade
+- help
+- version
+- patch
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:18Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:881e8e9ccb43fb2d56343cd29e59702b65e7af0d83af4af7d19ccb10d36ae762
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 > **ℹ️ Info**

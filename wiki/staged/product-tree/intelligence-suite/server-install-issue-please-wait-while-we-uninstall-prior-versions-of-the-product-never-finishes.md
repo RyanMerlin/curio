@@ -1,21 +1,28 @@
 ---
 id: 81ca3ed36782940d
 title: Server Install Issue - "Please wait while we uninstall prior versions of the product" never finishes
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:1679491882
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1679491882
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- intelligence-suite
+keywords:
+- uninstall
+- server
+- prior
+- versions
+- issue
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:17Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:6328abc5f435e9f4605240461227bfa187babf37ac12e711ee43311839e3d817
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 | Issue | "Please wait while we uninstall prior versions of the product" never finishes |

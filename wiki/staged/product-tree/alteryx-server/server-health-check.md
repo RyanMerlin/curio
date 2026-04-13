@@ -1,21 +1,28 @@
 ---
 id: 3eea4a24505d9806
 title: Server Health Check
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2002419792
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2002419792
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- server
+- health
+- check
+- mongodb
+- sharepoint
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:17Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:c9d8168074be07759847493c62b8c9fa71d87fa4f5734f750d63cd49c6195bca
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 > **ℹ️ Info**

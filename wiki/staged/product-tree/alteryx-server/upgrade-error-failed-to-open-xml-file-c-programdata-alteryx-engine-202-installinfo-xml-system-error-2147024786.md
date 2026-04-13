@@ -1,21 +1,28 @@
 ---
 id: 2dafa898f910632a
 title: 'Upgrade Error - Failed to open XML file C:\ProgramData\Alteryx\Engine\202#.#\InstallInfo.xml, system error: -2147024786'
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2386460678
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2386460678
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- server
+- error
+- installed
+- installer
+- would
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:19Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:0a8190253289db6c3a9c25a07a218aac7031883db5d0d30d35559bdab5a18a1e
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 | Context |  |

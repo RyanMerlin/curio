@@ -4,16 +4,16 @@
 ## uncategorized (38 pages)
 - **staged/product-tree/alteryx-server/installation-and-upgrade.md** — ---
 - **staged/product-tree/alteryx-server/issues-installation-and-upgrade.md** — ---
-- **intake/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md** — | Issue | "Please wait while we uninstall prior versions of the product" never finishes |
+- **staged/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md** — | Issue | "Please wait while we uninstall prior versions of the product" never finishes |
 - **staged/product-tree/alteryx-server/errors-installation-and-upgrade.md** — Installation and Upgrade Errors
-- **intake/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md** — | Context | Upgrading Server |
-- **intake/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md** — | Context |  |
+- **staged/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md** — | Context | Upgrading Server |
+- **staged/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md** — | Context |  |
 - **staged/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md** — | Context | When upgrading Alteryx Server an error occurs “AlteryxService” could not be installed. |
 - **staged/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md** — | Context | MongoDB Migration when performing an upgrade |
 - **staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-attempting-to-upgrade-from-an-unsupported-version-upgrade-to-alteryx-server-version-2018-1-or-later-to-attempt-to-upgrade-to-your-desired-version.md** — | Context |  |
 - **staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-upgrading-from-a-version-of-server-that-utilizes-mongodb-version-older-than-6-0.md** — | Context | Upgrading Server to a version using MongoDB 7.0 from a version using an earlier database |
-- **intake/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md** — > **ℹ️ Info**
-- **intake/server-upgrade-issues-by-version.md** — > **ℹ️ Info**
+- **staged/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md** — > **ℹ️ Info**
+- **staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/cryptomigration-in-22-3.md** — ---
 - **staged/product-tree/alteryx-server/issues-cryptomigration-log.md** — Issues
 - **staged/product-tree/alteryx-server/errors-cryptomigration-log.md** — CryptoMigration Errors
@@ -23,7 +23,7 @@
 - **staged/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md** — > **ℹ️ Info**
 - **staged/topic-tree/admin-ignore-this-page.md** — 
-- **intake/servicedata-blob-removal-in-23-2.md** — > **ℹ️ Info**
+- **staged/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/pre-upgrade-checks.md** — ---
 - **staged/product-tree/alteryx-server/errors-pre-upgrade-checks.md** — Errors
 - **staged/product-tree/intelligence-suite/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
@@ -36,8 +36,8 @@
 - **staged/product-tree/alteryx-server/embedded-mongodb-upgrade-migration.md** — ---
 - **staged/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md** — > **📝 Note**
 - **staged/product-tree/alteryx-server/mongodb-upgrade-folder-structure.md** — ---
-- **intake/server-version-build-number-vs-patch-for-older-versions.md** — > **ℹ️ Info**
-- **intake/server-health-check.md** — > **ℹ️ Info**
+- **staged/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md** — > **ℹ️ Info**
+- **staged/product-tree/alteryx-server/server-health-check.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/draft-for-server-upgrade-guide-in-community.md** — > **ℹ️ Info**
 
