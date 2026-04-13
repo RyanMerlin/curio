@@ -587,16 +587,16 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
                 .map(|c| format!("{} ", c))
                 .unwrap_or_default();
 
-            // Strip outer <p> tags from description for inline use
-            let desc = strip_outer_p(&tree.description_html);
-
+            let desc = inline_desc(&tree.description_html);
             out.push_str(&format!(
-                "<li><strong>{icon}{title}</strong> &mdash; <code>{slug}/</code><br/>{desc}",
+                "<li><strong>{icon}{title}</strong> &mdash; <code>{slug}/</code>",
                 icon = icon,
                 title = html_escape(&tree.title),
                 slug = html_escape(&tree.slug),
-                desc = desc,
             ));
+            if !desc.is_empty() {
+                out.push_str(&format!("<br/><em>{desc}</em>"));
+            }
 
             if !tree.subtrees.is_empty() {
                 out.push_str("<ul>\n");
@@ -606,14 +606,17 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
                         .and_then(char::from_u32)
                         .map(|c| format!("{} ", c))
                         .unwrap_or_default();
-                    let sub_desc = strip_outer_p(&sub.description_html);
+                    let sub_desc = inline_desc(&sub.description_html);
                     out.push_str(&format!(
-                        "<li>{sub_icon}<strong>{title}</strong> &mdash; <code>{slug}/</code><br/>{sub_desc}</li>\n",
+                        "<li>{sub_icon}<strong>{title}</strong> &mdash; <code>{slug}/</code>",
                         sub_icon = sub_icon,
                         title = html_escape(&sub.title),
                         slug = html_escape(&sub.slug),
-                        sub_desc = sub_desc,
                     ));
+                    if !sub_desc.is_empty() {
+                        out.push_str(&format!("<br/><em>{sub_desc}</em>"));
+                    }
+                    out.push_str("</li>\n");
                 }
                 out.push_str("</ul>\n");
             }
@@ -629,6 +632,18 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
     }
 
     out
+}
+
+/// Flatten block-level HTML (p, blockquote) to a single inline text string.
+/// Strips all block tags and collapses whitespace so descriptions render
+/// inline inside <li> elements without causing wide block containers.
+fn inline_desc(html: &str) -> String {
+    let text = html
+        .replace("<blockquote>", "").replace("</blockquote>", " ")
+        .replace("<p>", "").replace("</p>", " ")
+        .replace("<br/>", " ").replace("<br />", " ");
+    // Collapse runs of whitespace / newlines
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn strip_outer_p(html: &str) -> &str {
