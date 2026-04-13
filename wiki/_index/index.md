@@ -14,7 +14,7 @@
 - **staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-upgrading-from-a-version-of-server-that-utilizes-mongodb-version-older-than-6-0.md** — | Context | Upgrading Server to a version using MongoDB 7.0 from a version using an earlier database |
 - **staged/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md** — > **ℹ️ Info**
 - **staged/product-tree/alteryx-server/server-upgrade-issues-by-version.md** — > **ℹ️ Info**
-- **staged/product-tree/alteryx-server/cryptomigration-in-22-3.md** — ---
+- **published/product-tree/alteryx-server/cryptomigration-in-22-3.md** — ---
 - **staged/product-tree/alteryx-server/issues-cryptomigration-log.md** — Issues
 - **staged/product-tree/alteryx-server/errors-cryptomigration-log.md** — CryptoMigration Errors
 - **staged/product-tree/alteryx-server/faq-help-cryptomigration.md** — Overview
