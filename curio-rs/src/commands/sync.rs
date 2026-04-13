@@ -102,9 +102,11 @@ pub async fn run_sync(
             if stem.starts_with('_') { continue; }
 
             // Readme and Northstar live under Config; everything else at the parent level
-            let schema_parent: Option<&str> = match stem {
-                "northstar" | "readme" => config_page_id.as_deref().or(parent_page_id.as_deref()),
-                _ => parent_page_id.as_deref(),
+            let needs_config_parent = matches!(stem, "northstar" | "readme");
+            let schema_parent: Option<&str> = if needs_config_parent {
+                config_page_id.as_deref().or(parent_page_id.as_deref())
+            } else {
+                parent_page_id.as_deref()
             };
 
             // Readme uses a custom title
@@ -118,8 +120,6 @@ pub async fn run_sync(
                 .with_context(|| format!("Failed to read {}", path.display()))?;
             let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
             let html_body = if stem == "northstar" {
-                // Custom rich rendering: replace the raw blueprint section with a
-                // visual nested list built from the parsed TreeNode data.
                 let trees = parse_northstar_blueprint(body_md);
                 render_northstar_for_confluence(body_md, &trees)
             } else if ext == "md" {
@@ -128,18 +128,45 @@ pub async fn run_sync(
                 format!("<pre><code>{}</code></pre>", body_md)
             };
             let hash = content_hash(body_md);
-            // Check existing
-            if let Ok(Some(ref page)) = client.get_page_by_title(space_key, schema_parent, &page_title).await {
+
+            // Space-wide lookup so we find the page regardless of where it currently lives
+            let existing = client.get_page_by_title(space_key, None, &page_title).await.ok().flatten();
+
+            if let Some(ref page) = existing {
                 let page_id = page["id"].as_str().unwrap_or_default().to_string();
-                if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
-                    if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
-                        skipped.push(format!("[schema] {}", page_title));
-                        if stem == "config" { config_page_id = Some(page_id.clone()); }
-                        synced_page_ids.insert(page_id);
-                        continue;
+
+                // Get v2 details to check parentId and current title
+                let page_v2 = client.get_page_by_id_v2(&page_id).await.ok().flatten();
+                let current_parent = page_v2.as_ref()
+                    .and_then(|p| p["parentId"].as_str())
+                    .unwrap_or("");
+                let current_title = page_v2.as_ref()
+                    .and_then(|p| p["title"].as_str())
+                    .unwrap_or("");
+
+                // Move the page under Config only if it's not already there
+                if needs_config_parent {
+                    if let Some(ref config_id) = config_page_id {
+                        if current_parent != config_id.as_str() {
+                            let _ = client.move_page(&page_id, config_id).await;
+                        }
+                    }
+                }
+
+                // Skip only if hash AND title both match (title mismatch forces a rename update)
+                let title_matches = current_title == page_title;
+                if title_matches {
+                    if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
+                        if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
+                            skipped.push(format!("[schema] {}", page_title));
+                            if stem == "config" { config_page_id = Some(page_id.clone()); }
+                            synced_page_ids.insert(page_id);
+                            continue;
+                        }
                     }
                 }
             }
+
             match client.create_or_update_page(space_key, schema_parent, &page_title, "storage", &html_body).await {
                 Ok(page_id) => {
                     let _ = set_sync_prop(&client, &page_id, &hash).await;
