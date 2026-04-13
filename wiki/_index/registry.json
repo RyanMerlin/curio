@@ -33,11 +33,11 @@
     "id": "81ca3ed36782940d"
   },
   {
-    "path": "staged/product-tree/alteryx-server/errors-installation-and-upgrade.md",
+    "path": "published/product-tree/alteryx-server/errors-installation-and-upgrade.md",
     "title": "Errors (Installation and Upgrade)",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "Installation and Upgrade Errors",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
