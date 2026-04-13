@@ -1,7 +1,7 @@
 ---
 id: fa12e00bbe18677c
 title: Defects (CryptoMigration)
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1654718642
@@ -16,7 +16,7 @@ keywords:
 - defects
 - cryptomigration
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:05Z
+updated_at: 2026-04-13T01:58:46Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:085238fdb823e1acfd83d93f0554dcb8fd312316b5775b792756493db6ab9f5c

@@ -70,3 +70,4 @@
 - **2026-04-13T01:58:43Z** publish: controller-token-length-transition-from-21-4-to-22-3 published to published/product-tree/alteryx-server/controller-token-length-transition-from-21-4-to-22-3.md
 - **2026-04-13T01:58:44Z** publish: cryptomigration-in-22-3 published to published/product-tree/alteryx-server/cryptomigration-in-22-3.md
 - **2026-04-13T01:58:46Z** publish: cryptomigration-log-alteryxservicemigrator-log-note-there-are-two published to published/product-tree/alteryx-server/cryptomigration-log-alteryxservicemigrator-log-note-there-are-two.md
+- **2026-04-13T01:58:47Z** publish: defects-cryptomigration published to published/product-tree/alteryx-server/defects-cryptomigration.md
