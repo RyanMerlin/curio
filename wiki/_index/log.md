@@ -37,3 +37,26 @@
 - **2026-04-12T21:07:35Z** sync: 44 upserted, 0 skipped, 0 stale deleted, 0 errors
 - **2026-04-12T21:09:13Z** sync: 40 upserted, 33 skipped, 3 stale deleted, 0 errors
 - **2026-04-12T23:42:18Z** sync: 37 upserted, 33 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T23:52:36Z** sync: 36 upserted, 34 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T23:56:27Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-12T23:58:28Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:03:11Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:04:48Z** sync: 37 upserted, 34 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:05:16Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:24:06Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:24:37Z** sync: 37 upserted, 34 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:25:01Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:29:12Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T00:38:52Z** sync: 41 upserted, 1 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T00:42:51Z** sync: 41 upserted, 1 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T00:44:11Z** sync: 36 upserted, 34 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T00:45:47Z** query: "what is curio"
+- **2026-04-13T00:47:42Z** sync: 36 upserted, 34 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T01:10:09Z** sync: 36 upserted, 34 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T01:10:58Z** sync: 36 upserted, 34 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T01:17:32Z** sync: 36 upserted, 34 skipped, 0 stale deleted, 1 errors
+- **2026-04-13T01:25:08Z** sync: 37 upserted, 34 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T01:27:59Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T01:32:24Z** sync: 36 upserted, 35 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T01:34:12Z** sync: 37 upserted, 34 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T01:37:30Z** sync: 37 upserted, 34 skipped, 0 stale deleted, 0 errors
