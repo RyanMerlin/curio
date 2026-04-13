@@ -1,21 +1,28 @@
 ---
 id: 24c0f8f7d99c30ef
 title: Embedded MongoDB upgrade / migration
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2314994152
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2314994152
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- upgrade
+- mongodb
+- embedded
+- version
+- server
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:05Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:906f6483e73e2a272449d2c03cca4a7eea072b46e46657528ed91fc2bb8bb023
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 ---
