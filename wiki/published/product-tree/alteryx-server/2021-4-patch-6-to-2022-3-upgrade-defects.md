@@ -1,7 +1,7 @@
 ---
 id: 0d51911641ce3fc2
 title: 2021.4 Patch 6 to 2022.3 Upgrade Defects
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1868234983
@@ -17,7 +17,7 @@ keywords:
 - recovery
 - tgaldcfcfffefeeffsystem
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:03Z
+updated_at: 2026-04-13T01:58:41Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:1cf1e487df05472765c0f5a716474a3ac1f74fd0417df7649523b34cbcd3d8d8

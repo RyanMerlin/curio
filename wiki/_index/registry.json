@@ -308,11 +308,11 @@
     "id": "9d22c624772bb143"
   },
   {
-    "path": "staged/product-tree/alteryx-server/2021-4-patch-6-to-2022-3-upgrade-defects.md",
+    "path": "published/product-tree/alteryx-server/2021-4-patch-6-to-2022-3-upgrade-defects.md",
     "title": "2021.4 Patch 6 to 2022.3 Upgrade Defects",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",

@@ -65,3 +65,4 @@
 - **2026-04-13T01:56:14Z** process: intake items routed
 - **2026-04-13T01:56:17Z** process: intake items routed
 - **2026-04-13T01:56:19Z** process: intake items routed
+- **2026-04-13T01:58:41Z** publish: 2021-4-patch-6-to-2022-3-upgrade-defects published to published/product-tree/alteryx-server/2021-4-patch-6-to-2022-3-upgrade-defects.md
