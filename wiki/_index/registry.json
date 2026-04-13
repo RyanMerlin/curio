@@ -253,11 +253,11 @@
     "id": "3ace91393a47ef5d"
   },
   {
-    "path": "staged/product-tree/alteryx-server/errors-pre-upgrade-checks.md",
+    "path": "published/product-tree/alteryx-server/errors-pre-upgrade-checks.md",
     "title": "Errors (Pre-Upgrade Checks)",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "Errors",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",

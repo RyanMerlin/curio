@@ -76,3 +76,4 @@
 - **2026-04-13T01:58:50Z** publish: errors-cryptomigration-log published to published/product-tree/alteryx-server/errors-cryptomigration-log.md
 - **2026-04-13T02:02:42Z** publish: errors-host-recovery published to published/product-tree/alteryx-server/errors-host-recovery.md
 - **2026-04-13T02:02:43Z** publish: errors-installation-and-upgrade published to published/product-tree/alteryx-server/errors-installation-and-upgrade.md
+- **2026-04-13T02:02:44Z** publish: errors-pre-upgrade-checks published to published/product-tree/alteryx-server/errors-pre-upgrade-checks.md
