@@ -84,3 +84,4 @@
 - **2026-04-13T02:02:49Z** publish: how-to-build-remove-queries-from-cryptomigration-logs published to published/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md
 - **2026-04-13T02:02:50Z** publish: how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id published to published/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md
 - **2026-04-13T02:02:51Z** publish: how-to-upgrade-embedded-mongodb-version-manually published to published/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md
+- **2026-04-13T02:02:52Z** publish: install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed published to published/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md
