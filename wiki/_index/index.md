@@ -1,5 +1,5 @@
 # Curio Wiki Index
-> Last updated: 2026-04-13 02:02 UTC | Pages: 38
+> Last updated: 2026-04-13 02:03 UTC | Pages: 38
 
 ## uncategorized (38 pages)
 - **published/product-tree/alteryx-server/installation-and-upgrade.md** — ---
@@ -24,7 +24,7 @@
 - **published/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md** — > **ℹ️ Info**
 - **staged/topic-tree/admin-ignore-this-page.md** — 
 - **staged/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md** — > **ℹ️ Info**
-- **staged/product-tree/alteryx-server/pre-upgrade-checks.md** — ---
+- **published/product-tree/alteryx-server/pre-upgrade-checks.md** — ---
 - **published/product-tree/alteryx-server/errors-pre-upgrade-checks.md** — Errors
 - **staged/product-tree/intelligence-suite/rollback-downgrade-a-failed-server-upgrade.md** — > **ℹ️ Info**
 - **published/product-tree/alteryx-server/host-recovery.md** — ---
