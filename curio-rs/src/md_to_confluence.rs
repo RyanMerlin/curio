@@ -94,12 +94,23 @@ fn replace_macro_blocks(markdown: &str) -> Result<(String, Vec<String>)> {
             let body_md = body_lines.join("\n");
             let body_storage = markdown_to_storage(&body_md)?;
 
-            let title_param = title
-                .map(|t| format!(r#"<ac:parameter ac:name="title">{}</ac:parameter>"#, escape_xml(&t)))
-                .unwrap_or_default();
-
+            // Confluence Cloud's Fabric editor rejects <ac:structured-macro> tags.
+            // Render as an HTML panel using a table with a left border colour strip.
+            let icon = match macro_name {
+                "info"    => "ℹ️",
+                "tip"     => "💡",
+                "note"    => "⚠️",
+                "warning" => "🚨",
+                _         => "▶",
+            };
+            let title_html = match title {
+                Some(t) => format!("<strong>{icon} {}</strong><br/>", escape_xml(&t)),
+                None    => format!("<strong>{icon}</strong><br/>"),
+            };
             let fragment = format!(
-                r#"<ac:structured-macro ac:name="{macro_name}" ac:schema-version="1">{title_param}<ac:rich-text-body>{body_storage}</ac:rich-text-body></ac:structured-macro>"#
+                "<blockquote>{title_html}{body_storage}</blockquote>",
+                title_html = title_html,
+                body_storage = body_storage,
             );
             let idx = fragments.len();
             fragments.push(fragment);

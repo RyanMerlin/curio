@@ -633,9 +633,12 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
 
 fn strip_outer_p(html: &str) -> &str {
     let s = html.trim();
-    let s = s.strip_prefix("<p>").unwrap_or(s);
-    let s = s.strip_suffix("</p>").unwrap_or(s);
-    s.trim()
+    // Only strip the outer <p>...</p> when the entire string is a single paragraph —
+    // i.e. it starts with <p>, ends with </p>, and has no other </p> inside.
+    if s.starts_with("<p>") && s.ends_with("</p>") && s[3..s.len()-4].find("</p>").is_none() {
+        return s[3..s.len()-4].trim();
+    }
+    s
 }
 
 fn html_escape(s: &str) -> String {

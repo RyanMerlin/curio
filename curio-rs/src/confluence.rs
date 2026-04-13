@@ -267,38 +267,28 @@ impl ConfluenceClient {
                 );
             }
         } else {
-            // Create new page using the v2 API so current Confluence folders/pages accept it.
+            // Create new page via v1 API — v2 rejects storage-format macros (ac:structured-macro).
+            // v1 accepts full Confluence storage format including info/tip/note/warning panels.
             let mut page_data = serde_json::json!({
+                "type": "page",
                 "status": "current",
                 "title": title,
                 "body": {
-                    "representation": body_storage_format,
-                    "value": body_content
-                },
-                "subtype": "live"
+                    "storage": {
+                        "representation": "storage",
+                        "value": body_content
+                    }
+                }
             });
-            if let Some(effective_parent_id) = effective_parent_id {
-                let parent_page = self
-                    .get_content_tree_item_by_id_v2(effective_parent_id)
-                    .await?
-                    .context("Parent page not found when creating a child page")?;
-                let space_id = parent_page["spaceId"]
-                    .as_str()
-                    .context("spaceId missing from parent page response")?;
-                page_data["spaceId"] = serde_json::json!(space_id);
-                page_data["parentId"] = serde_json::json!(effective_parent_id);
-            } else {
-                // Top-level page: the v2 API requires the numeric space ID, not the key string.
-                // Fetch it via the spaces API.
-                let space_id = self.get_numeric_space_id(&self.space_key.clone()).await
-                    .context("Failed to look up numeric space ID for top-level page creation")?;
-                page_data["spaceId"] = serde_json::json!(space_id);
+            if let Some(pid) = effective_parent_id {
+                page_data["ancestors"] = serde_json::json!([{"id": pid}]);
             }
+            page_data["space"] = serde_json::json!({"key": space_key});
 
             println!("Creating Confluence page: {}", title);
             let response = self
                 .client
-                .post(&format!("{}/api/v2/pages", self.base_url))
+                .post(&format!("{}/rest/api/content", self.base_url))
                 .basic_auth(&self.email, Some(&self.auth_token))
                 .json(&page_data)
                 .send()
