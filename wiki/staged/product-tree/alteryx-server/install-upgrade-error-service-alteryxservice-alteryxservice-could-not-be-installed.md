@@ -1,7 +1,7 @@
 ---
 id: deff7614f4369c04
 title: Install/Upgrade Error - Service ‘AlteryxService' (AlteryxService) could not be installed.
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2497511586
@@ -17,7 +17,7 @@ keywords:
 - administrator
 - installation
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:14Z
+updated_at: 2026-04-13T01:58:56Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:f558318f4c29d6b75e11160846ffd74cd1847f9d8c45c6a1bb7af839201e00ed

@@ -1,7 +1,7 @@
 ---
 id: 964bbd0f66ece1d4
 title: How to build remove() queries from CryptoMigration logs
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1950515201
@@ -17,7 +17,7 @@ keywords:
 - httpsalteryxatlassiannetwikispacessupportserverpages
 - backported
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:13Z
+updated_at: 2026-04-13T01:58:54Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:70f9bdfd37279c5c2b6c8235f9b925868e84a8986d7da4c4ed529c713a8fbf25

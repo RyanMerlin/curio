@@ -1,7 +1,7 @@
 ---
 id: 567092b57260c876
 title: 'Example: Alteryx Server Upgrade 22.1 to 23.2 (MongoDB Upgrade: 4.2 to 6.0)'
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2639659009
@@ -17,7 +17,7 @@ keywords:
 - service
 - schema
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:12Z
+updated_at: 2026-04-13T01:58:52Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:ff8395bcb3dfcd369738738194ade85a6ab14d83bb993e13875dd12d08dcdc66

@@ -1,7 +1,7 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1709050604
@@ -17,7 +17,7 @@ keywords:
 - mongodb
 - will
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:16Z
+updated_at: 2026-04-13T01:59:00Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:6c647c42758ecc4c4ffcafcb6ea7cdb1c2f56fd101e6f1cf44a2e48e40ddbfe9

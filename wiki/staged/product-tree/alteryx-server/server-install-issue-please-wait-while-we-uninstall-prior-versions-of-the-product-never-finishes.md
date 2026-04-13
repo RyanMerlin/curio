@@ -1,7 +1,7 @@
 ---
 id: 81ca3ed36782940d
 title: Server Install Issue - "Please wait while we uninstall prior versions of the product" never finishes
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1679491882
@@ -17,7 +17,7 @@ keywords:
 - versions
 - issue
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:17Z
+updated_at: 2026-04-13T01:59:02Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:6328abc5f435e9f4605240461227bfa187babf37ac12e711ee43311839e3d817

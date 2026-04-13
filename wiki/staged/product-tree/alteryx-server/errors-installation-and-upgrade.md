@@ -1,7 +1,7 @@
 ---
 id: 0cfb0e96ee956763
 title: Errors (Installation and Upgrade)
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2106261638
@@ -17,7 +17,7 @@ keywords:
 - installation
 - failed
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:12Z
+updated_at: 2026-04-13T01:58:51Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:a26f3093062081f4c014095ccab8653bc9cb1314d43e5f4a1f9564719283f9b1

@@ -1,7 +1,7 @@
 ---
 id: 58848bbf6262533b
 title: MongoDB Upgrade Folder Structure
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2979693181
@@ -17,7 +17,7 @@ keywords:
 - upgrade
 - persistence
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:16Z
+updated_at: 2026-04-13T01:58:59Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:e5b3a5831b4ca1d6977101937af7f238f1fee60475851ee4e0a4f2af78ccba14
