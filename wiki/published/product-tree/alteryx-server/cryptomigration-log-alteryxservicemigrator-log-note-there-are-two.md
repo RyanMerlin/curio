@@ -1,7 +1,7 @@
 ---
 id: 4872a577921a82a4
 title: 'CryptoMigration Log (AlteryxServiceMigrator_#.log) - Note: there are TWO'
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:1640761815
@@ -17,7 +17,7 @@ keywords:
 - universal
 - coordinated
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:05Z
+updated_at: 2026-04-13T01:58:45Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:c5ce7615fb186c4bb334bf7fcdcdd00f7a566c6eeb41483181c671273ef6d9e4
