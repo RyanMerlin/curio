@@ -99,11 +99,11 @@
     "id": "8cb2a8060c1e486a"
   },
   {
-    "path": "staged/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-upgrading-from-a-version-of-server-that-utilizes-mongodb-version-older-than-6-0.md",
+    "path": "published/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-upgrading-from-a-version-of-server-that-utilizes-mongodb-version-older-than-6-0.md",
     "title": "Mongo Database Upgrade Error - You are upgrading from a version of Server that utilizes MongoDB version older than 6.0",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "| Context | Upgrading Server to a version using MongoDB 7.0 from a version using an earlier database |",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",
