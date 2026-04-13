@@ -2,7 +2,7 @@
 > Last updated: 2026-04-13 02:02 UTC | Pages: 38
 
 ## uncategorized (38 pages)
-- **staged/product-tree/alteryx-server/installation-and-upgrade.md** — ---
+- **published/product-tree/alteryx-server/installation-and-upgrade.md** — ---
 - **staged/product-tree/alteryx-server/issues-installation-and-upgrade.md** — ---
 - **staged/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md** — | Issue | "Please wait while we uninstall prior versions of the product" never finishes |
 - **published/product-tree/alteryx-server/errors-installation-and-upgrade.md** — Installation and Upgrade Errors
