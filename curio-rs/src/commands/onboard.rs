@@ -561,6 +561,7 @@ fn build_onboard_config(state: &OnboardState) -> Config {
             log_level: None,
         },
         wiki: Default::default(),
+        llm: Default::default(),
     }
 }
 

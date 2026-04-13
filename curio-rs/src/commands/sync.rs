@@ -378,6 +378,9 @@ pub async fn run_sync(
 // ─── Entry collection ─────────────────────────────────────────────────────
 
 /// Return all entries under `root` as (relative_path, is_dir) in sorted BFS order.
+/// Excludes:
+///   - `.analysis.json` sidecars (machine provenance, never synced to Confluence)
+///   - `.gitkeep` placeholder files
 fn collect_sorted_entries(root: &Path) -> Result<Vec<(PathBuf, bool)>> {
     use walkdir::WalkDir;
     let mut entries = Vec::new();
@@ -387,8 +390,21 @@ fn collect_sorted_entries(root: &Path) -> Result<Vec<(PathBuf, bool)>> {
         .filter_map(|e| e.ok())
         .filter(|e| e.path() != root)
     {
-        let rel = e
-            .path()
+        let path = e.path();
+
+        // Skip analysis sidecars and git placeholders
+        if e.file_type().is_file() {
+            let name = path.file_name().unwrap_or_default().to_string_lossy();
+            if name == ".gitkeep" {
+                continue;
+            }
+            // Skip *.analysis.json — machine provenance, never synced
+            if name.ends_with(".analysis.json") {
+                continue;
+            }
+        }
+
+        let rel = path
             .strip_prefix(root)
             .map(PathBuf::from)
             .unwrap_or_default();
@@ -662,7 +678,7 @@ fn html_escape(s: &str) -> String {
 
 // ─── NORTHSTAR blueprint parser ───────────────────────────────────────────
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct TreeNode {
     /// Display title (e.g. "Account-tree")
     pub title: String,

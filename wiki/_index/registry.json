@@ -1,420 +1,610 @@
 [
   {
-    "path": "published/product-tree/alteryx-server/installation-and-upgrade.md",
-    "title": "Installation and Upgrade",
+    "path": "published/curio-readme.md",
+    "title": "Curio README",
     "category": [],
-    "keywords": [],
+    "keywords": [
+      "readme",
+      "documentation",
+      "overview"
+    ],
     "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "30510ba5c9a25977"
+    "summary": "Curio",
+    "confidence": 0.8,
+    "updated_at": "2026-04-12T18:37:05Z",
+    "id": "42c59af8a4bae559"
   },
   {
-    "path": "published/product-tree/alteryx-server/issues-installation-and-upgrade.md",
-    "title": "Issues (Installation and Upgrade)",
-    "category": [],
-    "keywords": [],
+    "path": "published/product-tree/alteryx-server/errors-host-recovery.md",
+    "title": "Errors (Host Recovery)",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "errors",
+      "host",
+      "recovery"
+    ],
     "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "b8eca716f67136cc"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md",
-    "title": "Server Install Issue - \"Please wait while we uninstall prior versions of the product\" never finishes",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "| Issue | \"Please wait while we uninstall prior versions of the product\" never finishes |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "81ca3ed36782940d"
+    "summary": "Errors",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:42Z",
+    "id": "9b59dfdb14cd2403"
   },
   {
     "path": "published/product-tree/alteryx-server/errors-installation-and-upgrade.md",
     "title": "Errors (Installation and Upgrade)",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "mongodb",
+      "upgrade",
+      "start",
+      "installation",
+      "failed"
+    ],
     "status": "published",
     "summary": "Installation and Upgrade Errors",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:43Z",
     "id": "0cfb0e96ee956763"
   },
   {
-    "path": "published/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md",
-    "title": "Upgrade Error - mongod.exe - Entry Point Not Found | The procedure entry point BCryptHash could not be located in the dynamic link library \\Alteryx\\bin\\mongod.exe",
-    "category": [],
-    "keywords": [],
+    "path": "published/product-tree/alteryx-server/errors-pre-upgrade-checks.md",
+    "title": "Errors (Pre-Upgrade Checks)",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "errors",
+      "checks",
+      "preupgrade"
+    ],
     "status": "published",
-    "summary": "| Context | Upgrading Server |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "591975c0cc4d7d3f"
+    "summary": "Errors",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:44Z",
+    "id": "65fd815a0e3bd72b"
   },
   {
-    "path": "published/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
-    "title": "Upgrade Error - Failed to open XML file C:\\ProgramData\\Alteryx\\Engine\\202#.#\\InstallInfo.xml, system error: -2147024786",
-    "category": [],
-    "keywords": [],
+    "path": "published/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md",
+    "title": "Example: Alteryx Server Upgrade 22.1 to 23.2 (MongoDB Upgrade: 4.2 to 6.0)",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "migration",
+      "logs",
+      "alteryx",
+      "service",
+      "schema"
+    ],
     "status": "published",
-    "summary": "| Context |  |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "2dafa898f910632a"
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:45Z",
+    "id": "567092b57260c876"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/faq-help-cryptomigration.md",
+    "title": "FAQ / Help - CryptoMigration",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "cryptomigration",
+      "tool",
+      "prep",
+      "upgrade",
+      "will"
+    ],
+    "status": "published",
+    "summary": "Overview",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:46Z",
+    "id": "bd5cb6609fa82250"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/host-recovery-encryption-key-transfer-process.md",
+    "title": "Host Recovery Encryption Key Transfer Process",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "encryption",
+      "transfer",
+      "patch",
+      "process",
+      "host"
+    ],
+    "status": "published",
+    "summary": "---",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:47Z",
+    "id": "9d22c624772bb143"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/host-recovery.md",
+    "title": "Host Recovery",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "tgal",
+      "host",
+      "recovery",
+      "tgaldcfcfffefeeffsystem",
+      "jira"
+    ],
+    "status": "published",
+    "summary": "---",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:48Z",
+    "id": "c3fff7762fbe4739"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md",
+    "title": "How to build remove() queries from CryptoMigration logs",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "error",
+      "workflow",
+      "remove",
+      "httpsalteryxatlassiannetwikispacessupportserverpages",
+      "backported"
+    ],
+    "status": "published",
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:49Z",
+    "id": "964bbd0f66ece1d4"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md",
+    "title": "How to find the appinfos Workflow for an AS_PackageDefinitions._id",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "find",
+      "appinfos",
+      "workflow",
+      "record",
+      "aspackagedefinitionsid"
+    ],
+    "status": "published",
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:50Z",
+    "id": "aeb68099f66cc0e8"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md",
+    "title": "How to upgrade Embedded MongoDB version manually",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "upgrade",
+      "version",
+      "mongodb",
+      "service",
+      "embedded"
+    ],
+    "status": "published",
+    "summary": "> **📝 Note**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:51Z",
+    "id": "9c496c5d7999b435"
   },
   {
     "path": "published/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md",
     "title": "Install/Upgrade Error - Service ‘AlteryxService' (AlteryxService) could not be installed.",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "alteryxservice",
+      "could",
+      "system",
+      "administrator",
+      "installation"
+    ],
     "status": "published",
     "summary": "| Context | When upgrading Alteryx Server an error occurs “AlteryxService” could not be installed. |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:52Z",
     "id": "deff7614f4369c04"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/installation-and-upgrade.md",
+    "title": "Installation and Upgrade",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "installation",
+      "upgrade"
+    ],
+    "status": "published",
+    "summary": "---",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:53Z",
+    "id": "30510ba5c9a25977"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/issues-cryptomigration-log.md",
+    "title": "Issues (CryptoMigration Log)",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "tgaldcfcfffefeeffsystem",
+      "issues",
+      "jira",
+      "counts",
+      "user"
+    ],
+    "status": "published",
+    "summary": "Issues",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:54Z",
+    "id": "5bdfd11f2aacf2c7"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/issues-installation-and-upgrade.md",
+    "title": "Issues (Installation and Upgrade)",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "issues",
+      "jira",
+      "gcsedcfcfffefeeffsystem",
+      "installation",
+      "upgrade"
+    ],
+    "status": "published",
+    "summary": "---",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:55Z",
+    "id": "b8eca716f67136cc"
   },
   {
     "path": "published/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md",
     "title": "Mongo Database Upgrade Error - Failed to backup the folder:C:\\ProgramData\\Alteryx\\Service\\Persistence\\MongoDB_Backup. Access to the path 'C:\\ProgramData\\Alteryx\\Service\\Persistence\\MongoDB' is denied",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "antivirus",
+      "upgrade",
+      "mongo",
+      "error",
+      "folder"
+    ],
     "status": "published",
     "summary": "| Context | MongoDB Migration when performing an upgrade |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:56Z",
     "id": "91337d4e259e2352"
   },
   {
     "path": "published/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-attempting-to-upgrade-from-an-unsupported-version-upgrade-to-alteryx-server-version-2018-1-or-later-to-attempt-to-upgrade-to-your-desired-version.md",
     "title": "Mongo Database Upgrade Error - You are attempting to upgrade from an unsupported version. Upgrade to Alteryx Server version 2018.1 or later to attempt to upgrade to your desired version.",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "version",
+      "upgrade",
+      "mongodb",
+      "server",
+      "versions"
+    ],
     "status": "published",
     "summary": "| Context |  |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:57Z",
     "id": "8cb2a8060c1e486a"
   },
   {
     "path": "published/product-tree/alteryx-server/mongo-database-upgrade-error-you-are-upgrading-from-a-version-of-server-that-utilizes-mongodb-version-older-than-6-0.md",
     "title": "Mongo Database Upgrade Error - You are upgrading from a version of Server that utilizes MongoDB version older than 6.0",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "version",
+      "upgrade",
+      "mongo",
+      "server",
+      "mongodb"
+    ],
     "status": "published",
     "summary": "| Context | Upgrading Server to a version using MongoDB 7.0 from a version using an earlier database |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:58Z",
     "id": "8036d36f5b34bfa8"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md",
-    "title": "Server Upgrade Version Paths - What version can upgrade to what versions?",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "b9ac518153229f71"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/server-upgrade-issues-by-version.md",
-    "title": "Server Upgrade Issues-by-Version",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "76ab286cdda87a35"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/cryptomigration-in-22-3.md",
-    "title": "CryptoMigration in 22.3",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "cf778d85a0014d18"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/issues-cryptomigration-log.md",
-    "title": "Issues (CryptoMigration Log)",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "Issues",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "5bdfd11f2aacf2c7"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/errors-cryptomigration-log.md",
-    "title": "Errors (CryptoMigration Log)",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "CryptoMigration Errors",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "d8b45be104aeaaf8"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/faq-help-cryptomigration.md",
-    "title": "FAQ / Help - CryptoMigration",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "Overview",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "bd5cb6609fa82250"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/cryptomigration-log-alteryxservicemigrator-log-note-there-are-two.md",
-    "title": "CryptoMigration Log (AlteryxServiceMigrator_#.log) - Note: there are TWO",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "4872a577921a82a4"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/defects-cryptomigration.md",
-    "title": "Defects (CryptoMigration)",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "- TGAL-1018477dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "fa12e00bbe18677c"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/how-to-find-the-appinfos-workflow-for-an-as-packagedefinitions-id.md",
-    "title": "How to find the appinfos Workflow for an AS_PackageDefinitions._id",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "aeb68099f66cc0e8"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/how-to-build-remove-queries-from-cryptomigration-logs.md",
-    "title": "How to build remove() queries from CryptoMigration logs",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "964bbd0f66ece1d4"
-  },
-  {
-    "path": "staged/topic-tree/admin-ignore-this-page.md",
-    "title": "Admin (ignore this page)",
-    "category": [],
-    "keywords": [],
-    "status": "staged",
-    "summary": "",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "8f2710a925a4d02a"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md",
-    "title": "ServiceData Blob Removal in 23.2",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "dd354a6069320a10"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/pre-upgrade-checks.md",
-    "title": "Pre-Upgrade Checks",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "3ace91393a47ef5d"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/errors-pre-upgrade-checks.md",
-    "title": "Errors (Pre-Upgrade Checks)",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "Errors",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "65fd815a0e3bd72b"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/rollback-downgrade-a-failed-server-upgrade.md",
-    "title": "Rollback / Downgrade a Failed Server Upgrade",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "564f90efd2a29dbe"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/host-recovery.md",
-    "title": "Host Recovery",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "c3fff7762fbe4739"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/errors-host-recovery.md",
-    "title": "Errors (Host Recovery)",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "Errors",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "9b59dfdb14cd2403"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/host-recovery-encryption-key-transfer-process.md",
-    "title": "Host Recovery Encryption Key Transfer Process",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "9d22c624772bb143"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/2021-4-patch-6-to-2022-3-upgrade-defects.md",
-    "title": "2021.4 Patch 6 to 2022.3 Upgrade Defects",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "0d51911641ce3fc2"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/controller-token-length-transition-from-21-4-to-22-3.md",
-    "title": "Controller Token Length Transition from 21.4 to 22.3",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "d54a8c85f7706f28"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/cloud-vm-server-deployment.md",
-    "title": "Cloud / VM Server Deployment",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "| AWS | Best Practices for Deploying Alteryx Server on AWS (PDF) <== Tim R link |",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "36b557ee678b5cbc"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/embedded-mongodb-upgrade-migration.md",
-    "title": "Embedded MongoDB upgrade / migration",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "24c0f8f7d99c30ef"
-  },
-  {
-    "path": "published/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md",
-    "title": "How to upgrade Embedded MongoDB version manually",
-    "category": [],
-    "keywords": [],
-    "status": "published",
-    "summary": "> **📝 Note**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "9c496c5d7999b435"
   },
   {
     "path": "published/product-tree/alteryx-server/mongodb-upgrade-folder-structure.md",
     "title": "MongoDB Upgrade Folder Structure",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "folder",
+      "mongodb",
+      "mongo",
+      "upgrade",
+      "persistence"
+    ],
     "status": "published",
     "summary": "---",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:02:59Z",
     "id": "58848bbf6262533b"
   },
   {
-    "path": "published/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md",
-    "title": "Server Version Build Number vs Patch for Older Versions",
-    "category": [],
-    "keywords": [],
+    "path": "published/product-tree/alteryx-server/pre-upgrade-checks.md",
+    "title": "Pre-Upgrade Checks",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "preupgrade",
+      "checks",
+      "upgrade",
+      "during",
+      "they"
+    ],
+    "status": "published",
+    "summary": "---",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:00Z",
+    "id": "3ace91393a47ef5d"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/rollback-downgrade-a-failed-server-upgrade.md",
+    "title": "Rollback / Downgrade a Failed Server Upgrade",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "upgrade",
+      "version",
+      "server",
+      "mongodb",
+      "will"
+    ],
     "status": "published",
     "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "1053cc0d7e5753dc"
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:04:50Z",
+    "id": "564f90efd2a29dbe"
   },
   {
     "path": "published/product-tree/alteryx-server/server-health-check.md",
     "title": "Server Health Check",
-    "category": [],
-    "keywords": [],
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "server",
+      "health",
+      "check",
+      "mongodb",
+      "sharepoint"
+    ],
     "status": "published",
     "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:01Z",
     "id": "3eea4a24505d9806"
   },
   {
-    "path": "published/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md",
-    "title": "Example: Alteryx Server Upgrade 22.1 to 23.2 (MongoDB Upgrade: 4.2 to 6.0)",
-    "category": [],
-    "keywords": [],
+    "path": "published/product-tree/alteryx-server/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md",
+    "title": "Server Install Issue - \"Please wait while we uninstall prior versions of the product\" never finishes",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "uninstall",
+      "server",
+      "prior",
+      "versions",
+      "issue"
+    ],
     "status": "published",
-    "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "567092b57260c876"
+    "summary": "| Issue | \"Please wait while we uninstall prior versions of the product\" never finishes |",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:04:55Z",
+    "id": "81ca3ed36782940d"
   },
   {
-    "path": "published/product-tree/alteryx-server/draft-for-server-upgrade-guide-in-community.md",
-    "title": "_DRAFT for Server Upgrade Guide in Community",
-    "category": [],
-    "keywords": [],
+    "path": "published/product-tree/alteryx-server/server-upgrade-issues-by-version.md",
+    "title": "Server Upgrade Issues-by-Version",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "error",
+      "upgrade",
+      "version",
+      "jira",
+      "migration"
+    ],
     "status": "published",
     "summary": "> **ℹ️ Info**",
-    "confidence": null,
-    "updated_at": "2026-04-13T01:55:58Z",
-    "id": "827c78a1e03b548e"
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:04Z",
+    "id": "76ab286cdda87a35"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md",
+    "title": "Server Upgrade Version Paths - What version can upgrade to what versions?",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "mongo",
+      "upgrade",
+      "help",
+      "version",
+      "patch"
+    ],
+    "status": "published",
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:05Z",
+    "id": "b9ac518153229f71"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md",
+    "title": "Server Version Build Number vs Patch for Older Versions",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "versions",
+      "older",
+      "longer",
+      "document",
+      "officially"
+    ],
+    "status": "published",
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:06Z",
+    "id": "1053cc0d7e5753dc"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/servicedata-blob-removal-in-23-2.md",
+    "title": "ServiceData Blob Removal in 23.2",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "blob",
+      "servicedata",
+      "removal",
+      "issues",
+      "will"
+    ],
+    "status": "published",
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:07Z",
+    "id": "dd354a6069320a10"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md",
+    "title": "Upgrade Error - Failed to open XML file C:\\ProgramData\\Alteryx\\Engine\\202#.#\\InstallInfo.xml, system error: -2147024786",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "server",
+      "error",
+      "installed",
+      "installer",
+      "would"
+    ],
+    "status": "published",
+    "summary": "| Context |  |",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:09Z",
+    "id": "2dafa898f910632a"
+  },
+  {
+    "path": "published/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md",
+    "title": "Upgrade Error - mongod.exe - Entry Point Not Found | The procedure entry point BCryptHash could not be located in the dynamic link library \\Alteryx\\bin\\mongod.exe",
+    "category": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "keywords": [
+      "server",
+      "error",
+      "entry",
+      "point",
+      "alteryxbinmongodexe"
+    ],
+    "status": "published",
+    "summary": "| Context | Upgrading Server |",
+    "confidence": 0.55,
+    "updated_at": "2026-04-13T02:03:11Z",
+    "id": "591975c0cc4d7d3f"
+  },
+  {
+    "path": "published/product-tree/intelligence-suite/rollback-downgrade-a-failed-server-upgrade.md",
+    "title": "Rollback / Downgrade a Failed Server Upgrade",
+    "category": [
+      "product-tree",
+      "intelligence-suite"
+    ],
+    "keywords": [
+      "upgrade",
+      "version",
+      "server",
+      "mongodb",
+      "will"
+    ],
+    "status": "published",
+    "summary": "> **ℹ️ Info**",
+    "confidence": 0.55,
+    "updated_at": "2026-04-12T21:06:13Z",
+    "id": "564f90efd2a29dbe"
+  },
+  {
+    "path": "published/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md",
+    "title": "Server Install Issue - \"Please wait while we uninstall prior versions of the product\" never finishes",
+    "category": [
+      "product-tree",
+      "intelligence-suite"
+    ],
+    "keywords": [
+      "uninstall",
+      "server",
+      "prior",
+      "designer",
+      "versions"
+    ],
+    "status": "published",
+    "summary": "| Issue | \"Please wait while we uninstall prior versions of the product\" never finishes |",
+    "confidence": 0.55,
+    "updated_at": "2026-04-12T21:06:14Z",
+    "id": "81ca3ed36782940d"
   }
 ]

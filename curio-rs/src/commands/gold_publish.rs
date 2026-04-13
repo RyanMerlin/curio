@@ -87,6 +87,15 @@ pub async fn run_publish(
     let rel_dest = dest_path.strip_prefix(repo_root).unwrap_or(&dest_path);
     crate::git_ops::git_mv(repo_root, rel_src, rel_dest)?;
 
+    // Move analysis sidecar alongside content (if present)
+    let analysis_src = src_path.with_extension("analysis.json");
+    if analysis_src.exists() {
+        let analysis_dest = dest_path.with_extension("analysis.json");
+        let rel_asrc = analysis_src.strip_prefix(repo_root).unwrap_or(&analysis_src);
+        let rel_adest = analysis_dest.strip_prefix(repo_root).unwrap_or(&analysis_dest);
+        let _ = crate::git_ops::git_mv(repo_root, rel_asrc, rel_adest);
+    }
+
     // Update registry
     let new_rel = dest_path
         .strip_prefix(wiki_dir)

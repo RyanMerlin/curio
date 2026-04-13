@@ -102,3 +102,6 @@
 - **2026-04-13T02:03:11Z** publish: upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe published to published/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md
 - **2026-04-13T02:04:50Z** publish: rollback-downgrade-a-failed-server-upgrade published to published/product-tree/alteryx-server/rollback-downgrade-a-failed-server-upgrade.md
 - **2026-04-13T02:04:55Z** publish: server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes published to published/product-tree/alteryx-server/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md
+- **2026-04-13T02:05:21Z** sync: 38 upserted, 37 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T02:05:46Z** sync: 38 upserted, 37 skipped, 0 stale deleted, 0 errors
+- **2026-04-13T03:12:18Z** reindex: rebuilt hierarchical indexes from 31 pages

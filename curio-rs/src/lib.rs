@@ -5,6 +5,7 @@ pub mod confluence;
 pub mod error;
 pub mod git_ops;
 pub mod harness;
+pub mod llm;
 pub mod northstar;
 pub mod output;
 pub mod reconcile;

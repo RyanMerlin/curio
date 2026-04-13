@@ -68,7 +68,15 @@
       "WebFetch(domain:developer.atlassian.com)",
       "WebSearch",
       "Bash(pip show:*)",
-      "WebFetch(domain:pypi.org)"
-    ]
+      "WebFetch(domain:pypi.org)",
+      "mcp__atlassian-api__delete-page",
+      "Bash(ls wiki/intake/*.md)",
+      "Bash(ls wiki/published/product-tree/alteryx-server/*.md)",
+      "Bash(ls wiki/staged/product-tree/alteryx-server/*.md)",
+      "Bash(find wiki/published/product-tree/alteryx-server -name \"*.md\" -exec git rm {} \\\\;)",
+      "Bash(xargs head:*)",
+      "Bash(./curio-rs/target/debug/curio reindex:*)"
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }

@@ -1,11 +1,11 @@
 use crate::{Frontmatter, PageStatus, WikiIndex, WikiIndexEntry, WikiPage};
 use anyhow::{Context, Result};
 use chrono::Utc;
+use std::collections::BTreeMap;
 use std::path::Path;
 use walkdir::WalkDir;
 
 const REGISTRY_FILE: &str = "_index/registry.json";
-const INDEX_MD_FILE: &str = "_index/index.md";
 const LOG_MD_FILE: &str = "_index/log.md";
 
 // ─── Registry (registry.json) ────────────────────────────────────────────
@@ -56,7 +56,7 @@ pub fn remove_registry_entry(wiki_dir: &Path, id: &str) -> Result<()> {
 // ─── Reindex from filesystem ─────────────────────────────────────────────
 
 /// Walk `wiki_dir/**/*.md`, parse frontmatter, and rebuild `WikiIndex`.
-/// Skips files in `_index/`, `_audit/`, and `_schema/`.
+/// Skips `_index/`, `_audit/`, `_schema/` directories and `index.md` files.
 pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
     let mut pages = Vec::new();
 
@@ -75,15 +75,21 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
             .expect("walkdir entry is under wiki_dir");
 
         // Skip system directories
-        let first_component = rel.components().next().map(|c| c.as_os_str().to_string_lossy().into_owned()).unwrap_or_default();
-        if matches!(first_component.as_str(), "_index" | "_audit" | "_schema") {
+        let first = rel.components().next()
+            .map(|c| c.as_os_str().to_string_lossy().into_owned())
+            .unwrap_or_default();
+        if matches!(first.as_str(), "_index" | "_audit" | "_schema") {
+            continue;
+        }
+
+        // Skip co-located index.md files — they are generated artifacts, not content pages
+        if rel.file_name().map_or(false, |f| f == "index.md") {
             continue;
         }
 
         match crate::wiki_fs::parse_wiki_page(abs) {
             Ok(page) => {
-                let entry = entry_from_page(&page, rel);
-                pages.push(entry);
+                pages.push(entry_from_page(&page, rel));
             }
             Err(e) => {
                 eprintln!("Warning: skipping {} — {}", rel.display(), e);
@@ -110,58 +116,284 @@ pub fn entry_from_page(page: &WikiPage, rel_path: &Path) -> WikiIndexEntry {
     }
 }
 
-// ─── index.md ────────────────────────────────────────────────────────────
+// ─── Hierarchical co-located index.md files ──────────────────────────────
 
-/// Rebuild `wiki/_index/index.md` from the registry.
-pub fn rebuild_index_md(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
-    let path = wiki_dir.join(INDEX_MD_FILE);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
+/// Rebuild all co-located `index.md` files in `wiki/published/` from the registry
+/// and NORTHSTAR blueprint. Also removes the legacy `_index/index.md` if it exists.
+///
+/// Generates:
+///   wiki/published/index.md                        — root navigation
+///   wiki/published/{tree}/index.md                 — tree overview
+///   wiki/published/{tree}/{subtree}/index.md       — leaf page table
+pub fn rebuild_colocated_indexes(
+    wiki_dir: &Path,
+    index: &WikiIndex,
+    trees: &[crate::commands::sync::TreeNode],
+) -> Result<()> {
+    // Remove legacy monolithic index if it exists
+    let legacy = wiki_dir.join("_index/index.md");
+    if legacy.exists() {
+        std::fs::remove_file(&legacy)?;
+    }
+
+    let published_dir = wiki_dir.join("published");
+    if !published_dir.exists() {
+        return Ok(());
     }
 
     let now = Utc::now().format("%Y-%m-%d %H:%M UTC").to_string();
-    let total = index.pages.len();
 
-    // Group by first category segment
-    let mut by_category: std::collections::BTreeMap<String, Vec<&WikiIndexEntry>> =
-        std::collections::BTreeMap::new();
-    for entry in &index.pages {
-        let cat = entry.category.first().cloned().unwrap_or_else(|| "uncategorized".to_string());
-        by_category.entry(cat).or_default().push(entry);
-    }
+    // Group published pages by tree and subtree
+    let published_pages: Vec<&WikiIndexEntry> = index
+        .pages
+        .iter()
+        .filter(|e| e.status == "published" && !e.path.starts_with("_"))
+        .collect();
 
-    let mut out = format!(
-        "# Curio Wiki Index\n> Last updated: {} | Pages: {}\n\n",
-        now, total
-    );
-
-    if index.pages.is_empty() {
-        out.push_str("_No pages yet. Run `curio intake` to add content._\n");
-    } else {
-        for (cat, entries) in &by_category {
-            out.push_str(&format!("## {} ({} pages)\n", cat, entries.len()));
-            for e in entries {
-                let conf = e
-                    .confidence
-                    .map(|c| format!(" [confidence:{:.0}%]", c * 100.0))
-                    .unwrap_or_default();
-                let kw = if e.keywords.is_empty() {
-                    String::new()
-                } else {
-                    format!(" | keywords: {}", e.keywords.join(", "))
-                };
-                out.push_str(&format!(
-                    "- **{}** — {}{}{}\n",
-                    e.path, e.summary, conf, kw
-                ));
-            }
-            out.push('\n');
+    // Count pages per tree/subtree
+    let mut tree_counts: BTreeMap<String, usize> = BTreeMap::new();
+    let mut subtree_counts: BTreeMap<(String, String), usize> = BTreeMap::new();
+    for page in &published_pages {
+        let tree = page.category.first().cloned().unwrap_or_else(|| "uncategorized".to_string());
+        let subtree = page.category.get(1).cloned();
+        *tree_counts.entry(tree.clone()).or_insert(0) += 1;
+        if let Some(st) = subtree {
+            *subtree_counts.entry((tree, st)).or_insert(0) += 1;
         }
     }
 
-    std::fs::write(&path, out)
-        .with_context(|| format!("Failed to write {}", path.display()))?;
+    let total: usize = published_pages.len();
+
+    // ── Root index: wiki/published/index.md ─────────────────────────────
+    let mut root_md = format!(
+        "# Curio Knowledge Index\n> {} pages | updated {}\n\n",
+        total, now
+    );
+
+    if trees.is_empty() {
+        root_md.push_str("_No tree blueprint defined. Run `curio init` to seed from NORTHSTAR._\n");
+    } else {
+        root_md.push_str("## Trees\n\n");
+        for tree in trees {
+            let count = tree_counts.get(&tree.slug).copied().unwrap_or(0);
+            let desc = strip_html_inline(&tree.description_html);
+            root_md.push_str(&format!("### [{title}]({slug}/index.md)\n", title=tree.title, slug=tree.slug));
+            if !desc.is_empty() {
+                root_md.push_str(&format!("> {}\n", desc));
+            }
+            root_md.push_str(&format!("> **{}** pages\n\n", count));
+
+            for sub in &tree.subtrees {
+                let sub_count = subtree_counts.get(&(tree.slug.clone(), sub.slug.clone())).copied().unwrap_or(0);
+                let sub_desc = strip_html_inline(&sub.description_html);
+                root_md.push_str(&format!("- [{title}]({tree}/{slug}/index.md)", title=sub.title, tree=tree.slug, slug=sub.slug));
+                if !sub_desc.is_empty() {
+                    root_md.push_str(&format!(" — _{}_", sub_desc));
+                }
+                root_md.push_str(&format!(" ({} pages)\n", sub_count));
+            }
+            root_md.push('\n');
+        }
+    }
+
+    let root_path = published_dir.join("index.md");
+    std::fs::write(&root_path, &root_md)
+        .with_context(|| format!("Failed to write {}", root_path.display()))?;
+
+    // ── Tree and leaf indexes ────────────────────────────────────────────
+    for tree in trees {
+        let tree_dir = published_dir.join(&tree.slug);
+        if !tree_dir.exists() {
+            std::fs::create_dir_all(&tree_dir)?;
+        }
+
+        // Pages belonging to this tree but no subtree
+        let tree_top_pages: Vec<&&WikiIndexEntry> = published_pages
+            .iter()
+            .filter(|e| {
+                e.category.first().map(|s| s.as_str()) == Some(&tree.slug)
+                    && e.category.len() == 1
+            })
+            .collect();
+
+        write_tree_index(&tree_dir, tree, &tree.subtrees, &tree_top_pages, now.as_str())?;
+
+        // Leaf indexes for each subtree
+        for sub in &tree.subtrees {
+            let sub_dir = tree_dir.join(&sub.slug);
+            if !sub_dir.exists() {
+                std::fs::create_dir_all(&sub_dir)?;
+            }
+
+            let sub_pages: Vec<&&WikiIndexEntry> = published_pages
+                .iter()
+                .filter(|e| {
+                    e.category.first().map(|s| s.as_str()) == Some(tree.slug.as_str())
+                        && e.category.get(1).map(|s| s.as_str()) == Some(sub.slug.as_str())
+                })
+                .collect();
+
+            write_leaf_index(&sub_dir, sub, &sub_pages, now.as_str())?;
+        }
+    }
+
+    // ── Uncategorized fallback ───────────────────────────────────────────
+    // Pages that don't match any known tree get written to published/uncategorized/index.md
+    let uncategorized: Vec<&&WikiIndexEntry> = published_pages
+        .iter()
+        .filter(|e| {
+            let tree = e.category.first().map(|s| s.as_str()).unwrap_or("uncategorized");
+            !trees.iter().any(|t| t.slug == tree)
+        })
+        .collect();
+
+    if !uncategorized.is_empty() {
+        let unc_dir = published_dir.join("uncategorized");
+        std::fs::create_dir_all(&unc_dir)?;
+        let mut md = format!("# Uncategorized\n> Pages not yet routed to a tree.\n> {} pages | updated {}\n\n", uncategorized.len(), now);
+        md.push_str("| Title | Summary | Updated |\n|-------|---------|--------|\n");
+        for e in &uncategorized {
+            let fname = e.path.split('/').last().unwrap_or(&e.path);
+            md.push_str(&format!(
+                "| [{}]({}) | {} | {} |\n",
+                e.title, fname, e.summary, short_date(&e.updated_at)
+            ));
+        }
+        std::fs::write(unc_dir.join("index.md"), md)?;
+    }
+
     Ok(())
+}
+
+fn write_tree_index(
+    tree_dir: &Path,
+    tree: &crate::commands::sync::TreeNode,
+    subtrees: &[crate::commands::sync::TreeNode],
+    top_pages: &[&&WikiIndexEntry],
+    now: &str,
+) -> Result<()> {
+    let desc = strip_html_inline(&tree.description_html);
+    let mut md = format!("# {}\n", tree.title);
+    if !desc.is_empty() {
+        md.push_str(&format!("> {}\n", desc));
+    }
+    md.push_str(&format!("> updated {}\n\n", now));
+
+    if !subtrees.is_empty() {
+        md.push_str("## Subtrees\n\n");
+        for sub in subtrees {
+            let sub_desc = strip_html_inline(&sub.description_html);
+            md.push_str(&format!("- **[{}]({}/index.md)**", sub.title, sub.slug));
+            if !sub_desc.is_empty() {
+                md.push_str(&format!(" — {}", sub_desc));
+            }
+            md.push('\n');
+        }
+        md.push('\n');
+    }
+
+    if !top_pages.is_empty() {
+        md.push_str("## Pages\n\n");
+        md.push_str("| Title | Summary | Updated |\n|-------|---------|--------|\n");
+        for e in top_pages {
+            let fname = e.path.split('/').last().unwrap_or(&e.path);
+            md.push_str(&format!(
+                "| [{}]({}) | {} | {} |\n",
+                e.title, fname, e.summary, short_date(&e.updated_at)
+            ));
+        }
+    }
+
+    std::fs::write(tree_dir.join("index.md"), md)
+        .with_context(|| format!("Failed to write tree index at {}", tree_dir.display()))
+}
+
+fn write_leaf_index(
+    sub_dir: &Path,
+    sub: &crate::commands::sync::TreeNode,
+    pages: &[&&WikiIndexEntry],
+    now: &str,
+) -> Result<()> {
+    let desc = strip_html_inline(&sub.description_html);
+    let mut md = format!("# {}\n", sub.title);
+    if !desc.is_empty() {
+        md.push_str(&format!("> {}\n", desc));
+    }
+    md.push_str(&format!("> **{}** pages | updated {}\n\n", pages.len(), now));
+
+    if pages.is_empty() {
+        md.push_str("_No pages yet._\n");
+    } else {
+        md.push_str("| Title | Summary | Keywords | Updated |\n|-------|---------|----------|--------|\n");
+        let mut sorted = pages.to_vec();
+        sorted.sort_by(|a, b| a.title.cmp(&b.title));
+        for e in sorted {
+            let fname = e.path.split('/').last().unwrap_or(&e.path);
+            let kw = e.keywords.join(", ");
+            md.push_str(&format!(
+                "| [{}]({}) | {} | {} | {} |\n",
+                e.title, fname, e.summary, kw, short_date(&e.updated_at)
+            ));
+        }
+    }
+
+    std::fs::write(sub_dir.join("index.md"), md)
+        .with_context(|| format!("Failed to write leaf index at {}", sub_dir.display()))
+}
+
+/// Strip HTML tags and collapse whitespace for use in markdown text.
+fn strip_html_inline(html: &str) -> String {
+    let mut out = String::new();
+    let mut in_tag = false;
+    for ch in html.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => out.push(ch),
+            _ => {}
+        }
+    }
+    out.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn short_date(ts: &str) -> &str {
+    // "2026-04-13T02:03:24Z" → "2026-04-13"
+    if ts.len() >= 10 { &ts[..10] } else { ts }
+}
+
+/// Read the root navigation index for passing to LLM context.
+/// Reads from `wiki/published/index.md` (new location).
+pub fn read_index_md(wiki_dir: &Path) -> Result<String> {
+    // Prefer new co-located root index
+    let new_path = wiki_dir.join("published/index.md");
+    if new_path.exists() {
+        return std::fs::read_to_string(&new_path)
+            .with_context(|| format!("Failed to read {}", new_path.display()));
+    }
+    // Legacy fallback
+    let legacy = wiki_dir.join("_index/index.md");
+    if legacy.exists() {
+        return std::fs::read_to_string(&legacy)
+            .with_context(|| format!("Failed to read {}", legacy.display()));
+    }
+    Ok(String::new())
+}
+
+// ─── Backwards-compat shim ───────────────────────────────────────────────
+
+/// Legacy monolithic index rebuild — retained as a shim for callers that haven't
+/// migrated. Delegates to rebuild_colocated_indexes with an empty tree list,
+/// which writes minimal indexes and removes the old _index/index.md.
+pub fn rebuild_index_md(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
+    // Try to load NORTHSTAR trees for richer output
+    let ns_path = wiki_dir.join("_schema/northstar.md");
+    let trees = if ns_path.exists() {
+        let md = std::fs::read_to_string(&ns_path).unwrap_or_default();
+        crate::commands::sync::parse_northstar_blueprint(&md)
+    } else {
+        vec![]
+    };
+    rebuild_colocated_indexes(wiki_dir, index, &trees)
 }
 
 // ─── log.md ──────────────────────────────────────────────────────────────
@@ -172,30 +404,16 @@ pub fn append_log(wiki_dir: &Path, entry: &str) -> Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-
     let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let line = format!("- **{}** {}\n", now, entry);
-
     let mut content = if path.exists() {
         std::fs::read_to_string(&path)?
     } else {
         "# Curio Operation Log\n\n".to_string()
     };
-
     content.push_str(&line);
     std::fs::write(&path, content)?;
     Ok(())
-}
-
-// ─── Convenience: load index.md text ────────────────────────────────────
-
-/// Read index.md as a string (for passing to LLM context).
-pub fn read_index_md(wiki_dir: &Path) -> Result<String> {
-    let path = wiki_dir.join(INDEX_MD_FILE);
-    if !path.exists() {
-        return Ok(String::new());
-    }
-    std::fs::read_to_string(&path).with_context(|| format!("Failed to read {}", path.display()))
 }
 
 // ─── Lookup helpers ──────────────────────────────────────────────────────
@@ -205,13 +423,8 @@ pub fn entries_by_status<'a>(index: &'a WikiIndex, status: &str) -> Vec<&'a Wiki
     index.pages.iter().filter(|e| e.status == status).collect()
 }
 
-/// Check whether a content_hash already exists in the registry (dedup).
-pub fn is_duplicate_hash(_index: &WikiIndex, content_hash: &str) -> bool {
-    // The hash is stored in frontmatter, not the index entry, so we
-    // can only check via the index if we add it. For now, check by path.
-    // A more thorough check reads each file's frontmatter.
-    let _ = content_hash;
-    false // Will be enriched by intake command directly comparing hashes
+pub fn is_duplicate_hash(_index: &WikiIndex, _content_hash: &str) -> bool {
+    false
 }
 
 /// Build a `WikiIndexEntry` directly from `Frontmatter` + relative path + summary.

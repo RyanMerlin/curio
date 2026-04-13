@@ -15,6 +15,48 @@ pub struct Config {
     pub runtime: RuntimeConfig,
     #[serde(default)]
     pub wiki: WikiConfig,
+    #[serde(default)]
+    pub llm: LlmConfig,
+}
+
+/// LLM inference settings — required for `curio process` (routing) and `curio query`.
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
+pub struct LlmConfig {
+    /// Anthropic API key. Reads from ANTHROPIC_API_KEY env var if not set here.
+    pub api_key: String,
+    /// Model to use for routing/analysis. Default: claude-sonnet-4-6.
+    #[serde(default = "LlmConfig::default_model")]
+    pub model: String,
+}
+
+impl LlmConfig {
+    fn default_model() -> String {
+        "claude-sonnet-4-6".to_string()
+    }
+
+    pub fn effective_api_key(&self) -> String {
+        if !self.api_key.is_empty() {
+            return self.api_key.clone();
+        }
+        std::env::var("ANTHROPIC_API_KEY").unwrap_or_default()
+    }
+
+    pub fn effective_model(&self) -> String {
+        if self.model.is_empty() {
+            return Self::default_model();
+        }
+        self.model.clone()
+    }
+
+    pub fn require_api_key(&self) -> anyhow::Result<String> {
+        let key = self.effective_api_key();
+        if key.is_empty() {
+            anyhow::bail!(
+                "Anthropic API key not configured. Set ANTHROPIC_API_KEY env var or add to .curio.yaml under llm.api_key."
+            );
+        }
+        Ok(key)
+    }
 }
 
 /// Confluence connection settings — only required when sync or Confluence-source intake is used.
@@ -188,6 +230,7 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
             config.wiki.wiki_dir = PathBuf::from(wiki_dir);
         }
     }
+    // ANTHROPIC_API_KEY is read by LlmConfig::effective_api_key() at call time — no caching needed.
 
     if config.runtime.temp_dir.is_none() {
         config.runtime.temp_dir = Some(default_temp_dir());
