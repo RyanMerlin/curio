@@ -1,21 +1,28 @@
 ---
 id: 19541479922a3ab3
 title: Routing Validation - Server rollback with secondary product mention
-status: intake
+status: staged
 source:
   kind: file
   id: file:C:\code\agents\curio\tmp\routing-validation-server-primary.txt
   origin_url: null
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- server
+- rollback
+- upgrade
+- mongodb
+- validation
 created_at: 2026-04-13T23:17:18Z
-updated_at: 2026-04-13T23:17:18Z
-confidence: null
+updated_at: 2026-04-13T23:17:48Z
+confidence: 0.93
 cross_refs: []
 content_hash: sha256:fe18223e43121af25536f5f04ae8b28b7f8d3ca282774aa55db6808111706829
 confluence_page_id: null
-model_used: null
+model_used: codex-validation
 ---
 
 This validation document is primarily about rolling back an Alteryx Server upgrade after a failed migration.

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-13T23:17:48Z",
+  "model": "codex-validation",
+  "inputs": {
+    "title": "Routing Validation - Server rollback with secondary product mention",
+    "source_url": null,
+    "content_hash": "sha256:fe18223e43121af25536f5f04ae8b28b7f8d3ca282774aa55db6808111706829",
+    "content_preview": "This validation document is primarily about rolling back an Alteryx Server upgrade after a failed migration.\n\nThe main topic is the Server rollback workflow, including backup checks, controller token handling, service restart order, and MongoDB restore considerations.\n\nOne step mentions uninstalling related products such as Predictive Tools or Intelligence Suite before reinstalling the prior Server version, but those are secondary references and not the main subject of the article.\n\nThe page sho"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.93,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "review_reason": null,
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "routing",
+      "validation",
+      "-",
+      "server",
+      "rollback",
+      "with",
+      "secondary",
+      "product",
+      "mention"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "topic",
+      "secondary",
+      "main",
+      "mentions",
+      "rollback",
+      "route",
+      "Alteryx"
+    ]
+  }
+}
