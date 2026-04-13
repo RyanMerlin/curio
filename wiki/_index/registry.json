@@ -165,11 +165,11 @@
     "id": "d8b45be104aeaaf8"
   },
   {
-    "path": "staged/product-tree/alteryx-server/faq-help-cryptomigration.md",
+    "path": "published/product-tree/alteryx-server/faq-help-cryptomigration.md",
     "title": "FAQ / Help - CryptoMigration",
     "category": [],
     "keywords": [],
-    "status": "staged",
+    "status": "published",
     "summary": "Overview",
     "confidence": null,
     "updated_at": "2026-04-13T01:55:58Z",

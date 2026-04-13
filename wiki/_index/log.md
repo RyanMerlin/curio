@@ -78,3 +78,4 @@
 - **2026-04-13T02:02:43Z** publish: errors-installation-and-upgrade published to published/product-tree/alteryx-server/errors-installation-and-upgrade.md
 - **2026-04-13T02:02:44Z** publish: errors-pre-upgrade-checks published to published/product-tree/alteryx-server/errors-pre-upgrade-checks.md
 - **2026-04-13T02:02:45Z** publish: example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0 published to published/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md
+- **2026-04-13T02:02:46Z** publish: faq-help-cryptomigration published to published/product-tree/alteryx-server/faq-help-cryptomigration.md
