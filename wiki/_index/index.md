@@ -37,7 +37,7 @@
 - **published/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md** — > **📝 Note**
 - **published/product-tree/alteryx-server/mongodb-upgrade-folder-structure.md** — ---
 - **staged/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md** — > **ℹ️ Info**
-- **staged/product-tree/alteryx-server/server-health-check.md** — > **ℹ️ Info**
+- **published/product-tree/alteryx-server/server-health-check.md** — > **ℹ️ Info**
 - **published/product-tree/alteryx-server/example-alteryx-server-upgrade-22-1-to-23-2-mongodb-upgrade-4-2-to-6-0.md** — > **ℹ️ Info**
 - **published/product-tree/alteryx-server/draft-for-server-upgrade-guide-in-community.md** — > **ℹ️ Info**
 
