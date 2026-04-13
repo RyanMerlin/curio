@@ -1,21 +1,28 @@
 ---
 id: 0cfb0e96ee956763
 title: Errors (Installation and Upgrade)
-status: intake
+status: staged
 source:
   kind: confluence_page
   id: confluence-page:2106261638
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2106261638
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- mongodb
+- upgrade
+- start
+- installation
+- failed
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:55:58Z
-confidence: null
+updated_at: 2026-04-13T01:56:12Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:a26f3093062081f4c014095ccab8653bc9cb1314d43e5f4a1f9564719283f9b1
 confluence_page_id: null
-model_used: null
+model_used: heuristic
 ---
 
 # Installation and Upgrade Errors
