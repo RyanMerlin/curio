@@ -1,7 +1,7 @@
 ---
 id: 24c0f8f7d99c30ef
 title: Embedded MongoDB upgrade / migration
-status: staged
+status: published
 source:
   kind: confluence_page
   id: confluence-page:2314994152
@@ -17,7 +17,7 @@ keywords:
 - version
 - server
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T01:56:05Z
+updated_at: 2026-04-13T01:58:49Z
 confidence: 0.55
 cross_refs: []
 content_hash: sha256:906f6483e73e2a272449d2c03cca4a7eea072b46e46657528ed91fc2bb8bb023

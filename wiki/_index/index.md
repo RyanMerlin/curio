@@ -33,7 +33,7 @@
 - **published/product-tree/alteryx-server/2021-4-patch-6-to-2022-3-upgrade-defects.md** — TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)
 - **published/product-tree/alteryx-server/controller-token-length-transition-from-21-4-to-22-3.md** — > **ℹ️ Info**
 - **published/product-tree/alteryx-server/cloud-vm-server-deployment.md** — | AWS | Best Practices for Deploying Alteryx Server on AWS (PDF) <== Tim R link |
-- **staged/product-tree/alteryx-server/embedded-mongodb-upgrade-migration.md** — ---
+- **published/product-tree/alteryx-server/embedded-mongodb-upgrade-migration.md** — ---
 - **staged/product-tree/alteryx-server/how-to-upgrade-embedded-mongodb-version-manually.md** — > **📝 Note**
 - **staged/product-tree/alteryx-server/mongodb-upgrade-folder-structure.md** — ---
 - **staged/product-tree/alteryx-server/server-version-build-number-vs-patch-for-older-versions.md** — > **ℹ️ Info**
