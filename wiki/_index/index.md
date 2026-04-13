@@ -6,7 +6,7 @@
 - **published/product-tree/alteryx-server/issues-installation-and-upgrade.md** — ---
 - **staged/product-tree/intelligence-suite/server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md** — | Issue | "Please wait while we uninstall prior versions of the product" never finishes |
 - **published/product-tree/alteryx-server/errors-installation-and-upgrade.md** — Installation and Upgrade Errors
-- **staged/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md** — | Context | Upgrading Server |
+- **published/product-tree/alteryx-server/upgrade-error-mongod-exe-entry-point-not-found-the-procedure-entry-point-bcrypthash-could-not-be-located-in-the-dynamic-link-library-alteryx-bin-mongod-exe.md** — | Context | Upgrading Server |
 - **published/product-tree/alteryx-server/upgrade-error-failed-to-open-xml-file-c-programdata-alteryx-engine-202-installinfo-xml-system-error-2147024786.md** — | Context |  |
 - **published/product-tree/alteryx-server/install-upgrade-error-service-alteryxservice-alteryxservice-could-not-be-installed.md** — | Context | When upgrading Alteryx Server an error occurs “AlteryxService” could not be installed. |
 - **published/product-tree/alteryx-server/mongo-database-upgrade-error-failed-to-backup-the-folder-c-programdata-alteryx-service-persistence-mongodb-backup-access-to-the-path-c-programdata-alteryx-service-persistence-mongodb-is-denied.md** — | Context | MongoDB Migration when performing an upgrade |
