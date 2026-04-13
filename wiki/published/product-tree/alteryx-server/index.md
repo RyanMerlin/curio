@@ -1,6 +1,6 @@
 # Alteryx Server
 > Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns.
-> **26** pages | updated 2026-04-13 23:17 UTC
+> **30** pages | updated 2026-04-13 23:33 UTC
 
 | Title | Summary | Keywords | Updated |
 |-------|---------|----------|--------|
@@ -24,6 +24,10 @@
 | [Rollback / Downgrade a Failed Server Upgrade](rollback-downgrade-a-failed-server-upgrade.md) | > **ℹ️ Info** | upgrade, version, server, mongodb, will | 2026-04-13 |
 | [Server Health Check](server-health-check.md) | > **ℹ️ Info** | server, health, check, mongodb, sharepoint | 2026-04-13 |
 | [Server Install Issue - "Please wait while we uninstall prior versions of the product" never finishes](server-install-issue-please-wait-while-we-uninstall-prior-versions-of-the-product-never-finishes.md) | | Issue | "Please wait while we uninstall prior versions of the product" never finishes | | uninstall, server, prior, versions, issue | 2026-04-13 |
+| [Server Upgrade Issues by Version - 22.3 and 22.1](server-upgrade-issues-by-version-22-3-and-22-1.md) | > **ℹ️ Info** | upgrade, version, 22.3, 22.1, controller-token | 2026-04-13 |
+| [Server Upgrade Issues by Version - 23.2 and 23.1](server-upgrade-issues-by-version-23-2-and-23-1.md) | > **ℹ️ Info** | upgrade, version, 23.2, 23.1, cryptomigration | 2026-04-13 |
+| [Server Upgrade Issues by Version - 24.1](server-upgrade-issues-by-version-24-1.md) | > **ℹ️ Info** | upgrade, version, 24.1, schema, migration | 2026-04-13 |
+| [Server Upgrade Issues by Version - 25.1 and 24.2](server-upgrade-issues-by-version-25-1-and-24-2.md) | > **ℹ️ Info** | upgrade, version, 25.1, 24.2, mongodb | 2026-04-13 |
 | [Server Upgrade Issues-by-Version](server-upgrade-issues-by-version.md) | > **ℹ️ Info** | error, upgrade, version, jira, migration | 2026-04-13 |
 | [Server Upgrade Version Paths - What version can upgrade to what versions?](server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md) | > **ℹ️ Info** | mongo, upgrade, help, version, patch | 2026-04-13 |
 | [Server Version Build Number vs Patch for Older Versions](server-version-build-number-vs-patch-for-older-versions.md) | > **ℹ️ Info** | versions, older, longer, document, officially | 2026-04-13 |
