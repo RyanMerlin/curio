@@ -1,21 +1,29 @@
 ---
 id: 036f097923053c26
 title: AlteryxService.exe test
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2253260418
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2253260418
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- alteryxservice
+- diagnostic
+- command-line
+- startup
+- testing
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:22Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:95d1455c69078f63bc8808de96c5505f133c3d9c78ef73209b9f1b1d32fe2018
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

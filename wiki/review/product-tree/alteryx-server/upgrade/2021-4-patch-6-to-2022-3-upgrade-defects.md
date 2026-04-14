@@ -1,21 +1,30 @@
 ---
 id: 0d51911641ce3fc2
 title: 2021.4 Patch 6 to 2022.3 Upgrade Defects
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1868234983
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1868234983
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- defects
+- '2021.4'
+- '2022.3'
+- patch
+- version-specific
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:20Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:1cf1e487df05472765c0f5a716474a3ac1f74fd0417df7649523b34cbcd3d8d8
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)

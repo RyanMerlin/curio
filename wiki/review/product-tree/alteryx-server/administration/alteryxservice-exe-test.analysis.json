@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:22Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "AlteryxService.exe test",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2253260418",
+    "content_hash": "sha256:95d1455c69078f63bc8808de96c5505f133c3d9c78ef73209b9f1b1d32fe2018",
+    "content_preview": "---\n\n---\n\n> **ℹ️ Info**\n>\n> **AlteryxService.exe test** performs several checks, some will be logged during startup but this is a succinct view and and can show things that don’t appear in logs\n\n| **Key Articles** | [Command line Testing Tools for Windows and Server](https://alteryx.atlassian.net/wiki/search?text=Command+line+Testing+Tools+for+Windows+and+Server) > **AlteryxService** |\n| --- | --- |\n\n# To Run AlteryxService.exe\n\nChange directory to C:\\Program Files\\Alteryx\\bin, or wherever the c"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.69,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "alteryxservice.exe",
+      "test"
+    ],
+    "keywords_extracted": [
+      "test",
+      "AlteryxServiceexe",
+      "AlteryxService",
+      "line",
+      "installed",
+      "show",
+      "Windows",
+      "CProgram"
+    ]
+  }
+}

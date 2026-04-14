@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:23Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "API",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640792867",
+    "content_hash": "sha256:7c34fed83b2fc5d9f0d0b2d7b1dc88212f6b86dde76aa63a03c3231b0f7167cb",
+    "content_preview": "**Endpoints**\n > [V3](https://alteryx.atlassian.net/wiki/search?text=V3+Endpoints)\n > [V2](https://alteryx.atlassian.net/wiki/search?text=V2+Endpoints)\n > [V1](https://alteryx.atlassian.net/wiki/search?text=V1+Endpoints)\n > [/webapi/oauth2/token](https://alteryx.atlassian.net/wiki/search?text=/webapi/oauth2/token)\n\n[Swagger (API Docs)](https://alteryx.atlassian.net/wiki/search?text=Swagger)\n\n[Issues](https://alteryx.atlassian.net/wiki/search?text=General+Issues+(API))\n[Errors](https://alteryx.at"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "api"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.54,
+    "usability": 0.55,
+    "review_reason": "Hub/index page — route to review as branch-node proposal for api subtree",
+    "proposed_new_subtree": "api",
+    "proposal_rationale": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "api"
+    ],
+    "keywords_extracted": [
+      "VhttpsalteryxatlassiannetwikisearchtextVEndpoints",
+      "time",
+      "Swagger",
+      "PartnershiphttpsalteryxatlassiannetwikisearchtextUIPathPartnership",
+      "Migration",
+      "PostmanhttpsalteryxatlassiannetwikispacesSupportCseBasicspagestitlePostman",
+      "than",
+      "Helphttpshelpalteryxcomcurrentenserverapioverviewhtml"
+    ]
+  }
+}

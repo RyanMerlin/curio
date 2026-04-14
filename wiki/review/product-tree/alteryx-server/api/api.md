@@ -1,21 +1,29 @@
 ---
 id: 3e731c7eb197448e
 title: API
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640792867
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640792867
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- server-api
+- oauth
+- endpoints
+- swagger
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:23Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:7c34fed83b2fc5d9f0d0b2d7b1dc88212f6b86dde76aa63a03c3231b0f7167cb
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 **Endpoints**
