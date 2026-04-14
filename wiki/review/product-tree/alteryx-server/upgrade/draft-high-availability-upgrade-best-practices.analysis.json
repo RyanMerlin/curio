@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:36Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "[DRAFT] High Availability Upgrade Best Practices",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2624061518",
+    "content_hash": "sha256:0aefcf6800ffb0a2a2b1bbf9ced1e2bb407801c06b4f14825dc31fb4344196d1",
+    "content_preview": "This page is a draft update for\n\n[High Availability Upgrade Best Practices](https://alteryx.atlassian.net/wiki/search?text=High+Availability+Upgrade+Best+Practices)\n\nThe page presents Best Practices for upgrading an HA Server Environment\n\n---\n\n---\n\n# Before Attempting an HA Upgrade\n\nFor a Prod environment, you should have performed the following before attempting the Prod upgrade:\n\n**Option 1**\nSuccessfully upgraded and tested a UAT or Dev server that used a recent backup of the Prod database (f"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.6,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.5799999,
+    "usability": 0.54999995,
+    "review_reason": "Draft of existing page — potential overlap with 'high-availability-upgrade-best-practices'; review for merge",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "[draft]",
+      "high",
+      "availability",
+      "upgrade",
+      "best",
+      "practices"
+    ],
+    "keywords_extracted": [
+      "Controller",
+      "Failover",
+      "Gallery",
+      "Upgrade",
+      "start",
+      "Primary",
+      "will",
+      "Cluster"
+    ]
+  }
+}

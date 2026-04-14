@@ -1,21 +1,28 @@
 ---
 id: 827c78a1e03b548e
 title: _DRAFT for Server Upgrade Guide in Community
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3589931151
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3589931151
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- draft
+- community-guide
+- how-to
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:36Z
+confidence: 0.6
 cross_refs: []
 content_hash: sha256:278ea820c85c8803529298f53ce9bf110d93a483ff7ec514d3a8a9eeb66208d3
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

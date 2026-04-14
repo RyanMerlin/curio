@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-draft-high-availability-upgrade-best-practices",
+  "generated_at": "2026-04-14T15:19:36Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "draft-high-availability-upgrade-best-practices",
+  "title": "[DRAFT] High Availability Upgrade Best Practices",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "upgrade"
+  ],
+  "summary": "Draft re-write of the High Availability Upgrade Best Practices page — actively being revised.",
+  "body_markdown": "This page is a draft update for\n\n[High Availability Upgrade Best Practices](https://alteryx.atlassian.net/wiki/search?text=High+Availability+Upgrade+Best+Practices)\n\nThe page presents Best Practices for upgrading an HA Server Environment\n\n---\n\n---\n\n# Before Attempting an HA Upgrade\n\nFor a Prod environment, you should have performed the following before attempting the Prod upgrade:\n\n**Option 1**\nSuccessfully upgraded and tested a UAT or Dev server that used a recent backup of the Prod database (from the [Host Recovery](https://help.alteryx.com/current/en/server/install/server-host-recovery-guide.html) process)\n\n**Option 2** \nSuccessfully upgraded and tested a Sandbox Server by taking the following steps:\n\n- Install same-version Server to Sandbox\n- Copy the Mongo database to a Sandbox User-Managed MongoDB\n- Perform a Server Host Recovery\n- Connect Sandbox to the Sandbox User-Managed MongoDB\n- Confirm encryption key stores are functioning\n- Upgrade the Sandbox\n- Test critical workflows are performing as expected\n\n# Overview\n\n> **ℹ️ Info**\n>\n> Downtime will be required for your initial validation and during the upgrades of each HA Node.  The HA environment cannot remain functional during this process.\n\nThe following sections will detail these steps\n\n- Confirm Only One HA Controller is Active\n- Validate Primary and Failover Server Key Stores\n- Stop MS Failover ClusterDetermine a Strategy to Access Each HA Gallery DirectlyStop the MS Failover Cluster to ensure it doesn’t failover and start an HA Failover Controller during the HA Primary upgrade\n   - Determine a Strategy to Access Each HA Gallery Directly\n   - Stop the MS Failover Cluster to ensure it doesn’t failover and start an HA Failover Controller during the HA Primary upgrade\n\n- Upgrade HA Primary NodeUpgrade all nodes (Controller, Gallery(s), Worker(s))Start ControllerIf not included in the Controller node, start one Gallery to perform MongoDB Schema migrationsStart WorkersTest critical workflowsStop Controller\n   - Upgrade all nodes (Controller, Gallery(s), Worker(s))\n   - Start Controller\n   - If not included in the Controller node, start one Gallery to perform MongoDB Schema migrations\n   - Start Workers\n   - Test critical workflows\n   - Stop Controller\n\n- Upgrade each HA Failover NodeUpgrade all nodes (Controller, Gallery(s), Worker(s))Start ControllerIf not included in the Controller node, start one Gallery (database has already been schema migrated)Start WorkersTest critical workflowsStop Controller\n   - Upgrade all nodes (Controller, Gallery(s), Worker(s))\n   - Start Controller\n   - If not included in the Controller node, start one Gallery (database has already been schema migrated)\n   - Start Workers\n   - Test critical workflows\n   - Stop Controller\n\n## HA Architecture Diagram\n\nNote that only the HA Primary Controller is running and all HA Nodes share the same MognoDB (likely a multinode replica set)\n\n---\n\n# Confirm Only One HA Controller is Active\n\n> **ℹ️ Info**\n>\n> Alteryx HA configuration is **Active-Passive** in which only ONE Controller should be running\n\nTo ensure only one HA Controller is active, please confirm:\n\n- Each Controller Alteryx Service is set to Manual start [tbd-should Gallery and Worker Nodes be running?]\n\n- Only the HA Primary Controller is Running out of all the HA Controllers\n\n---\n\n# Validate Primary and Failover Server Key Stores\n\n> **ℹ️ Info**\n>\n> Key Stores decrypt\n> \n> - Credentials\n> - DCM Connections\n> - Shared Database Connections\n> \n> A Server can start and APPEAR to run even when its Key Stores are not functioning. However, it will fail when running a workflow using any of the above elements.\n\n**Option 1**\n[**TBD - determine a minimal Key Store test**]\n\n**Option 2 **\nRun workflows that use\n\n- a Credential\n- DCM\n- a Shared Callery Connection\n\n---\n\n# Stop MS Failover Cluster\n\n## Determine a Strategy to Access Each HA Gallery Directly\n\n> **ℹ️ Info**\n>\n> Determine how you can directly access each HA Node for testing when the MS Failover Cluster is stopped\n\nThe DNS for the Gallery URL may point to\n\n- Option 1The MS Failover Cluster (cluster.company.com).  This relies on the MS Failover Cluster to forward the URL to the HA Node that is currently running. When you stop the MS Failover Cluster the URL will no longer resolve and you will be unable to start any of the HA Controllers for testing unless you edit the Controller’s hosts file [tbd hos to do this]\n- Option 2Directly to the HA Nodes (direct.company.com).  In this scenario, the DNS will point the URL to each of the HA Gallery IPs and function when any Gallery is running. [tbd-correct?].  No additional settings are required for testing individual HA Nodes with this configuration.\n\n## Stop the MS Failover Cluster \n\n> **ℹ️ Info**\n>\n> During HA Primary upgrade, you need to ensure the MS Failover Cluster does not attempt to start an HA Failover Node\n\nStop the MS Failover Cluster\n\n[**TBD - Link to MS documentation for this**]\n\n---\n\n# Upgrade HA Primary Node \n\n> **ℹ️ Info**\n>\n> Upgrading and starting the HA Primary Node will lead to upgrade Schema Migrations in the database\n\nPlease see upgrade documentation, including the links to the **Server Upgrade Checklist** and **Version-to-Version Guide**:  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server.html##>\n\nPerform the following steps in the HA Primary environment\n\n- Upgrade all Alteryx nodes (Controller, Gallery(s), Worker(s))\n- Start Controller\n- If not included in the Controller node, start one GalleryThe Gallery will perform MongoDB Schema migrations\n   - The Gallery will perform MongoDB Schema migrations\n\n- Start Workers\n- Test critical workflows\n- Stop Controller\n\nAHHHHHHHHH\n\n- It is possible that the controller token changes as part of upgrade if you are upgrading from a version that has 48 Characters of Controller Token. Hence verify the controller Token and Storage Keys Encrypted value to be identical.\n- If the tokens are different after the upgrade, perform the host recovery on Node 2 and 3\n\n---\n\n# Upgrade each HA Failover Node\n\n> **ℹ️ Info**\n>\n> Upgrading and starting the HA Failover Nodes will confirm they are ready to function in a failover situation\n\nPerform the following steps for each HA Failover Node\n\n- Upgrade all Alteryx nodes (Controller, Gallery(s), Worker(s))\n- Start Controller\n- If not included in the Controller node, start one GalleryNote: database has already been schema-migrated\n   - Note: database has already been schema-migrated\n\n- Start Workers\n- Test critical workflows\n- Stop Controller\n\n---\n\nDraft provided to\n\n- 00734720",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.6,
+    "quality_confidence": 0.5799999,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.54999995,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Draft of existing page — potential overlap with 'high-availability-upgrade-best-practices'; review for merge",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "proposed_node_title": "upgrade",
+    "proposed_node_slug": "upgrade",
+    "node_description": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2624061518"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2624061518"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Draft of existing page — potential overlap with 'high-availability-upgrade-best-practices'; review for merge"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:34Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Delete old sessions records",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702927558",
+    "content_hash": "sha256:66813ac7082d70e5973a33288d4a68c1bd6390be9e3679291bfc41dc598c23b6",
+    "content_preview": "> **ℹ️ Info**\n>\n> This articles explains how to **delete sessions** in MongoDB and/or add an index\n> \n> Too many **sessions **records can cause various timeout errors on Server\n\n| **Count all sessions** | db.sessions.count() |\n| --- | --- |\n| **Count sessions > 30 days old** | db.sessions.find({UpdateDate:{$lt: new Date(ISODate().getTime() - 1000 * 86400 * **30**)}}).count() |\n| **Delete sessions >30 days old** | db.sessions.remove({UpdateDate:{$lt: new Date(ISODate().getTime() - 1000 * 86400 * "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.73999995,
+    "usability": 0.82,
+    "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "delete",
+      "old",
+      "sessions",
+      "records"
+    ],
+    "keywords_extracted": [
+      "sessions",
+      "DateISODategetTime",
+      "records",
+      "days",
+      "dbsessionsremoveUpdateDatelt",
+      "index",
+      "clearsessionsbat",
+      "dbsessionscount"
+    ]
+  }
+}

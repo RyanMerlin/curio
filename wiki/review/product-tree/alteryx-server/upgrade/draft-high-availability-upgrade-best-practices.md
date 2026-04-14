@@ -1,21 +1,29 @@
 ---
 id: 54252f8b774443bb
 title: '[DRAFT] High Availability Upgrade Best Practices'
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2624061518
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2624061518
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- high-availability
+- best-practices
+- draft
+- ha
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:36Z
+confidence: 0.6
 cross_refs: []
 content_hash: sha256:0aefcf6800ffb0a2a2b1bbf9ced1e2bb407801c06b4f14825dc31fb4344196d1
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 This page is a draft update for

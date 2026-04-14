@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:38Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Enablement (Centralized Configuration Management)",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/4087284167",
+    "content_hash": "sha256:c6c4c20de38a68f3210bf6e7fb25b011c2ba8b94c460d3c4eec9344762f2db89",
+    "content_preview": "| **Enablement** | Jason Aggee Mar-11-2026 5m 28a  --- |\n| --- | --- |\n| **UI** | UI is in AAC  Config for Controller, Worker, Gallery  Config Controller  Config a Worker  Get the Worker PhoneHome file.  Tells the Server who to contact to get the configuration  Place file on Controller  Get Launch file for a Worker  Place on the Worker  When Service starts, it reaches out for its config and creates/updates RuntimeSettings.xml  Can still go to Alteryx System Settings  Reports  Central log access "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.49,
+    "usability": 0.65999997,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "enablement",
+      "(centralized",
+      "configuration",
+      "management)"
+    ],
+    "keywords_extracted": [
+      "Worker",
+      "Config",
+      "Controller",
+      "file",
+      "Enablement",
+      "Place",
+      "Configuration",
+      "Launch"
+    ]
+  }
+}

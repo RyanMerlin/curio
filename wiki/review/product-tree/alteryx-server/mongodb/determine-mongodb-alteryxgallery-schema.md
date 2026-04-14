@@ -1,21 +1,29 @@
 ---
 id: 1e0735c3c873cc22
 title: Determine MongoDB AlteryxGallery Schema
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702894190
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702894190
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- schema
+- alteryxgallery
+- upgrade
+- migration
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:35Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:13ae16c7f335724445b16c5738a9b9ebd42434f24a60a12b1c4d85a0c271bbee
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:36Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "_DRAFT for Server Upgrade Guide in Community",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3589931151",
+    "content_hash": "sha256:278ea820c85c8803529298f53ce9bf110d93a483ff7ec514d3a8a9eeb66208d3",
+    "content_preview": "> **ℹ️ Info**\n>\n> This page is a DRAFT for a Community Guide page in the same form as [SharePoint & Alteryx Guide](https://community.alteryx.com/t5/Alteryx-Community-Resources/SharePoint-amp-Alteryx-Guide/ta-p/1371125) (Comm) and the other “Guides” in Community/.\n\n---\n\n---\n\n# Foundational Articles that Span the Upgrade Process\n\n- https://help.alteryx.com/current/en/server/best-practices/server-upgrade-best-practices.html – narrative overview of upgrade best practces\n- https://help.alteryx.com/cu"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.6,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "Draft status — low confidence; requires editorial review before publication",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "_draft",
+      "for",
+      "server",
+      "upgrade",
+      "guide",
+      "in",
+      "community"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "upgrade",
+      "Alteryx",
+      "Upgrade",
+      "version",
+      "Embedded",
+      "Community",
+      "Silent"
+    ]
+  }
+}
