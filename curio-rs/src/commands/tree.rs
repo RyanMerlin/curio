@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::{commands::sync::parse_northstar_blueprint, config::Config, git_ops, northstar::sync_taxonomy_from_markdown, output::emit_json};
+use crate::{config::Config, git_ops, northstar::load_taxonomy, output::emit_json};
 
 /// Sync the `wiki/published/` directory tree to match the NORTHSTAR blueprint.
 ///
@@ -19,9 +19,9 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
         );
     }
 
-    let ns_md = std::fs::read_to_string(&northstar_path)?;
-    let _ = sync_taxonomy_from_markdown(wiki_dir);
-    let trees = parse_northstar_blueprint(&ns_md);
+    let _ns_md = std::fs::read_to_string(&northstar_path)?;
+    let taxonomy = load_taxonomy(wiki_dir)?;
+    let trees = taxonomy.nodes;
 
     if trees.is_empty() {
         if !json {
@@ -38,36 +38,10 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
 
     // Build expected set: all slugs that should exist
     let mut expected: std::collections::HashSet<String> = std::collections::HashSet::new();
-    for tree in &trees {
-        expected.insert(tree.slug.clone());
-        for sub in &tree.subtrees {
-            expected.insert(format!("{}/{}", tree.slug, sub.slug));
-        }
-    }
+    collect_expected_paths(&trees, &mut expected, Vec::new());
 
     // Create missing dirs
-    for tree in &trees {
-        let tree_dir = published_dir.join(&tree.slug);
-        if !tree_dir.exists() {
-            if dry_run {
-                created.push(format!("published/{}", tree.slug));
-            } else {
-                std::fs::create_dir_all(&tree_dir)?;
-                created.push(format!("published/{}", tree.slug));
-            }
-        }
-        for sub in &tree.subtrees {
-            let sub_dir = tree_dir.join(&sub.slug);
-            if !sub_dir.exists() {
-                if dry_run {
-                    created.push(format!("published/{}/{}", tree.slug, sub.slug));
-                } else {
-                    std::fs::create_dir_all(&sub_dir)?;
-                    created.push(format!("published/{}/{}", tree.slug, sub.slug));
-                }
-            }
-        }
-    }
+    create_expected_dirs(&published_dir, &trees, &mut created, dry_run, Vec::new())?;
 
     // Remove dirs that are no longer in NORTHSTAR, but only if they are empty
     if published_dir.exists() {
@@ -93,34 +67,10 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
                         slug
                     ));
                 }
-            } else {
-                // Tree exists — check subtrees within it
-                for sub_entry in std::fs::read_dir(&path)? {
-                    let sub_entry = sub_entry?;
-                    let sub_path = sub_entry.path();
-                    if !sub_path.is_dir() { continue; }
-                    let sub_slug = sub_path.file_name().unwrap_or_default().to_string_lossy().to_string();
-                    let full_key = format!("{}/{}", slug, sub_slug);
-                    if !expected.contains(&full_key) {
-                        let is_empty = std::fs::read_dir(&sub_path)?.next().is_none();
-                        if is_empty {
-                            if dry_run {
-                                removed.push(format!("published/{} (empty, would remove)", full_key));
-                            } else {
-                                std::fs::remove_dir(&sub_path)?;
-                                removed.push(format!("published/{}", full_key));
-                            }
-                        } else {
-                            skipped.push(format!(
-                                "published/{} (not in NORTHSTAR but has content — move manually)",
-                                full_key
-                            ));
-                        }
-                    }
-                }
             }
         }
     }
+    prune_unexpected_dirs(&published_dir, &expected, dry_run, &mut removed, &mut skipped, Vec::new())?;
 
     // Also sync wiki/_config/northstar.md ← NORTHSTAR.md if repo root copy is newer
     let repo_northstar = wiki_dir.parent().map(|p| p.join("NORTHSTAR.md")).filter(|p| p.exists());
@@ -169,5 +119,88 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
         }
     }
 
+    Ok(())
+}
+
+fn collect_expected_paths(
+    nodes: &[crate::northstar::TaxonomyNode],
+    expected: &mut std::collections::HashSet<String>,
+    prefix: Vec<String>,
+) {
+    for node in nodes {
+        let mut current = prefix.clone();
+        current.push(node.slug.clone());
+        expected.insert(current.join("/"));
+        collect_expected_paths(&node.children, expected, current);
+    }
+}
+
+fn create_expected_dirs(
+    root: &std::path::Path,
+    nodes: &[crate::northstar::TaxonomyNode],
+    created: &mut Vec<String>,
+    dry_run: bool,
+    prefix: Vec<String>,
+) -> Result<()> {
+    for node in nodes {
+        let mut current = prefix.clone();
+        current.push(node.slug.clone());
+        let rel = current.join("/");
+        let dir = root.join(current.iter().collect::<std::path::PathBuf>());
+        if !dir.exists() {
+            if dry_run {
+                created.push(format!("published/{}", rel));
+            } else {
+                std::fs::create_dir_all(&dir)?;
+                created.push(format!("published/{}", rel));
+            }
+        }
+        create_expected_dirs(root, &node.children, created, dry_run, current)?;
+    }
+    Ok(())
+}
+
+fn prune_unexpected_dirs(
+    root: &std::path::Path,
+    expected: &std::collections::HashSet<String>,
+    dry_run: bool,
+    removed: &mut Vec<String>,
+    skipped: &mut Vec<String>,
+    prefix: Vec<String>,
+) -> Result<()> {
+    if !root.exists() {
+        return Ok(());
+    }
+    for entry in std::fs::read_dir(root)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let slug = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        if slug.starts_with('_') {
+            continue;
+        }
+        let mut current = prefix.clone();
+        current.push(slug.clone());
+        let key = current.join("/");
+        prune_unexpected_dirs(&path, expected, dry_run, removed, skipped, current.clone())?;
+        if !expected.contains(&key) {
+            let is_empty = std::fs::read_dir(&path)?.next().is_none();
+            if is_empty {
+                if dry_run {
+                    removed.push(format!("published/{} (empty, would remove)", key));
+                } else {
+                    std::fs::remove_dir(&path)?;
+                    removed.push(format!("published/{}", key));
+                }
+            } else {
+                skipped.push(format!(
+                    "published/{} (not in taxonomy but has content — move manually)",
+                    key
+                ));
+            }
+        }
+    }
     Ok(())
 }

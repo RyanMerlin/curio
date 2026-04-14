@@ -298,12 +298,16 @@ Your job: classify an article into exactly one route from the Available Routes b
 
 ## Routing Rules
 - Choose the MOST SPECIFIC matching route. Prefer a subtree (e.g. product-tree/alteryx-server) over a top-level tree.
+- Hierarchy is the main design goal. Do not stop at the first acceptable shallow route if the content clearly implies a deeper intermediate structure.
+- Use branch indexes and the existing hierarchy aggressively to understand where this content should live as part of the whole knowledge base.
+- Keep searching likely neighboring structure until you believe you have found the relevant peers, branch nodes, and overlap candidates.
 - If confidence < 0.75 OR the article genuinely matches multiple routes equally, set status to "review".
 - If no existing subtree fits confidently, set status to "review", propose a new subtree slug, and explain why existing routes are insufficient.
 - Route names are workspace-specific examples from the current NORTHSTAR, not permanent universal labels. Use the CURRENT route descriptions, not stale assumptions from another project.
 - Prioritize the dominant content topic and title wording over incidental mentions in the body.
 - A passing mention of another product, dependency, or uninstall step does NOT make that other product the route.
 - If a page is primarily about one system's install, upgrade, rollback, recovery, architecture, usage, migration, policy, or operations, keep it with that dominant system even if the body mentions related products.
+- Default toward deeper hierarchy for technical-detail documents. If the content is operational, version-specific, scenario-specific, troubleshooting-specific, implementation-specific, or otherwise narrow and detailed, prefer a deeper path or a new intermediate node rather than placing it flat under a shallow branch. Only keep it at a higher level when the content is clearly broad, cross-cutting, or intentionally acts as a branch-level overview.
 - When in doubt, route to review rather than guess.
 
 ## Output Format

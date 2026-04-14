@@ -10,6 +10,10 @@ Curio is not a page router.
 
 Curio is an information transformation system.
 
+Hierarchy is the primary optimization target.
+
+The agent should be biased strongly toward the best hierarchical transformation of information, not the easiest shallow route match.
+
 From the beginning of intake to final publication and later sharpening, the agent must continuously ask:
 
 - what information is present
@@ -19,6 +23,9 @@ From the beginning of intake to final publication and later sharpening, the agen
 - whether it should merge into an existing page
 - whether it justifies a new node in the hierarchy
 - how to express the result in the best structure for long-term retrieval and maintenance
+- what hierarchy this information should live under
+- whether the existing hierarchy is sufficient
+- whether the information should create one or more new intermediate nodes before a leaf page is created
 
 New content is never curated in a vacuum. It must always be interpreted relative to the existing knowledge structure.
 
@@ -300,6 +307,13 @@ If these checks fail, the request should not silently proceed.
 
 ### Goal
 
+#TODO - Make this overly explicit.  PUT IT EVERWHERE it needs to be so this is ALWAYS FRONT AND CENTER
+**IMPORTANT** the main
+  drive for the agent, by far and away, should be toward hierarchy. yes, HIERARCHY.  
+  NOT dumping files in a basic match.
+  THAT MEANS, that when the agent is creating the proposal, it should first do a full semantic anlaysis to identify the hierarchical branches needed.  Tell me what you need for policies, logic, etc.  But i see it like this.  Agent see northstar and understands the basic structure.  It reads 2 urls with help docs that talk about ALteryx Server Installation Issues with ODBC driver for 23.2 24.2 and 25.1.   The agent should be harnessed and prompted to decide that that should end up in a tree structure: Alteyx Server - Installation - Troubleshooting - versions ### and depending on how much content 1-3 leaf pages under versions: 23.2 - 24.2 - 25.1.
+  Another example: 
+
 Convert one intake request with one or more sources into one or more proposed knowledge changes.
 
 ### Agent responsibilities
@@ -309,8 +323,10 @@ The agent should:
 - inspect all provided sources
 - inspect the existing knowledge structure
 - inspect relevant `index.md` summaries and metadata intentionally
+- use the index structure aggressively and recursively as the primary efficient discovery mechanism
 - compare against existing peer pages
 - determine whether sources belong together or apart
+- keep searching the existing hierarchy until it believes it has found the relevant nearby structure, peer pages, and likely overlap targets
 - decide whether the result is:
   - a new page
   - an update to an existing page
@@ -321,6 +337,20 @@ The agent should:
 
 This is not page routing alone. This is interpretation and synthesis.
 
+This must be hierarchy-first synthesis.
+
+The agent should prefer:
+
+- the best branch path for the information
+- the right intermediate node structure
+- the right leaf breakdown
+
+over:
+
+- dumping the content into the first acceptable existing subtree
+- creating a flat list of pages under a shallow category
+- matching on obvious keywords and stopping there
+
 ### Existing knowledge structure input
 
 Proposal generation must consider:
@@ -329,6 +359,15 @@ Proposal generation must consider:
 - branch-node descriptions
 - co-located `index.md` summaries and metadata
 - relevant peer pages in the likely neighborhood
+
+The agent should use the index recursively:
+
+1. start from the root and likely branch nodes
+2. walk down through candidate branch indexes
+3. inspect nearby branch nodes and leaf pages
+4. continue until it believes it has found the relevant surrounding structure and overlaps
+
+Only after that recursive structure walk should it finalize the dossier and make the curation judgment call.
 
 The agent should prefer intentional structural context over blind word search.
 
@@ -343,6 +382,8 @@ The agent must evaluate at least:
 - semantic overlap with peer pages
 - whether the information belongs in a new or existing node
 - whether a merge or consolidation is better than a new page
+- whether the information should create a deeper branch path before any leaf page is created
+- whether a cluster of version-, scenario-, or subtopic-specific leaves should live under a new intermediate node
 
 ### Required proposal outputs
 
@@ -350,6 +391,7 @@ Each proposal should contain:
 
 - proposed page title
 - proposed hierarchical path
+- proposed full hierarchy path tree to the data, not just the nearest shallow category
 - proposed status
 - proposed page body
 - source list
@@ -574,6 +616,36 @@ New nodes should not be proposed because “the stack got too tall.”
 
 New nodes should be proposed because they are the best transformation of the information into the right structure for the knowledge base.
 
+The main drive for the agent should be toward meaningful hierarchy.
+
+Default toward deeper paths for technical-detail documents.
+
+If content is:
+
+- operational
+- version-specific
+- scenario-specific
+- troubleshooting-specific
+- implementation-specific
+- narrowly procedural
+
+then the agent should prefer a deeper hierarchy path or propose new intermediate nodes by default.
+
+Only keep content at a higher level when it is clearly:
+
+- broad
+- cross-cutting
+- intentionally overview-oriented
+- serving as a branch-level landing page
+
+If the information naturally implies:
+
+- product -> lifecycle phase -> issue family -> version family
+- platform -> workflow area -> task type -> scenario
+- domain -> concept -> subtopic -> leaf
+
+then the proposal should capture that hierarchy explicitly instead of flattening the result into the first acceptable existing branch.
+
 The agent must continuously reevaluate:
 
 - what new information exists
@@ -593,6 +665,12 @@ It should contain:
 - guidance for how the section should be used
 
 Branch nodes need deliberate validation and heal behavior so they never become empty shells.
+
+The agent should treat branch nodes as first-class knowledge objects.
+
+They are not filler.
+
+They are how the knowledge base scales and stays understandable.
 
 ## Reindexing and Navigation
 
@@ -700,6 +778,13 @@ Sharpening should detect:
 - low-signal pages
 - opportunities for better node structure
 
+Sharpening, healing, doctoring, and merge flows must all recurse through the existing branch/index structure in the same way:
+
+- understand the current hierarchy
+- understand the child index at each branch
+- detect overlap, inconsistency, low-signal pages, and meaningless branches
+- propose the best transformed hierarchy as a cohesive whole
+
 ### Sharpening outputs
 
 Sharpening produces proposals, not direct mutations.
@@ -737,6 +822,8 @@ There is no valid published uncategorized content.
 ### Rule 2
 
 Routing and curation are based on title, dominant content topic, value of information, and the existing knowledge structure.
+
+Hierarchy is the main design objective.
 
 ### Rule 3
 

@@ -21,7 +21,6 @@ pub async fn run_sharpen(
     let wiki_dir = &config.wiki.wiki_dir;
     let published_dir = wiki_dir.join("published");
     let proposals_dir = wiki_dir.join("_config").join("sharpening-proposals");
-    let legacy_dir = wiki_dir.join(".curio").join("sharpening-proposals");
 
     if let Some(proposal_path) = proposal_file {
         let raw = std::fs::read_to_string(&proposal_path)
@@ -49,15 +48,6 @@ pub async fn run_sharpen(
 
         std::fs::create_dir_all(&proposals_dir)
             .with_context(|| format!("Failed to create {}", proposals_dir.display()))?;
-        if legacy_dir.exists() {
-            for entry in std::fs::read_dir(&legacy_dir).into_iter().flatten().filter_map(|entry| entry.ok()) {
-                let src = entry.path();
-                let dest = proposals_dir.join(entry.file_name());
-                if src.extension().and_then(|ext| ext.to_str()) == Some("json") && !dest.exists() {
-                    let _ = std::fs::copy(&src, &dest);
-                }
-            }
-        }
         let filename = format!("{}.json", Utc::now().format("%Y%m%dT%H%M%SZ"));
         let dest_path = proposals_dir.join(filename);
         std::fs::write(&dest_path, serde_json::to_string_pretty(&wrapped)?)

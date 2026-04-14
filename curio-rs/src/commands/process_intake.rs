@@ -30,6 +30,13 @@ use crate::{
     PageStatus,
 };
 
+#[derive(Debug, Clone, serde::Serialize)]
+struct HierarchyContextEntry {
+    path: String,
+    title: String,
+    summary: String,
+}
+
 pub async fn run_process(
     config: &Config,
     dry_run: bool,
@@ -136,8 +143,9 @@ fn output_routing_manifest(
     let taxonomy = load_taxonomy(wiki_dir)?;
     let northstar_md = std::fs::read_to_string(wiki_dir.join("_config/northstar.md")).unwrap_or_default();
 
-    // Load root index for quick orientation
+    // Load root index and recursively gather hierarchy context for efficient structure-first routing.
     let index_md = crate::wiki_index::read_index_md(wiki_dir).unwrap_or_default();
+    let hierarchy_context = collect_hierarchy_context(wiki_dir)?;
 
     let pages: Vec<serde_json::Value> = intake_pages
         .iter()
@@ -158,12 +166,15 @@ fn output_routing_manifest(
         "taxonomy": taxonomy,
         "northstar_context": northstar_md,
         "index_summary": index_md,
+        "hierarchy_context": hierarchy_context,
         "pages": pages,
         "instructions": {
-            "task": "Turn each intake page into a proposal with a defensible route, overlap assessment, and review/staged lane.",
-                "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null, \"merge_target\": null}",
+            "task": "Turn each intake page into a hierarchy-first proposal with a defensible full path, overlap assessment, and review/staged lane.",
+                "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\", \"optional-deeper-node\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null, \"merge_target\": null}",
             "confidence_rule": "confidence >= 0.75 and a valid existing subtree fit is necessary but not sufficient for staged. Weak or low-usability content should still go to review.",
             "quality_rule": "Assess information quality and human usability separately from routing confidence. Low-signal, placeholder-like, or weak-content pages must go to review even if the route is obvious.",
+            "hierarchy_rule": "Hierarchy is the primary design goal. Use the taxonomy plus recursive branch index context to find the best full path. Do not stop at the first acceptable shallow match if the information clearly implies a deeper structure.",
+            "recursive_index_rule": "Use hierarchy_context and branch indexes religiously. Keep traversing likely branch paths and nearby peers until you believe you have found the relevant surrounding structure and overlaps.",
             "new_subtree_rule": "If no existing subtree fits confidently, do not force publication. Route to review, provide the closest category path you can justify, and fill proposed_new_subtree plus proposal_rationale.",
             "overlap_rule": "If the material appears semantically duplicative with likely peers, prefer review with merge or consolidation guidance instead of staged.",
             "apply_command": "curio process --route-file <path-to-decisions.json>"
@@ -291,6 +302,40 @@ fn collect_intake_pages(intake_dir: &Path, limit: u32) -> Result<Vec<(String, cr
         }
     }
     Ok(pages)
+}
+
+fn collect_hierarchy_context(wiki_dir: &Path) -> Result<Vec<HierarchyContextEntry>> {
+    let mut entries = Vec::new();
+    let published_dir = wiki_dir.join("published");
+    if !published_dir.exists() {
+        return Ok(entries);
+    }
+    for entry in walkdir::WalkDir::new(&published_dir).into_iter().filter_map(|entry| entry.ok()) {
+        let path = entry.path();
+        if !entry.file_type().is_file()
+            || path.file_name().and_then(|name| name.to_str()) != Some("index.md")
+        {
+            continue;
+        }
+        let raw = std::fs::read_to_string(path)
+            .with_context(|| format!("Failed to read {}", path.display()))?;
+        let rel = path.strip_prefix(wiki_dir).unwrap_or(path).to_string_lossy().replace('\\', "/");
+        let title = raw
+            .lines()
+            .find(|line| line.starts_with('#'))
+            .map(|line| line.trim_start_matches('#').trim().to_string())
+            .unwrap_or_else(|| rel.clone());
+        let summary = raw
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .skip(1)
+            .take(6)
+            .collect::<Vec<_>>()
+            .join(" ");
+        entries.push(HierarchyContextEntry { path: rel, title, summary });
+    }
+    entries.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(entries)
 }
 
 fn apply_routing(

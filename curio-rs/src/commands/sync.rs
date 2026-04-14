@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use crate::{
     config::{Config, upsert_repo_env_var},
     confluence::ConfluenceClient,
-    northstar::{load_taxonomy, sync_taxonomy_from_markdown, NorthstarTaxonomy, TaxonomyNode},
+    northstar::{load_taxonomy, NorthstarTaxonomy, TaxonomyNode},
     output::emit_json,
     proposal::load_proposal_record,
     quality::assess_quality,
@@ -34,7 +34,6 @@ pub struct CurioConfluenceTree {
     pub root_id: String,
     pub staged_id: String,
     pub review_id: String,
-    pub review_proposals_id: String,
     pub published_id: String,
     pub config_id: String,
 }
@@ -73,8 +72,6 @@ pub async fn run_sync(
 
     let wiki_dir = &config.wiki.wiki_dir;
     let published_dir = wiki_dir.join("published");
-    let _ = sync_taxonomy_from_markdown(wiki_dir);
-
     if !published_dir.exists() {
         anyhow::bail!("wiki/published/ not found. Run `curio init` first.");
     }
@@ -107,8 +104,6 @@ pub async fn run_sync(
     let mut skipped: Vec<String> = Vec::new();
     let mut errors: Vec<String> = Vec::new();
     let mut synced_page_ids: HashSet<String> = HashSet::new();
-    synced_page_ids.insert(tree.review_proposals_id.clone());
-
     // Sync top-level config pages first (settings, northstar, readme) under CURIO/Config
     let config_dir = wiki_dir.join("_config");
     if config_dir.exists() && !dry_run {
@@ -310,19 +305,12 @@ pub async fn run_sync(
         &mut errors,
     )
     .await?;
-    let proposals_dir = {
-        let new_dir = wiki_dir.join("_config").join("sharpening-proposals");
-        if new_dir.exists() {
-            new_dir
-        } else {
-            wiki_dir.join(".curio").join("sharpening-proposals")
-        }
-    };
+    let proposals_dir = wiki_dir.join("_config").join("sharpening-proposals");
     sync_review_proposals(
         &client,
         space_key,
         &proposals_dir,
-        tree.review_proposals_id.as_str(),
+        tree.review_id.as_str(),
         &mut synced_page_ids,
         &mut skipped,
         &mut upserted,
@@ -453,16 +441,6 @@ pub async fn ensure_curio_confluence_tree(
         None,
     )
     .await?;
-    let review_proposals_id = upsert_static_page(
-        client,
-        space_key,
-        Some(review_id.as_str()),
-        "Review Proposals",
-        "<p>Curio sharpening and taxonomy proposals that require human review.</p>",
-        "proposals",
-        None,
-    )
-    .await?;
     let config_id = upsert_static_page(
         client,
         space_key,
@@ -555,7 +533,6 @@ pub async fn ensure_curio_confluence_tree(
         root_id: root_page_id,
         staged_id,
         review_id,
-        review_proposals_id,
         published_id,
         config_id,
     })

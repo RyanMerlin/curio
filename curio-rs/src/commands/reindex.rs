@@ -2,7 +2,6 @@ use anyhow::Result;
 
 use crate::{
     config::Config,
-    northstar::sync_taxonomy_from_markdown,
     output::emit_json,
     wiki_index::{
         append_log, rebuild_colocated_indexes, reindex_from_filesystem,
@@ -31,7 +30,6 @@ pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<(
         return Ok(());
     }
 
-    let _ = sync_taxonomy_from_markdown(wiki_dir);
     let trees = crate::northstar::load_taxonomy(wiki_dir)
         .map(|taxonomy| taxonomy.nodes.iter().map(crate::commands::sync::tree_node_from_taxonomy).collect())
         .unwrap_or_else(|_| {
