@@ -1,21 +1,27 @@
 ---
 id: cbb2f844e892425c
 title: V2 Endpoints
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1681396400
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1681396400
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- v2
+- endpoints
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:21:35Z
+confidence: 0.9
 cross_refs: []
 content_hash: sha256:8b8d40ac80df3169ed6baea0c0f9ccb30f19e706ae6dc2cc9165302ab53e2add
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

@@ -1,21 +1,27 @@
 ---
 id: 1600f3f312a1281d
 title: V3 Endpoints
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1681363286
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1681363286
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- v3
+- endpoints
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:21:35Z
+confidence: 0.72
 cross_refs: []
 content_hash: sha256:8b1e9046853590b74fd6b31dd131e79633a7c5e47e067cc27bfb14baae1f5363
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

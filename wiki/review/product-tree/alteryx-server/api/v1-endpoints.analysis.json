@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:21:34Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "V1 Endpoints",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1681461806",
+    "content_hash": "sha256:541a93e19ccce0549216a11b48388cefc519de2ff6d4e902f801a545b0350646",
+    "content_preview": "---\n\n---\n\n- API Error - 400 errors on a POST or PUT\n- API Error - 403 errors for endpoints that require User and Workflow to be in the same Subscription\n\n---\n\n| **Key articles** | [Admin vs User endpoints](https://help.alteryx.com/current/en/server/api-overview.html#server-apis) <== **scroll right to User column** |\n| --- | --- |"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "api"
+    ],
+    "confidence": 0.9,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.43,
+    "usability": 0.8,
+    "review_reason": "Taxonomy mutation",
+    "proposed_new_subtree": "product-tree/alteryx-server/api",
+    "proposal_rationale": "V1 endpoint docs belong in api subtree."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "v1",
+      "endpoints"
+    ],
+    "keywords_extracted": [
+      "User",
+      "Error",
+      "errors",
+      "endpoints",
+      "Endpoints",
+      "require",
+      "right",
+      "articles"
+    ]
+  }
+}

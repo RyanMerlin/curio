@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:21:34Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Utility Workflows",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1941112486",
+    "content_hash": "sha256:6a00b2ec441cc8a33dad3f2acdc1289a8892a8ede757010d8638b3b22b4a86b9",
+    "content_preview": "---\n\n---\n\n> **ℹ️ Info**\n>\n> **Utility Workflows** help answer questions Admins have that aren’t easily answered in the Server UI.  They often use the API or pull data directly from the Server database.\n\n| **Access** | **Internal **    > **Customer Support Gallery**        > <http://ayx-gcs-gal-01/gallery>            <== **Support Gallery**        > [00 GCS Gallery Workflow List.yxmd](http://ayx-gcs-gal-01/gallery/#!/app/00-GCS-Gallery-Workflow-List/6492127f4e68ecd6acc30545)  <== **XLSX of all wo"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.8,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "Taxonomy mutation",
+    "proposed_new_subtree": "product-tree/alteryx-server/administration",
+    "proposal_rationale": "Utility workflows belong in administration."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-designer",
+    "title_tokens": [
+      "utility",
+      "workflows"
+    ],
+    "keywords_extracted": [
+      "Gallery",
+      "Support",
+      "Community",
+      "Utility",
+      "Customer",
+      "Workflows",
+      "workflows",
+      "Server"
+    ]
+  }
+}
