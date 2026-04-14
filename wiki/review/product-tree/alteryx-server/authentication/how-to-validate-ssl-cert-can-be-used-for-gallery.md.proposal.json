@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-how-to-validate-ssl-cert-can-be-used-for-gallery",
+  "generated_at": "2026-04-14T15:20:08Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "how-to-validate-ssl-cert-can-be-used-for-gallery",
+  "title": "How to - Validate SSL Cert can be Used for Gallery",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "How to validate that an SSL certificate can be used for Alteryx Gallery — startup failure diagnosis.",
+  "body_markdown": "| **Issue** | > **📝 Note** > > Alteryx Service does not start with SSL enabled |\n| --- | --- |\n| **Screenshot** |  |\n| **Related Issues** | Alteryx Service will start with SSL disabled, however when enabled, the service fails to start. |\n\n# Troubleshooting\n\n|  | **Check** | **Steps** |\n| --- | --- | --- |\n| 1 | **Enhanced Key Usage** | 1. Open MMC, add the Certificated Snap In, go to Personal, locate the SSL cert.    2. Double click the certificate, go to Details, look for “Enhanced Key Usage” field.    3. Inspect the fields  Primarily used in Self-Signed Cert environments, for example PNC employs this procedure. When they ask to get a certificate created, the system asks for it’s purpose, which is then listed in the “Enhanced Key Usage” field. Below is an example of a certificate that is NOT certified to work with Alteryx Gallery. This is for Secure Email and Client Authentication (SAML). |\n| 2 |  |  |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.87,
+    "quality_confidence": 0.76,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.78000003,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2201291939"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2201291939"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}

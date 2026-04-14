@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:05Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How To (SQL DB Persistence)",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2345107478",
+    "content_hash": "sha256:0f856e1eb1952b9e1dfde7158432065f30b1f5da10ea9d426479de4ed9ad28a0",
+    "content_preview": "---\n\n---\n\n|  |  |\n| --- | --- |\n| #### View SQL DB database | [SQL Server Management Studio (SSMS)](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=SQL+Server+Management+Studio+(SSMS)) |\n| #### Get copy of customer's database | Using SQL Server Management Studio, they backup the database and you restore it.  Then set you APOD to the restored databases.  Collation should transfer.  ChatGPT prompts:  What are the steps for someone to export their SQL Server database and the "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "sql-db-persistence"
+    ],
+    "confidence": 0.78,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "Hub/section index; requires sql-db-persistence subtree taxonomy approval",
+    "proposed_new_subtree": "sql-db-persistence",
+    "proposal_rationale": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "(sql",
+      "db",
+      "persistence)"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "database",
+      "APOD",
+      "Click",
+      "password",
+      "file",
+      "SSMS",
+      "dont"
+    ]
+  }
+}

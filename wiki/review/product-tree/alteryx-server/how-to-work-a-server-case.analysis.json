@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:09Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How to Work a Server Case",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2947253108",
+    "content_hash": "sha256:c44ddb3cf5f51d93ebf53f81d129b5f78902639f7c301c2461fd184481d4e1cd",
+    "content_preview": "| **Questions** | **Steps/Notes** |\n| --- | --- |\n| What version of Server are they using? | Important to know the full version of Server. With the full version of Server you can determine the patch they are on from the [Release notes for that version](https://help.alteryx.com/release-notes/en/release-notes/server-release-notes/server-2024-2-release-notes.html). |\n| What is the architecture of of the Server environment? | Single-node or multi-node environment? If multi-node, please describe the "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "First ingest — requires review before publication",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "work",
+      "a",
+      "server",
+      "case"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "issue",
+      "What",
+      "failing",
+      "Designer",
+      "version",
+      "logs",
+      "environment"
+    ]
+  }
+}

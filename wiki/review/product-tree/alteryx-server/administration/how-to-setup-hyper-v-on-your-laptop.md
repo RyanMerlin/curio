@@ -1,21 +1,29 @@
 ---
 id: e78679a3afdecd8b
 title: How to Setup Hyper-V on your Laptop
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2003075393
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2003075393
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- hyper-v
+- virtualization
+- laptop
+- testing
+- setup
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:04Z
+confidence: 0.78
 cross_refs: []
 content_hash: sha256:f6c0d7426434cb54b8880ae640006585b7af5f32f961299eec2f56d5c71b9fe3
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 Hyper-V is a Microsoft hardware virtualization product which lets you create and run virtual machines. Each virtual machine acts like a independent instance which can run operating system and other supporting programs much like a computer/laptop. Your Window 11 Enterprise laptops have the capability to run Hyper-V and launch/run multiple VMs provided you have the right system resources.  This can be especially useful when testing product features to understand how a the functionality works and whether its a defect.

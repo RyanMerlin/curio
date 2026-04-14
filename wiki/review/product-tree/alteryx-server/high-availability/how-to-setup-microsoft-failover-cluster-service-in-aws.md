@@ -1,21 +1,29 @@
 ---
 id: 2243e20d252927b7
 title: How to Setup Microsoft failover cluster service in AWS
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1999044872
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1999044872
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- high-availability
+keywords:
+- high-availability
+- failover-cluster
+- aws
+- microsoft
+- setup
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:05Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:29b36df046ea95da65085f08a5f23b02daac54206c390fd236b2af6d517d602c
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**
