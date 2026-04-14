@@ -439,7 +439,7 @@ pub async fn ensure_curio_confluence_tree(
         client,
         space_key,
         Some(review_id.as_str()),
-        "Proposals",
+        "Review Proposals",
         "<p>Curio sharpening and taxonomy proposals that require human review.</p>",
         "proposals",
         None,
