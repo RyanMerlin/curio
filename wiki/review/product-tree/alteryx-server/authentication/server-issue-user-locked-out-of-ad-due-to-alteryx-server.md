@@ -1,21 +1,29 @@
 ---
 id: 2860ea9e2d263572
 title: Server Issue - User locked out of AD due to Alteryx Server
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3406233691
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3406233691
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- authentication
+- active-directory
+- locked-out
+- windows-auth
+- issue
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:48Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:f2d6f7a0c76c279e1dac44a7f2a5e223cea973f9562b716a538d80992481ab4c
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | Issue | User  locked out of AD for a brief period (~15min) due to Alteryx Server |

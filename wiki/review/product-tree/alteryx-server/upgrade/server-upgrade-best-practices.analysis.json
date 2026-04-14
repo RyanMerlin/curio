@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:50Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Server Upgrade Best Practices",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3208446355",
+    "content_hash": "sha256:23e97f6f21bc3c10f021e76cc01fe2d469c7d1de2de92c3ea95d040188cbe7a3",
+    "content_preview": "## Redesign Help page\n\n<https://help.alteryx.com/current/en/server/best-practices/server-upgrade-best-practices.html#review-the-release-notes>\n\n---\n\n### Status: In Review\n\n| Published Date | Published Link |\n| --- | --- |\n|  |  |\n\n(This box is invisible)\n\n**Status Key:**\n\n- Draft - Documentation is being drafted\n- In Review - Documentation is being reviewed and edited\n- Ready - Documentation has been signed off and is ready to be published\n- Published (Add link & Date) - Documentation is publish"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "server",
+      "upgrade",
+      "best",
+      "practices"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "upgrade",
+      "your",
+      "Alteryx",
+      "version",
+      "versions",
+      "Upgrade",
+      "environment"
+    ]
+  }
+}

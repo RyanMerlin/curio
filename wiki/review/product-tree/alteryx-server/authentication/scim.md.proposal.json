@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-scim",
+  "generated_at": "2026-04-14T13:50:47Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "scim",
+  "title": "SCIM",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "Hub/index for SCIM on Alteryx Server — configuration, logging, errors.",
+  "body_markdown": "---\n\n*[Organized section — child pages listed separately]*\n\n---\n\n> **ℹ️ Info**\n>\n> Supported in 23.1+\n\n> **ℹ️ Info**\n>\n> **DEFINITION**\n> \n> SCIM (System Cross-domain Identity Management) is a protocol that standardizes how identity information is exchanged between one entity and another.\n> \n> We typically use it to sync User Group and User information from **Entra ID** to a Server using **Entra ID SAML** auth.  As most customers sync their **on-prem AD** with their **cloud Entra ID**, a SCIM configuration would effectively sync their **AD Groups** to their Alteryx Server.\n> \n> But SCIM is an endpoint standard independent of a specific product.  Therefore it could also be used to sync **Okta** User Groups to Alteryx Server using **Okta SAML**.\n\n> **ℹ️ Info**\n>\n> **HOW GROUPS APPEAR**\n> \n> Note:  The User Groups** **being synced will appear as **Custom Groups** in Server.  It is NOT recommended to edit these **Custom Groups** directly, but no guard rails in the product prevent this.\n> \n> SCIM **pushes** AD updates, it doesn’t interrogate Server to find the current state.  Therefore, it will not re-add a user that was manually removed from a Custom Group.\n\n> **📝 Note**\n>\n> **An easier (but less comprehensive) alternative can be recommended for AD**\n> \n> The **AD Sync Utility **is a workflow that performs some of the key SCIM functions with a less complex setup that doesn’t require an additional **Microsoft Entra Connect Provisioning Agent **Server (as is frequently required in customer’s Entra ID environments).\n> \n> - https://help.alteryx.com/current/en/designer/workflows/enterprise-utilities/active-directory-sync.html#active-directory-sync                                                                       <== Help\n> - https://marketplace.alteryx.com/en-US/apps/439219/server-user-management-enterprise-utility  <== Marketplace\n> - Enterprise Utility - Active Directory Sync                                          <== Confluence\n> \n> Technically, this is not SCIM as it works directly with the database rather than making the SCIM standard API calls.  But it will sync user lists from AD groups to Server Custom Groups.",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.8,
+    "quality_confidence": 0.84999996,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.55,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Hub/section index; requires authentication subtree taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2545254568"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2545254568"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Hub/section index; requires authentication subtree taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}
