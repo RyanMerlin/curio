@@ -1,21 +1,29 @@
 ---
 id: a20e5abee1a3d4ec
 title: How to reset a user's Built-in Auth password if the Server can't send email
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2310013006
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2310013006
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- authentication
+- built-in-auth
+- password-reset
+- email
+- how-to
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:19Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:5bc9a4a4f173fb3eef451a63c83ae0b3253b89d05a8467ceb2d5eccbfff228b9
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

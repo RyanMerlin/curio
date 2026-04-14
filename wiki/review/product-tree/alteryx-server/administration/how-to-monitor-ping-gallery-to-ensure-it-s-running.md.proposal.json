@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-how-to-monitor-ping-gallery-to-ensure-it-s-running",
+  "generated_at": "2026-04-14T13:50:18Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "how-to-monitor-ping-gallery-to-ensure-it-s-running",
+  "title": "How to monitor/ping Gallery to ensure it's running?",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "administration"
+  ],
+  "summary": "How to monitor or ping Alteryx Gallery to ensure it is running — external monitoring setup.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> Customer wants to monitor the status of an Alteryx Gallery and Service to check they are up so they can report if service is down / not responding.\n> \n> This is often referred to as checking for a heartbeat.  <https://en.wikipedia.org/wiki/Heartbeat_(computing)>\n\n| Monitor Gallery | #E3FCEF/gallery/api/status/ping/ Returns 200 when all is good.From:  Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy/VIP) (KB) |\n| --- | --- |\n| MonitorService | #E3FCEF/alteryxservice/status |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.85,
+    "quality_confidence": 0.58000004,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.86,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "proposed_node_title": "administration",
+    "proposed_node_slug": "administration",
+    "node_description": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2481291417"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2481291417"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  }
+}

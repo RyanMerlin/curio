@@ -1,21 +1,28 @@
 ---
 id: 86b9a61636d0579a
 title: How-To (Mongo)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1738277754
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1738277754
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- how-to
+- maintenance
+- operations
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:18Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:219e9c37d84eca1a4107c96c9af253fcee198fc4f6840da10947e7fa97c93a1d
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 title

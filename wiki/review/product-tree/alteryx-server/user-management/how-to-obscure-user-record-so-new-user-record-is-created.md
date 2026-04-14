@@ -1,21 +1,29 @@
 ---
 id: 7b6e31ca7aaffb14
 title: How to Obscure User Record so New User Record is Created
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3662053718
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3662053718
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- user-management
+keywords:
+- users
+- records
+- obscure
+- privacy
+- account-management
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:19Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:d930747e3a785e3d82f4a4ee811ca41190795c0a6f6da318c9fda89426e7511f
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**
