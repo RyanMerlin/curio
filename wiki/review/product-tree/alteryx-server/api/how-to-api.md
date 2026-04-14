@@ -1,21 +1,27 @@
 ---
 id: 635bc26f7f96f071
 title: How To (API)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1756266974
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1756266974
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- how-to
+- server-api
 created_at: 2026-04-14T13:40:13Z
-updated_at: 2026-04-14T13:40:13Z
-confidence: null
+updated_at: 2026-04-14T13:50:14Z
+confidence: 0.75
 cross_refs: []
 content_hash: sha256:6ece93724362d18bc335d010cbf829a24e2494262d6b0f6fe4aaa4d3e3e386ee
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

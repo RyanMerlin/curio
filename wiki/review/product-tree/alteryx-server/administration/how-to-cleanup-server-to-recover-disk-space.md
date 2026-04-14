@@ -1,21 +1,29 @@
 ---
 id: bf154d275042ece2
 title: How to Cleanup Server to Recover Disk Space
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640793108
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793108
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- disk-space
+- cleanup
+- maintenance
+- files
+- operations
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:15Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:f11648b5402f3be5d452d29c54b32cc92e413e10039eab013a43f415295423b3
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

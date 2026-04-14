@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:15Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How to Cleanup Server to Recover Disk Space",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793108",
+    "content_hash": "sha256:f11648b5402f3be5d452d29c54b32cc92e413e10039eab013a43f415295423b3",
+    "content_preview": "> **ℹ️ Info**\n>\n> Server creates a lot of files and some are not automatically cleaned up and others aren’t cleaned up due to defects.\n\nnote TODO\n\n- Confirm these KBs are represented in the document helping customers clean up their Server\n- Move Google page to public KB\n\nTODO\n\n- Confirm these KBs are represented in the document helping customers clean up their Server\n- Move Google page to public KB\n\nKey ArticlesCleanup Server to Recover Disk Space (Google) <== clean up unused files/spaceHow to D"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.5,
+    "usability": 0.54999995,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "cleanup",
+      "server",
+      "to",
+      "recover",
+      "disk",
+      "space"
+    ],
+    "keywords_extracted": [
+      "Jira",
+      "Server",
+      "TCPEdcfcfffefeeffSystem",
+      "files",
+      "clean",
+      "Google",
+      "cleaned",
+      "represented"
+    ]
+  }
+}
