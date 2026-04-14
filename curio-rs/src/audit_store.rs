@@ -39,6 +39,10 @@ fn audit_log_path(wiki_dir: &Path) -> PathBuf {
     audit_dir(wiki_dir).join("audit.jsonl")
 }
 
+fn sync_marker_path(wiki_dir: &Path) -> PathBuf {
+    wiki_dir.join("_config").join("last-sync.txt")
+}
+
 fn legacy_audit_log_path(wiki_dir: &Path) -> PathBuf {
     wiki_dir.join(".curio").join("audit.jsonl")
 }
@@ -47,6 +51,16 @@ fn ensure_audit_dir(wiki_dir: &Path) -> Result<()> {
     let dir = audit_dir(wiki_dir);
     fs::create_dir_all(&dir)
         .with_context(|| format!("Failed to create audit directory: {}", dir.display()))
+}
+
+fn write_sync_marker(wiki_dir: &Path, ts: &str) -> Result<()> {
+    let marker_path = sync_marker_path(wiki_dir);
+    if let Some(parent) = marker_path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create sync marker directory: {}", parent.display()))?;
+    }
+    fs::write(&marker_path, format!("{}\n", ts))
+        .with_context(|| format!("Failed to write sync marker: {}", marker_path.display()))
 }
 
 fn parse_kind(entry: &str) -> String {
@@ -167,10 +181,23 @@ pub fn append_entry(wiki_dir: &Path, entry: &str) -> Result<()> {
     writeln!(file, "{}", line).context("Failed to append audit entry")?;
     drop(file);
 
+    if audit_entry.kind == "sync" {
+        write_sync_marker(wiki_dir, &audit_entry.ts)?;
+    }
+
     maybe_compact(wiki_dir)
 }
 
 pub fn read_last_sync(wiki_dir: &Path) -> Result<Option<String>> {
+    let marker_path = sync_marker_path(wiki_dir);
+    if marker_path.exists() {
+        let raw = fs::read_to_string(&marker_path)
+            .with_context(|| format!("Failed to read sync marker: {}", marker_path.display()))?;
+        let trimmed = raw.trim();
+        if !trimmed.is_empty() {
+            return Ok(Some(trimmed.to_string()));
+        }
+    }
     let entries = read_entries(wiki_dir)?;
     Ok(entries
         .iter()
