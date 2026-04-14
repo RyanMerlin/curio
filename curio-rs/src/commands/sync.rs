@@ -572,7 +572,8 @@ async fn ensure_curio_root_page(
         if let Some(page) = client.get_page_by_id_v2(root_id).await? {
             let title_matches = page["title"].as_str() == Some(CURIO_ROOT_TITLE);
             let space_matches = page["spaceId"].as_str().is_some();
-            if title_matches && space_matches {
+            let status_current = page["status"].as_str() == Some("current");
+            if title_matches && space_matches && status_current {
                 return Ok(root_id.to_string());
             }
         }
