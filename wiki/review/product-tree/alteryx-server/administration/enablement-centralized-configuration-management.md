@@ -1,21 +1,29 @@
 ---
 id: 15f84a5494aca45b
 title: Enablement (Centralized Configuration Management)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:4087284167
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/4087284167
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- configuration
+- centralized
+- enablement
+- ui
+- settings
 created_at: 2026-04-14T13:40:13Z
-updated_at: 2026-04-14T13:40:13Z
-confidence: null
+updated_at: 2026-04-14T13:50:01Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:89540ed0d79896c3061067fd4d8d9bd6d1b0477ba7d08eb963ddcfa628f8acb5
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | Enablement | Jason Aggee Mar-11-2026 5m 28a |

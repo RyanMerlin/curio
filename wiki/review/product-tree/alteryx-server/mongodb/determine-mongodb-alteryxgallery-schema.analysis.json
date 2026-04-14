@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:49:59Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Determine MongoDB AlteryxGallery Schema",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702894190",
+    "content_hash": "sha256:70701edb3dc26f514023b6fd00223b4cf4572a74c94cc6174c0cb614d0fc4b2e",
+    "content_preview": "> **ℹ️ Info**\n>\n> Each Server upgrade will update the Mongo DB schema by adding or removing fields and collections.\n> \n> This process is a common point of failure, leading to the Service failing to start after the upgrade.\n\n| Key Articles | https://help.alteryx.com/current/en/server/configure/mongodb-management/mongodb-schema-reference.html  <== matches Server version to Schema |\n| --- | --- |\n\n---\n\n%ProgramData%\\Alteryx\\Gallery\\Logs\\**alteryx-migration.csv**\n\ndb.versions.find({},{Number:1, _id:"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.62,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "determine",
+      "mongodb",
+      "alteryxgallery",
+      "schema"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "Schema",
+      "upgrade",
+      "idlimitsortnatural",
+      "dbversionsfindNumber",
+      "Each",
+      "common",
+      "schema"
+    ]
+  }
+}

@@ -1,21 +1,29 @@
 ---
 id: b2024558325369eb
 title: Delete mongod.lock
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702894333
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702894333
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- mongod-lock
+- embedded-mongo
+- delete
+- maintenance
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:58Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:3f1c6a93a4a3064d0d93b432dac0779023093df2e6d1b666341991b7628f8a22
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 for embedded mongo onlyPurple

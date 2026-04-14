@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:01Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Embedded MongoDB upgrade / migration",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2314994152",
+    "content_hash": "sha256:4a3bc42e3ee5c7b2fc8af622bf89acaef5f7704729cf3b229fb3e9104b30c726",
+    "content_preview": "---\n\n*[Organized section — child pages listed separately]*\n\n---\n\n> **ℹ️ Info**\n>\n> **Embedded MongoDB** is upgraded during some Server upgrades, see:\n> \n> - https://help.alteryx.com/current/en/server/configure/database-management/mongodb-management/mongodb-schema-reference.html\n> \n> **User-Managed** and **Atlas Cloud MongoDB** version upgrades are not performed by an Alteryx Server Upgrade, customers must manage those themselves\n\n> **📝 Note**\n>\n> **Review the Mongo version upgrade log, xxx_PreUp"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.82,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.77000004,
+    "usability": 0.67,
+    "review_reason": "Hub/section index; requires mongodb subtree taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "embedded",
+      "mongodb",
+      "upgrade",
+      "/",
+      "migration"
+    ],
+    "keywords_extracted": [
+      "upgrade",
+      "MongoDB",
+      "Embedded",
+      "version",
+      "Server",
+      "Mongo",
+      "upgrades",
+      "must"
+    ]
+  }
+}

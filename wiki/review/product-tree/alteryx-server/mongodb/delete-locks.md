@@ -1,21 +1,29 @@
 ---
 id: 84aebb6e90f09d0d
 title: Delete locks
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702927446
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702927446
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- locks
+- delete
+- embedded-mongo
+- maintenance
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:57Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:fbd6c5ff1318b7026dd25a72aea481d79f9b04e2d1529d7ee52ece5fa2851ce5
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

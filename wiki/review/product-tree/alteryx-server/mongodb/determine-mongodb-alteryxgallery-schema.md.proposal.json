@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-determine-mongodb-alteryxgallery-schema",
+  "generated_at": "2026-04-14T13:49:59Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "determine-mongodb-alteryxgallery-schema",
+  "title": "Determine MongoDB AlteryxGallery Schema",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "mongodb"
+  ],
+  "summary": "Explains how Server upgrades update the AlteryxGallery MongoDB schema and how to determine the current schema version.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> Each Server upgrade will update the Mongo DB schema by adding or removing fields and collections.\n> \n> This process is a common point of failure, leading to the Service failing to start after the upgrade.\n\n| Key Articles | https://help.alteryx.com/current/en/server/configure/mongodb-management/mongodb-schema-reference.html  <== matches Server version to Schema |\n| --- | --- |\n\n---\n\n%ProgramData%\\Alteryx\\Gallery\\Logs\\**alteryx-migration.csv**\n\ndb.versions.find({},{Number:1, _id:0}).limit(1).sort({$natural:-1})\n\ndb.versions.find({},{Number:1, _id:0}).limit(1).sort({$natural:-1})\n{ \"Number\" : 31 }\n>]]>",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.87,
+    "quality_confidence": 0.62,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "proposed_node_title": "mongodb",
+    "proposed_node_slug": "mongodb",
+    "node_description": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted.",
+    "rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1702894190"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702894190"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  }
+}
