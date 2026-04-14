@@ -53,3 +53,6 @@ Append-only record of ingests, routing runs, publications, and queries.
 - 2026-04-14 15:21 UTC — process: intake items routed
 - 2026-04-14 15:21 UTC — process: intake items routed
 - 2026-04-14 15:21 UTC — process: intake items routed
+- 2026-04-14 15:28 UTC — sync: 173 upserted, 46 skipped, 0 stale deleted, 0 legacy deleted, 2 errors
+- 2026-04-14 15:28 UTC — sync: 173 upserted, 147 skipped, 0 stale deleted, 0 legacy deleted, 2 errors
+- 2026-04-14 15:48 UTC — sync: 173 upserted, 148 skipped, 0 stale deleted, 0 legacy deleted, 2 errors
