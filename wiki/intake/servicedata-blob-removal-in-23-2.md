@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c5fa4888fa7aa37c01924c8b376e5f7a0b33a68214a2da0c4938d493bc527de6
+content_hash: sha256:c8337534189db74bc41689d7579a7f756a3d009929fbe94b16e8e63d4e4ad7cd
 confluence_page_id: null
 model_used: null
 ---
@@ -25,8 +25,6 @@ model_used: null
 > **📝 Note**
 >
 > This will break Administative workflows that used the **ServiceDataParser macro** and will need to be refactored to remove the macro and access the fields directly** **
-
-note This page tracks issues related to the removal of the **ServiceData blob**
 
 This page tracks issues related to the removal of the **ServiceData blob**
 

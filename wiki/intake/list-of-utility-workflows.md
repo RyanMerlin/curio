@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:1474cba8316fd647241cba05aeb0f7885ff0fddebc10b98690fd4cf4835a3220
+content_hash: sha256:4e91c7deba33919428516bf6b5279ab68358078a01c73e1632328301020edc78
 confluence_page_id: null
 model_used: null
 ---
@@ -31,16 +31,10 @@ model_used: null
 
 ---
 
-note 4a0100a8-7f61-4bcb-8c94-0791127f7a32 Version Compatibility column definitions
-
-–** ServiceDataParser **– 23.1 or prior containing **__ServiceData** blob field called that was unpacked by a macro, 
-                                         Mongo Input Tool 
-– **Mongo                   **– accesses Mongo
-
 Version Compatibility column definitions
 
 –** ServiceDataParser **– 23.1 or prior containing **__ServiceData** blob field called that was unpacked by a macro, 
-                                         [Mongo Input Tool](/wiki/spaces/SupportServer/pages/1702763531/Mongo+Input+Tool#%E2%80%A6unpack-the-__ServiceData-/-ServiceData-blob) 
+                                         Mongo Input Tool 
 – **Mongo                   **– accesses Mongo
 
 |  |  |  |

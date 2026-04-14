@@ -9,22 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:ae0dceb6f0307a59a0f1e912bc39df0b23c6a018c6b47063f5e0402f67166216
+content_hash: sha256:fe0a28d917ba172f1f195063846b36d1a261fe330f47e5110fa4a3fca9063eb5
 confluence_page_id: null
 model_used: null
 ---
 
-note This page is a draft update for
-
-High Availability Upgrade Best Practices
-
 This page is a draft update for
 
-[High Availability Upgrade Best Practices](/wiki/spaces/SupportServer/pages/2383446384/High+Availability+Upgrade+Best+Practices)
+High Availability Upgrade Best Practices
 
 The page presents Best Practices for upgrading an HA Server Environment
 

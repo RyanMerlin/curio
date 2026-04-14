@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:f11648b5402f3be5d452d29c54b32cc92e413e10039eab013a43f415295423b3
+content_hash: sha256:8bccfeb6c29a4d03f1cbf777e27b3c4b1367c2ac9e2889df8778e2abaa8e407a
 confluence_page_id: null
 model_used: null
 ---
@@ -21,11 +21,6 @@ model_used: null
 > **ℹ️ Info**
 >
 > Server creates a lot of files and some are not automatically cleaned up and others aren’t cleaned up due to defects.
-
-note TODO
-
-- Confirm these KBs are represented in the document helping customers clean up their Server
-- Move Google page to public KB
 
 TODO
 

@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:b4d5198c1f9932c70121c904bfb225358da0490243dc9401eb5607deb999eb93
+content_hash: sha256:75d1356ac278b5e09f6736023dae86c325c542a48ef2784815b834bc665937d9
 confluence_page_id: null
 model_used: null
 ---
@@ -23,8 +23,6 @@ model_used: null
 > Some Servers experience intermittent or consistent problems if the Server is going outside of itself to resolve its own FQDN name.  This is especially an issue with load balancers.
 > 
 > Adding an entry to the **hosts **file allows requests made from the Service to find the Gallery, bypassing any DNS/network entity that may be causing an issue.
-
-note Another issue also referred to as “loopback” <https://docs.google.com/document/d/1Kj0UBGaUhgw8wX0K2izOiEZbKs8yzzxQ718dXSf08H4/edit?usp=sharing> (Google)
 
 Another issue also referred to as “loopback” <https://docs.google.com/document/d/1Kj0UBGaUhgw8wX0K2izOiEZbKs8yzzxQ718dXSf08H4/edit?usp=sharing> (Google)
 

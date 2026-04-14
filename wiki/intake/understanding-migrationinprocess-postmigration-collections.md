@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:594f6eb397cca03f5e2ef7f0937c8b4b79ead632fec83e1ac5a1ebdc3c196f17
+content_hash: sha256:432c9ccb9fb74269a090876c70e36890c966dbe70b548e1cd6e659a5399199ed
 confluence_page_id: null
 model_used: null
 ---
@@ -78,9 +78,7 @@ In this case, the upgrades to **22.1**, **22.3**, and **23.1** didn’t lead to 
 
 If the customer has no backup and their IT didn’t take snapshots of the Server and they need to roll back an upgrade, you can do this through careful renaming of the PostMigration collections.
 
-note This assumes the same version on Mongo.  **tbd **- Can you backup a later Mongo version and restore to an earlier version?  If so, you can do that and also edit the ASMongoDBVersion.bin to the earlier Mongo version, this would allow the database to be started with the earlier Mongo versions.
-
-This assumes the same version on Mongo.  **tbd **- Can you backup a later Mongo version and restore to an earlier version?  If so, you can do that and also edit the [ASMongoDBVersion.bin](/wiki/spaces/SupportServer/pages/2652471356/ASMongoDBVersion.bin) to the earlier Mongo version, this would allow the database to be started with the earlier Mongo versions.
+This assumes the same version on Mongo.  **tbd **- Can you backup a later Mongo version and restore to an earlier version?  If so, you can do that and also edit the ASMongoDBVersion.bin to the earlier Mongo version, this would allow the database to be started with the earlier Mongo versions.
 
 (1) Backup the current database before making changes.
 

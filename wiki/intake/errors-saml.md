@@ -9,20 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:a85f7dfb5e1ca48d5a8c2d562262c4cfa2ca2743890a8628d971ac20e2162d6f
+content_hash: sha256:f5da27e0703d4600b1ca6e99da2e1fbe0f7e7a0ca174c3333e9c7598e260d3e0
 confluence_page_id: null
 model_used: null
 ---
 
 # SAML Errors
 
-note For aas log errors, see SAML SSO / AAS Logs
-
-For aas log errors, see [SAML SSO / AAS Logs](/wiki/spaces/SupportServer/pages/1656685042/SAML+SSO+AAS+Logs)
+For aas log errors, see SAML SSO / AAS Logs
 
 ---
 

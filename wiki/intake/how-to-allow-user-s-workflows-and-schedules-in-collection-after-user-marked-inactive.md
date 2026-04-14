@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c193b2f1625cb19b3da18851698ef706f539df42f21d84a6a6a0f9bd5dd71e34
+content_hash: sha256:7b151f8331abf0321f057f8e8c3d5c69f8736fdbd107f05bd283168a3fe1f13e
 confluence_page_id: null
 model_used: null
 ---
@@ -25,10 +25,6 @@ When a user is marked Inactive in the Server UI their Workflows and Schedules ar
 > **ℹ️ Info**
 >
 > Tested Server 2022.1, Case 00593606
-
-note This process may not be needed in a future version of Server when Private Studios have been removed and the API can transfer ownership of assets without requiring users be in the same Private Studio.
-
-<https://community.alteryx.com/t5/Alteryx-Server-Knowledge-Base/How-to-move-from-Subscriptions-to-Collections-in-Server/ta-p/1137150> (1137150)
 
 This process may not be needed in a future version of Server when Private Studios have been removed and the API can transfer ownership of assets without requiring users be in the same Private Studio.
 

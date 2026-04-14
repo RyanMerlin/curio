@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:ff158c9ea11d34680d39cb935a1a1a54ee0145f3c51d8be77afa7621f0c02439
+content_hash: sha256:d3184ec984327445d1bd82c70380683963cfeccad4ae036f1d6ec8d92e72bcc5
 confluence_page_id: null
 model_used: null
 ---
@@ -21,8 +21,6 @@ model_used: null
 > **ℹ️ Info**
 >
 > See also: Command line Testing Tools for Windows and Server
-
-note Open command prompt **as Administrator**
 
 Open command prompt **as Administrator**
 

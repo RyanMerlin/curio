@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:2bc09f918f42400689c328f2bdeded24c582cb464f2c9833187f650f05f5722e
+content_hash: sha256:50ac43b71348c2114200e842bd36092eef46409ad6078ca0942c7f3b5ed47d8a
 confluence_page_id: null
 model_used: null
 ---
@@ -21,10 +21,6 @@ model_used: null
 ---
 
 ---
-
-note Asked Michael P where to place this error.  If it’s the Service Log it would be good to have the lead-in to show the full error messages.  And since this error refers to looking into the “Migrator” logs, it would be good to understand which of the many migration logs this is and get that error as well (likely the Service Schema migration).
-
-- Server Migrator failed with exit code 2993
 
 Asked Michael P where to place this error.  If it’s the Service Log it would be good to have the lead-in to show the full error messages.  And since this error refers to looking into the “Migrator” logs, it would be good to understand which of the many migration logs this is and get that error as well (likely the Service Schema migration).
 

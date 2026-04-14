@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c2e9f15f8288c27924f70ba8591b382356a7555ccd10457c76ede7e140b165b3
+content_hash: sha256:e67d09a66835f109c5c5ec1ead442e4dc04d5174ea464158765c9e2f9eea2760
 confluence_page_id: null
 model_used: null
 ---
@@ -22,13 +22,9 @@ model_used: null
 >
 > Chaining allows a workflow or analytic app to trigger a next workflow or analytic app to run
 
-note 2a4ebf0c-cefc-46f8-b90f-f9682a02f914 **For Designer-only chaining, see:**
-
-How to Chain Workflows and Analytic Apps in Designer (aka Workflow Orchestration)
-
 **For Designer-only chaining, see:**
 
-[How to Chain Workflows and Analytic Apps in Designer (aka Workflow Orchestration)](/wiki/spaces/SupportDesigner/pages/1765015871/How+to+Chain+Workflows+and+Analytic+Apps+in+Designer+aka+Workflow+Orchestration)
+How to Chain Workflows and Analytic Apps in Designer (aka Workflow Orchestration)
 
 ---
 

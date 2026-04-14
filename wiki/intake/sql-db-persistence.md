@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c7c471121b72c839713e698475ff8aedcb318dfe71f01356e3e0279b4d2096da
+content_hash: sha256:3b8e5a519cca706706e157dfc5a61d58b6e04ba2947fb9c6af6d19501f007d02
 confluence_page_id: null
 model_used: null
 ---
@@ -26,9 +26,7 @@ model_used: null
 >
 > 24.1 added User-Managed SQL Server as an alternative to MongoDB for the Server’s databases
 
-note b1b6bbcc-e93a-48a7-b9da-8833f495d89d For information on connecting Designer to SQL Server: SQL Server (Microsoft)
-
-For information on connecting Designer to SQL Server: [SQL Server (Microsoft)](/wiki/spaces/SupportDesigner/pages/1702891678/SQL+Server+Microsoft)
+For information on connecting Designer to SQL Server: SQL Server (Microsoft)
 
 |  |  |
 | --- | --- |

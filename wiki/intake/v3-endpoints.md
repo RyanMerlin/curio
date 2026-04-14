@@ -9,18 +9,16 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:09:17Z
-updated_at: 2026-04-14T15:09:17Z
+created_at: 2026-04-14T15:10:53Z
+updated_at: 2026-04-14T15:10:53Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d778640d23df4c51a3686d17c0fe78c74c0590360d625236e15db4e0c0b61d72
+content_hash: sha256:278cb9c319b592695819236b63702ca67c705dcfe210c171afef01db2cba883b
 confluence_page_id: null
 model_used: null
 ---
 
 ---
-
-note **Todo** - Document new 23.2 endpoint to run a workflow that was shared with user via Collection.  The old endpoint remains to run your own workflows.
 
 **Todo** - Document new 23.2 endpoint to run a workflow that was shared with user via Collection.  The old endpoint remains to run your own workflows.
 
