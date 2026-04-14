@@ -9,18 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:f5da27e0703d4600b1ca6e99da2e1fbe0f7e7a0ca174c3333e9c7598e260d3e0
+content_hash: sha256:7a412c01027cea9c717011d1faaabb07393619b442a5cadd4213a90652aec72c
 confluence_page_id: null
 model_used: null
 ---
 
 # SAML Errors
 
-For aas log errors, see SAML SSO / AAS Logs
+For aas log errors, see [SAML SSO / AAS Logs](https://alteryx.atlassian.net/wiki/search?text=SAML+SSO+/+AAS+Logs)
 
 ---
 

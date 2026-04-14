@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c3425baa13527c901350714e208c0af010564dc10c97d1b28c101215bb7c68ca
+content_hash: sha256:fb7fa20ab19d7fe6d6d7409196b1f0a16b1017d729294eef27bc01d3eb933f0d
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ model_used: null
 >
 > Explanation of the Miongo collections with names like **usersMigrationInProgress **and **usersPostMigration_45 **and how to use them for rollbacks
 
-| **Logs** | Schema Migration logs for Gallery and Service (alteryx-XXX-migration.csv) |
+| **Logs** | [Schema Migration logs for Gallery and Service (alteryx-XXX-migration.csv)](https://alteryx.atlassian.net/wiki/search?text=Schema+Migration+logs+for+Gallery+and+Service+(alteryx-XXX-migration.csv)) |
 | --- | --- |
 | **Help** | <https://help.alteryx.com/current/en/server/configure/database-management/mongodb-management/mongodb-schema-reference.html> |
 
@@ -78,7 +78,7 @@ In this case, the upgrades to **22.1**, **22.3**, and **23.1** didn’t lead to 
 
 If the customer has no backup and their IT didn’t take snapshots of the Server and they need to roll back an upgrade, you can do this through careful renaming of the PostMigration collections.
 
-This assumes the same version on Mongo.  **tbd **- Can you backup a later Mongo version and restore to an earlier version?  If so, you can do that and also edit the ASMongoDBVersion.bin to the earlier Mongo version, this would allow the database to be started with the earlier Mongo versions.
+This assumes the same version on Mongo.  **tbd **- Can you backup a later Mongo version and restore to an earlier version?  If so, you can do that and also edit the [ASMongoDBVersion.bin](https://alteryx.atlassian.net/wiki/search?text=ASMongoDBVersion.bin) to the earlier Mongo version, this would allow the database to be started with the earlier Mongo versions.
 
 (1) Backup the current database before making changes.
 

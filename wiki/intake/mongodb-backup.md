@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:f74123a2fd6029f2ba2626429f9b21fc1a4c90ee059d96285ad5b37c62d52747
+content_hash: sha256:13b845642b496b79e4abcde74c0edb62b9f9e131fc81b979f0733e854f563387
 confluence_page_id: null
 model_used: null
 ---
@@ -32,7 +32,7 @@ for embedded mongo onlyPurple
 | --- | --- |
 | **Alternatives** | When Service is stopped (to ensure you don’t capture Mongo DB mid-update)     - ZIP the Persistence folder    - Snapshot the entire machine |
 | **Tool Updates** | Mar-2024 – Mongo backup and Restore tools were updated and backported to older Server versions. The goal was to reduce errors during backup and restore such as memory exhaustion.     - TCPE-95277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
-| **Validate backup counts** | Utility Workflow - Validate_Mongo_Dump_Collection_Counts    <== Utility compares mongoDump.log counts to the source MongoDB.             Created for a case where backup didn’t backup all records |
+| **Validate backup counts** | [Utility Workflow - Validate_Mongo_Dump_Collection_Counts](https://alteryx.atlassian.net/wiki/search?text=Utility+Workflow+-+Validate_Mongo_Dump_Collection_Counts)    <== Utility compares mongoDump.log counts to the source MongoDB.             Created for a case where backup didn’t backup all records |
 | **Jira** | TCPE-95577dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
 | **Help** | <https://help.alteryx.com/current/server/mongodb-backups> |
 

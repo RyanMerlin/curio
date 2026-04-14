@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:ffca62c3c427305baa13301bd681a8ab0ba42a8cb323da4d8e011518125750f5
+content_hash: sha256:5d928b416e40eec99e51bff0851a64e4180bb7c4ddd7fd61dd71eefacd561535
 confluence_page_id: null
 model_used: null
 ---
@@ -26,10 +26,10 @@ model_used: null
 >
 > 24.1 added User-Managed SQL Server as an alternative to MongoDB for the Server’s databases
 
-For information on connecting Designer to SQL Server: SQL Server (Microsoft)
+For information on connecting Designer to SQL Server: [SQL Server (Microsoft)](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=SQL+Server+(Microsoft))
 
 | **Access** | <https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16>                                                                                                           > **x64 Driver** |
 | --- | --- |
-| **Tools** | SQL Server Management Studio (SSMS)  <== **view and edit SQL DB** |
+| **Tools** | [SQL Server Management Studio (SSMS)](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=SQL+Server+Management+Studio+(SSMS))  <== **view and edit SQL DB** |
 | Enablement | **2024-04-09 Enablement**     - User Managed MSSQL for Server Internal Enablement FAQ <== Mariah B    - 2024-04-09 - Server 24.1 SQL Server and Transfer Assets 1h37m    - 2024-04-09 - Mongo To SQL Migration Demo 16m <== Jarrod Thuenerhttps://youtu.be/RUytFrg5Bcc?si=fYT3h-sIKoCT6gbs  16mSharePoint link <== source of YouTube video       - https://youtu.be/RUytFrg5Bcc?si=fYT3h-sIKoCT6gbs  16m       - SharePoint link <== source of YouTube video     - Slides (pptx) |
-| **Help** | <https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management.html>  <https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/sql-db-advanced-connection-strings.html>    > SQL DB Connection Strings  <== **better than Help as of Jan-2026** <https://help.alteryx.com/current/en/server/best-practices/sql-db-in-server-upgrades-best-practices.html>  List of all Help pages touched to include SQL Server references     - SQL Documentation Updates |
+| **Help** | <https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management.html>  <https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/sql-db-advanced-connection-strings.html>    > [SQL DB Connection Strings](https://alteryx.atlassian.net/wiki/search?text=SQL+DB+Connection+Strings)  <== **better than Help as of Jan-2026** <https://help.alteryx.com/current/en/server/best-practices/sql-db-in-server-upgrades-best-practices.html>  List of all Help pages touched to include SQL Server references     - SQL Documentation Updates |

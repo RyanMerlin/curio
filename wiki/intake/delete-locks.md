@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:fbd6c5ff1318b7026dd25a72aea481d79f9b04e2d1529d7ee52ece5fa2851ce5
+content_hash: sha256:ce9b34b2387360865b0a859d656b28e0f9f3613a433fd538482112c91c9adbdc
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ model_used: null
 >
 > This articles explains how to “delete locks” in MongoDB
 
-As part of a [Server Host Recovery](https://help.alteryx.com/current/server/server-host-recovery-guide) or Reindex you need to "delete locks".
+As part of a [Server Host Recovery](https://help.alteryx.com/current/server/server-host-recovery-guide) or [Reindex](https://alteryx.atlassian.net/wiki/search?text=Reindex+MongoDB) you need to "delete locks".
 
 You'll delete all records from the **AlteryxGallery.locks** and **AlteryxGallery_Lucene.luceneFs.locks** collections.  These locks contain the machine name of the machine that wrote them and can't be deleted by another machine. Because of this, these locks will block the Service from accessing Mongo if the Server's machine name was changed or the Mongo database was restored from another machine without following the [Server Host Recovery](https://help.alteryx.com/current/server/server-host-recovery-guide).
 

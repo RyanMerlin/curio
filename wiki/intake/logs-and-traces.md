@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:97e986000b3185287853abe4cdb9d67d66c6dcde5bff0c429dc83b7b77bfec00
+content_hash: sha256:3f270f9ac407780d3bbdde5d9c6a19f7e0d9a186ff622a736c3d2b5e6fd6d668
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ model_used: null
 >
 > This page covers Server logs
 > 
-> See also: **Support-Desginer > **Logs and Traces
+> See also: **Support-Desginer > **[Logs and Traces](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Logs+and+Traces)
 
 ToolsAlteryx Workbench (SharePoint) <== Tech Support File ViewerHelphttps://help.alteryx.com/current/en/server/configure/configure-and-use-server-logs.html
 

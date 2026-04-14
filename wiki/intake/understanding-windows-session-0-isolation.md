@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:4bd3a2c3fbe3591d2fb1c23f0e4d94b96d307170745428e1f7190dd79ee81e6f
+content_hash: sha256:22861183e13aba978aa37bf04b059003408a1371c89a78e52e7063f5c58565b7
 confluence_page_id: null
 model_used: null
 ---
@@ -25,7 +25,7 @@ model_used: null
 | **Author** | Michael Adler |
 | --- | --- |
 | CSU | Understanding Windows Session 0 Isolation (Michael Adler) 30m |
-| **Key Articles** | How-To (Excel)  <== **search for “Server” articles** |
+| **Key Articles** | [How-To (Excel)](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=How-To+(Excel))  <== **search for “Server” articles** |
 
 ---
 

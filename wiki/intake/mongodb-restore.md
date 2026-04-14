@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d1fd4063d0220bfa9fd5e7038877ac590529656d5f2d47f654ee53192b454553
+content_hash: sha256:5916b3b02fe26ddaa22d8260ed249d7e6f920135c00f213c8d3a3862fe89d5d0
 confluence_page_id: null
 model_used: null
 ---
@@ -43,10 +43,10 @@ for embedded mongo onlyPurple
 
 |  | **Action** | **Steps** |
 | --- | --- | --- |
-| 1 | #### Prepare APOD | If you will be restoring a large customer database, start an APOD with large C: and D: drives.  Set a large swap file on C: (explained below) and do the restore to D: (see Mongo Error - fatal error: out of memory) |
+| 1 | #### Prepare APOD | If you will be restoring a large customer database, start an APOD with large C: and D: drives.  Set a large swap file on C: (explained below) and do the restore to D: (see [Mongo Error - fatal error: out of memory](https://alteryx.atlassian.net/wiki/search?text=Mongo+Error+-+fatal+error:+out+of+memory)) |
 | 2 | #### Stop Service | Stop the Alteryx Service |
 | 3 | #### Host Recovery? | noteRed  If restoring a database from a backup made on another machine, you MUST follow the <https://help.alteryx.com/current/en/server/install/server-host-recovery-guide.html> |
-| 4 | #### Restore from pre_upgrade folder? | If restoring from a Pre_Upgrade folder you’ll need to manually create **AS_MongoDBVersion.bin** to contain the MongoDB version that matches the Server install version before restoring, see   > ASCredentials.bin   > <https://help.alteryx.com/current/server/mongodb-schema-reference> |
-| 5 | #### Restore | Open **Command Prompt** as **Administrator**.  (*) If restoring from a **Pre_Upgrade **folder, see section “**Restore from pre_upgrade folder?**“  X:  cd \FOLDER \Alteryx\bin net stop alteryxservice **AlteryxService.exe emongorestore=”X:\BKP”,”X:\REST”,10** The “10” at the end sets the mongo batchSize to try to avoid the Mongo Error - fatal error: out of memory error.  While more reliable, this may slow the restore down. |
-| 6 | #### Success? | **Confirm restore was 100% successful**  Check the **mongoRestore.log **in the folder you restored Mongo to  > **⚠️ Warning** > > **Mongo Restore FAILS SILENTLY and frequently failes for larger restores on APODS** >  > [Ed P] Should we consider requesting ZIP files of the persistence folder instead on Mongo backups for larger databases? I know there is lore that ZIPs aren’t reliable, but they seem quite reliable for all other data so why would a Mongo folder be different?  Example of silent failure – the restore appears successful:  But the **mongoRestore.log** (in the restore folder) shows that it failed  or  Despite failing, you can still start the MongoDB without error.  You may be able to start the Service but data will be missing (for example, all of the Shared Gallery Connections in a case Jon L worked).  Other times the Service will fail to start with an error that the “user” user is missing.  To correct **out of memory** issue, see: Mongo Error - fatal error: out of memory |
+| 4 | #### Restore from pre_upgrade folder? | If restoring from a Pre_Upgrade folder you’ll need to manually create **AS_MongoDBVersion.bin** to contain the MongoDB version that matches the Server install version before restoring, see   > [ASCredentials.bin](https://alteryx.atlassian.net/wiki/search?text=ASCredentials.bin)   > <https://help.alteryx.com/current/server/mongodb-schema-reference> |
+| 5 | #### Restore | Open **Command Prompt** as **Administrator**.  (*) If restoring from a **Pre_Upgrade **folder, see section “**Restore from pre_upgrade folder?**“  X:  cd \FOLDER \Alteryx\bin net stop alteryxservice **AlteryxService.exe emongorestore=”X:\BKP”,”X:\REST”,10** The “10” at the end sets the mongo batchSize to try to avoid the [Mongo Error - fatal error: out of memory](https://alteryx.atlassian.net/wiki/search?text=Mongo+Error+-+fatal+error:+out+of+memory) error.  While more reliable, this may slow the restore down. |
+| 6 | #### Success? | **Confirm restore was 100% successful**  Check the **mongoRestore.log **in the folder you restored Mongo to  > **⚠️ Warning** > > **Mongo Restore FAILS SILENTLY and frequently failes for larger restores on APODS** >  > [Ed P] Should we consider requesting ZIP files of the persistence folder instead on Mongo backups for larger databases? I know there is lore that ZIPs aren’t reliable, but they seem quite reliable for all other data so why would a Mongo folder be different?  Example of silent failure – the restore appears successful:  But the **mongoRestore.log** (in the restore folder) shows that it failed  or  Despite failing, you can still start the MongoDB without error.  You may be able to start the Service but data will be missing (for example, all of the Shared Gallery Connections in a case Jon L worked).  Other times the Service will fail to start with an error that the “user” user is missing.  To correct **out of memory** issue, see: [Mongo Error - fatal error: out of memory](https://alteryx.atlassian.net/wiki/search?text=Mongo+Error+-+fatal+error:+out+of+memory) |
 | 7 | #### Point to restored folder | Run **Alteryx System Settings** and adjust the **Controller > Persistence folder** to the restored location. |

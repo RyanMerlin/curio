@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:ed28ec5a1093a4b9d130f3d8946cc965fdad7e02f385c6db00baf0f8c7fd13d0
+content_hash: sha256:d580baa04a959477a9160902dadd34952476ae36591c8de9011b23fa1edadc90
 confluence_page_id: null
 model_used: null
 ---
@@ -35,11 +35,11 @@ model_used: null
 | **Prevent** | If you have Copilot installed, you need to uninstall or install the latest version BEFORE upgrading to 25.1     - https://help.alteryx.com/aac/en/alteryx-copilot.html#uninstall-alteryx-copilot > Uninstall    - https://marketplace.alteryx.com/en-US/apps/476096/alteryx-copilot  <== latest version |
 | **Jira** | <https://alteryx.atlassian.net/issues/TDES-14553?jql=textfields%20~%20%22Spike%3A%20Unhandled%20Exception%20occurred%20popup%20dialog%20appears%20after%20upgrading%20to%2025.1%20from%20a%20previous%20version%20with%20Copilot%20installed%22> |
 | **Release Notes** | Release notes call out this issue  <https://help.alteryx.com/release-notes/en/release-notes/designer-release-notes/designer-2025-1-release-notes.html#copilot-designer-compatibility> |
-| **Confluence** | General Error - An Unhandled Exception occurred > **Upgrade to 25.1? Copilot** |
+| **Confluence** | [General Error - An Unhandled Exception occurred](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=General+Error+-+An+Unhandled+Exception+occurred) > **Upgrade to 25.1? Copilot** |
 |  |  |
 | **25.1** | ## activeRed (25.1-tbd) Error publishing with a credential - Invalid username or password. |
 | **Issue** | Publishing to 25.1 from older Desogner will get the error below |
-| **Confluence** | File > Save Error - Invalid username or password |
+| **Confluence** | [File > Save Error - Invalid username or password](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=File+>+Save+Error+-+Invalid+username+or+password) |
 | **Jira** | GCSE-358077dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
 |  |  |
 |  | # |
@@ -48,7 +48,7 @@ model_used: null
 | **24.2** | ## activeRed PreventGreen (24.2-tbd Mongo 7.0) Embedded MongoDB upgrade no longer backs up the data for rollback |
 | **Prevent** | Ensure customer snapshots Server with the Service stopped. |
 | **Issue** | You can no longer rely on the Mongo_Backup folder to use in a rollback since it’s not created,  The Mongo_PreUpgrade folder is used to upgrade the database to 7.0 during the backup process, so it can’t be used in a rollback. |
-| **Confluence** | MongoDB Upgrade Folder Structure |
+| **Confluence** | [MongoDB Upgrade Folder Structure](https://alteryx.atlassian.net/wiki/search?text=MongoDB+Upgrade+Folder+Structure) |
 |  |  |
 | **24.2** | ## activeRed PreventGreen (24.2) Alteryx License Server 24.2 Admin Command Error “Server responded with a 401“ |
 | **Prevent** | Be aware of the issue and use the post-upgrade workaround to reset the password |
@@ -64,19 +64,19 @@ model_used: null
 | **Issue** | The step to upgrade the Embeded MongoDB to 7.0 fails  You are upgrading from a version of Server that utilizes MongoDB version older than 6.0. You need to upgrade to Server version 2023.2 before moving forward. |
 | **Cause** | OPTION 1 – The user is attempting to upgrade from a version of Server that uses Mongo 4.X  OPTION 2 – The file that indicates the current MongoDB version, **ASMongoDBVersion.bin**, is inaccurately showing version 4.x |
 | **Resolution** | OPTION 1 – Rollback and upgrade Server one Embeddd MongoDB upgrade at a time.  First to a version with Mongo 6.0, then a version with Mongo 7.0.  OPTION 2 – Edit **ASMongoDBVersion.bin **to contain simply. “6.0.5” so the upgrade software will see the Persistence folder as Mongo 6.0.  Run a manual Mongo upgrade to 7.0 and restart the Server. |
-| **Confluence** | Mongo Database Upgrade Error - You are upgrading from a version of Server that utilizes MongoDB version older than 6.0 |
+| **Confluence** | [Mongo Database Upgrade Error - You are upgrading from a version of Server that utilizes MongoDB version older than 6.0](https://alteryx.atlassian.net/wiki/search?text=Mongo+Database+Upgrade+Error+-+You+are+upgrading+from+a+version+of+Server+that+utilizes+MongoDB+version+older+than+6.0) |
 | **Versions** | 24.2 - tbd  Affects the Embedded Mongo upgrade to Mongo7.0.  Similar issue occurs with different error messages fro each Embedded Mongo DB update. |
 |  |  |
 | **24.2** | ## activeRed (24.2 - tbd) Data loss during MongoDB Version Upgrade |
 | **Issue** | The MongoDB Upgrade process does not report some errors that can result in silent data loss during MongoDB version upgrade |
 | **Logs** | You can review the MongoDB version upgrade log in the folder created next to the Persistence folder during upgrade:     - \xxx_PreUpgrade\migration.log  Unfortunately, the log includes several errors that look bad but are expected.  The workflow provided in the Confluence link will parse the migration.log and ignore the expected errors. |
 | **Versions** | Upgrades to 24.2 that include a MongoDB version upgrade |
-| **Confluence** | migration.log (embedded Mongo version upgrade)  <== diagnostic workflow to filter out expected errors in migration.log CSU Tech Talk 25 |
+| **Confluence** | [migration.log (embedded Mongo version upgrade)](https://alteryx.atlassian.net/wiki/search?text=migration.log+(embedded+Mongo+version+upgrade))  <== diagnostic workflow to filter out expected errors in migration.log [CSU Tech Talk 25](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=CSU+Tech+Talk+25) |
 | **Jira** | GCSE-322477dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
 |  |  |
 | **24.2** | ## 24.2.1.1.41 _Patch_1Blue Gallery stops responding/fails as CPU utilization builds slowly over time |
 | **Issue** | After upgrading to 24.2.1.14, Gallery encounters intermittent outage due to excessive CPU load which increases slowly over time until Gallery failure |
-| **Logs** | Gallery Logs repeat     - 2024-11-09 00:37:07.237346,INFO,39,AlteryxServerHost,ActionTrigger<IScheduleOperations>,Work,,,,CST-DEMO-GAL-1,,,,,,"Performing Alteryx.Server.Models.Operations.ScheduleOperations, self-triggered by timeout.",  Gallery Log Info - Performing Alteryx.Server.Models.Operations.ScheduleOperations, self-triggered by timeout. |
+| **Logs** | Gallery Logs repeat     - 2024-11-09 00:37:07.237346,INFO,39,AlteryxServerHost,ActionTrigger<IScheduleOperations>,Work,,,,CST-DEMO-GAL-1,,,,,,"Performing Alteryx.Server.Models.Operations.ScheduleOperations, self-triggered by timeout.",  [Gallery Log Info - Performing Alteryx.Server.Models.Operations.ScheduleOperations, self-triggered by timeout.](https://alteryx.atlassian.net/wiki/search?text=Gallery+Log+Info+-+Performing+Alteryx.Server.Models.Operations.ScheduleOperations,+self-triggered+by+timeout.) |
 | **Cause** | At minimum, a moderate usage of the Server API and API tokens generated will compound the number of processes created leading to an overload of CPU utilization |
 | **Workaround** | From Jira card     - If increased resource usage is gradual enough, scheduling a periodic restart of the AlteryxService on any gallery nodes    - If happening frequently:Minimize Server API use in workflowsTemporarily disable Server API use by setting it to a different portRollback       - Minimize Server API use in workflows       - Temporarily disable Server API use by setting it to a different port       - Rollback |
 | **Jira** | TGAL-1213877dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira [**25.1-LTS, 24.2.1_Patch1**] |
@@ -87,7 +87,7 @@ model_used: null
 | **24.1** | ## Action Req'dYellow Python version upgrade requires update of all Connectors |
 | **Issue** | Python version upgrade requiring update of all Connectors and workflows using Python |
 | **Errors** | tbd |
-| **Help** | Python Version Upgrades |
+| **Help** | [Python Version Upgrades](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Python+Version+Upgrades) |
 |  |  |
 | **24.1** | ## activeRed PreventGreen (24.1 - tbd) Upgrade from 21.4 early patches (LTS-p4) is unstable |
 | **Prevent** | Patch to the latest 21.4 before upgrading |
@@ -112,7 +112,7 @@ model_used: null
 | **Issue** | Dates in a variety of collections have the value **0001-01-01T00:00:00**, which confuses the AlteryxService Schema Migration as it converts all times from Server timezone to UTC. |
 | **Errors** | Service Schema Migration (alteryx-migration.csv)     - 2024-09-19 03:49:43.680292,INFO,1,AlteryxServerMigrator,migrationLogger,MoveNext,Starting Service Migration: 3,    - 2024-09-19 03:49:44.391287,FATAL,1,AlteryxServerMigrator,migrationLogger,DoMigrateDatabase,Migration failed with error: Year number is out of range 1400..9999: '0001-01-01T00:00:00',  Service Log     - 2024-09-19 03:49:43.680292,ERROR,7884,AlteryxService,,,,,,,,,"S:\Alteryx\Service\AlteryxService\src\AlteryxServiceManager.cpp: 1156. Server Migrator failed with exit code <3762504530>. See Migrator Logs for detailed error message. This error must be addressed in order for the service to start." |
 | **Versions** | Not expressly tested in 24.2 but expecting it will be an issue since upgrades that go through 24.1 will include the service Schema 3 upgrade |
-| **Resolution** | Service Schema Migration Log Fatal - Migration failed with error: Year number is out of range 1400..9999: '0001-01-01T00:00:00' |
+| **Resolution** | [Service Schema Migration Log Fatal - Migration failed with error: Year number is out of range 1400..9999: '0001-01-01T00:00:00'](https://alteryx.atlassian.net/wiki/search?text=Service+Schema+Migration+Log+Fatal+-+Migration+failed+with+error:+Year+number+is+out+of+range+1400..9999:+'0001-01-01T00:00:00') |
 |  |  |
 | **24.1** | ## activeRed PreventGreen (24.1) Custom site colors are removed |
 | **Prevent** | See defect workaround to reapply the colors after upgrade |
@@ -170,14 +170,14 @@ model_used: null
 | **23.2** | ## activeRed  (23.2+) Version numbers of existing workflows all display as 1 |
 | **Issue** |  |
 | **KB** | [Alteryx Workflow Version History Discrepancy with Alteryx Server 2023.2](https://knowledge.alteryx.com/index/s/article/Alteryx-Workflow-Version-History-Discrepancy-with-Alteryx-Server-20232) (KB)  <== **workaround** |
-| **Confluence** | Issues (User > My Workspace)  <== generic cross-link, no additional information |
+| **Confluence** | [Issues (User > My Workspace)](https://alteryx.atlassian.net/wiki/search?text=Issues+(User+>+My+Workspace))  <== generic cross-link, no additional information |
 | **Jira** | TCPE-110077dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira[**Cancelled**]     - Jira was Cancelled, not Done, due to a script that can be run in Mongo to fix the issue after it occurs, per comments     - Only affects workflows that existed before patch 22.1.1.42691, per Jira |
 |  |  |
 | **23.2** | ## activeRed (23.2 - 24.1) Data loss during MongoDB Version Upgrade |
 | **Issue** | The MongoDB Upgrade process does not report some errors that can result in silent data loss during MongoDB version upgrade |
 | **Logs** | You can review the MongoDB version upgrade log in the folder created next to the Persistence folder during upgrade:     - \xxx_PreUpgrade\migration.log  Unfortunately, the log includes several errors that look bad but are expected.  The workflow provided in the Confluence link will parse the migration.log and ignore the expected errors. |
 | **Versions** | Upgrades to 23.2 and 24.1 that include a MongoDB version upgrade. |
-| **Confluence** | migration.log (embedded Mongo version upgrade)  <== diagnostic workflow to filter out expected errors in migration.log CSU Tech Talk 25 |
+| **Confluence** | [migration.log (embedded Mongo version upgrade)](https://alteryx.atlassian.net/wiki/search?text=migration.log+(embedded+Mongo+version+upgrade))  <== diagnostic workflow to filter out expected errors in migration.log [CSU Tech Talk 25](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=CSU+Tech+Talk+25) |
 | **Jira** | GCSE-322477dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
 |  |  |
 | **23.2** | ##  not doneRed  (23.2) Revision numbers of existing workflows all displaying as 1 after upgrade to 2023.2 |
@@ -192,7 +192,7 @@ model_used: null
 | **Issue** | When upgrading from a NEW 22.3, 23.1, 23.2 installs (already CryptoMigrated) some customers will be missing AlteryxService.AS_Versions (which is the indicator to the upgrader that the data is CryptoMigrated).  This leads the upgrade to beleive that CryptoMigration needs to be performed.  However, the 22.3+ database and RuntimeSettings.xml are already CryptoMigrated and will error towards the end of the attempt to CryptoMigrate them again.  This issue applies to upgrades of NEW installs of     - 22.3 (Mongo 4.2) to 23.1 (Mongo 4.2), 23.2 (Mongo 6.0), 24.1 (Mongo 6.0)    - 23.1 (Mongo 4.2) to 23.2 (Mongo 6.0), 24.1 (Mongo 6.0)    - 23.2 (Mongo 6.0) to 24.1 (Mongo 6.0), 24.2 (Mongo 7.0), any version that uses Mongo 7.0 |
 | **Patching before upgrade** | **User needs to upgrade their version to the Patch before upgrading to new version**, so this works differently than most patches where upgrading TO the Patch version corrects the issue.  Ex: upgrade 23.1_LTS to 23.1.392_Patch_7 before upgrading to 23.2 to prevent this issue     - 23.1.392_Patch_7  <== upgrade to this patch (or later) to percent the error when upgrading to a later version    - 23.2.173_Patch_4  <== upgrade to this patch (or later) to percent the error when upgrading to a later version    - 24.1_LTS                <== issue no longer occurs for users start with a NEW install of 24.2 |
 | **Service Log** | Service Log  TBD |
-| **CryptoMigration Log** | Cryptomigration – AlteryxServiceMigrator_# .log     - 2024-06-08 14:37:41.902258;3;Error during key initialization. <Error importing keys to Microsoft\Crypto\RSA\MachineKeys\ directory in ProgramData: Bad Version of provider. (-2146893817)>  CryptoMigration Log Error - Error during key initialization. <Error importing keys to Microsoft\Crypto\RSA\MachineKeys\ directory in ProgramData: Bad Version of provider. (-2146893817)> |
+| **CryptoMigration Log** | Cryptomigration – AlteryxServiceMigrator_# .log     - 2024-06-08 14:37:41.902258;3;Error during key initialization. <Error importing keys to Microsoft\Crypto\RSA\MachineKeys\ directory in ProgramData: Bad Version of provider. (-2146893817)>  [CryptoMigration Log Error - Error during key initialization. <Error importing keys to Microsoft\Crypto\RSA\MachineKeys\ directory in ProgramData: Bad Version of provider. (-2146893817)>](https://alteryx.atlassian.net/wiki/search?text=CryptoMigration+Log+Error+-+Error+during+key+initialization.+<Error+importing+keys+to+Microsoft\Crypto\RSA\MachineKeys\+directory+in+ProgramData:+Bad+Version+of+provider.+(-2146893817)>) |
 | **Additional possible errors** | From the Defect  The error that appears in in AlteryxServiceMigrator_X.log appears to be dependent on what the pre-upgrade version was. When upgrading from 2023.1.1.361 to 2023.2.1.173, the error at appeared is:     - 2024-05-17 19:47:28.654117;3;Error during key initialization. <Error importing keys to Microsoft\Crypto\RSA\MachineKeys\ directory in ProgramData: Bad Version of provider. (-2146893817)>  Examples of upgrades and error message received:     - Got signal 222023.2.1.89 > 2024.1.1.17       - 2023.2.1.89 > 2024.1.1.17     - Bad Version of provider2022.3.1.597 > 2023.1.1.3922022.3.1.597 > 2024.1.1.172023.1.1.361 > 2023.2.1.173       - 2022.3.1.597 > 2023.1.1.392       - 2022.3.1.597 > 2024.1.1.17       - 2023.1.1.361 > 2023.2.1.173   LastStartupError.txt and AlteryxServiceMigrator_X.log files from following replication tests attached:     - 2023.2.1.89 > 2024.1.1.17    - 2022.3.1.597 > 2024.1.1.17 |
 | **Verions** | 23.1, 23.2 |
 | **Jira** | TGAL-1118577dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
@@ -213,7 +213,7 @@ model_used: null
 | **Prevent** | The **CryptoMigration Prep Tool Pre Flight checks** can identify some Cryptomigration issues before attempting the upgrade     - https://help.alteryx.com/20223/en/server/install/install-or-upgrade-server/migration-prep-tool/run-the-migration-prep-tool.html  The PreFlight checks **REQUIRE **a [64-bit Controller token](https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/migration-prep-tool.html?lang=en##) or it will error with:     - CryptoMigration Log Pre Flight Error - RunasCredential failed while Decrypting storage key. <Server Error: 500 Server Error The Authentication Key is not valid, client <xxx.xxx.xxx.xx>> |
 | **Issue** | CryptoMigration to AES256 standard generated a large number of errors |
 | **Error** | Numerous error can occur when running the CryptoMigration Prep Tool, see Confluence page below. |
-| **Confluence** | CryptoMigration in 22.3     - Errors (CryptoMigration Log) |
+| **Confluence** | [CryptoMigration in 22.3](https://alteryx.atlassian.net/wiki/search?text=CryptoMigration+in+22.3)     - Errors (CryptoMigration Log) |
 | **Help** | <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/migration-prep-tool.html> |
 |  |  |
 | **22.3** | ## patchBlue  SAML Okta Login Leads to Please Sign In page |
@@ -243,19 +243,19 @@ model_used: null
 | **Log Error** | Gallery Migration log **alteryx-migration.csv**     - 2024-12-20 20:37:06.863334, INFO, 1, AlteryxServerWebApiHost, migrationLogger, MoveNext, Starting Migration: 40.03    - 2024-12-20 20:37:07.345314, FATAL, 1, AlteryxServerWebApiHost, migrationLogger, DoMigrateDatabase, Migration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'. |
 | **Resolution** | If still trying to upgrade, change **dataConnectionsInProcess.PasswordSecured** NULL values to ““ (empty string) with the following query  If rolled back, **dataConnections.PasswordSecured** NULL values to ““ (empty string) |
 | **Jira** | GCSE-290277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira  [**25.1-LTS**] GCSE-301177dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira  <== possibly a dupe |
-| **Confluence** | Gallery Schema Migration Log Error - Migration to version 40.03 failed: Renaming collection from 'dataConnections' to 'dataConnectionsMigrationInProcess_40.03  Gallery Schema Migration Log Fatal - Migration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'.  <== 40.03  Gallery Schema Migration Log Fatal - Migraration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'.  <== 40.03  <== possibly a dupe |
+| **Confluence** | [Gallery Schema Migration Log Error - Migration to version 40.03 failed: Renaming collection from 'dataConnections' to 'dataConnectionsMigrationInProcess_40.03](https://alteryx.atlassian.net/wiki/search?text=Gallery+Schema+Migration+Log+Error+-+Migration+to+version+40.03+failed:+Renaming+collection+from+'dataConnections'+to+'dataConnectionsMigrationInProcess_40.03)  [Gallery Schema Migration Log Fatal - Migration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'.  <== 40.03](https://alteryx.atlassian.net/wiki/search?text=Gallery+Schema+Migration+Log+Fatal+-+Migration+failed+with+error:+Unable+to+cast+object+of+type+'MongoDB.Bson.BsonNull'+to+type+'MongoDB.Bson.BsonString'.++<==+40.03)  [Gallery Schema Migration Log Fatal - Migraration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'.  <== 40.03](https://alteryx.atlassian.net/wiki/search?text=Gallery+Schema+Migration+Log+Fatal+-+Migraration+failed+with+error:+Unable+to+cast+object+of+type+'MongoDB.Bson.BsonNull'+to+type+'MongoDB.Bson.BsonString'.++<==+40.03)  <== possibly a dupe |
 | **Versions** | 22.1_Patch3 - 24.1 (limited by Mongo 4.2 to 6.0 upgrade).  Additionally, defect was corrected in 25.1-LTS.  But this doesn’t matter for Embedded Mongo since the user would have already experienced it upgrading to a Mongo 6.0 version and had to change the NULLs to ““ already. |
 |  |  |
 | **22.1** **Patch_3** | ## ActiveRed PreventGreen (22.1_Patch3 - 24.1) Gallery Schema Migration 40.03 fails with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'. |
 | **Same as** | This resolved in the same was as **Migration to version 40.03 failed: Renaming collection from 'dataConnections' to 'dataConnectionsMigrationInProcess_40.03** above |
-| **Confluence** | Gallery Schema Migration Log Fatal - Migration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'.  <== 40.03 |
+| **Confluence** | [Gallery Schema Migration Log Fatal - Migration failed with error: Unable to cast object of type 'MongoDB.Bson.BsonNull' to type 'MongoDB.Bson.BsonString'.  <== 40.03](https://alteryx.atlassian.net/wiki/search?text=Gallery+Schema+Migration+Log+Fatal+-+Migration+failed+with+error:+Unable+to+cast+object+of+type+'MongoDB.Bson.BsonNull'+to+type+'MongoDB.Bson.BsonString'.++<==+40.03) |
 | **Jira** | GCSE-290277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira  [**25.1-LTS**] |
 |  |  |
 | **22.1** | ## patchBlue Action Req'dYellow Controller Token Length Change Breaks Host Recovery |
 | **Issue** | - Controller token changes from 40- to 64-char for new installs, but upgrades were leaving it at 40-char    - This breaks Server Host Recovery and requires the token to be regenerated as a 64-char before Host Recovery can be performed    - Newer upgrades are lengthening the Token to 64-char in a way that keeps Controller and Gallery/Worker nodes in sync    - It’s not clear if a patch will lengthen the token |
 | **Action** | Check the Controller Token length, if 40-char use Regenerate to make it 64-char.  The new Controller Token needs to be updated to other nodes. |
 | **Error** | [tbd SHRG error with 40-char token ] |
-| **Confluence** | Controller Token Length Transition from 21.4 to 22.3 |
+| **Confluence** | [Controller Token Length Transition from 21.4 to 22.3](https://alteryx.atlassian.net/wiki/search?text=Controller+Token+Length+Transition+from+21.4+to+22.3) |
 |  |  |
 | **22.1** | ## patch ???Blue (22.1 - 24.2) Gallery migration fails on 40.01 with error deserializing the CustomCss property |
 | **Issue** | 40.01 Gallery Schema migration for 22.1 fails |

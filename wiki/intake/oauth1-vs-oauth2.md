@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:04deada08e31b40380ea7f99188e52ba4785a2a9f2c483354671a72766519f6e
+content_hash: sha256:eb70bcd8abffed21b09580ae27f8e2962f996f86721417a15aa8e9442401161d
 confluence_page_id: null
 model_used: null
 ---
@@ -30,7 +30,7 @@ model_used: null
 
 # Links
 
-| **Call Server API from Workflow** | Server API Tool +  How to use the V3 API Pack |
+| **Call Server API from Workflow** | [Server API Tool +](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Server+API+Tool++)  [How to use the V3 API Pack](https://alteryx.atlassian.net/wiki/search?text=How+to+use+the+V3+API+Pack) |
 | --- | --- |
 | **Difference** | In **OAuth1 **customers can     - Make an API call by passing their key and secret in the API call  In **OAuth2 **they need to     - FIRST, Make a call to /webapi/oauth2/token with thier Key and Secret.  This returns a Bearer Token that expirs in ~1hr.    - SECOND, Make the API call passing the Bearer Token.  The above is standard for OAuth2, it’s not specific to our API.  Therefore, they can find many examples online specific to the language they're developing in.  Helping people construct their OAuth2 code is out of scope. |
 | Tutorials | <https://www.oauth.com/oauth2-servers/differences-between-oauth-1-2/>  <https://www.thedataschool.com.au/shiva-ravi/connecting-to-api-using-oauth-2-from-alteryx/>          <==  [Tim R] “the data school link does talk about OAuth 2.0 but doesn't talk                     about interfacing with our Gallery specifically, which I believe is a bit                     different implementation of OAuth 2.0” |

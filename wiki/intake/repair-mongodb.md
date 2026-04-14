@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:be99742ad3443b8b8a09ac374dd9d8c44eb5db8ee2e3afd1064e80016b6bbc24
+content_hash: sha256:b1aa04c8dcbfd8a16b9299b26f0265f5d78ef20672b68092bcca5693b9ec8123
 confluence_page_id: null
 model_used: null
 ---
@@ -26,4 +26,4 @@ for embedded mongo onlyPurple
 
 | **Repair MongoDB** | c:  cd %ProgramFiles%\Alteryx\bin  mongod.exe --dbpath "DRIVE:\PERSISTENCE_FOLDER " --port 27018 **--repair** |
 | --- | --- |
-| **Troubleshooting** | For the following error running --repair  > **⚠️ Warning** > > can't start without --journal enabled when journal files are present, terminating  add  **--nojournal** flag after **--repair**  c:  cd %ProgramFiles%\Alteryx\bin  mongod.exe --dbpath "DRIVE:\FOLDER " --port 27018 --repair **--nojournal** |
+| **Troubleshooting** | For the following error running [--repair]  > **⚠️ Warning** > > can't start without --journal enabled when journal files are present, terminating  add  **--nojournal** flag after **--repair**  c:  cd %ProgramFiles%\Alteryx\bin  mongod.exe --dbpath "DRIVE:\FOLDER " --port 27018 --repair **--nojournal** |

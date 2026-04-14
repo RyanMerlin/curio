@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:30598e610e041144655d6304428b3a335506ab8eac704ba769bf48b33987a1e4
+content_hash: sha256:95d1455c69078f63bc8808de96c5505f133c3d9c78ef73209b9f1b1d32fe2018
 confluence_page_id: null
 model_used: null
 ---
@@ -26,7 +26,7 @@ model_used: null
 >
 > **AlteryxService.exe test** performs several checks, some will be logged during startup but this is a succinct view and and can show things that don’t appear in logs
 
-| **Key Articles** | Command line Testing Tools for Windows and Server > **AlteryxService** |
+| **Key Articles** | [Command line Testing Tools for Windows and Server](https://alteryx.atlassian.net/wiki/search?text=Command+line+Testing+Tools+for+Windows+and+Server) > **AlteryxService** |
 | --- | --- |
 
 # To Run AlteryxService.exe

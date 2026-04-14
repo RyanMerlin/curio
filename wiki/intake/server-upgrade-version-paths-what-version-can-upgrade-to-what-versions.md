@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c334c2fb430432dcd34a16b5811ef5a27494e44a6fb765d509aecfb360ded90a
+content_hash: sha256:50a8fd4b5972944eac2bd33c911bb486c6727b66e4b4ddcd6b79a14d65d76979
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ model_used: null
 >
 > This document helps plan what versions you can upgrade to directly
 
-| **Key Articles** | Server Upgrade Issues-by-Version  MongoDB Upgrade Folder Structure |
+| **Key Articles** | [Server Upgrade Issues-by-Version](https://alteryx.atlassian.net/wiki/search?text=Server+Upgrade+Issues-by-Version)  [MongoDB Upgrade Folder Structure](https://alteryx.atlassian.net/wiki/search?text=MongoDB+Upgrade+Folder+Structure) |
 | --- | --- |
 | **Help** | <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-supported-versions.html>       > <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-unsupported-versions.html>  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/server-upgrade-checklist.html>  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server.html>  <https://help.alteryx.com/current/en/server/configure/database-management/mongodb-management/mongodb-schema-reference.html> |
 
@@ -52,7 +52,7 @@ model_used: null
 | **Version** |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- |
 | **21.4** | Mongo 4.2 |  |  |  |  |
-| \| \| \| | **<< Stop at 21.4 and regenerate Controller Token before upgrade to 22.1+ >> **  Controller Token Length Transition from 21.4 to 22.3  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-unsupported-versions.html#2021-4:~:text=Internal%20Change%3A%20Controller%20Token%20length%20extended> |  |  |  |  |
+| \| \| \| | **<< Stop at 21.4 and regenerate Controller Token before upgrade to 22.1+ >> **  [Controller Token Length Transition from 21.4 to 22.3](https://alteryx.atlassian.net/wiki/search?text=Controller+Token+Length+Transition+from+21.4+to+22.3)  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-unsupported-versions.html#2021-4:~:text=Internal%20Change%3A%20Controller%20Token%20length%20extended> |  |  |  |  |
 | **21.4** |  | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 |
 | **21.3.6+** |  | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 |
 | **21.3.5-** |  |  | Mongo 4.0 | n/a | n/a |

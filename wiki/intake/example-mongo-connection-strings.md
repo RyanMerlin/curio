@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:63343035966c08c14f3c07b66f866ffda359dadee72fa6ccd8bb3b71f9688810
+content_hash: sha256:1f7ba9d2a5fde5f66877fcfc01bb9c68fd47bb7f3aab0d84172dc41d23177705
 confluence_page_id: null
 model_used: null
 ---
@@ -22,5 +22,5 @@ model_used: null
 >
 > Connection strings to connect to Mongo
 
-| **Key Articles** | <https://help.alteryx.com/current/server/mongodb-advanced-connection-strings>     - which links to https://www.mongodb.com/docs/v5.0/reference/connection-string/  Mongo ODBC Driver |
+| **Key Articles** | <https://help.alteryx.com/current/server/mongodb-advanced-connection-strings>     - which links to https://www.mongodb.com/docs/v5.0/reference/connection-string/  [Mongo ODBC Driver](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Mongo+ODBC+Driver) |
 | --- | --- |

@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:bdd716c538edb47f1eb61a45a76b0b684ebf1edf72f3e95e31fcfbaf858beb51
+content_hash: sha256:64894792ec6310156def43ce642e090444b110c16791808a5eee8c1d6f486f98
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ note
 
 # THIS PAGE IS BEING RE-DRAFTED IN
 
-[DRAFT] High Availability Upgrade Best Pracices
+[[DRAFT] High Availability Upgrade Best Pracices](https://alteryx.atlassian.net/wiki/search?text=[DRAFT]+High+Availability+Upgrade+Best+Practices)
 
 # THIS PAGE IS BEING RE-DRAFTED IN
 

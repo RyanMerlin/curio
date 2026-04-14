@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:a683a62d086fc0ee5f0a9c3d3ae8db24b5583da1abb1fdd13efb32bd307d6e81
+content_hash: sha256:99efe36ed3cd192fe1b24fcb478908aae3bc4b7eb43fb8097397abcbd96a3c32
 confluence_page_id: null
 model_used: null
 ---
@@ -29,10 +29,10 @@ model_used: null
 
 | **Testing Tools** |  |
 | --- | --- |
-| **Swagger** | Access the API with Swagger  Swagger can determine if the call is working as expected and/or differently for Curator vs Artisan.  Since the API documentation is light, testing in Swagger will determine how an API works. |
-| httpbin.org | Quickly shows what the API call is passing.  This can be used to compare a working Postman or cURL call to a failing call from their script or the Download Tool.  **To use **– replace the endpoint being called with <http://httpbin.org/anything>     - This will return JSON showing everything the call sent.  Postman and cURL add Headers to the call that may be required but not being passed by the script or Download Tool.  Many settings are case-sensitive. |
-| Fiddler | Since the calls to [httpbin.org](http://httpbin.org) don’t include the our API’s OAuth2 Bearer Token and the subsequent authentication performed by our API, you can use Fiddler to compare working calls from Postman or cURL to the failing call from their script of the Download Tool.  If Fiddler fixes the issue, that is a strong indication that their proxy is the problem since Fiddler replaces their proxy. |
-| Postman  cURL | 3rd-party API testing tools.  You can ask customer to ensure they can make the call work in Postman or cURL.  If they can’t, they need to work on their call before it will work in their script or the Download Tool. |
+| **Swagger** | [Access the API with Swagger](https://alteryx.atlassian.net/wiki/search?text=How+to+Test+the+API+with+Swagger)  Swagger can determine if the call is working as expected and/or differently for Curator vs Artisan.  Since the API documentation is light, testing in Swagger will determine how an API works. |
+| [httpbin.org](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=httpbin.org) | Quickly shows what the API call is passing.  This can be used to compare a working Postman or cURL call to a failing call from their script or the Download Tool.  **To use **– replace the endpoint being called with <http://httpbin.org/anything>     - This will return JSON showing everything the call sent.  Postman and cURL add Headers to the call that may be required but not being passed by the script or Download Tool.  Many settings are case-sensitive. |
+| [Fiddler](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=Fiddler) | Since the calls to [httpbin.org](http://httpbin.org) don’t include the our API’s OAuth2 Bearer Token and the subsequent authentication performed by our API, you can use Fiddler to compare working calls from Postman or cURL to the failing call from their script of the Download Tool.  If Fiddler fixes the issue, that is a strong indication that their proxy is the problem since Fiddler replaces their proxy. |
+| [Postman](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=Postman)  [cURL](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=cURL) | 3rd-party API testing tools.  You can ask customer to ensure they can make the call work in Postman or cURL.  If they can’t, they need to work on their call before it will work in their script or the Download Tool. |
 
 | **Check** | **Steps** |
 | --- | --- |

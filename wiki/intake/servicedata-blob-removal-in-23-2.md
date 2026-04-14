@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:2edbaa9d0045b211a3bd8d6ae3ff8f35e1b09a9bda4901c83115161aa140bd05
+content_hash: sha256:2f1728bf2d567eb4d9be8346224002d315258434e64db03e6f70ee3f39bce3c8
 confluence_page_id: null
 model_used: null
 ---
@@ -30,4 +30,4 @@ This page tracks issues related to the removal of the **ServiceData blob**
 
 | **Key Articles** | <https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1702763531/Mongo+Input+Tool#%E2%80%A6-unpack-the-__ServiceData-%2F-ServiceData-blob> |
 | --- | --- |
-| **Log** | Schema Migration log  <== **schema migration errors here** |
+| **Log** | [Schema Migration log](https://alteryx.atlassian.net/wiki/search?text=Schema+Migration+logs+for+Gallery+and+Service+(alteryx-XXX-migration.csv))  <== **schema migration errors here** |

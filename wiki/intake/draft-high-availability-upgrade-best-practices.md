@@ -9,18 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:fe0a28d917ba172f1f195063846b36d1a261fe330f47e5110fa4a3fca9063eb5
+content_hash: sha256:0aefcf6800ffb0a2a2b1bbf9ced1e2bb407801c06b4f14825dc31fb4344196d1
 confluence_page_id: null
 model_used: null
 ---
 
 This page is a draft update for
 
-High Availability Upgrade Best Practices
+[High Availability Upgrade Best Practices](https://alteryx.atlassian.net/wiki/search?text=High+Availability+Upgrade+Best+Practices)
 
 The page presents Best Practices for upgrading an HA Server Environment
 

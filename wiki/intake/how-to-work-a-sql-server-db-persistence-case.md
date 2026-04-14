@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:a2df24e596fba77d01d0ae45b6f8a7d9824c85ae99b1ca40ce2b574e53565f1a
+content_hash: sha256:cf36198dca014cd58dfda16d09f065f76305e673a7ad01f4177d5fa61d5650e1
 confluence_page_id: null
 model_used: null
 ---
@@ -43,4 +43,4 @@ model_used: null
 | **Did the AlteryxService and AlteryxGallery schemas create successfully?** | Check the AlteryxService and AlteryxGallery schema migration logs (alteryx-migration.csv) for schema errors |
 | **Does the database access user have permission to read from, write to, and create the AlteryxGallery and AlteryxService databases and tables?** | The database access user applied in the connection strings will need the `CREATE TABLE` permission to create the Alteryx Server schema tables in the SQL Server databases when starting Alteryx Server for the first time. Specifically this requires SA user level full control, so that `ALTER DATABASE` can be run after creating the tables. After the databases have been successfully created, SA access is no longer needed. |
 | **Are the AlteryxGallery and AlteryxService databases dedicated to Alteryx Server?** | The databases should not contain any other tables not used by Alteryx Server |
-| **Performance issues?** | How far is the Gallery from the SQL Server?  Run a pathping command from the Gallery node to see how far away the SQL Server is:     - pathping /n SQL_SERVER_HOST |
+| **Performance issues?** | How far is the Gallery from the SQL Server?  Run a [pathping](https://alteryx.atlassian.net/wiki/search?text=Command+line+Testing+Tools+for+Windows+and+Server) command from the Gallery node to see how far away the SQL Server is:     - pathping /n SQL_SERVER_HOST |

@@ -9,18 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:0af2fd26b99a187d8737aef2888b6d18f1be6959fb2da8e2927b3a662afe97cb
+content_hash: sha256:92bb7e178fa98ee61b2b2d6960ffb00257f459a8a42be23cf535c68960c50a10
 confluence_page_id: null
 model_used: null
 ---
 
 # Installation and Upgrade Errors
 
-| **Key Articles** | Server Upgrade Issues-by-Version |
+| **Key Articles** | [Server Upgrade Issues-by-Version](https://alteryx.atlassian.net/wiki/search?text=Server+Upgrade+Issues-by-Version) |
 | --- | --- |
 
 ---

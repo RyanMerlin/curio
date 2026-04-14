@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:812269d57ce40c5d8855230ce02e41eca85437d5a3d98802ea9645b8b8fd36d9
+content_hash: sha256:3112299704543de941251db0e9b1f922ccc0b180b8aceedfbd1aad1f45b62156
 confluence_page_id: null
 model_used: null
 ---
@@ -43,5 +43,5 @@ model_used: null
 > | **21.4** | **40** | 64 | 64 | Host recovery fails if a 40-char token is used |
 > | **22.1** | **40** or 64 | 64 | 64 | Host recovery fails if a 40-char token is used |
 > |  |  |  |  |  |
-> | **22.3** | 64 | 64 | 64 | All good!  ---  In an upgrade that lengthens the token from 40 to 64, the Controller and Workers will lengthen in the same way and still connect after upgrade.  Admin should update their Runbook with the new token.  The upgrade will backup RuntimeSettings.xml before re-encrypting it.     - RuntimeSettings.22_2_legacy.xml – the original, pre-upgrade version    - RuntimeSettings.22_2_migration.xml – the re-encrypted version    - RuntimeSettings.xml – a copy of the re-encrypted untimeSettings.22_2_migration.xml  See FAQ / Help - CryptoMigration |
+> | **22.3** | 64 | 64 | 64 | All good!  ---  In an upgrade that lengthens the token from 40 to 64, the Controller and Workers will lengthen in the same way and still connect after upgrade.  Admin should update their Runbook with the new token.  The upgrade will backup RuntimeSettings.xml before re-encrypting it.     - RuntimeSettings.22_2_legacy.xml – the original, pre-upgrade version    - RuntimeSettings.22_2_migration.xml – the re-encrypted version    - RuntimeSettings.xml – a copy of the re-encrypted untimeSettings.22_2_migration.xml  See [FAQ / Help - CryptoMigration](https://alteryx.atlassian.net/wiki/search?text=FAQ+/+Help+-+CryptoMigration) |
 > |  |  |  |  |  |

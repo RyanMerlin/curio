@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:653cb1d433e5576db300552d4888f6aa616293433816f72538a56ed37ff485a3
+content_hash: sha256:ff49d30f87436e2541d39b5411265e2c01f63825efc5a13f0dd136779dfc9d64
 confluence_page_id: null
 model_used: null
 ---
@@ -33,7 +33,7 @@ model_used: null
 | #### Add a NEW user | Login to the Server as a new user with a new password |
 | --- | --- |
 | #### Install Studio3T Free | <https://studio3t.com/download-studio3t-free/> |
-| #### Configure Studio 3T | You’ll configure using the Non-Admin Monog password found in **Alteryx System Settings > Persistence > Password**  ---  In Studio 3T:  **localhost **above works when on the Controller using Embedded Mongo, for other situations: Example Mongo Connection Strings |
+| #### Configure Studio 3T | You’ll configure using the Non-Admin Monog password found in **Alteryx System Settings > Persistence > Password**  ---  In Studio 3T:  **localhost **above works when on the Controller using Embedded Mongo, for other situations: [Example Mongo Connection Strings](https://alteryx.atlassian.net/wiki/search?text=Example+Mongo+Connection+Strings) |
 | #### Find the NEW user | Run the query:  db.getCollection("users").find({"Email":"**DummyUser@myCompany.com**"}) **Right-click > Document View** |
 | #### Copy the NEW Password fields |  |
 | #### Find the EXISTING user who needs to update their password updated | Perform the same search as for the NEW user, but with the EXISTING user’s email address.  **Right-click > Document > Edit** |

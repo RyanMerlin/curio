@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:396013dd6ebec88535dede808689109a410ffdc51ab6248c008c46635c7ccd5e
+content_hash: sha256:04d5a9da2764c0b1927b4b10e03e808e534ff22420e7f64d70f92b4756cb6065
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ model_used: null
 >
 > **ASMongoDBVersion.bin** is a text file in the Mongo database folder.  It's checked during a Server upgrade to determine the Mongo database version and if a Mongo version upgrade is needed.  The first line, with the Mongo version number, is the only line that's needed. Mongo does not create or use this file, it's only used by the Server upgrade process.
 
-| **Key Articles** | Embedded MongoDB upgrade / migration   <== what folders are created during a MongoDB version upgrade |
+| **Key Articles** | [Embedded MongoDB upgrade / migration](https://alteryx.atlassian.net/wiki/search?text=Embedded+MongoDB+upgrade+/+migration)   <== what folders are created during a MongoDB version upgrade |
 | --- | --- |
 | **File Location** | Found in the **Persistence Folder** as set in the **Alteryx System Settings > Controller > Persistence > Data Folder** |
 

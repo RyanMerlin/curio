@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:906f6483e73e2a272449d2c03cca4a7eea072b46e46657528ed91fc2bb8bb023
+content_hash: sha256:0c6ae853fe9d2bcc0753dcd3693a52eec0b41da42a44fbf708ee84f8d50ae22f
 confluence_page_id: null
 model_used: null
 ---
@@ -55,4 +55,4 @@ model_used: null
 > 
 > In Mongo upgrades prior to 7.0, the customer was provided the OPTION to upgrade the Embedded MongoDB version.  Since this is a required step, unchecking the MongoDB upgrade leads to the Service being set to Manually run and refusing to start.
 > 
-> See How to upgrade Embedded MongoDB version manually
+> See [How to upgrade Embedded MongoDB version manually](https://alteryx.atlassian.net/wiki/search?text=How+to+upgrade+Embedded+MongoDB+version+manually)

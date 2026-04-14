@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:90eea7bc85265230f8c35eb4558921d12af4127ec64a9435dd9bc2d18e66a97e
+content_hash: sha256:ab4ce25a7a1abd4e5b456499f7faefa901b06a0fee94ee2e83d27c0a0a476273
 confluence_page_id: null
 model_used: null
 ---
@@ -95,8 +95,8 @@ model_used: null
 >
 > See also:
 > 
-> How to Allow User's Workflows and Schedules in Collection after User marked Inactive
-> How to Transition from Subscriptions to Collections
+> [How to Allow User's Workflows and Schedules in Collection after User marked Inactive](https://alteryx.atlassian.net/wiki/search?text=How+to+Allow+User's+Workflows+and+Schedules+in+Collection+after+User+marked+Inactive)
+> [How to Transition from Subscriptions to Collections](https://alteryx.atlassian.net/wiki/search?text=How+to+Transition+from+Subscriptions+to+Collections)
 
 ## Options
 

@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:4e5e54c8491fbe068af24b36d6ce7cafc1d5b709f9493fe8889c2aef4eeeb12f
+content_hash: sha256:278ea820c85c8803529298f53ce9bf110d93a483ff7ec514d3a8a9eeb66208d3
 confluence_page_id: null
 model_used: null
 ---
@@ -61,9 +61,9 @@ What version can upgrade to what?
 
 <https://help.alteryx.com/current/en/server/best-practices/server-upgrade-best-practices.html#1--perform-a-backup> - Backup for safe rollback procedures
 
-Community Utility - Environment Info Tool to Assist Upgrades +  <== I haven’t used this, but it looks very cool.
+[Community Utility - Environment Info Tool to Assist Upgrades +](https://alteryx.atlassian.net/wiki/search?text=Community+Utility+-+Environment+Info+Tool+to+Assist+Upgrades++)  <== I haven’t used this, but it looks very cool.
 
-Server Upgrade Issues-by-Version
+[Server Upgrade Issues-by-Version](https://alteryx.atlassian.net/wiki/search?text=Server+Upgrade+Issues-by-Version)
 
 - <== are there some of the “Prevent” items we can pull from here to have admins.  ex: Uninstall Copilot trial before upgrading Designer to 25.1, Server Upgrade Issues-by-Version
 

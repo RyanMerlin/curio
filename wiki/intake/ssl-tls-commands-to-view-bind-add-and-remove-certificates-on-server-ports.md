@@ -9,18 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:04dc8d793cdfda15dae83c739f4c19a507a631a4c273e89134e03d021222fc6b
+content_hash: sha256:690cf0ca8e294b7b9ef4e94a7692b9efb624bbb1fccec2ad35925da4fb47e232
 confluence_page_id: null
 model_used: null
 ---
 
 > **ℹ️ Info**
 >
-> See also: Command line Testing Tools for Windows and Server
+> See also: [Command line Testing Tools for Windows and Server](https://alteryx.atlassian.net/wiki/search?text=Command+line+Testing+Tools+for+Windows+and+Server)
 
 Open command prompt **as Administrator**
 

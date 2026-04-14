@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:e67d09a66835f109c5c5ec1ead442e4dc04d5174ea464158765c9e2f9eea2760
+content_hash: sha256:d459700745a82d9a58be09cf3ce01fb2c9cbf016fe2b0acb07bec8e77b33e9d4
 confluence_page_id: null
 model_used: null
 ---
@@ -24,7 +24,7 @@ model_used: null
 
 **For Designer-only chaining, see:**
 
-How to Chain Workflows and Analytic Apps in Designer (aka Workflow Orchestration)
+[How to Chain Workflows and Analytic Apps in Designer (aka Workflow Orchestration)](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=How+to+Chain+Workflows+and+Analytic+Apps+in+Designer+(aka+Workflow+Orchestration))
 
 ---
 

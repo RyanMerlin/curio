@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:34fab8c18d3aa10192b7a24de668c832e368fb1a5e1906959dc0194b28dc7151
+content_hash: sha256:29169e9ed437f667d0b10748e2de9bafbaca3a7dbfec630b786442ae814c0664
 confluence_page_id: null
 model_used: null
 ---
@@ -24,7 +24,7 @@ for embedded mongo onlyPurple
 >
 > There appears no simple Mongo command can tell the version of MongoDB a persistece folder contains.  Fortunately this issue doesn’t come up often as customers typically know the Server version each backup or PreUpgrade folder relates to.
 
-The MongoDB version number is stored in the text file, **ASMongoDBVersion.bin**, in the persistence folder as described in ASMongoDBVersion.bin .  While typically correct, it can be wrong.
+The MongoDB version number is stored in the text file, **ASMongoDBVersion.bin**, in the persistence folder as described in [ASMongoDBVersion.bin](https://alteryx.atlassian.net/wiki/search?text=ASMongoDBVersion.bin) .  While typically correct, it can be wrong.
 
 ---
 

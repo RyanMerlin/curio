@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:cb0a98187d638772cd69efd5d1776ae596f4ce26bfe28de379d1aeea518bf399
+content_hash: sha256:a3486b3acd850df42c81579a59e1178efc5ac5465975b01b2550824a97752ff1
 confluence_page_id: null
 model_used: null
 ---
@@ -36,7 +36,7 @@ model_used: null
 
 # Setup a Share on your APOD
 
-How to Setup UNC Filepath on an APOD
+[How to Setup UNC Filepath on an APOD](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=How+to+Setup+UNC+Filepath+on+an+APOD)
 
 # BAT file
 

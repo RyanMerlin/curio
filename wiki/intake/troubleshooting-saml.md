@@ -9,16 +9,16 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:8c3c59622fa2adc38030a452b4751ea9b9e4bfca8f91ebf1c2627678a38a476d
+content_hash: sha256:57dce9f5523f014fda696d0dc10ba443e41c55a8a06d361259bdfba467c66e5c
 confluence_page_id: null
 model_used: null
 ---
 
-| #### Logs | SAML SSO / AAS Logs |
+| #### Logs | [SAML SSO / AAS Logs](https://alteryx.atlassian.net/wiki/search?text=SAML+SSO+/+AAS+Logs) |
 | --- | --- |
 | #### SAML Tracer file during login process | <https://chromewebstore.google.com/detail/saml-tracer/mpdajninpobndbfcldcmbpnnbhibjmch?hl=en&pli=1> |
 | #### Decode SAML tokens | <https://samltool.io/>                                                    <== **decode SAML messages** |

@@ -9,22 +9,22 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:1c3f65db8fb3b535c89785f9e22ec165d4619973b887f2563fefdc990e4c4223
+content_hash: sha256:a9adaf5baf5fa9b724aae829e8831dc95a207bba6a80c1a209916b495e673350
 confluence_page_id: null
 model_used: null
 ---
 
 > **ℹ️ Info**
 >
-> The **Mongo Input Tool** can be used to explore an Embedded or a non-TLS User-managed database. For a TLS User-managed database you can use the Mongo ODBC Driver.
+> The **Mongo Input Tool** can be used to explore an Embedded or a non-TLS User-managed database. For a TLS User-managed database you can use the [Mongo ODBC Driver](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Mongo+ODBC+Driver).
 
 > **📝 Note**
 >
-> The **MongoDB Tools** were replaced with Mongo ODBC Driver in 23.1 release
+> The **MongoDB Tools** were replaced with [Mongo ODBC Driver](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Mongo+ODBC+Driver) in 23.1 release
 > 
 > To use MongoDB Input in 23.1+, **right-click tool ribbon > Show Deprecated Tools**
 
@@ -32,7 +32,7 @@ model_used: null
 >
 > Do NOT use the **MongoDB Output Tool **to write the Alteryx Server, it will corrupt the system
 
-| **Schemas** | <https://help.alteryx.com/current/server/alteryxgallery-mongodb-schema>  <https://help.alteryx.com/current/server/alteryxservice-mongodb-schema>  Mongo Collections and Entity-Relationship Diagram (ERD) |
+| **Schemas** | <https://help.alteryx.com/current/server/alteryxgallery-mongodb-schema>  <https://help.alteryx.com/current/server/alteryxservice-mongodb-schema>  [Mongo Collections and Entity-Relationship Diagram (ERD)](https://alteryx.atlassian.net/wiki/search?text=Mongo+Entity-Relationship+Diagram+(ERD)) |
 | --- | --- |
 
 ---

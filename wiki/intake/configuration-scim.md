@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:9c1917196d3ba25d4e43f9535ea6bc83e0dd82bc3b772952bda9d4d54c88545d
+content_hash: sha256:94389b4ad5c6c7d1638f0d5e0f2aab0e6379fa0b8742d1492c621cc0330b155e
 confluence_page_id: null
 model_used: null
 ---
@@ -29,7 +29,7 @@ model_used: null
 
 ---
 
-Configure APOD - SCIM for Entra ID using the Microsoft Entra Connect Provisioning Agent
+[Configure APOD - SCIM for Entra ID using the Microsoft Entra Connect Provisioning Agent](https://alteryx.atlassian.net/wiki/spaces/SupportCseBasics/pages?title=Configure+APOD+-+SCIM+for+Entra+ID+using+the+Microsoft+Entra+Connect+Provisioning+Agent)
 
 ---
 

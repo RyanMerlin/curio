@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d8933c5259cf25f4fb17a8bc3b8f093307dccd861263119d28a4ddc87d5f9071
+content_hash: sha256:e2b948a989eac494ee597616cafc9792c9b83220a83928216b9080e1371a78df
 confluence_page_id: null
 model_used: null
 ---
@@ -41,5 +41,5 @@ Working page for Tim Randall
 | **IDP** | **Developer Account/Env setup** | **Configuration setup** |
 | --- | --- | --- |
 | **ADFS** | <https://learn.microsoft.com/en-us/microsoft-365/troubleshoot/active-directory/set-up-adfs-for-single-sign-on>  <https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/install-the-ad-fs-role-service> (more fine-tuned set-up doc TBD soon) | [Configuring SAML on Alteryx Server for ADFS](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-on-Alteryx-Server-for-ADFS-1583461562791) (KB) |
-| **PingFederate** | <https://docs.pingidentity.com/r/en-us/pingfederate-110/help_initialsetup_settinguppingfederate> | PingFederate (SAML) |
+| **PingFederate** | <https://docs.pingidentity.com/r/en-us/pingfederate-110/help_initialsetup_settinguppingfederate> | [PingFederate (SAML)](https://alteryx.atlassian.net/wiki/search?text=PingFederate+(SAML)) |
 | **WebSeal (IBM)** | N/A | N/A |

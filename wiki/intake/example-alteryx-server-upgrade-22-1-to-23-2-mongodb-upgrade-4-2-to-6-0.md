@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:16:58Z
-updated_at: 2026-04-14T15:16:58Z
+created_at: 2026-04-14T15:18:28Z
+updated_at: 2026-04-14T15:18:28Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c63bea1916266f94f26d20a6bbffa8bf70c0e4f020e13bb907eced0c3d3349e9
+content_hash: sha256:7856055dc7635a6a7af5dcca29f7cc67c2904cd66bda5127c90aa32a28ea7b53
 confluence_page_id: null
 model_used: null
 ---
@@ -24,7 +24,7 @@ model_used: null
 > 
 > **Overview:** This document demonstrates the migration process for upgrading Alteryx Server from version **22.1** to **23.2**, including the MongoDB upgrade from **4.2 to 6.0**. Logging has been configured in `D:\ProgramData\Alteryx` to distinguish logs for each stage
 
-Review: Embedded MongoDB upgrade (a.k.a. MongoDB version migration) - Support-Server - Confluence
+Review: [Embedded MongoDB upgrade (a.k.a. MongoDB version migration) - Support-Server - Confluence](https://alteryx.atlassian.net/wiki/search?text=Embedded+MongoDB+upgrade+/+migration)
 
 ---
 
@@ -148,8 +148,8 @@ After completing the Service DB schema migration, the process moves to the **Gal
 | Upgrade CryptoMigration | n/a | n/a |
 | - CryptoMigration of RuntimeSettings.xml | `AlteryxServiceMigrator_X.log` | `C:\ProgramData\Alteryx\Service` |
 | - CryptoMigration of remaining collections | `AlteryxServiceMigrator_X.log` | configured path for Service logs |
-| Schema Migration (Service DB) | `alteryx-migration.csv` | configured path for Sevice logs |
-| Schema Migration (Gallery DB) | `alteryx-migration.csv` | configured path for Gallery logs |
+| [Schema Migration](https://alteryx.atlassian.net/wiki/search?text=Schema+Migration+logs+for+Gallery+and+Service+(alteryx-XXX-migration.csv)) (Service DB) | `alteryx-migration.csv` | configured path for Sevice logs |
+| [Schema Migration](https://alteryx.atlassian.net/wiki/search?text=Schema+Migration+logs+for+Gallery+and+Service+(alteryx-XXX-migration.csv)) (Gallery DB) | `alteryx-migration.csv` | configured path for Gallery logs |
 
 ---
 
