@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-sev-1-s-draft",
+  "generated_at": "2026-04-14T13:50:53Z",
+  "lane": "review",
+  "kind": "new_page",
+  "subject_slug": "sev-1-s-draft",
+  "title": "Sev 1's [DRAFT]",
+  "target_path": [
+    "product-tree",
+    "alteryx-server"
+  ],
+  "summary": "Draft reference for Sev 1 cases on Alteryx Server — references to error articles.",
+  "body_markdown": "| Key Articles | LasttartUpError.txt Error - There was an error starting the Alteryx Service <Gallery Service failed to start in a timely fashion, exiting.> Server Sev 1 Flowchart (Sharepoint PDF) |\n| --- | --- |\n| Help | https://help.alteryx.com/current/en/server/install/server-host-recovery-guide.html  https://help.alteryx.com/current/en/server/install/server-processes-reference.html  https://help.alteryx.com/current/en/designer/system-requirements.html |\n| Sev 1’s | Sev 1 Resource Center and Training (Google) -- prepare to resolve Sev 1'sOrient (Google)Understand MongoDB (Google)Rollback / Downgrade a Failed Server Upgrade Encryption Grid (Google)Server Encryption Grid Schema Migration and Pre-Upgrade Checks (Google)Issues / Resolutions (Google) |\n| DRAFTS | Following are just draftsSev 1 Flowchart ideas Cameron Training |",
+  "recommended_action": "review before further action",
+  "scores": {
+    "route_confidence": 0.55,
+    "quality_confidence": 0.61,
+    "hierarchy_fit_confidence": 0.55,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.79999995,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Draft/incomplete page — low signal for publication; review for completion or removal",
+  "merge_target": null,
+  "taxonomy_mutation": null,
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1640793208"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793208"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Draft/incomplete page — low signal for publication; review for completion or removal"
+    ],
+    "overlap_candidates": [],
+    "rationale": ""
+  }
+}

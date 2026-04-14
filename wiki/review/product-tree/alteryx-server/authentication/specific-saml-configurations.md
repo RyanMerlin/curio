@@ -1,21 +1,28 @@
 ---
 id: c7b3cd17c65b77ae
 title: SPECIFIC SAML CONFIGURATIONS
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1665370204
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1665370204
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- saml
+- configuration
+- idp
+- sso
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:54Z
+confidence: 0.78
 cross_refs: []
 content_hash: sha256:5bc27864a4082748b97d7b192e9cc9f7b65a44d75e9c6093402ac36d77a2fb2f
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

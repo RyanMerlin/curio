@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:55Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "SQL DB Persistence",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2163704316",
+    "content_hash": "sha256:11d922bf8b62ed2923a14121e45235f4a5c99ab5fb8ba5d157002c6b5862c26a",
+    "content_preview": "---\n\n*[Organized section — child pages listed separately]*\n\n---\n\n> **ℹ️ Info**\n>\n> 24.1 added User-Managed SQL Server as an alternative to MongoDB for the Server’s databases\n\nnote b1b6bbcc-e93a-48a7-b9da-8833f495d89d For information on connecting Designer to SQL Server: SQL Server (Microsoft)\n\nFor information on connecting Designer to SQL Server: [SQL Server (Microsoft)](/wiki/spaces/SupportDesigner/pages/1702891678/SQL+Server+Microsoft)\n\n| Access | https://learn.microsoft.com/en-us/sql/connect/"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "sql-db-persistence"
+    ],
+    "confidence": 0.82,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "Hub/index page; requires sql-db-persistence subtree taxonomy approval",
+    "proposed_new_subtree": "sql-db-persistence",
+    "proposal_rationale": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "sql",
+      "db",
+      "persistence"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "Help",
+      "connecting",
+      "pages",
+      "Designer",
+      "information",
+      "Enablement",
+      "httpslearnmicrosoftcomenussqlconnectodbcdownloadodbcdriverforsqlserverviewsqlserverver"
+    ]
+  }
+}

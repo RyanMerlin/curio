@@ -1,21 +1,30 @@
 ---
 id: 361c9b5d918bff3b
 title: SSL/TLS Commands to View, Bind/Add, and Remove Certificates on Server Ports
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1744667238
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1744667238
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- ssl
+- tls
+- certificates
+- commands
+- netsh
+- ports
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:56Z
+confidence: 0.9
 cross_refs: []
 content_hash: sha256:bc4b14fd83f96580acd430a038b19f81639ffe931f743dfa6cb9da0897a1f6cd
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

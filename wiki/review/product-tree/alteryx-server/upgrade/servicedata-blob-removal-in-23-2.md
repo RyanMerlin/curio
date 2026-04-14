@@ -1,21 +1,29 @@
 ---
 id: dd354a6069320a10
 title: ServiceData Blob Removal in 23.2
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1944160523
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1944160523
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- '23.2'
+- servicedata
+- blob
+- migration
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:52Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:b33c860f0d493d84217a8eb75dea5e099d8f21672c3f653606e6ae1c9f71e89d
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**
