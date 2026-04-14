@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-troubleshooting",
+  "generated_at": "2026-04-14T04:25:06Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "troubleshooting",
+  "title": "Troubleshooting",
+  "target_path": [
+    "product-tree",
+    "alteryx-server"
+  ],
+  "summary": "Server troubleshooting hub page with child links and curated support references; extraction is incomplete and likely needs a deeper troubleshooting branch.",
+  "body_markdown": "---",
+  "recommended_action": "review before further action",
+  "scores": {
+    "route_confidence": 0.82,
+    "quality_confidence": 0.0,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.19,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "The source page is an index-like hub and the current intake extraction is too thin to support staging. Review is required to confirm a deeper branch structure and recover the missing source signal.",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "proposed_node_title": "troubleshooting",
+    "proposed_node_slug": "troubleshooting",
+    "node_description": "The page is clearly Server-primary and functions as a troubleshooting hub rather than a single leaf article. It should likely become an intermediate branch under product-tree/alteryx-server with curated child pages and a branch index instead of being flattened as one generic page.",
+    "rationale": "The page is clearly Server-primary and functions as a troubleshooting hub rather than a single leaf article. It should likely become an intermediate branch under product-tree/alteryx-server with curated child pages and a branch index instead of being flattened as one generic page.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1640793138"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1640793138/Troubleshooting"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "The source page is an index-like hub and the current intake extraction is too thin to support staging. Review is required to confirm a deeper branch structure and recover the missing source signal."
+    ],
+    "overlap_candidates": [],
+    "rationale": "The page is clearly Server-primary and functions as a troubleshooting hub rather than a single leaf article. It should likely become an intermediate branch under product-tree/alteryx-server with curated child pages and a branch index instead of being flattened as one generic page."
+  }
+}
