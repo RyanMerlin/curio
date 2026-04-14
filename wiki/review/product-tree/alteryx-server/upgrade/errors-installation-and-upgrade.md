@@ -1,21 +1,28 @@
 ---
 id: 0cfb0e96ee956763
 title: Errors (Installation and Upgrade)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2106261638
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2106261638
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- installation
+- errors
+- troubleshooting
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:04Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:a16a0176ae71c9b1aaeecf55f455d952a12ed77f4b90dc18d54c193cf22ec49d
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 # Installation and Upgrade Errors
