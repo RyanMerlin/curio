@@ -467,7 +467,16 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
                 let cells: Vec<String> = tr.children()
                     .filter_map(scraper::ElementRef::wrap)
                     .filter(|c| matches!(c.value().name(), "td" | "th"))
-                    .map(|c| inline_text(c).replace('|', "\\|").trim().to_string())
+                    .map(|c| {
+                        // children_to_md (not element_to_md) so we process cell contents
+                        // without hitting the "td" => String::new() short-circuit.
+                        // Collapse newlines to spaces and escape pipe chars for GFM table syntax.
+                        children_to_md(c, depth + 1)
+                            .replace('\n', " ")
+                            .replace('|', "\\|")
+                            .trim()
+                            .to_string()
+                    })
                     .collect();
                 if !cells.is_empty() {
                     rows.push(cells);
@@ -500,16 +509,24 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         // Render as a proper markdown link using the Confluence base URL.
         "ac:link" => {
             let ri_page_sel = scraper::Selector::parse("ri\\:page").unwrap();
+            // Display text can be in ac:link-title or ac:link-body (new ADF format)
             let link_title_sel = scraper::Selector::parse("ac\\:link-title").unwrap();
+            let link_body_sel  = scraper::Selector::parse("ac\\:link-body").unwrap();
 
-            // Prefer explicit display text from ac:link-title
             let display = el.select(&link_title_sel).next()
+                .or_else(|| el.select(&link_body_sel).next())
                 .map(|lt| lt.text().collect::<String>())
                 .filter(|t| !t.trim().is_empty());
 
             if let Some(ri_el) = el.select(&ri_page_sel).next() {
-                let content_title = ri_el.value().attr("ri:content-title").unwrap_or("");
-                let space_key = ri_el.value().attr("ri:space-key").unwrap_or("");
+                // Namespace prefixes are stripped from attribute names by HTML parsers:
+                // "ri:content-title" → "content-title", "ri:space-key" → "space-key"
+                let content_title = ri_el.value().attr("ri:content-title")
+                    .or_else(|| ri_el.value().attr("content-title"))
+                    .unwrap_or("");
+                let space_key = ri_el.value().attr("ri:space-key")
+                    .or_else(|| ri_el.value().attr("space-key"))
+                    .unwrap_or("");
                 let text = display.as_deref().unwrap_or(content_title).trim().to_string();
                 if !content_title.is_empty() {
                     let base = CONFLUENCE_BASE.with(|c| c.borrow().clone());
@@ -535,7 +552,9 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             children_to_md(el, depth)
         }
         "ri:page" => {
-            if let Some(ct) = el.value().attr("ri:content-title") {
+            let ct = el.value().attr("ri:content-title")
+                .or_else(|| el.value().attr("content-title"));
+            if let Some(ct) = ct {
                 return ct.to_string();
             }
             String::new()
@@ -548,9 +567,44 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         // if allowed to fall through to the default arm.
         "ac:parameter" => String::new(),
 
+        // ADF (Atlassian Document Format) extension elements.
+        // ac:adf-extension contains ac:adf-content (real content) AND ac:adf-fallback
+        // (a legacy HTML duplicate for old clients). We render only ac:adf-content.
+        "ac:adf-fallback" => String::new(),
+        "ac:adf-attribute" => String::new(), // metadata, not body text
+        "ac:adf-extension" => {
+            let content_sel = scraper::Selector::parse("ac\\:adf-content").unwrap();
+            el.select(&content_sel)
+                .map(|c| children_to_md(c, depth))
+                .collect::<String>()
+        }
+        "ac:adf-node" => {
+            // Panel nodes (note/warning/info/tip) — render their children as a blockquote callout.
+            let panel_type = el.value().attr("type").unwrap_or("");
+            let content = children_to_md(el, depth);
+            if content.trim().is_empty() { return String::new(); }
+            match panel_type {
+                "panel" => {
+                    // panel-type attribute is in a child ac:adf-attribute — read it from child text
+                    // or just use a generic blockquote (panel-type already suppressed by ac:adf-attribute rule).
+                    let indented = content.trim().lines()
+                        .map(|l| format!("> {}", l))
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    format!("{}\n\n", indented)
+                }
+                _ => content,
+            }
+        }
+        "ac:adf-content" => children_to_md(el, depth),
+
         "ac:structured-macro" => {
             // info/note/warning → blockquote-style callout
-            let macro_name = el.value().attr("ac:name").unwrap_or("");
+            // HTML parsers strip namespace prefixes from attribute names, so
+            // "ac:name" is stored as just "name" in the DOM.
+            let macro_name = el.value().attr("ac:name")
+                .or_else(|| el.value().attr("name"))
+                .unwrap_or("");
             // children/pagetree macros signal a section-index page.
             // Return empty — the hub synthesis at the page level already handles this.
             if macro_name == "children" || macro_name == "pagetree" {
@@ -577,8 +631,10 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
                     format!("> **{}**\n>\n{}\n\n", label, indented)
                 }
                 "code" => {
-                    let lang = el.select(&scraper::Selector::parse("ac\\:parameter[ac\\:name=language]").unwrap())
+                    // Try both namespaced and non-namespaced attribute selectors
+                    let lang = el.select(&scraper::Selector::parse("ac\\:parameter[name=language]").unwrap())
                         .next()
+                        .or_else(|| el.select(&scraper::Selector::parse("ac\\:parameter[ac\\:name=language]").unwrap()).next())
                         .map(|p| p.text().collect::<String>())
                         .unwrap_or_default();
                     format!("```{}\n{}\n```\n\n", lang, body.trim())
@@ -623,13 +679,16 @@ fn inline_children(el: scraper::ElementRef<'_>, depth: usize) -> String {
             scraper::node::Node::Element(_) => {
                 if let Some(child_el) = scraper::ElementRef::wrap(child) {
                     let tag = child_el.value().name();
-                    // Only recurse into inline elements; block elements are skipped here
+                    // Recurse into inline elements (HTML + Confluence inline link elements).
                     match tag {
                         "a" | "strong" | "b" | "em" | "i" | "code" | "span"
-                        | "br" | "sup" | "sub" | "u" | "s" | "del" => {
+                        | "br" | "sup" | "sub" | "u" | "s" | "del"
+                        // Confluence inline elements that should produce linked output:
+                        | "ac:link" | "ac:link-title" | "ac:link-body"
+                        | "ri:page" | "ri:attachment" | "ri:user" | "ri:space" => {
                             out.push_str(&element_to_md(child_el, depth));
                         }
-                        // Block elements inside inline context: just grab text
+                        // Other elements inside inline context: just grab text
                         _ => {
                             let t = child_el.text().collect::<String>();
                             out.push_str(t.trim());
