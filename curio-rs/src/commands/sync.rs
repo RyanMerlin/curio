@@ -75,6 +75,7 @@ pub async fn run_sync(
     dry_run: bool,
     json: bool,
     parent_page_id_override: Option<String>,
+    full_refresh: bool,
 ) -> Result<()> {
     config.connection.require_confluence()?;
 
@@ -295,6 +296,7 @@ pub async fn run_sync(
         &wiki_dir.join("staged"),
         tree.staged_id.as_str(),
         "staged",
+        full_refresh,
         &mut synced_page_ids,
         &mut skipped,
         &mut upserted,
@@ -307,6 +309,7 @@ pub async fn run_sync(
         &wiki_dir.join("review"),
         tree.review_id.as_str(),
         "review",
+        full_refresh,
         &mut synced_page_ids,
         &mut skipped,
         &mut upserted,
@@ -341,8 +344,9 @@ pub async fn run_sync(
     )
     .await?;
 
-    // Delete stale pages
-    if !dry_run {
+    // Prune stale pages — only in full-refresh mode to avoid slow Confluence tree walks
+    // on every incremental sync. Run `curio sync --all` to prune deleted pages.
+    if !dry_run && full_refresh {
         let mut stale_deleted = 0usize;
         for root_id in [&tree.published_id, &tree.staged_id, &tree.review_id] {
             let stale =
@@ -1116,6 +1120,7 @@ async fn sync_lane_directory(
     root_dir: &Path,
     root_page_id: &str,
     lane: &str,
+    full_refresh: bool,
     synced_ids: &mut HashSet<String>,
     skipped: &mut Vec<String>,
     upserted: &mut Vec<String>,
@@ -1176,6 +1181,7 @@ async fn sync_lane_directory(
                 parent_conf_id.as_deref(),
                 &abs_path,
                 lane,
+                full_refresh,
                 synced_ids,
                 skipped,
             )
@@ -1391,6 +1397,7 @@ async fn sync_lane_page(
     parent_id: Option<&str>,
     path: &Path,
     lane: &str,
+    full_refresh: bool,
     synced_ids: &mut HashSet<String>,
     skipped: &mut Vec<String>,
 ) -> Result<String> {
@@ -1417,10 +1424,24 @@ async fn sync_lane_page(
     .await?;
 
     // For review-lane pages: persist the Confluence page ID in a .sync-refs.json sidecar
-    // and post/update the single pinned reaction-instruction footer comment so reviewers
-    // can signal approve/reject/rewrite without editing the page.
+    // and post/update the single pinned reaction-instruction footer comment.
+    // In incremental mode, skip this block entirely when the sidecar already has both IDs —
+    // the comment body is static and never needs updating unless --all is passed.
     if lane == "review" {
-        if let Ok(Some(existing)) = client.get_page_by_title(space_key, parent_id, &page_title).await {
+        let refs_path = path.with_extension("sync-refs.json");
+        let existing_refs: serde_json::Value = if refs_path.exists() {
+            std::fs::read_to_string(&refs_path)
+                .ok()
+                .and_then(|s| serde_json::from_str(&s).ok())
+                .unwrap_or(serde_json::json!({}))
+        } else {
+            serde_json::json!({})
+        };
+        let already_set = existing_refs["confluence_review_page_id"].is_string()
+            && existing_refs["pinned_comment_id"].is_string();
+        if !full_refresh && already_set {
+            // Incremental: sidecar is complete, skip API calls.
+        } else if let Ok(Some(existing)) = client.get_page_by_title(space_key, parent_id, &page_title).await {
             if let Some(page_id) = existing["id"].as_str() {
                 // Upsert the pinned comment ──────────────────────────────────────────
                 let pinned_body = "<p><em>Curio review signals</em>: react \

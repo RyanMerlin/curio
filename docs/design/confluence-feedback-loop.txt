@@ -1,0 +1,276 @@
+Curio — Rendering Re-intake, Confluence Feedback Loop, and Source-Provider Refactor
+
+     Context
+
+     The prior alignment sweep landed (A/B blocks green; 41 tests passing; 152 review proposals
+     synced to Confluence). Reviewing those proposals in Confluence surfaced three classes of
+     gap:
+
+     1. Rendering bugs in the already-ingested pages:
+       - ac:link elements render as [Page Title] with no URL (not clickable)
+       - note/info macros duplicate their title text into the body
+       - [Organized section — child pages listed separately] placeholder leaks into pages that
+     use ac:structured-macro name="children" but aren't hubs
+       - These are fixed in code (commit 752df86) but the 152 already-synced pages still carry
+     the broken output. A re-intake is needed.
+     2. No feedback loop from Confluence back into Curio. curio sync is push-only (intake.rs:209
+     extracts page-id from URL for pull; sync.rs uses a curio-sync content-property hash and
+     in-memory dir_to_page_id map — nothing round-trips). A reviewer reacting 👍 on a proposal,
+     adding the label curio:approve, or writing a comment has no effect on the wiki. This means
+     every approval/rejection requires the user to hand-edit the markdown or re-run curio
+     process. Karpathy's compounding model needs this loop closed.
+     3. Architecture is Confluence-coupled. curio-rs/src/confluence.rs is wrapped directly by
+     commands/intake.rs, commands/sync.rs, commands/onboard.rs, and parts of config.rs/init.rs.
+     The existing providers/ directory holds LLM harness configs (Claude/Codex/Gemini) and
+     .agents/plugins/marketplace.json ships harness workflow bundles — neither is a Rust-level
+     source-provider abstraction. Extending beyond Confluence (GitHub wiki, Notion, filesystem,
+     SharePoint) today means copy-pasting the command modules.
+
+     The user also flagged metadata opportunities: labels/tags, attachments, owner, views,
+     last-updated-by, word count — Confluence already exposes these; we're not using them as
+     signals in the proposal dossier.
+
+     Intended outcome: re-intake the SupportServer space with the rendering fixes; close the
+     feedback loop so emoji reactions + labels + comments on Confluence review pages can drive
+     approve/reject/rewrite actions; enrich proposals with Confluence metadata; and abstract the
+     Confluence integration behind a SourceProvider trait so new sources can be added as trait
+     impls.
+
+     Approach
+
+     Scope for this pass: D + E only. Metadata enrichment (F) and source-provider refactor (G)
+     are deferred — their designs are retained below as the next-iteration backlog but will not
+     be implemented in this commit set.
+
+     Feedback signal map: Labels (curio:approve / curio:reject / curio:rewrite) are the primary
+     explicit signal. On top of that, Curio posts one pinned footer comment per Review page at
+     sync time ("React 👍 to approve, 👎 to reject, ❓ to request rewrite"). Reactions on that
+     pinned comment are interpreted identically to the equivalent labels — giving reviewers a
+     one-click path that doesn't require opening the label UI. Free-form comments on the page are
+      surfaced into <slug>.feedback.md but do not auto-trigger reprocessing (that's the deferred
+     "full loop" option).
+
+     Block D — Re-intake with rendering fixes (prerequisite)
+
+     Re-run the SupportServer ingest so the fixes in 752df86 propagate. Already-synced Confluence
+      Review pages are stale; need to either regenerate or delete+resync.
+
+     1. Archive current wiki/review/ tree (git branch snapshot) so we can compare before/after.
+     2. Revert the 152 review/product-tree/alteryx-server/** files back to wiki/intake/ (or
+     git-restore + re-intake). Easiest: git rm -rf wiki/review/product-tree/alteryx-server/ then
+     re-run intake.
+     3. curio intake --url
+     https://alteryx.atlassian.net/wiki/spaces/SupportServer/overview?homepageId=1640792523
+     --recursive
+     4. Spot-check: open one former-broken page (e.g. v3-endpoints.md) — confirm:
+       - ac:link references now render as [Page
+     Title](https://alteryx.atlassian.net/wiki/spaces/...)
+       - No [Organized section — child pages listed separately] noise on non-hub pages
+       - No duplicate Todo - ... note blocks
+     5. Regenerate routes.json (re-run gen-routes.js or build a smaller sample for validation).
+     6. curio process --route-file routes.json → re-apply routing.
+     7. curio sync → overwrite the Confluence Review pages. Taxonomy Reconciliation Index will
+     auto-rebuild.
+
+     No code changes; this block is operational only.
+
+     Critical files: none modified; this is a data-regeneration pass.
+
+     Block E — Confluence feedback loop (read labels, reactions, comments)
+
+     Extend the system so Confluence-side reviewer actions drive Curio state changes.
+
+     E1. Persist the Confluence page ID on sync. Today Frontmatter.confluence_page_id is
+     populated on intake (the source page ID) but not on sync (the ID of the Confluence review
+     page we create). That means we can't read back metadata from the correct page. Extend
+     sync.rs:sync_lane_page to store the created/updated page ID into a sidecar
+     <slug>.sync-refs.json next to the wiki markdown (or a new frontmatter field
+     review_confluence_page_id). Keep confluence_page_id as the source-of-truth intake ID.
+
+     E2. Extend ConfluenceClient with read-only feedback endpoints (curio-rs/src/confluence.rs):
+     - get_page_labels_v2(id) -> Vec<String> (GET /wiki/api/v2/pages/{id}/labels)
+     - get_page_footer_comments(id) -> Vec<Comment> (GET /wiki/api/v2/pages/{id}/footer-comments)
+     - get_page_inline_comments(id) -> Vec<Comment> (GET /wiki/api/v2/pages/{id}/inline-comments)
+     - get_comment_reactions(comment_id) -> Vec<Reaction> (reactions are per-comment in v2)
+     - get_page_watchers(id) -> Vec<User> (v1 only — GET
+     /wiki/rest/api/content/{id}/notification/page-watch)
+     - Labels and content-properties wrappers already exist (confluence.rs:619,702); reuse.
+
+     E3. Post a pinned reaction comment on sync. In sync.rs:sync_lane_page (review lane only),
+     after upserting the page, create (or update) a single footer comment with stable text:
+     "Curio review signals: react 👍 to approve, 👎 to reject, ❓ to request rewrite. Or apply
+     labels curio:approve / curio:reject / curio:rewrite. Free-form comments are captured as
+     reviewer feedback.". Persist that comment ID in the <slug>.sync-refs.json sidecar so we know
+      which comment's reactions count as signals (and don't confuse them with reactions on
+     unrelated comments).
+
+     E4. New curio feedback command (curio-rs/src/commands/feedback.rs):
+     - For each page in wiki/review/ with a stored review Confluence ID, fetch labels + footer
+     comments + inline comments + reactions on the pinned comment
+     - Combine signals into a single decision per page, with label taking precedence over
+     reactions when both present:
+       - curio:approve label OR 👍 on pinned comment → move page review → staged; if proposal
+     carries proposed_new_subtree, also auto-add the subtree to northstar.json (with description
+     from the proposal's taxonomy_mutation.node_description)
+       - curio:reject label OR 👎 on pinned comment → git-rm the wiki page + proposal (logged in
+     log.md)
+       - curio:rewrite label OR ❓ on pinned comment → reset status=intake, move back to
+     wiki/intake/, append reviewer comments (non-pinned) to a new <slug>.feedback.md so the next
+     curio process has that context
+       - Free-form comments (not the pinned one, no matching label/reaction) → appended to
+     <slug>.feedback.md without status change; surfaced in the next process manifest but no
+     auto-action
+     - Write a summary to stdout and _config/log.md
+     - Dry-run mode required (--dry-run) before making changes
+
+     E5. Surface feedback in the proposal dossier. When process_intake runs and
+     <slug>.feedback.md exists, include it in the manifest so the routing LLM sees prior reviewer
+      commentary and can revise rationale/category/merge_target accordingly.
+
+     Critical files:
+     - curio-rs/src/confluence.rs — add ~6 read methods + one comment-create method
+     - curio-rs/src/commands/feedback.rs — new command
+     - curio-rs/src/commands/sync.rs — persist created page IDs, post pinned comment
+     - curio-rs/src/cli.rs — register feedback subcommand
+     - curio-rs/src/commands/process_intake.rs — include feedback.md in manifest when present
+
+     Deferred (not in this pass)
+
+     The two blocks below are design-complete but deferred per user scoping. They remain here as
+     the next iteration's backlog.
+
+     Block F — Confluence metadata enrichment on intake (deferred)
+
+     Pull richer metadata during intake so it's available for routing, dossiers, and the
+     sync-back surface.
+
+     F1. On intake, fetch and store:
+     - Page labels → seed Frontmatter.keywords (additive; dedup with agent-added keywords)
+     - Page owner + last-updated-by → new Frontmatter.source_owner and source_last_updated_by
+     fields
+     - Attachments list (filenames + sizes) → Frontmatter.source_attachments: Vec<String> (just
+     names; don't download bodies in phase 1)
+     - Word count (already have via content length) + age → Frontmatter.source_stats: {
+     word_count, created_at, updated_at }
+     - Watchers count (optional signal of page importance) → Frontmatter.source_watcher_count
+
+     F2. Thread these through to the routing manifest (process_intake.rs) so the LLM can prefer
+     older + heavily-watched + attachment-rich pages as canonical merge targets, and deprioritize
+      stale/orphan pages.
+
+     F3. Display in proposal dossier (sync.rs render_lane_page_body) — add a "Source context"
+     table with owner, last-updated, views (if available), watcher count, label list, attachment
+     count.
+
+     Critical files:
+     - curio-rs/src/lib.rs — extend Frontmatter
+     - curio-rs/src/commands/intake.rs — fetch metadata during collect_from_confluence
+     - curio-rs/src/commands/process_intake.rs — include metadata in manifest
+     - curio-rs/src/commands/sync.rs:render_lane_page_body — render metadata block
+     - curio-rs/src/confluence.rs — add get_attachments_v2 (labels/watchers covered in E2)
+
+     Block G — SourceProvider trait and plugin pattern (deferred)
+
+     Abstract Confluence so additional sources (filesystem, GitHub wiki, Notion) can plug in.
+     This is architectural and independent of D/E/F.
+
+     G1. New module curio-rs/src/source/mod.rs defining:
+
+     #[async_trait]
+     pub trait SourceProvider: Send + Sync {
+         fn kind(&self) -> &'static str;  // "confluence", "filesystem", etc.
+
+         // Read
+         async fn fetch_page(&self, id: &str) -> Result<SourcePage>;
+         async fn list_children(&self, parent_id: &str) -> Result<Vec<SourcePageRef>>;
+         async fn list_descendants(&self, root_id: &str) -> Result<Vec<SourcePageRef>>;
+         async fn get_labels(&self, id: &str) -> Result<Vec<String>>;
+         async fn get_comments(&self, id: &str) -> Result<Vec<SourceComment>>;
+         async fn get_reactions(&self, id: &str) -> Result<Vec<SourceReaction>>;
+         async fn get_attachments(&self, id: &str) -> Result<Vec<SourceAttachment>>;
+
+         // Write (Confluence is bidirectional; filesystem is too; GitHub wiki is push-only for
+     now)
+         async fn upsert_page(&self, parent_id: Option<&str>, title: &str, body_html: &str) ->
+     Result<String>;
+         async fn delete_page(&self, id: &str) -> Result<()>;
+         async fn move_page(&self, id: &str, new_parent: &str) -> Result<()>;
+         async fn add_label(&self, id: &str, label: &str) -> Result<()>;
+         async fn set_property(&self, id: &str, key: &str, value: &serde_json::Value) ->
+     Result<()>;
+
+         fn can_write(&self) -> bool { true }
+         fn supports_reactions(&self) -> bool { false }
+     }
+
+     G2. Shared types (curio-rs/src/source/types.rs): SourcePage, SourcePageRef, SourceComment,
+     SourceReaction, SourceAttachment, ProviderTaggedId { kind, id }.
+
+     G3. Move existing code into curio-rs/src/source/confluence/:
+     - confluence.rs → source/confluence/client.rs + source/confluence/provider.rs (the trait
+     impl)
+     - md_to_confluence.rs → source/confluence/storage_format.rs
+     - Keep the raw REST client intact; the provider.rs shim just adapts to the trait
+
+     G4. Seed a FilesystemProvider (source/filesystem/provider.rs): reads markdown files from a
+     directory as pages; no reactions/comments; write-capable. Useful for local-only wikis and
+     for testing (golden fixtures can be replayed without hitting the network).
+
+     G5. Update consumers to take Arc<dyn SourceProvider> instead of ConfluenceClient:
+     - commands/intake.rs — replace collect_from_confluence with collect_from_provider(provider,
+     url, ...)
+     - commands/sync.rs — split the Confluence-specific hierarchy logic (static-page scaffolding,
+      parent resolution via title) into a provider-specific helper; keep the generic
+     lane-traversal source-neutral
+     - commands/feedback.rs (from Block E) — becomes provider-agnostic automatically
+     - config.rs — provider registry: providers: { kind: "confluence", base_url, auth_ref }, {
+     kind: "filesystem", root_path }
+
+     G6. Frontmatter generalization: confluence_page_id: Option<String> → source_ref:
+     Option<ProviderTaggedId> (kept as a one-liner map for YAML readability). Add a migration
+     that sets source_ref = { kind: "confluence", id: <old-value> } for legacy pages.
+
+     Critical files (new module tree):
+     - curio-rs/src/source/mod.rs (trait + factory)
+     - curio-rs/src/source/types.rs
+     - curio-rs/src/source/confluence/client.rs (moved from confluence.rs)
+     - curio-rs/src/source/confluence/provider.rs (new — trait impl)
+     - curio-rs/src/source/confluence/storage_format.rs (moved from md_to_confluence.rs)
+     - curio-rs/src/source/filesystem/provider.rs (new)
+     - curio-rs/src/commands/intake.rs, sync.rs, onboard.rs, init.rs — adapt to trait
+     - curio-rs/src/lib.rs — frontmatter migration
+
+     This block is the largest and most invasive. Recommend doing it last, after D+E land and the
+      feedback-loop semantics are proven against Confluence. Doing G first would make E harder
+     because you'd be designing the trait against an unfinished feature set.
+
+     Critical Files (in-scope only)
+
+     - Already modified (committed 752df86): curio-rs/src/commands/intake.rs,
+     curio-rs/src/commands/sync.rs
+     - Block D: none (operational — just regenerates data)
+     - Block E: curio-rs/src/confluence.rs, new curio-rs/src/commands/feedback.rs,
+     curio-rs/src/commands/sync.rs, curio-rs/src/cli.rs, curio-rs/src/commands/process_intake.rs
+
+     Verification
+
+     - Block D: Open wiki/review/product-tree/alteryx-server/api/v3-endpoints.md after re-intake
+     and confirm:
+       - At least one [link title](https://alteryx.atlassian.net/...) markdown link
+       - No [Organized section text
+       - No duplicate Todo - ... notes
+       - Confluence Review page body mirrors the fix after curio sync
+     - Block E:
+       - cargo test green (new unit tests for label-parsing + reaction-parsing; mocked Confluence
+      responses)
+       - After a re-sync, every Review page in Confluence has exactly one pinned Curio footer
+     comment
+       - Add label curio:approve to one Review page → run curio feedback --dry-run → verify the
+     planned action; run live → page moved review → staged, northstar.json updated if applicable,
+      log.md has a new entry
+       - React 👍 on the pinned comment of a different page → run curio feedback → same approve
+     action executed
+       - Add a free-form comment → run curio feedback → verify <slug>.feedback.md appears and
+     contains the comment text; run next curio process → manifest for that slug carries the
+     feedback
+       - curio feedback is idempotent (running twice does not double-apply)

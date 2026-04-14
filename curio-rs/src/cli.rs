@@ -198,6 +198,12 @@ pub enum Commands {
     Tree,
 
     /// Push wiki/published/ to Confluence (one-way sync).
+    ///
+    /// Default (incremental): only pushes new or changed pages. Skips pruning of
+    /// deleted pages and skips re-posting pinned comments that are already set.
+    ///
+    /// Use --all for a full refresh: re-checks every page, prunes stale Confluence
+    /// pages, and re-posts pinned reaction comments on all review pages.
     Sync {
         /// Override the Confluence parent page ID from config.
         #[arg(long)]
@@ -206,6 +212,11 @@ pub enum Commands {
         /// Show what would be pushed without making Confluence API calls.
         #[arg(long)]
         dry_run: bool,
+
+        /// Full refresh: prune stale Confluence pages and re-post all pinned comments.
+        /// Without this flag, sync is incremental (new/changed pages only, no pruning).
+        #[arg(long)]
+        all: bool,
     },
 
     /// Read Confluence review signals (labels, reactions, comments) and apply them to the wiki.

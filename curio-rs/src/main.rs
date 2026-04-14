@@ -121,9 +121,9 @@ async fn main() -> Result<()> {
             let config = load_config(config_path_str)?;
             run_tree(&config, cli.dry_run, cli.json).await?;
         }
-        Some(Commands::Sync { parent_page_id, dry_run }) => {
+        Some(Commands::Sync { parent_page_id, dry_run, all }) => {
             let config = load_config(config_path_str)?;
-            run_sync(&config, dry_run || cli.dry_run, cli.json, parent_page_id).await?;
+            run_sync(&config, dry_run || cli.dry_run, cli.json, parent_page_id, all).await?;
         }
         Some(Commands::Feedback { dry_run }) => {
             let config = load_config(config_path_str)?;
