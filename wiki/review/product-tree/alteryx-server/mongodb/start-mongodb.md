@@ -1,21 +1,29 @@
 ---
 id: cc36d4a37c2ad48b
 title: Start MongoDB
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702893171
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702893171
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- start
+- embedded-mongo
+- service
+- operations
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:51Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:05892d47af2d113670418a34a3f99602a795e3ad0123931be37baafb8de5d9ee
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 for embedded mongo onlyPurple

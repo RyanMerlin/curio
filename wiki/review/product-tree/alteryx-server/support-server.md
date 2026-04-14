@@ -1,21 +1,27 @@
 ---
 id: eb22b3b256cc6c3c
 title: Support-Server
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640792523
   origin_url: https://alteryx.atlassian.net/wiki/spaces/SupportServer/overview?homepageId=1640792523
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- server
+- hub
+- overview
+- support
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:51Z
+confidence: 0.7
 cross_refs: []
 content_hash: sha256:b20f7b5e9bf989d12ac69b916f3524fa19b059d26d4201392afa8ed8abe59b2d
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

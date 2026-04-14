@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:52Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Swagger",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1886159311",
+    "content_hash": "sha256:e2d923c66e463450c3833f7bcbfcaeecb7f4f2d57f13a7904ab714d8caab15b6",
+    "content_preview": "Hub page: Swagger\n\n*This page serves as a section index with no prose body.*\n"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "api"
+    ],
+    "confidence": 0.75,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "low_word_count",
+      "thin_structure",
+      "low_unique_term_count"
+    ],
+    "information_quality": 0.0,
+    "usability": 0.069999985,
+    "review_reason": "Sparse hub page; requires api subtree",
+    "proposed_new_subtree": "api",
+    "proposal_rationale": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together."
+  },
+  "signals": {
+    "heuristic_pre_signal": null,
+    "title_tokens": [
+      "swagger"
+    ],
+    "keywords_extracted": [
+      "page",
+      "Swagger",
+      "serves",
+      "prose",
+      "This",
+      "body",
+      "index",
+      "section"
+    ]
+  }
+}

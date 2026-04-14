@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:52Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "(Tim Randall) IDP setup list to test (SAML)",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2003271981",
+    "content_hash": "sha256:e2b948a989eac494ee597616cafc9792c9b83220a83928216b9080e1371a78df",
+    "content_preview": "Working page for Tim Randall\n\n---\n\n---\n\n# Easily configurable\n\n| **IDP** | **Developer Account/Env setup** | **Configuration setup** |\n| --- | --- | --- |\n| **Azure AD** | <https://developer.microsoft.com/en-us/microsoft-365/dev-program>  (90 day exp) | [Configuring SAML 2.0 on Alteryx Server for Azure AD](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-2-0-on-Alteryx-Server-for-Azure-AD) (KB) |\n| **JumpCloud** | <https://jumpcloud.com/lp/cloud-directory-fava-bean> | [Configuring "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "confidence": 0.5,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.43999997,
+    "usability": 0.54999995,
+    "review_reason": "Personal/working page — low signal value; review for inclusion vs deletion",
+    "proposed_new_subtree": "authentication",
+    "proposal_rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "(tim",
+      "randall)",
+      "idp",
+      "setup",
+      "list",
+      "to",
+      "test",
+      "(saml)"
+    ],
+    "keywords_extracted": [
+      "SAML",
+      "Alteryx",
+      "Server",
+      "Configuring",
+      "setup",
+      "Randall",
+      "AccountEnv",
+      "Developer"
+    ]
+  }
+}

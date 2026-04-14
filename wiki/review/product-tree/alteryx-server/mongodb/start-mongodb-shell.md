@@ -1,21 +1,29 @@
 ---
 id: 4ccfefdfbe06ecd1
 title: Start MongoDB Shell
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702828761
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702828761
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- shell
+- mongo-shell
+- embedded-mongo
+- diagnostic
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:50Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:6c7a4276444c514b23e6427a0743bdb9c505d4935d1bf418d84ed6ddabeb1f5e
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 for embedded mongo onlyPurple
