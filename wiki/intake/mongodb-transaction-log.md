@@ -9,15 +9,19 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:483b6d1f30d0877a0bd911c8781689b4c978389aa3379cc05b583fae6dd945aa
+content_hash: sha256:18a71b18ea0689b64ff87ca7fe56c62661e511b7561ba26a694637f42936e628
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: MongoDB Transaction Log
+> **ℹ️ Info**
+>
+> Setup low level Mongo transaction logging
 
-*This page serves as a section index with no prose body.*
+| **Enable Logging** | [How To: Enable MongoDB logs in RuntimeSettings.xml](https://knowledge.alteryx.com/index/s/article/How-To-Enable-MongoDB-logs-in-RuntimeSettings-xml-1583461461810) (KB)  Edit RuntimeSettings.xml  ``` ]]> ``` |
+| --- | --- |
+| **Disable Logging** | [How To: Disable MongoDB logs in RuntimeSettings.xml](https://knowledge.alteryx.com/index/s/article/How-To-Disable-MongoDB-logs-in-RuntimeSettings-xml) (KB) |

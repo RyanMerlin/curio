@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:75d1356ac278b5e09f6736023dae86c325c542a48ef2784815b834bc665937d9
+content_hash: sha256:e9c153b3b53eafb8bdcdae0911e9fb6e2a8b91f6c2d5be63610ed87c91a65d2e
 confluence_page_id: null
 model_used: null
 ---
@@ -26,7 +26,7 @@ model_used: null
 
 Another issue also referred to as “loopback” <https://docs.google.com/document/d/1Kj0UBGaUhgw8wX0K2izOiEZbKs8yzzxQ718dXSf08H4/edit?usp=sharing> (Google)
 
-|  |  |
+| **Key Articles** | [How and Why to do a Hosts file modification](https://knowledge.alteryx.com/index/s/article/How-and-Why-to-do-a-Hosts-file-modification) (KB) [Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy)](https://knowledge.alteryx.com/index/s/article/Requirements-for-Configuring-Alteryx-Server-with-a-Load-Balancer-or-Reverse-Proxy-1628116360935) (KB) |
 | --- | --- |
 
 # Edit the hosts files

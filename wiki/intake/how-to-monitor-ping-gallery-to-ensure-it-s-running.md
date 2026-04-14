@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:7b3799791a3507f7d264e3c2acb2e342bed7fe344f2493d4b1025e3aedb82b25
+content_hash: sha256:5ca23de4e9e38b28e3648041a9c9bcaedb67e6c79cf54bd89ee75a7372c62f62
 confluence_page_id: null
 model_used: null
 ---
@@ -24,6 +24,6 @@ model_used: null
 > 
 > This is often referred to as checking for a heartbeat.  <https://en.wikipedia.org/wiki/Heartbeat_(computing)>
 
-|  |  |
+| **Monitor Gallery** | /gallery/api/status/ping/ Returns **200 **when all is good.  From:  [Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy/VIP)](https://knowledge.alteryx.com/index/s/article/Requirements-for-Configuring-Alteryx-Server-with-a-Load-Balancer-or-Reverse-Proxy-1628116360935) (KB) |
 | --- | --- |
-|  |  |
+| **MonitorService** | /alteryxservice/status |

@@ -9,15 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:5b7d6ef025d5d1045b995bfe5b8b79b0e55441ed4742b8ac2cfadd21d2d2f13f
+content_hash: sha256:b7606b9f1baf1725770ec960f5672a4b187771bbe0aa7322e9f7c6ca0fc2c545
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: Alteryx System Settings Change Log
+> **ℹ️ Info**
+>
+> 25.1 feature added without detailed explanation
 
-*This page serves as a section index with no prose body.*
+| **Access** | C:\ProgramData\Alteryx\RuntimeSettingsAuditLog.csv |
+| --- | --- |

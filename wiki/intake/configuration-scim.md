@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d5e0c4df5e69744e148981aebfcd261263bb6f69524b77b28e13348111512e2d
+content_hash: sha256:9c1917196d3ba25d4e43f9535ea6bc83e0dd82bc3b772952bda9d4d54c88545d
 confluence_page_id: null
 model_used: null
 ---
@@ -22,7 +22,7 @@ model_used: null
 >
 > Configuration options for SCIM
 
-|  |  |
+| **Key Articles** | [SCIM token expiry date to be extended](https://alteryx.lightning.force.com/kA0R3000000QkdVKAS) (KB) |
 | --- | --- |
 
 ---
@@ -57,9 +57,9 @@ Technically, this is not SCIM as it works directly with the database rather than
 >
 > Most customers sync their on-prem AD with their cloud Entra ID, so SCIM for Entra ID will, essentially, sync their AD user groups with the Server
 
-|  |  |
+| **Basic setup for Entra ID** | Create Entra ID App     - https://help.alteryx.com/current/en/server/configure/configure-alteryx-server-authentication/configure-alteryx-server-for-scim-with-azure-active-directory.html    - https://help.alteryx.com/current/en/server/configure/configure-alteryx-server-authentication/configure-saml-2-0-on-alteryx-server-for-azure-active-directory.html |
 | --- | --- |
-|  |  |
+| **Additional steps needed when Entra ID doesn’t have line-of-sight access to Alteryx Server** | The above basic setup mentions that when Entra ID doesn’t have line-of-sight access to Server (which is common) an intermediary Server machine must be added called a **Microsoft Entra Connect Provisioning Agent**     - https://learn.microsoft.com/en-us/entra/identity/app-provisioning/on-premises-scim-provisioning  The following is a walk-through of setting up the Provisioning Agent on APoDs     - https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1999176109/How+to+Configure+SCIM+for+Entra+ID+using+the+Microsoft+Entra+Connect+Provisioning+Agent?atl_f=content-tree  ---  Example of not having line-of-sight [00790386]  We were facing issue while establishing a connection between the SCIM which is enabled in the Microsoft Entra App to the Azure VM which is hosted in azure UBS network. **The issue is the ENTRA app is in Microsoft domain and the VM is in UBS domain**, there is a firewall block happening and the UBS network is not allowing to connect to the Entra App. |
 
 ---
 

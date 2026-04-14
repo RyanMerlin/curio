@@ -9,18 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:82104ff53eede5b1285458dabcfe2827c933b6dcec91dc6e8d27961b8e385bbc
+content_hash: sha256:5479258531622844adac7a8c841753ff40c8e18bc496112168842661c10e2a19
 confluence_page_id: null
 model_used: null
 ---
 
-|  |  |
+| **AWS** | [Best Practices for Deploying Alteryx Server on AWS](https://community.alteryx.com/pvsmt99345/attachments/pvsmt99345/server-discussions/6705/1/best-practices-for-deploying-alteryx-server-on-aws.pdf) (PDF) <== Tim R link |
 | --- | --- |
-|  |  |
+| **Azure** | [Alteryx Server on Azure](https://community.alteryx.com/t5/Alteryx-Server-Knowledge-Base/Alteryx-Server-on-Azure/ta-p/24395) (24395) [Alteryx Server on Azure](http://downloads.alteryx.com/Documentation/Alteryx%20Server%20on%20Azure.pdf) (whitepaper) |
 
 # Moving On-Prem to VM
 

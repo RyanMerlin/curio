@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:0fceecfdd15381e62b381637c971d1c1423cb05f55a9808cd48836938616f51e
+content_hash: sha256:6810d90b30646820d755534c3133e9be3e9a4a67b5786ed2ee764a068cf86a87
 confluence_page_id: null
 model_used: null
 ---
@@ -24,5 +24,5 @@ model_used: null
 
 # Issue / Resolution
 
-|  |
+| > **⚠️ Warning** > > Error > Could not deserialize the response body.  **Issue**: After upgrade to 2022.1 the UIPath integrations with Server broke.  Clicking **Test Connection** errors with .  Case 00620132  This does not affect our UIPath Tool, just UIPath’s application that calls our API.  **Resolution**:  The customer needs to update their “Activity Pack” to the post-OAuth2 API Activity Pack.  We changed our **GET /v1/workflows/subscription **endpoint contract in 2021.4 in the move from OAuth1 to OAuth2, specifically     - OAuth1 => "packageType": 1,    - OAuth2 => "packageType": "Module", |
 | --- |

@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c84fc8805d0cd7c3b8ed5f2bf66afda5ac2b1346ccf96499d7108d8fef7b953c
+content_hash: sha256:66813ac7082d70e5973a33288d4a68c1bd6390be9e3679291bfc41dc598c23b6
 confluence_page_id: null
 model_used: null
 ---
@@ -24,11 +24,11 @@ model_used: null
 > 
 > Too many **sessions **records can cause various timeout errors on Server
 
-|  |  |
+| **Count all sessions** | db.sessions.count() |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
+| **Count sessions > 30 days old** | db.sessions.find({UpdateDate:{$lt: new Date(ISODate().getTime() - 1000 * 86400 * **30**)}}).count() |
+| **Delete sessions >30 days old** | db.sessions.remove({UpdateDate:{$lt: new Date(ISODate().getTime() - 1000 * 86400 * **30**)}}) |
+| **Add an index to make access faster** | db.getCollection('sessions').createIndex({SessionId: -1}) |
 
 ---
 

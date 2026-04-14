@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:7b151f8331abf0321f057f8e8c3d5c69f8736fdbd107f05bd283168a3fe1f13e
+content_hash: sha256:55a286adea960a18a7a8cbb00edc493ca38d396d4d8dbc9059a73daa3477b14a
 confluence_page_id: null
 model_used: null
 ---
@@ -30,12 +30,12 @@ This process may not be needed in a future version of Server when Private Studio
 
 <https://community.alteryx.com/t5/Alteryx-Server-Knowledge-Base/How-to-move-from-Subscriptions-to-Collections-in-Server/ta-p/1137150> (1137150)
 
-|  |  |
+| **Task** | **Steps** |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| **Ensure users are in same Collection** | Ensure the Source User and Destination User are both in the same Collection |
+| **Add Source User assets to Collection** | Add all assets from Source User (workflows and schedules) to the Collection via the Server UI. |
+| **Remove the Source User from Collection via Mongo ** | To find which Collections they are in, use the following Mongo query:  db.getCollection('collections').find({"Users.ActiveDirectoryObject.DisplayName":/FIRST LAST /}).pretty() Example:  db.getCollection('collections').find({"Users.ActiveDirectoryObject.DisplayName":/Tim Randall /}) Note: after Source User is removed from the Collection, other users can still run the Workflows, view results, and Schedule Workflows owned by the Source User. |
+| **Set Source User to Active: false in Mongo** | Set Source User to **Active: false** in Mongo:  db.getCollection('users').update({"Email":"EMAIL_ADDRESS "},{$set:{Active:false}}) Example:  db.getCollection('users').update({"Email":"[tim.randall@alteryx.com](mailto:tim.randall@alteryx.com)"},{$set:{Active:false}}) |
 
 # Concerns
 

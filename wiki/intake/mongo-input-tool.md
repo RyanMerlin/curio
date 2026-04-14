@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:21b6dfccf4b7ed4925dcaa6b9af5dcccee05b13f72161c0e18ca8a3ef1ae1126
+content_hash: sha256:1c3f65db8fb3b535c89785f9e22ec165d4619973b887f2563fefdc990e4c4223
 confluence_page_id: null
 model_used: null
 ---
@@ -32,7 +32,7 @@ model_used: null
 >
 > Do NOT use the **MongoDB Output Tool **to write the Alteryx Server, it will corrupt the system
 
-|  |  |
+| **Schemas** | <https://help.alteryx.com/current/server/alteryxgallery-mongodb-schema>  <https://help.alteryx.com/current/server/alteryxservice-mongodb-schema>  Mongo Collections and Entity-Relationship Diagram (ERD) |
 | --- | --- |
 
 ---

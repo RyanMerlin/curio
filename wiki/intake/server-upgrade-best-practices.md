@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c69d7b8600604d143fe1c735c246c5d832e4f5fabf17e68d0fc9d4c2cd11f94f
+content_hash: sha256:cf386a389635495e1b46fe81fecfdba41c9b22d56708cfc901e2f3b4b6ab3ad5
 confluence_page_id: null
 model_used: null
 ---
@@ -26,7 +26,7 @@ model_used: null
 
 ### Status: In Review
 
-|  |  |
+| **Published Date** | **Published Link** |
 | --- | --- |
 |  |  |
 
@@ -38,9 +38,9 @@ model_used: null
 - In Review - Documentation is being reviewed and edited
 - Ready - Documentation has been signed off and is ready to be published
 - Published (Add link & Date) - Documentation is published. Please add a link to the top of the page
-|  |  |  |
+| **POC** | **Sign-off Status** | **Sign-off Required by** |
 | --- | --- | --- |
-|  |  |  |
+| PM -   or | - [x] PM Signoff - [x] |  |
 ---
 
 Although upgrading from one version of Alteryx Server to another is a straightforward process, there are several considerations and preparation steps that can help ensure a smooth upgrade. This page will provide a topical overview of the process, including links to useful documentation, and a step-by-step approach to consider when planning your upgrade.
@@ -189,7 +189,7 @@ Download all the software you need and continue to the next step in the process.
 
 In general, it is best practice to keep Server and Designer on the same version. So, downloading the matching Designer installer at this time makes the most sense. However, since upgrading Designer across a large user base requires additional planning and resources, you might not wish to complete the upgrade at the same time as the Server upgrade.
 
-|  |
+| **Note** As of version 2025.2, Alteryx has decoupled Designer and Server updates to modernize the update experience and reduce IT overhead. You can now upgrade Designer independently of Server. |
 | --- |
 
 Server is generally backwards compatible with older versions of Designer, with the caveat that new features supported on the target version of Server won’t be available in older versions of Designer.
@@ -207,17 +207,17 @@ Better practices include
 
 The table below shows a tiered list of minimum to best-case recommendations when upgrading Server:
 
-|  |  |  |  |  |
+| **Embedded Mongo Backup** | **Minimum** | **Better** | **Best** | **Benefit** |
 | --- | --- | --- | --- | --- |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
+| Backup MongoDB | - [x] | - [ ] | - [ ] | Preserves database information for rollback in the event of errors during the upgrade. Rollback may include manual steps and may require the assistance of Alteryx Support. |
+| IT Snapshot of the Windows Server machine | - [ ] | - [x] | - [ ] | Provides quick and easy rollback with no manual steps.  Steps: Your IT team will back up a complete instance of the Alteryx Server machine.  **NOTE**:  The Service must be stopped so the Snapshot doesn’t capture the database while it’s being updated, as this could leave it in a non-functional state when restored. |
+| Blue-Green Deployment | - [ ] | - [ ] | - [x] | A database backup is needed in a Blue-Green Deployment to migrate host machines, but an IT snapshot is not necessary. |
+| **User-Managed Mongo or SQL Server Backup** | **Minimum** | **Better** | **Best** | **Benefit** |
+| Back up the database | - [ ] | - [ ] | - [x] | Upgrades perform schema migrations on database collections.  The original database is required to be able to roll back the upgrade. |
+| **Upgrade** | **Minimum** | **Better** | **Best** | **Benefit** |
+| In-place upgrade of Production Server | - [x] | - [ ] | - [ ] | Easiest to perform, but highest risk of unpredictable Production Server downtime in the event of an upgrade issue. |
+| Test upgrade on a Sandbox server | - [ ] | - [x] | - [ ] | Flush out upgrade issues and test critical workflows and Connectors in the upgraded environment without Production downtime.  Steps:  Perform a Host Recovery to a Sandbox environment:     - Embedded Mongo - copy the database to the Sandbox    - User-Managed Database - point Sandbox to a duplicate of the database  After validation of upgrade process, perform an in-place upgrade of Production Server. |
+| Blue-Green deployment | - [ ] | - [ ] | - [x] | Blue-Green deployment eliminates risk and potential downtime of an in-place upgrade as the original Production environment is not upgraded.  Steps:  Perform a Sandbox upgrade, validate critical workflows, then switch the URL of your Production environment to the Sandbox (making it the new Production environment). |
 
 Ideally, start with the same-version Sandbox/Dev/Test Server and upgrade it. See the [Alteryx Server Sandbox Environment Community](https://knowledge.alteryx.com/index/s/article/Alteryx-Server-Sandbox-Environment) article for more information on Sandbox environments.
 

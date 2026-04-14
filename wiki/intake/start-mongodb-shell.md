@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:33598c533749c2227d6d04d486a57cc520ac75fc666fa195e942c8d6b99cdf50
+content_hash: sha256:99b819780f15223ce817f8e8632627060d5114674570aa9cb10d8610e0a3ca77
 confluence_page_id: null
 model_used: null
 ---
@@ -30,7 +30,7 @@ for embedded mongo onlyPurple
 
 ---
 
-|  |  |
+| #### Start MongoDB Shell | 1. Get the Alteryx System Settings > Controller > Persistence > Non-Admin Password    2. If the Service isn’t running, then Start MongoDB.    3. Open a Command Prompt As Administrator    4. Navigate to the \Alteryx\bin folder    5. Enter commands below for the AlteryxGallery database  **[ for 23.2+ ]** mongosh -u user -p USER_PSWD  -host localhost:27018 AlteryxGallery  **[ for 23.1 and prior ] ** mongo -u user -p USER_PSWD  -host localhost:27018 AlteryxGallery Or open the AlteryxService database  **[ for 23.2+ ]** mongosh -u user -p USER_PSWD -host localhost:27018 AlteryxService  **[ for 23.1 and prior ]** mongo -u user -p USER_PSWD -host localhost:27018 AlteryxService You may now enter commands, see     - Example MongoDB Queries / Commands  ---  Note:  If you started MongoDB manually withOUT the **--auth **flag you do need to include the following to start the Shell  -u user -p USER_PSWD ---  Type **Ctrl-C** to exit the Shell.  [How to connect to MongoDB from the Command Line](https://knowledge.alteryx.com/index/s/article/How-to-connect-to-MongoDB-from-command-line) (KB) |
 | --- | --- |
-|  |  |
-|  |  |
+| #### Troubleshooting | > **⚠️ Warning** > > Error: couldn't connect to server localhost:27018, connection attempt failed: SocketException: Error connecting to localhost:27018 (127.0.0.1:27018) :: caused by :: **No connection could be made because the target machine actively refused it.**  The above error indicates the Mongo DB isn’t running, see Start MongoDB |
+| #### Older version of mongo.exe | An older version of mongo.exe is in the BIN folder as well, to be used if you used an older version of mongod.exe to start the Database. |

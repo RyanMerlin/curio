@@ -9,17 +9,16 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:1ad705fefda80596d0c802d9fa3ab29eaec65c81561503de3b2bcf7f19eaf073
+content_hash: sha256:59acfa638155aef86d575fb4a2a59fadd247be738fcd868d7f0dc2c0bc949f52
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: Load Balancers
-
-This page organizes the following sub-pages:
-
-- How to setup and apply a certification chain to an application load balancer.
+| **Key Articles** | [Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy)](https://knowledge.alteryx.com/index/s/article/Requirements-for-Configuring-Alteryx-Server-with-a-Load-Balancer-or-Reverse-Proxy-1628116360935)  (KB)     <== **Sophia** |
+| --- | --- |
+| **Configuration** | [How to set up Network Load-balancer in AWS for Alteryx Server](https://knowledge.alteryx.com/index/s/article/How-to-set-up-Network-Load-balancer-in-AWS-with-Alteryx-Server) (KB) |
+| **Tutorials** | Load Balancer Presentation (Michael Adler) AWS Load Balancers and Alteryx Server (Michael Adler) |

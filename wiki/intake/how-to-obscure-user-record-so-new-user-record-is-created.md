@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:933d5419fedd0e2b4e4d6eadba00f1aa31cf1fa48f23aef425bef2f8b86f37d8
+content_hash: sha256:05df6fe926e554c55b07c5e1629c0c39cabcabcfa54866688d9b228db5e285c6
 confluence_page_id: null
 model_used: null
 ---
@@ -37,8 +37,8 @@ model_used: null
 
 |  |  |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| **Change last name** | Add **_old** to the user’s last name. This ensures it’s clear that this is the “old” user record. |
+| **Change email** | Add **_old** after their last name in their email. |
+| **Change Studio name** | Add **_old **to the Studio name |
+| **For AD Auth** | **MongoDB**     - Edit AlteryxGallery.users.WindowsIndentity.Sid to have all 9’s to ensure it doesn’t match any other user  **SQL DB**     - Edit alteyx_server.UserWindowsIdentiites.Sid to have all 9’s to ensure it doesn’t match any other user |
+| **User opens new tab and login** | They will be prompted for their timezone, which indicates a new user record is being added. |

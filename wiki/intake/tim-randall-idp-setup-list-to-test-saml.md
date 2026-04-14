@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:a15a41bc1fd0a9f004f94a6dabb468aa124563dc195ed8c8f66359d403c8067f
+content_hash: sha256:d8933c5259cf25f4fb17a8bc3b8f093307dccd861263119d28a4ddc87d5f9071
 confluence_page_id: null
 model_used: null
 ---
@@ -26,20 +26,20 @@ Working page for Tim Randall
 
 # Easily configurable
 
-|  |  |  |
+| **IDP** | **Developer Account/Env setup** | **Configuration setup** |
 | --- | --- | --- |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| **Azure AD** | <https://developer.microsoft.com/en-us/microsoft-365/dev-program>  (90 day exp) | [Configuring SAML 2.0 on Alteryx Server for Azure AD](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-2-0-on-Alteryx-Server-for-Azure-AD) (KB) |
+| **JumpCloud** | <https://jumpcloud.com/lp/cloud-directory-fava-bean> | [Configuring SAML on Alteryx Server with JumpCloud](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-on-Alteryx-Server-with-JumpCloud) (KB) |
+| **Okta** | <https://dev-418598-admin.oktapreview.com/admin/dashboard> | [Configuring SAML on Alteryx Server for Okta](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-on-Alteryx-Server-for-Okta-1583461082739) (KB) |
+| **OneLogin** | <https://www.onelogin.com/register/142498> | [Configuring SAML on Alteryx Server for OneLogin](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-on-Alteryx-Server-for-OneLogin-1583461566692) (KB) |
+| **PingOne** | <https://www.pingidentity.com/en/try-ping.html> (30 days) | [Configuring SAML on Alteryx Server for PingOne](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-on-Alteryx-Server-for-PingOne-1583461082735) (KB) |
 
 ---
 
 # Require environment set-up/license (perhaps we can inquire with ones requiring a license on possible sandbox licenses in the future?):
 
-|  |  |  |
+| **IDP** | **Developer Account/Env setup** | **Configuration setup** |
 | --- | --- | --- |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| **ADFS** | <https://learn.microsoft.com/en-us/microsoft-365/troubleshoot/active-directory/set-up-adfs-for-single-sign-on>  <https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/install-the-ad-fs-role-service> (more fine-tuned set-up doc TBD soon) | [Configuring SAML on Alteryx Server for ADFS](https://knowledge.alteryx.com/index/s/article/Configuring-SAML-on-Alteryx-Server-for-ADFS-1583461562791) (KB) |
+| **PingFederate** | <https://docs.pingidentity.com/r/en-us/pingfederate-110/help_initialsetup_settinguppingfederate> | PingFederate (SAML) |
+| **WebSeal (IBM)** | N/A | N/A |

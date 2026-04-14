@@ -9,15 +9,22 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d91f5a42a4340e1bd42b6e1e28e4757798dcce231282baa9dc11f03ad360c1e2
+content_hash: sha256:13ef2889aea12e8de4fabdd4f41ae9f9efdd0d113406944437304c0d0b924bba
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: How To (API)
+---
 
-*This page serves as a section index with no prose body.*
+- How to Pass the Payload as JSON in Python
+
+---
+
+|  |  |
+| --- | --- |
+| **Key Articles** | How to Test the API with Swagger How to Use Swagger cURL Commands in Windows |
+| **Specific API uses** | [Excel to Alteryx API](https://knowledge.alteryx.com/index/s/article/Excel-to-Alteryx-API-1583460910055) (KB)   <== **Excel call to 21.4 and prior OAuth1 API** |

@@ -9,15 +9,23 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:449b1573c8c55eec3e4f23313af760c58eeb98b9b1d3a5f2f4da2c338cccd486
+content_hash: sha256:09ae3795c0ef53e9105bb7a19b9775dc0736773e12cdc37b9d2da8e543a6e8ae
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: User-Managed Mongo
+---
 
-*This page serves as a section index with no prose body.*
+---
+
+> **ℹ️ Info**
+>
+> User-managed Mongo is out of scope for support.
+
+| **Key Articles** | [How to Create a User-Managed MongoDB Instance](https://knowledge.alteryx.com/index/s/article/Creating-a-User-Managed-MongoDB-Instance) (KB) [Migrate between Embedded and User-Managed Mongo](https://knowledge.alteryx.com/index/s/article/Migrate-between-Embedded-and-UserManaged-Mongo) (KB) |
+| --- | --- |
+| **Connect to ** **User-Managed** | [How to Connect to a User-Managed MongoDB with Studio 3T](https://knowledge.alteryx.com/index/s/article/How-to-Connect-to-a-UserManaged-MongoDB-with-Studio-3T) (KB)  [How To: Connect to a user-managed MongoDB with Robo 3T](https://knowledge.alteryx.com/index/s/article/How-To-Connect-to-a-user-managed-MongoDB-with-Robo-3T) (KB) [Connecting to MongoDB Replica Set on Atlas using Robo3T](https://knowledge.alteryx.com/index/s/article/Connecting-to-MongoDB-Replica-Set-on-Atlas-using-Robo3T) (KB)  <https://www.mongodb.com/docs/atlas/data-federation/query/sql/drivers/odbc/connect/>  <https://help.alteryx.com/current/en/server/configure/mongodb-management/mongodb-advanced-connection-strings.html> |

@@ -9,15 +9,21 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:926c8cb9229a6be089709939dffc1e6f93e7fbc2d7ffb4dae265faf746645974
+content_hash: sha256:976fae4fdd8ab070050176d67b15cf8bac5714a2a7119ed784eec7a15e384daa
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: Mongo Entity-Relationship Diagram (ERD)
+> **ℹ️ Info**
+>
+> The Dev Team does not maintain and ERD for Mongo.  Below is what Support has developed.
 
-*This page serves as a section index with no prose body.*
+| #### Entity-Relation Diagram | London Hanson has carried forward a project Sophia F started to create an ERD     - ERD (Lucid Chart)For an ERD of version 23.1+ (w/o Lucene), scroll to the right       - For an ERD of version 23.1+ (w/o Lucene), scroll to the right     - as of Jul-2025 |
+| --- | --- |
+| #### Schema | <https://help.alteryx.com/current/server/alteryxgallery-mongodb-schema>  <https://help.alteryx.com/current/server/alteryxservice-mongodb-schema>  Example MongoDB Queries / Commands  <== **some info on specific collections**  SPECIFIC COLLECTIONS |
+| **Collections created during upgrade** | **Schema Migration**     - XxxMigrationInProcess  <== temp collection while migrating schema    - XxxPostMigration_##     <== backup BEFORE schema migration    - Understanding MigrationInProcess / PostMigration collections  **CryptoMigration**     - AS_Xxx.22.3                     <== temp collection while CryptoMigration    - AS_Xxx.Pre22.2               <== backup BEFORE CrytpoMigration    - FAQ / Help - CryptoMigration    - FAQ / Help - CryptoMigration |
+| #### Collection Hierarchy Navigation | **Collection hierarchy for Appinfos seems to be**     - appinfos  > AS_Applications    > AS_ApplicationVersions (and .Files)      > AS_PackageDefinitions (and .Files)        > AS_AppChunks (and .Files)          > Tenth Circle of Hell  **Matt H workflow that connects from appinfos to AS_AppChunk level** |

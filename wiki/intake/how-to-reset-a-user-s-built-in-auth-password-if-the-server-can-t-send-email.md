@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c3f471c39d35a89b67354cc13f889ae1525ff04e013b8eac443bbd63c6c50d53
+content_hash: sha256:653cb1d433e5576db300552d4888f6aa616293433816f72538a56ed37ff485a3
 confluence_page_id: null
 model_used: null
 ---
@@ -30,12 +30,12 @@ model_used: null
 
 ---
 
-|  |  |
+| #### Add a NEW user | Login to the Server as a new user with a new password |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| #### Install Studio3T Free | <https://studio3t.com/download-studio3t-free/> |
+| #### Configure Studio 3T | You’ll configure using the Non-Admin Monog password found in **Alteryx System Settings > Persistence > Password**  ---  In Studio 3T:  **localhost **above works when on the Controller using Embedded Mongo, for other situations: Example Mongo Connection Strings |
+| #### Find the NEW user | Run the query:  db.getCollection("users").find({"Email":"**DummyUser@myCompany.com**"}) **Right-click > Document View** |
+| #### Copy the NEW Password fields |  |
+| #### Find the EXISTING user who needs to update their password updated | Perform the same search as for the NEW user, but with the EXISTING user’s email address.  **Right-click > Document > Edit** |
+| #### Paste the NEW Password | Replace the **SecurityInfo** section of the EXISTING user with the **SecurityInfo **copied from the NEW user.  Then click **Validate** and **Update** |
+| **Have EXISITING user reattempt login with new password** | The password should be updated immediately, not need to restart the Service. |

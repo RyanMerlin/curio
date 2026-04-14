@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d64c115c6c8bcb68d2fed438d10eae7024a9b309dfb7f1c348da4c35b7005e19
+content_hash: sha256:541a93e19ccce0549216a11b48388cefc519de2ff6d4e902f801a545b0350646
 confluence_page_id: null
 model_used: null
 ---
@@ -27,5 +27,5 @@ model_used: null
 
 ---
 
-|  |  |
+| **Key articles** | [Admin vs User endpoints](https://help.alteryx.com/current/en/server/api-overview.html#server-apis) <== **scroll right to User column** |
 | --- | --- |

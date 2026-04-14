@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:7252a2a42503d84ca43492904cf8a7dc90edc99d3d458d419578f0c21cb662b4
+content_hash: sha256:ca27c256e23271b859fa361ee379620cb868b54da82d0998985fdc5ada1eaeec
 confluence_page_id: null
 model_used: null
 ---
@@ -29,9 +29,9 @@ model_used: null
 > - The workflow job and results do not appear in Server UI
 > - If run from a command-line script it subverts the #Simultaneous setting and runs one more workflow that the Server is sized for. Or more if multiple scripts launch workflows, overwhelming the Server.
 
-|  |  |
+| **Access** | <== **uses Control Containers (23.1+)**                    **TODO - remove dependency on V3 API pack,** see:                    <https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1778616339/How+to+call+Server+API+endoints+with+the+Download+Tool#Full-Example>  ---  <== **doesn’t use Control Containers**  ---  <== **POST /user/v2/workflows/{appId}/job for older Servers**  ---  <== Appends logging to TXT file, more flexible than XLSX as it handles  responses with different columns .                      **TODO - merge this with the Containers solution above** |
 | --- | --- |
-|  |  |
+| **Older versions** |  |
 
 # Solution
 
@@ -42,12 +42,12 @@ Walk through using the **V3 API Pack**
 
 # Configuration
 
-|  |  |
+| **File** | **Configuration Steps** |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| ## queueWF.bat      - Called from the customer's script    - Uses AlteryxEngineCmd.exe to immediately run queueWF.yxmd    - Logs the results and timestamp to queueLog.txt (logging looks like the Results pane for queueWF.yxmd) | 1. Update path to AlteryxEngineCmd.exe |
+| ## queueWF.yxmd     - Calls API to queue targetWF.yxmd in Gallery    - Logs AS_Queue.id and timestamp to XLSX file by appending rows | 1. Install V3 API Pack (faster) or Server API Tool (slower)How to use the V3 API Pack Server API Tool +       1. How to use the V3 API Pack       2. Server API Tool +     2. Configure tools for yourServer URLWorkflow ID you want to queue (from URL when viewing workflow in Server UI)API Token and Secret       1. Server URL       2. Workflow ID you want to queue (from URL when viewing workflow in Server UI)       3. API Token and Secret |
+| ## targetWF.yxmd     - Resource-intensive workflow that’s queued by this process | n/a |
+| ## queueLog.txt     - Logs queueWF.yxmd run results from the queueWF.bat | n/a |
+| ## queueLog_Success.xlsx     - Logs successful API calls for V3 Macro Pack option | File must already exist as it’s appended to |
+| ## queueLog_Failure.xlsx     - Logs failing API calls for V3 Macro Pack option | File must already exist as it’s appended to |
+| ## queueLog_ServerApiTool.xlsx     - Logs successful calls for Server API Tool option.  When the Server API Tool fails, there is no logging | File must already exist as it’s appended to |

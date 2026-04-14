@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:432c9ccb9fb74269a090876c70e36890c966dbe70b548e1cd6e659a5399199ed
+content_hash: sha256:c3425baa13527c901350714e208c0af010564dc10c97d1b28c101215bb7c68ca
 confluence_page_id: null
 model_used: null
 ---
@@ -22,9 +22,9 @@ model_used: null
 >
 > Explanation of the Miongo collections with names like **usersMigrationInProgress **and **usersPostMigration_45 **and how to use them for rollbacks
 
-|  |  |
+| **Logs** | Schema Migration logs for Gallery and Service (alteryx-XXX-migration.csv) |
 | --- | --- |
-|  |  |
+| **Help** | <https://help.alteryx.com/current/en/server/configure/database-management/mongodb-management/mongodb-schema-reference.html> |
 
 ---
 
@@ -38,11 +38,11 @@ During Server Upgrade, developers often update the schema (record definition) of
 
 # Collections created during Upgrade / Schema Migration
 
-|  |  |
+| **Collection** | **What is it** |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
+| **collectionX** | Initial collection |
+| **collectionXMigrationInProcess** | Records are being actively migrated from **collectionX **to this collection during upgrade / schema migration.  If schema migration is stuck, It’s safe to rename this collection so schema migration will re-attempt migrating **collectionX**.  If the Service is still starting, this collection will be immediately recreated as schema migration continues. |
+| **collectionXPostMigration_##** | After the schema migration completes collections are rotated:     - ORIGINAL collectionX  ==> collectionXPostMigration_##    - collectionXMigrationInProcess  ==>  NEW collectionX  If there is a schema migration error that **collectionXPostMigration_##** already exists, it’s safe to rename this collection.  If the Service is still starting, this collection will soon be recreated as schema migration continues. |
 
 ---
 

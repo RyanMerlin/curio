@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:341b699678cea8da85c5dfdb44d58406fcd226ba02f5a0c36b567bd9dfcf3943
+content_hash: sha256:14fb7612a9821f41fa1abd193e36510957d0f100d652c1102c87693d39adf7ab
 confluence_page_id: null
 model_used: null
 ---
@@ -22,15 +22,15 @@ model_used: null
 >
 > **The Customer Support Gallery** contains workflows that can help troubleshoot Server cases or provide more detailed views of Server activity
 
-|  |  |
+| **Access** | <http://ayx-gcs-gal-01/gallery> [00 GCS Gallery Workflow List.yxmd](http://ayx-gcs-gal-01/gallery/#!/app/00-GCS-Gallery-Workflow-List/6492127f4e68ecd6acc30545)  <== **XLSX of all workflows w/ descriptions** List of Utility Workflows            <== **list of key utility workflows** |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| **Workflow Template** | [Template](http://ayx-gcs-gal-01/gallery/#!/app/Documentation-Template/641cc4c91a47b1c75f4ea4d5) <== Support Gallery |
+| **How to publish your workflow** | <https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1632242331/Global+Customer+Support+Gallery#Upload-to-Gallery> |
+| **Key Articles** | Community Gallery |
+| **Alternative Site** | Another internal Gallery site created by another team:  [Alteryx Analytics Server](https://alteryx0.sharepoint.com/sites/DataAnalyticsHub/SitePages/Alteryx-Analytics-Server.aspx) |
+| **Managed by** | London Hanson, Josh Miller-Lee, Ed Phelps |
+| **Backups** | Monthly backup of the Gallery to the following folder (IT doesn’t backup the Gallery).   Backups taken     - Jan-28-2024 (Ed P) |
+| **OLD links** | Old Gallery     - http://den-cs-gcs-01/gallery/      <== Gallery  Pre-gallery workflows / Original/old workflows     - Troubleshooting Assets <== list of old workflows    - CUSP Folder                          <== deprecated |
 
 ---
 

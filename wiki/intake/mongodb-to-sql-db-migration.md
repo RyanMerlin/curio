@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:50ac43b71348c2114200e842bd36092eef46409ad6078ca0942c7f3b5ed47d8a
+content_hash: sha256:7a3ea731905fb64480223cb2eb04c8ddaf5df5b464c6354804cf5f399987726d
 confluence_page_id: null
 model_used: null
 ---
@@ -36,7 +36,7 @@ Asked Michael P where to place this error.  If it’s the Service Log it would b
 >
 > After upgrade, Service must be started to perform Mongo Schema Migration before attempting Mongo to SQL DB Migration
 
-|  |  |
+| #### Access | **Migration workflow**     - https://us1.alteryxcloud.com/license-portal/ > Server > VERSION >        Workflow to migrate from MongoDB to SQL  ---  **Microsoft ODBC Driver 18 for SQL Server (x64)**     - https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16  ---  **Simba MongoDB 2.3.22.1024 64-bit Driver**     - https://us1.alteryxcloud.com/license-portal/ > Drivers > MongoDB >        Simba MongoDB 2.3.22.1024 64-bit  ---  **Simba Schema**     - Unpack Migration Workflow YXZP for \Resources\MongoDB_Schema.json needed to configure the Simba driver |
 | --- | --- |
-|  |  |
-|  |  |
+| ####  Tutorials | <https://youtu.be/RUytFrg5Bcc?si=fYT3h-sIKoCT6gbs> 16m   <== Jarrod’s walk-through of configuring the SQL DB migration |
+| #### Help | <https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/mongo-to-sql-migration-guide.html>  <https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/server-sql-db-customer-faq.html#mongodb-to-mssql-migrator-faq> > **MongoDB to MSSQL Migrator FAQ** |

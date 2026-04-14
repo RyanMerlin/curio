@@ -9,15 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:9699e1f212d17f3c32cece9e545b63b80c6cdb1e9bab03e32a4a07c34c1e24c7
+content_hash: sha256:c6c4c20de38a68f3210bf6e7fb25b011c2ba8b94c460d3c4eec9344762f2db89
 confluence_page_id: null
 model_used: null
 ---
 
-Hub page: Enablement (Centralized Configuration Management)
-
-*This page serves as a section index with no prose body.*
+| **Enablement** | Jason Aggee Mar-11-2026 5m 28a  --- |
+| --- | --- |
+| **UI** | UI is in AAC  Config for Controller, Worker, Gallery  Config Controller  Config a Worker  Get the Worker PhoneHome file.  Tells the Server who to contact to get the configuration  Place file on Controller  Get Launch file for a Worker  Place on the Worker  When Service starts, it reaches out for its config and creates/updates RuntimeSettings.xml  Can still go to Alteryx System Settings  Reports  Central log access |

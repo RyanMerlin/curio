@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:5d5fd66eca0f252366b0cfb3272241f864509c6c38f75be444a51e8d0932b2a1
+content_hash: sha256:997fc36fa0477667bfa419d0bfffa856ced51d0412a9cca259d52c71b6751355
 confluence_page_id: null
 model_used: null
 ---
@@ -84,5 +84,5 @@ model_used: null
 >
 > 24.1 moved all timestamps to UTC
 
-|  |  |
+| **Key Articles** | MongoDB Support on Community Mongo (Confluence) <= **support in 23.1+** |
 | --- | --- |

@@ -9,28 +9,28 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:3630dff84a8bfac62be3ef1c6d69339c8ca84e2e6304edc182f9acf459f2d51e
+content_hash: sha256:be8f637b43a304f95023ce45b08a151876ce4cf74cd7b480529ac8228a7091dd
 confluence_page_id: null
 model_used: null
 ---
 
-|  |  |
+| **Issue** | > **📝 Note** > > Service fails to start when ServerUI HTTPS/SSL is selected >  > Service starts when this is unchecked and ServerUI is accessed with HTTP |
 | --- | --- |
-|  |  |
-|  |  |
+| **Screenshot** |  |
+| **Related Issues** |  |
 
 # Troubleshooting
 
-|  |  |  |
+|  | **Check** | **Steps** |
 | --- | --- | --- |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| 1 | **Is Controller Global SSL set?** |  |
+| 2 | **Is Port 443 open?** |  |
+| 3 | **Is Certificate installed** |  |
+| 4 | **Is Certificate trusted?** |  |
 
 [GCS Operations via Workflows: Card - access it on https://go.skype.com/cards.unsup...](https://teams.microsoft.com/l/message/19:05d469da10bd4f5a99baa1aa0baad90e@thread.skype/1743688069045?tenantId=522f39d9-303d-488f-9deb-a6d77f1eafd8&groupId=d7adbfc0-2b4e-487b-a707-42e478f217b6&parentMessageId=1743688069045&teamName=GRP_Customer%20Support%20-%20Skill%20Teams&channelName=Designer&createdTime=1743688069045)
 

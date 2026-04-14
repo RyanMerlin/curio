@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:278cb9c319b592695819236b63702ca67c705dcfe210c171afef01db2cba883b
+content_hash: sha256:8b1e9046853590b74fd6b31dd131e79633a7c5e47e067cc27bfb14baae1f5363
 confluence_page_id: null
 model_used: null
 ---
@@ -29,7 +29,7 @@ model_used: null
 
 ---
 
-|  |  |
+| **Key articles** | [Admin vs User endpoints](https://help.alteryx.com/current/en/server/api-overview.html#server-apis)  <== **scroll right to User column** |
 | --- | --- |
-|  |  |
-|  |  |
+| **Help** | <https://help.alteryx.com/current/server/server-api-v3-objects> <== **Parameter documentation** |
+| **Tutorials** | [Workflow](https://alteryx0.sharepoint.com/:u:/r/sites/GlobalCustomerSupport/CSU%20Repository/2022-05-10%20Server%20API%20v3%20Users%20API%20Endpoint%20Workflow%20Documented.yxmd?csf=1&web=1&e=hejTFU) / [Slides](https://alteryx0.sharepoint.com/:p:/r/sites/GlobalCustomerSupport/CSU%20Repository/2022-05-10%20Server%20API%20v3%20Review%20Slides.pptx?d=w1d7e1250776b4f5db1cab4ef7e2d0a9d&csf=1&web=1&e=gZRwip) / [Recording](https://alteryx0.sharepoint.com/:v:/r/sites/GlobalCustomerSupport/CSU%20Repository/2022-05-03%202022.1%20Release%20Enablement%20Features%20and%20Fixes%20-%20Part%20II%20Recording.mp4?csf=1&web=1&e=kbnjIK) <== **Matt H CSU on V3 API** |

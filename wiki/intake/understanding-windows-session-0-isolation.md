@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:0196ec3995274a21e70beb9c4b2b4ff9c83d2bcb2ccae75021d6c7adece17f3c
+content_hash: sha256:4bd3a2c3fbe3591d2fb1c23f0e4d94b96d307170745428e1f7190dd79ee81e6f
 confluence_page_id: null
 model_used: null
 ---
@@ -22,10 +22,10 @@ model_used: null
 >
 > This page digs into the Service running in Session 0 and the impact that has on the ability to run Batch Scripts via the Run Command
 
-|  |  |
+| **Author** | Michael Adler |
 | --- | --- |
-|  |  |
-|  |  |
+| CSU | Understanding Windows Session 0 Isolation (Michael Adler) 30m |
+| **Key Articles** | How-To (Excel)  <== **search for “Server” articles** |
 
 ---
 
@@ -73,13 +73,13 @@ Processes can be seen in **Windows Task Manger** and Service in the **Windows Se
 
 Differences between **Applications** and **Services** (not exhaustive).
 
-|  |  |
+| **Application** | **Service** |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| Runs in Session above 0 | Started in Session 0 |
+| Interactive | Non-interactive |
+| Multiple instances can run at the same time | Only one instance can run at the same time |
+| Exits when user logs off | Keeps running as long as OS is running. Can be stopped manually via Services. |
+| Uses the user’s home folder as the working directory. | Use **%SYSTEM%/System32** as the default working directory. |
 
 An in-depth description of this can be also found in the [Windows Internals Book](https://learn.microsoft.com/en-us/sysinternals/resources/windows-internals).
 
@@ -93,10 +93,10 @@ Running the **tasklist** command will return a list of processes running under t
 
 For instance:
 
-|  |  |  |  |  |
+| **Image Name** | **PID** | **Session Name** | **Session#** | **Mem Usage** |
 | --- | --- | --- | --- | --- |
-|  |  |  |  |  |
-|  |  |  |  |  |
+| **Wireshark.exe** | 29316 | Console | 13 | 99,260 K |
+| **pgbouncer.exe** | 6752 | Services | 0 | 8,040 K |
 
 Each process has a session.
 

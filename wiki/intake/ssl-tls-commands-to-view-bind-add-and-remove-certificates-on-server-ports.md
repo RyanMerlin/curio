@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:12:39Z
-updated_at: 2026-04-14T15:12:39Z
+created_at: 2026-04-14T15:16:58Z
+updated_at: 2026-04-14T15:16:58Z
 confidence: null
 cross_refs: []
-content_hash: sha256:d3184ec984327445d1bd82c70380683963cfeccad4ae036f1d6ec8d92e72bcc5
+content_hash: sha256:04dc8d793cdfda15dae83c739f4c19a507a631a4c273e89134e03d021222fc6b
 confluence_page_id: null
 model_used: null
 ---
@@ -24,8 +24,8 @@ model_used: null
 
 Open command prompt **as Administrator**
 
-|  |  |
+| **Task** | **Command** |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
+| **View bound certificates** | netsh http show sslcert |
+| **Remove certificate from a port** | netsh HTTP delete sslcert ipport=0.0.0.0:**443** [How to Remove the SSL Certificate from Alteryx Server](https://knowledge.alteryx.com/index/s/article/Removing-SSL-Certificate-from-Alteryx-Server) (KB) <== **REMOVE cert** |
+| **Bind certificate to a port** (then restart Service) | netsh http add sslcert ipport=0.0.0.0:**443 **certhash=‎**YOUR_CERT_HASH** appid={eea9431a-a3d4-4c9b-9f9a-b83916c11c67} **appid** doesn’t change and is unique to Alteryx Server  [Configuring Alteryx Server for SSL: Obtaining and Installing Certificates](https://knowledge.alteryx.com/index/s/article/Configuring-Alteryx-Server-for-SSL-Obtaining-and-Installing-Certificates-1583459841225) (KB) <== **ADD cert** |
