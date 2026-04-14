@@ -32,3 +32,15 @@ When launched from Curio, use:
 - `.agents/plugins/marketplace.json` as the plugin catalog
 - `plugins/` for Curio-local plugin bundles
 - `docs/` for Curio architecture and onboarding
+
+## Curation Workflow Rules
+
+- Do not bypass the Curio content process for curation work.
+- Do not directly create, restructure, split, merge, reroute, deduplicate, or substantially rewrite `wiki/published/` content as the first step unless the user explicitly asks for a manual override.
+- For new curation work and structural curation changes, the first artifact must go through `staged` or `review`.
+- Use `review` when the work involves ambiguity, taxonomy changes, subtree proposals, deduplication decisions, low-signal content, consolidation, or deletion candidates.
+- Use `staged` when the route is clear and the content is strong enough to preserve as a proposed curated draft before publication.
+- Treat Confluence `Review` as a required human-review surface. Proposals that humans need to inspect must appear there, not only in Git.
+- If you are about to edit `published/` directly for anything other than a narrow user-authorized manual cleanup, stop and route the work through `staged` or `review` first.
+- Low-signal or placeholder content must not be published. Route it to `review` with an explicit recommendation to improve, consolidate, or delete.
+- Confidence alone is not enough to publish. Also assess information quality and usability.
