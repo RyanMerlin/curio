@@ -1,21 +1,27 @@
 ---
 id: d88ffacf3490bdd7
 title: Tool Crosslinks
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1891795389
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1891795389
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- tools
+- crosslinks
+- reference
+- cse
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:51:00Z
+confidence: 0.65
 cross_refs: []
 content_hash: sha256:9a77dd8feda1564da0130fd930de161aaddb635a4b7e28df9f77bcf70fb1fe3e
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-troubleshooting-saml",
+  "generated_at": "2026-04-14T13:51:01Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "troubleshooting-saml",
+  "title": "Troubleshooting  (SAML)",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "SAML troubleshooting guide: logs, SAML Tracer, and common diagnostic steps for Server SSO issues.",
+  "body_markdown": "| Logs | SAML SSO / AAS Logs |\n| --- | --- |\n| SAML Tracer file during login process | https://chromewebstore.google.com/detail/saml-tracer/mpdajninpobndbfcldcmbpnnbhibjmch?hl=en&pli=1 |\n| Decode SAML tokens | https://samltool.io/                                                   <== decode SAML messages |\n| .har file during login if SAML Tracer not available | How to generate HAR file on the Gallery and Designer Cloud (KB)                                                  <== How to generate a .har file |\n| Troubleshooting | Checklist-for-working-SAML-cases (Internal KB)https://help.alteryx.com/current/server/configure-alteryx-server-authentication                                                    <== expand SAML section at endLetter casing matters when setting up SAML (vendor dependant) including the webapi address in the AYX System Settings. Specifically, if the Gallery Base/Server UI address has all caps, but the Web API URL has lowercase, a \"401\" error is received when signing in (we used Okta). Might have to do with verifying the HTTP requests match.  From: Today I LearnedTroubleshooting ToolsFiddler trace for Designer connection issueshttps://chrome.google.com/webstore/detail/saml-tracer/mpdajninpobndbfcldcmbpnnbhibjmch?hl=en plug-in for Chrome for Gallery connection issuesDesigner CEF Debugger doesn’t help |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.88,
+    "quality_confidence": 0.81,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.86,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1671266865"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1671266865"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}

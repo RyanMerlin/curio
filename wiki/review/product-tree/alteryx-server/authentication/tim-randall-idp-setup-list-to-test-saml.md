@@ -1,21 +1,29 @@
 ---
 id: 1294bfedc8f7b04c
 title: (Tim Randall) IDP setup list to test (SAML)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2003271981
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2003271981
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- saml
+- idp
+- testing
+- draft
+- personal-working-page
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:51:00Z
+confidence: 0.5
 cross_refs: []
 content_hash: sha256:4746161bbe74a1081959f35fceddc2b406e61c6e8b6efb72985c28ae5bc28faa
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 note Working page for Tim Randall

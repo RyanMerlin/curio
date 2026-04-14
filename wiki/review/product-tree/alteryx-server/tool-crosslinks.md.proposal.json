@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-tool-crosslinks",
+  "generated_at": "2026-04-14T13:51:00Z",
+  "lane": "review",
+  "kind": "new_page",
+  "subject_slug": "tool-crosslinks",
+  "title": "Tool Crosslinks",
+  "target_path": [
+    "product-tree",
+    "alteryx-server"
+  ],
+  "summary": "Landing page linking to Tools pages in Support-CSE and related spaces.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> This is a landing page to link to Tools pages in **Support-CSE Basics >** Key Tools and Links\n> \n> This page is mirrored in **Support-Designer** > Tool Crosslinks\n\n# Tools\n\n- APOD\n- Bookings\n- Case Portal and Community Access Issues\n- Chrome Developer Tools\n- CReW Macros\n- cURL\n- Fiddler\n- httpbin.org\n- Jira\n- MongoDB Compass\n- Notepad++\n- Postman\n- Procmon / Process Monitor\n- Robo3T\n- SnagIt\n- Voice of the Customer - VoC\n- Wireshark",
+  "recommended_action": "review before further action",
+  "scores": {
+    "route_confidence": 0.65,
+    "quality_confidence": 0.64,
+    "hierarchy_fit_confidence": 0.65,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.68,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Cross-reference navigation page — low standalone value",
+  "merge_target": null,
+  "taxonomy_mutation": null,
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1891795389"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1891795389"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Cross-reference navigation page — low standalone value"
+    ],
+    "overlap_candidates": [],
+    "rationale": ""
+  }
+}

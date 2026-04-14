@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:59Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Support-Server",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1640792523",
+    "content_hash": "sha256:5427e3e95dc10d6eb669cff60c18e17ce0adcf1f41b9a24d5d4accae2c2f5438",
+    "content_preview": "> **ℹ️ Info**\n>\n> This Site helps the Support team with Alteryx Server cases\n\n**Server**\n  > UI Pages\n  > Alteryx System Settings App\n  > Designer <=> Server\n  > Installation & Upgrade >> CryptoMigration\n\n**Technologies**\n  > API\n > Centralized Configuration Mgmt\n  > Connectors\n  > Data Lineage\n  > High Availability (HA)\n  > Load Balancers \n  > Mongo  **/ ** SQL DB\n  > SAML\n  > SCIM\n  > SSL\n\nTroubleshooting >> Logs\nHow-To\nIssues\nErrors\n\nUtility Workflows >> Customer Support Gallery\n\nServer Funda"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.7,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.56,
+    "usability": 0.45000002,
+    "review_reason": "Root hub/space overview page — should become branch-node description for product-tree/alteryx-server",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "support-server"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "SupportServer",
+      "Support",
+      "Alteryx",
+      "System",
+      "Centralized",
+      "team",
+      "Lineage"
+    ]
+  }
+}
