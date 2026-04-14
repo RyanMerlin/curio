@@ -4,6 +4,7 @@ use crate::{
     commands::sync::{ensure_curio_confluence_tree, parse_northstar_blueprint},
     config::Config,
     confluence::ConfluenceClient,
+    northstar::{save_taxonomy, sync_taxonomy_from_markdown},
     output::emit_json,
     wiki_index::{append_log, rebuild_index_md},
     WikiIndex,
@@ -105,13 +106,16 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
     if !config_settings.exists() || reset {
         std::fs::write(
             &config_settings,
-            "# Curio Wiki Configuration\n\n# Tree structure is defined in _config/northstar.md\nauto_commit: true\n",
+            "# Curio Wiki Configuration\n\n# Tree structure is defined in _config/northstar.json (generated from northstar.md)\nauto_commit: true\n",
         )?;
     }
+    let taxonomy = crate::northstar::parse_markdown_taxonomy(&ns_md);
+    save_taxonomy(wiki_dir, &taxonomy)?;
 
     // Generate co-located indexes from the seeded tree structure.
     let empty_index = WikiIndex::default();
     rebuild_index_md(wiki_dir, &empty_index)?;
+    let _ = sync_taxonomy_from_markdown(wiki_dir);
 
     // .gitkeep only in pipeline staging dirs (not in published/ — content is the placeholder)
     for dir in &[

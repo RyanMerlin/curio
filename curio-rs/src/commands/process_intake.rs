@@ -16,7 +16,13 @@ use std::path::{Path, PathBuf};
 
 use crate::{
     config::Config,
+    northstar::{load_taxonomy, taxonomy_path_exists},
     output::emit_json,
+    overlap::find_peer_overlap,
+    proposal::{
+        required_lane, save_proposal_record, ProposalDossier, ProposalKind, ProposalLane,
+        ProposalRecord, ProposalScores, ProposalTaxonomyMutation,
+    },
     quality::assess_quality,
     reconcile::{ReconcileDecision, RoutingAnalysis},
     wiki_fs::{parse_wiki_page, update_frontmatter},
@@ -127,13 +133,8 @@ fn output_routing_manifest(
 ) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
 
-    // Load NORTHSTAR for routing context
-    let ns_path = wiki_dir.join("_config/northstar.md");
-    let northstar_md = if ns_path.exists() {
-        std::fs::read_to_string(&ns_path).unwrap_or_default()
-    } else {
-        String::new()
-    };
+    let taxonomy = load_taxonomy(wiki_dir)?;
+    let northstar_md = std::fs::read_to_string(wiki_dir.join("_config/northstar.md")).unwrap_or_default();
 
     // Load root index for quick orientation
     let index_md = crate::wiki_index::read_index_md(wiki_dir).unwrap_or_default();
@@ -154,15 +155,17 @@ fn output_routing_manifest(
     let manifest = serde_json::json!({
         "action": "route_intake_pages",
         "page_count": pages.len(),
+        "taxonomy": taxonomy,
         "northstar_context": northstar_md,
         "index_summary": index_md,
         "pages": pages,
         "instructions": {
-            "task": "Route each page to exactly one wiki subtree.",
-                "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null}",
+            "task": "Turn each intake page into a proposal with a defensible route, overlap assessment, and review/staged lane.",
+                "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null, \"merge_target\": null}",
             "confidence_rule": "confidence >= 0.75 and a valid existing subtree fit is necessary but not sufficient for staged. Weak or low-usability content should still go to review.",
             "quality_rule": "Assess information quality and human usability separately from routing confidence. Low-signal, placeholder-like, or weak-content pages must go to review even if the route is obvious.",
             "new_subtree_rule": "If no existing subtree fits confidently, do not force publication. Route to review, provide the closest category path you can justify, and fill proposed_new_subtree plus proposal_rationale.",
+            "overlap_rule": "If the material appears semantically duplicative with likely peers, prefer review with merge or consolidation guidance instead of staged.",
             "apply_command": "curio process --route-file <path-to-decisions.json>"
         }
     });
@@ -303,18 +306,46 @@ fn apply_routing(
     if decision.category.is_empty() {
         anyhow::bail!("Routing decision for '{}' is missing a category path", slug);
     }
+    let taxonomy = load_taxonomy(wiki_dir)?;
     let mut analysis = analysis;
     let mut page = parse_wiki_page(src_path)?;
     let quality = assess_quality(&page.frontmatter.title, &page.body);
+    let overlap_candidates = find_peer_overlap(wiki_dir, &decision.category, &page.frontmatter.title, &page.body, Some(slug))?;
+    let overlap_risk = overlap_candidates.first().map(|candidate| candidate.score).unwrap_or(0.0);
     let mut target_status = if decision.status == "staged" { "staged" } else { "review" };
-    if target_status == "staged" && !quality.publishable {
+    let taxonomy_has_path = taxonomy_path_exists(&taxonomy, &decision.category);
+    if !taxonomy_has_path && decision.proposed_new_subtree.is_none() {
+        anyhow::bail!(
+            "Routing decision for '{}' uses invalid taxonomy path '{}'. Attach a new-node proposal or move it to review.",
+            slug,
+            decision.category.join("/")
+        );
+    }
+    let required_lane = required_lane(
+        decision.confidence,
+        quality.information_quality,
+        if taxonomy_has_path { decision.confidence } else { 0.5 },
+        overlap_risk,
+        !taxonomy_has_path,
+        decision.review_reason.is_some(),
+    );
+    if required_lane == ProposalLane::Review {
         target_status = "review";
         decision.status = "review".to_string();
-        let fallback_reason = format!(
-            "Low information quality ({:.0}%) or usability ({:.0}%) — requires review before publication",
-            quality.information_quality * 100.0,
-            quality.usability * 100.0
-        );
+        let fallback_reason = if overlap_risk >= 0.7 {
+            format!(
+                "High semantic overlap ({:.0}%) with existing peer content — requires review for merge or consolidation",
+                overlap_risk * 100.0
+            )
+        } else if !taxonomy_has_path {
+            "Proposed taxonomy path does not exist yet — requires review with a taxonomy mutation".to_string()
+        } else {
+            format!(
+                "Low information quality ({:.0}%) or usability ({:.0}%) — requires review before publication",
+                quality.information_quality * 100.0,
+                quality.usability * 100.0
+            )
+        };
         if decision.review_reason.is_none() {
             decision.review_reason = Some(fallback_reason.clone());
         }
@@ -325,11 +356,13 @@ fn apply_routing(
             sidecar.routing.information_quality = Some(quality.information_quality);
             sidecar.routing.usability = Some(quality.usability);
             sidecar.routing.flags.extend(quality.flags.clone());
+            sidecar.routing.flags.extend(overlap_candidates.iter().take(3).map(|candidate| format!("overlap:{}", candidate.path)));
         }
     } else if let Some(ref mut sidecar) = analysis {
         sidecar.routing.information_quality = Some(quality.information_quality);
         sidecar.routing.usability = Some(quality.usability);
         sidecar.routing.flags.extend(quality.flags.clone());
+        sidecar.routing.flags.extend(overlap_candidates.iter().take(3).map(|candidate| format!("overlap:{}", candidate.path)));
     }
     let cat_path: PathBuf = decision.category.iter().collect();
     let dest_dir = wiki_dir.join(target_status).join(&cat_path);
@@ -347,10 +380,24 @@ fn apply_routing(
 
     update_frontmatter(src_path, &page.frontmatter)?;
 
+    let proposal = build_proposal_record(
+        slug,
+        &page.frontmatter.title,
+        &page.body,
+        &decision,
+        target_status,
+        quality.information_quality,
+        quality.usability,
+        overlap_risk,
+        overlap_candidates.iter().map(|candidate| candidate.path.clone()).collect(),
+        &page.frontmatter.source,
+    );
+
     // Write analysis sidecar before git mv
     if let Some(ref a) = analysis {
         write_analysis_sidecar(src_path, a)?;
     }
+    save_proposal_record(src_path, &proposal)?;
 
     let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
     let rel_src = src_path.strip_prefix(repo_root).unwrap_or(src_path);
@@ -364,6 +411,13 @@ fn apply_routing(
         let rel_asrc = analysis_src.strip_prefix(repo_root).unwrap_or(&analysis_src);
         let rel_adest = analysis_dest.strip_prefix(repo_root).unwrap_or(&analysis_dest);
         crate::git_ops::git_mv(repo_root, rel_asrc, rel_adest)?;
+    }
+    let proposal_src = crate::proposal::proposal_sidecar_path(src_path);
+    if proposal_src.exists() {
+        let proposal_dest = crate::proposal::proposal_sidecar_path(&dest_path);
+        let rel_psrc = proposal_src.strip_prefix(repo_root).unwrap_or(&proposal_src);
+        let rel_pdest = proposal_dest.strip_prefix(repo_root).unwrap_or(&proposal_dest);
+        crate::git_ops::git_mv(repo_root, rel_psrc, rel_pdest)?;
     }
 
     Ok(())
@@ -411,6 +465,84 @@ fn build_analysis_from_decision(
             heuristic_pre_signal: pre_signal,
             title_tokens,
             keywords_extracted,
+        },
+    }
+}
+
+fn build_proposal_record(
+    slug: &str,
+    title: &str,
+    body: &str,
+    decision: &ReconcileDecision,
+    target_status: &str,
+    information_quality: f32,
+    usability: f32,
+    overlap_risk: f32,
+    overlap_candidates: Vec<String>,
+    source: &crate::SourceRef,
+) -> ProposalRecord {
+    let lane = if target_status == "staged" {
+        ProposalLane::Staged
+    } else {
+        ProposalLane::Review
+    };
+    let kind = if decision.proposed_new_subtree.is_some() {
+        ProposalKind::TaxonomyChange
+    } else if decision.merge_target.is_some() || overlap_risk >= 0.7 {
+        ProposalKind::Merge
+    } else {
+        ProposalKind::NewPage
+    };
+    let taxonomy_mutation = decision.proposed_new_subtree.as_ref().map(|slug_value| ProposalTaxonomyMutation {
+        proposed_parent_path: decision.category.clone(),
+        proposed_node_title: slug_value.replace('-', " "),
+        proposed_node_slug: slug_value.clone(),
+        node_description: decision.proposal_rationale.clone().unwrap_or_default(),
+        rationale: decision.proposal_rationale.clone().unwrap_or_default(),
+        rejected_nearby_nodes: vec![],
+    });
+    ProposalRecord {
+        schema_version: 1,
+        proposal_id: format!("proposal-{}", slug),
+        generated_at: Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string(),
+        lane,
+        kind,
+        subject_slug: slug.to_string(),
+        title: title.to_string(),
+        target_path: decision.category.clone(),
+        summary: decision.summary.clone(),
+        body_markdown: body.to_string(),
+        recommended_action: if target_status == "staged" {
+            "stage for approval".to_string()
+        } else {
+            "review before further action".to_string()
+        },
+        scores: ProposalScores {
+            route_confidence: decision.confidence,
+            quality_confidence: information_quality,
+            hierarchy_fit_confidence: if taxonomy_mutation.is_some() { 0.5 } else { decision.confidence },
+            overlap_risk,
+            evidence_completeness: 0.7,
+            usability,
+            freshness_confidence: 1.0,
+        },
+        review_reason: decision.review_reason.clone(),
+        merge_target: decision.merge_target.clone(),
+        taxonomy_mutation,
+        dossier: ProposalDossier {
+            source_ids: vec![source.id.clone()],
+            source_locations: source.origin_url.clone().into_iter().collect(),
+            fetched_artifacts: vec![source.kind.clone()],
+            compared_pages: overlap_candidates.clone(),
+            alternatives_considered: decision
+                .category
+                .iter()
+                .take(1)
+                .map(|segment| format!("Primary route candidate: {}", segment))
+                .collect(),
+            unresolved_questions: decision.review_reason.clone().into_iter().collect(),
+            overlap_candidates,
+            rationale: decision.proposal_rationale.clone().unwrap_or_default(),
         },
     }
 }

@@ -1,6 +1,6 @@
 # Alteryx Server
 > Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns.
-> **30** pages | updated 2026-04-14 00:59 UTC
+> **30** pages | updated 2026-04-14 03:25 UTC
 
 | Title | Summary | Keywords | Updated |
 |-------|---------|----------|--------|

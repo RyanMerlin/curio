@@ -2,7 +2,25 @@
 
 This document defines the intended end-to-end processing flow for Curio after initialization and setup are already complete.
 
-This is not a CLI reference and not a code walkthrough. It is the technical operating design for how content should move through Curio, what information is collected, what the agent must infer, what the deterministic system must validate, what gets written to Git, and what gets mirrored to Confluence.
+This is the technical design for how Curio should transform incoming information into the best evolving structure for the knowledge base. It is not a CLI reference and not a code walkthrough.
+
+## Core Point
+
+Curio is not a page router.
+
+Curio is an information transformation system.
+
+From the beginning of intake to final publication and later sharpening, the agent must continuously ask:
+
+- what information is present
+- how trustworthy and useful it is
+- how it relates to the existing knowledge base
+- whether it belongs in an existing node
+- whether it should merge into an existing page
+- whether it justifies a new node in the hierarchy
+- how to express the result in the best structure for long-term retrieval and maintenance
+
+New content is never curated in a vacuum. It must always be interpreted relative to the existing knowledge structure.
 
 ## Scope
 
@@ -10,7 +28,7 @@ This document starts at the moment new source material is introduced into Curio 
 
 - curated publication into the Git repo
 - curated mirroring into Confluence
-- later review / sharpening proposals for restructuring the knowledge base
+- later sharpening proposals for restructuring or consolidating the knowledge base
 
 This document does not cover:
 
@@ -29,31 +47,37 @@ The Git repo is the system of record.
 
 It stores:
 
-- all intake content
-- all staged content
-- all review content
-- all published content
+- intake requests
+- staged proposals
+- review proposals
+- published pages
 - `_config` source of truth
 - audit trail
 - local navigation aids
-- proposal artifacts
+- proposal dossiers
 - machine-maintained state that must be visible and reviewable in Git
 
-The Git repo may contain machine-oriented helper artifacts and operational structure.
+Git is where the full evidence trail lives.
 
 ### Confluence
 
-Confluence is the curated human-facing mirror.
+Confluence is the curated human-facing mirror and the human review surface.
 
-It should contain only intentional, human-meaningful structure and pages.
+It should contain:
+
+- intentional hierarchy
+- curated published pages
+- staged proposals that are human-meaningful to inspect
+- review proposals that require human judgment
+- proposal summaries and rationale when humans must evaluate them
 
 It should not contain:
 
-- audit logs
 - raw machine state
 - repo-only helper clutter
 - accidental duplicate pages
 - low-signal placeholders
+- opaque machine artifacts with no human review value
 
 Curio sync is one-way:
 
@@ -61,330 +85,426 @@ Curio sync is one-way:
 
 Confluence is not the source of truth.
 
-### Review visibility rule
+## Taxonomy Source of Truth
 
-Proposal state may be stored in Git, but proposals that require human review must also surface in Confluence under `Review`.
+Taxonomy should be driven by `wiki/_config/northstar.json`.
 
-Confluence `Review` is the human operational review surface for:
+That JSON should contain:
 
-- subtree proposals
-- merge / split proposals
-- deduplication proposals
-- deletion candidates
-- low-signal content decisions
-- other curation questions awaiting judgment
+- the hierarchical node tree
+- node identifiers / slugs
+- display titles
+- descriptions
+- any durable metadata needed to validate category paths
+
+`wiki/_config/northstar.md` should remain as the narrative / explanatory wrapper and the source for the Confluence-facing `Northstar` page body.
+
+The JSON drives structure.
+
+The Markdown drives human explanation.
+
+## Main Concepts
+
+### Intake Request
+
+An intake request is the unit of incoming work.
+
+One intake request may contain one or more sources, for example:
+
+- multiple Confluence pages
+- one or more URLs
+- one or more files or documents
+- pasted text
+- a human description of the problem or desired knowledge change
+
+Curio must accept as many source types as practical.
+
+### Source
+
+A source is an individual input artifact inside an intake request.
+
+Examples:
+
+- a Confluence page
+- a URL
+- a PDF
+- a markdown file
+- a screenshot
+- a spreadsheet
+- a human-written free-text prompt
+
+### Proposal
+
+A proposal is the core curation unit produced from an intake request.
+
+A proposal is not just “some notes.”
+
+It is a full curation candidate that contains two tightly coupled parts:
+
+1. the proposed page or proposed page-tree change
+2. the supporting dossier that explains why that proposal is correct
+
+The supporting dossier should contain:
+
+- all contributing sources
+- what was fetched / opened / sampled / inspected
+- what alternatives were considered
+- what existing pages were compared
+- what overlap / merge / deduplication checks were run
+- the route evaluation
+- the hierarchy evaluation
+- confidence metrics
+- quality / usability metrics
+- dates and timestamps of evaluation
+- explicit rationale for the proposed change
+
+An intake request may result in:
+
+- one proposal
+- multiple proposals
+- no publishable proposal, only a rejection / consolidation recommendation
+
+This is an inference problem. The agent must determine whether multiple sources belong together or should produce separate proposals.
+
+### Proposed Page
+
+Each proposal should include a proposed page artifact.
+
+That page is the candidate knowledge object that would eventually land in `published` if approved.
+
+The top of the page should include a structured information section with:
+
+- rationale
+- confidence metrics
+- quality / usability metrics
+- route / hierarchy decision
+- related sources and references
+
+The synthesized knowledge content should appear below that decision section.
+
+### Dossier
+
+The dossier is the verbose support record behind the proposal.
+
+It is how Curio remains explainable and reviewable.
 
 ## Pipeline Stages
 
 The main content pipeline is:
 
 1. `intake`
-2. `staged`
-3. `review`
-4. `published`
-5. `sharpening`
+2. `proposal generation`
+3. `staged`
+4. `review`
+5. `published`
+6. `sharpening`
 
-`sharpening` is not a forward stage in the same sense as the others. It is a periodic review function over existing curated content.
+`proposal generation` is conceptually separate even if parts of it are implemented inside other commands.
 
 ## Stage 1: Intake
 
 ### Goal
 
-Capture new source material into Curio in a consistent structure without pretending that it is already curated.
+Capture one or more sources into Curio in a structure that preserves provenance and supports later synthesis.
 
-### Possible source types
+### Intake acceptance
 
-Intake may begin from:
+Curio should accept as many information types as practical, including:
 
-- a Confluence page
-- a URL/web page
-- a local file
-- pasted or generated text
-- other future structured connectors
+- Confluence pages
+- URLs
+- local files
+- folders of files
+- documents
+- human text descriptions
+- future structured connectors
+
+The agent should be able to process files and documents directly, but the intake layer must preserve them faithfully enough for that later agent work.
 
 ### Required intake record
 
-Every intake item should be normalized into a content record with these conceptual fields:
+Every intake request should normalize into a request record with:
+
+- request identity
+- request timestamp
+- source list
+- optional human prompt / subject description
+- provenance metadata
+- capture status
+
+Each source inside the request should preserve:
 
 - source identity
 - source kind
 - source location
-- source title
-- source summary if extractable
-- body or content reference
-- capture timestamp
-- provenance metadata
-- initial subject hints if available
+- source title if available
+- source summary if available
+- source body reference
+- source capture timestamp
+- source provenance metadata
 
 ### Intake structure
 
-The intake artifact should preserve source provenance clearly.
+Intake must preserve sources as sources.
 
-Conceptually it needs:
+The point is not to flatten anything.
 
-- a stable Curio page ID
-- source metadata
-- raw or summarized content depending on source kind
-- enough extracted text for routing and later review
-- a clear indication that this is uncurated intake
+The point is to preserve enough hierarchical structure and provenance so the agent can later synthesize the right knowledge object or knowledge-tree change.
 
 ### Intake behavior by source kind
 
-#### Confluence page source
+#### Confluence source
 
-Curio should collect:
+Curio should preserve:
 
-- original page title
-- original page URL
-- page ID / source identifier
-- summary extract
-- readable body content or reference-card body, depending on source policy
-
-The goal is not to flatten the source beyond usefulness. The item should remain attributable to the source page.
+- original title
+- origin URL
+- page ID or source identifier
+- source body reference
+- source structure as faithfully as practical
 
 #### URL source
 
-Curio should collect:
+Curio should preserve:
 
 - canonical URL
-- page title if extractable
-- summary extract
-- readable content or captured excerpt
+- title if available
+- source body reference
+- any useful page metadata
 
-#### File source
+#### File / document source
 
-Curio should collect:
+Curio should preserve:
 
 - file path or file reference
-- detected media/content type
-- extracted content if feasible
-- a summary or preview
+- media / content type
+- file metadata
+- reference to the source artifact
+
+Content extraction and summarization are agent responsibilities, not Curio substrate responsibilities.
 
 ### Intake checks
 
-Before the item is accepted into intake, deterministic checks should verify:
+Before accepting an intake request, Curio should verify:
 
-- the source can be read or fetched
-- the intake item is not an exact duplicate of an already-tracked source artifact when duplicate detection is possible
+- the sources can be opened, fetched, or referenced
 - required provenance fields are present
-- the content is non-empty enough to be processed
+- the sources are not empty or broken in a way that makes analysis impossible
+- the request is not an obvious exact duplicate of an existing intake request when that can be determined safely
 
-If these checks fail, the item should not silently proceed.
+“Usable” here means the sources can actually be inspected by the later curation step.
 
-## Stage 2: Routing Analysis
+If these checks fail, the request should not silently proceed.
+
+## Stage 2: Proposal Generation
 
 ### Goal
 
-Determine what the content is mainly about, where it belongs in the curated taxonomy, and whether it is ready for `staged` or requires `review`.
+Convert one intake request with one or more sources into one or more proposed knowledge changes.
 
-This is the most important agent judgment step in Curio.
+### Agent responsibilities
 
-### Inputs to routing
+The agent should:
 
-The routing decision should consider:
+- inspect all provided sources
+- inspect the existing knowledge structure
+- inspect relevant `index.md` summaries and metadata intentionally
+- compare against existing peer pages
+- determine whether sources belong together or apart
+- decide whether the result is:
+  - a new page
+  - an update to an existing page
+  - a merge proposal
+  - a split proposal
+  - a new hierarchy-node proposal
+  - a discard / delete recommendation
 
-- title
-- dominant content topic
-- source summary
-- extracted body content
-- provenance
-- existing taxonomy in `_config/northstar.md`
-- existing published corpus when necessary for disambiguation
+This is not page routing alone. This is interpretation and synthesis.
 
-### Primary routing principle
+### Existing knowledge structure input
 
-Routing must be based on:
+Proposal generation must consider:
 
-- title
-- dominant content topic
+- `northstar.json`
+- branch-node descriptions
+- co-located `index.md` summaries and metadata
+- relevant peer pages in the likely neighborhood
 
-Secondary or incidental mentions are weak evidence.
+The agent should prefer intentional structural context over blind word search.
 
-The system must not over-weight:
+### Primary proposal dimensions
 
-- side mentions
-- prerequisite mentions
-- uninstall or compatibility side notes
-- incidental references to adjacent products
+The agent must evaluate at least:
 
-### What the agent must infer
+- dominant topic
+- value of information
+- route fit
+- depth of fit in the hierarchy
+- semantic overlap with peer pages
+- whether the information belongs in a new or existing node
+- whether a merge or consolidation is better than a new page
 
-The agent must infer:
+### Required proposal outputs
 
-- primary topic
-- best existing tree
-- best existing subtree
-- whether the item is truly about that subtree or only mentions it
-- whether the current title is human-meaningful
-- whether the content is specific enough to publish eventually
-- whether the content conflicts with existing knowledge
-- whether the content suggests a new subtree is needed
+Each proposal should contain:
 
-### Required routing output
-
-The routing analysis should produce a structured decision with at least:
-
-- title
+- proposed page title
+- proposed hierarchical path
 - proposed status
-- proposed category path
-- confidence
+- proposed page body
+- source list
 - rationale
-- notable evidence
-- review reason if not stageable
-- new-subtree proposal if needed
+- alternatives considered
+- merge target if applicable
+- new-node proposal if applicable
+- confidence metrics
+- quality metrics
+- usability metrics
+- timestamp of evaluation
 
-### Routing statuses
+## Confidence and Scoring
 
-The agent may route an intake item to:
+Confidence must not be a single scalar.
 
-- `staged`
-- `review`
+Curio should track multiple confidence / scoring dimensions, including:
 
-It must not route directly to `published`.
+- route confidence
+- quality confidence
+- hierarchy-fit confidence
+- merge / deduplication confidence
+- evidence completeness
+- date / freshness of evaluation
 
-### Stageable content
-
-A page can move to `staged` when:
-
-- the dominant topic is clear
-- an existing tree and subtree fit confidently
-- the content is coherent enough to preserve
-- the title is acceptable or can be refined safely
-
-### Review-required content
-
-A page must move to `review` when:
-
-- the dominant topic is ambiguous
-- multiple subtrees are plausible
-- the current taxonomy has no good fit
-- the source is low quality or contradictory
-- a likely duplicate exists
-- the item should trigger consolidation rather than new publication
-- a new subtree appears necessary
-- information quality is too low to justify publication
-- usability for a human reader is too low to justify publication
-
-## New Subtree Proposal Behavior
-
-This is a critical rule.
-
-There is no valid `published/uncategorized` outcome.
-
-If the agent cannot confidently fit content into an existing subtree, the content must:
-
-- go to `review`
-- include a proposal for a new subtree
-
-That proposal should include:
-
-- candidate parent tree
-- candidate subtree title
-- candidate subtree slug
-- rationale
-- why existing subtrees do not fit
-- source evidence
-- confidence
-- expected impact on future curation
-
-This is how Curio scales. It does not solve taxonomy gaps by publishing uncategorized content.
-
-The subtree proposal must also be visible in Confluence `Review` so a human can evaluate it there.
+These scores support judgment. They do not replace judgment.
 
 ## Stage 3: Staged
 
 ### Goal
 
-Hold content that has been routed confidently enough to preserve in a proposed curated location, but is not yet approved for final publication.
+Hold proposals that are strong enough to preserve as candidate curated outcomes, but are not yet final published knowledge.
 
-### What should be written into staged
-
-The staged artifact should include:
-
-- normalized title
-- preserved provenance
-- category path
-- confidence
-- rationale
-- keywords
-- cross references if known
-- body content or reference-style content appropriate to the source type
-
-`staged` is for proposed curation drafts, not invisible shortcuts to `published`.
-
-### What staged means
+### Meaning of staged
 
 `staged` means:
 
-- Curio believes it knows where this belongs
-- the item is promising enough to keep moving
-- a human or a later agent step can still refine it before publish
+- Curio has a concrete proposed page or hierarchy change
+- the proposal is coherent and worth preserving
+- it may still need human approval or later refinement before publish
 
-### Deterministic checks before allowing staged
+### Staged contents
 
-The system should validate:
+A staged proposal should include:
 
-- category path exists in current `northstar`
-- status is valid
-- title is non-empty
-- frontmatter is structurally valid
-- content file can be written into the proposed location
+- the proposed page content
+- the structured decision section at the top
+- provenance and source references
+- route / hierarchy path
+- all confidence and quality scores
+- rationale
+- comparison with nearby pages where relevant
 
-If these fail, the item should be diverted to `review`.
+### Staged checks
+
+The system should verify:
+
+- the proposal record is structurally valid
+- required provenance exists
+- the proposed hierarchical path is valid against `northstar.json`
+
+If the path does not exist in the taxonomy, Curio should not pretend the route is already valid.
+
+Instead, the proposal should explicitly include:
+
+- the taxonomy mutation being proposed
+- the new node to add to `northstar.json`
+- the corresponding Git path / page-tree change
+
+That may still land in `staged` if confidence is high and the proposal is complete, but it becomes a taxonomy-change proposal rather than a simple page-route proposal.
 
 ## Stage 4: Review
 
 ### Goal
 
-Hold items that require human or higher-judgment agent attention before they can safely become curated knowledge.
+Hold proposals that require human judgment or a higher-confidence curation pass.
 
-### Reasons content lands in review
+### What sends a proposal to review
 
-Common reasons:
+A proposal must go to `review` when:
 
-- ambiguous routing
-- suspected duplication
-- low confidence
-- taxonomy gap
-- poor title quality
-- poor content quality
-- conflicting evidence
-- possible need to merge into existing published content
+- the dominant topic is ambiguous
+- multiple hierarchical paths are plausible
+- the evidence for route fit is weak
+- the best action is merge / consolidation rather than simple publication
+- the taxonomy needs a new node and the justification is not trivial
+- semantic overlap with existing peer pages is high
+- the information quality is low
+- the human usability is low
+- the agent lacks enough context to make a defensible decision
+
+### Clear distinction for review
+
+“Awaiting judgment” should mean one of three concrete things:
+
+1. the agent lacks enough context
+2. the agent has multiple plausible outcomes with insufficient separation
+3. the proposal changes knowledge structure or published content in a way that needs explicit human approval
+
+That distinction should be stated directly in the review artifact.
 
 ### Review artifact requirements
 
-A review item should make the unresolved issue explicit.
+A review artifact must include:
 
-It should include:
+- the proposed page or hierarchy change
+- the full supporting dossier
+- route alternatives and why they were rejected
+- merge / overlap analysis if relevant
+- taxonomy proposal if relevant
+- full traceability to all sources
+- all scoring dimensions
+- explicit unresolved questions
+- explicit recommended action
 
-- proposed status or disposition
+### Confluence review behavior
+
+Anything a human must review must surface in Confluence `Review`.
+
+That includes:
+
+- page proposals
+- merge proposals
+- split proposals
+- taxonomy / hierarchy proposals
+- low-signal rejection candidates
+- consolidation recommendations
+
+If a human cannot see it in the review surface, it is operationally useless.
+
+## New Node Proposal Behavior
+
+There is no valid `published/uncategorized` outcome.
+
+If the existing hierarchy has no strong fit, the proposal must include a new-node proposal.
+
+That proposal must include:
+
+- proposed parent path
+- proposed new node title
+- proposed new node slug / identifier
+- node description
 - rationale
-- unresolved questions
+- why nearby existing nodes do not fit
 - source evidence
-- category candidates if any
-- subtree proposal if applicable
-- duplicate suspicion if applicable
-- information quality assessment
-- usability assessment
-- recommended action if the item is too weak to publish
+- confidence
+- expected impact on future curation
 
-Review artifacts that humans need to inspect should be mirrored into Confluence `Review`, not kept only as Git-local proposal files.
-
-### Review outcomes
-
-Review should resolve into one of:
-
-- approve route to `staged`
-- rewrite and then stage
-- merge with an existing page
-- reject / discard
-- create or approve a new subtree proposal
+The taxonomy change should target `northstar.json`, and the corresponding Git path and branch page should be part of the same proposal.
 
 ## Stage 5: Publish
 
 ### Goal
 
-Move curated content from working state into the published knowledge corpus in Git.
+Move approved staged proposals into the published knowledge corpus in Git.
 
 ### Publish is not raw promotion
 
@@ -392,96 +512,73 @@ Publishing is not just file movement.
 
 At publish time Curio must confirm:
 
-- the content is intentionally titled
+- the proposal is approved
+- the title is intentional and fits the peer neighborhood
 - the route is correct
-- the page is useful enough to deserve published status
-- the page is not a likely duplicate that should instead merge into existing knowledge
-- the information quality is high enough to be useful
-- the page is usable by a human reader without requiring major reconstruction
+- the hierarchy placement is correct
+- the information quality is high enough
+- the page is usable for a human reader
+- semantic overlap with peer pages is low enough, or a merge decision has already been made
 
-### Required publish checks
+### Publish checks
 
-Before publish, deterministic checks should validate:
+Before publish, Curio should verify:
 
-- category path exists
-- target location is valid
-- title is present
-- frontmatter is complete enough
-- the content is not trying to publish into a nonexistent subtree
-- the content is not low-signal placeholder material
-- the content clears the minimum information quality / usability gate
+- the target hierarchical path exists in `northstar.json`, or the approved taxonomy mutation has already been applied
+- the target Git path exists or is created as part of the approved change
+- the proposal is not low-signal placeholder material
+- the proposal clears the minimum quality / usability gate
+- the peer-level overlap check does not indicate a likely merge instead
 
-### Publish quality gate
+### Overlap rule
 
-Publish should depend on more than routing confidence.
+Duplicate detection is not enough.
 
-Curio should evaluate at least these dimensions:
+Curio should look for semantic overlap with nearby peer pages.
 
-- routing confidence
-- taxonomy fit
-- information quality
-- human usability
-- duplication risk
+If overlap is high enough that a new page would create redundant knowledge, the correct outcome is:
 
-Low confidence can block publication, but high confidence alone must not allow publication of weak content.
+- merge proposal
+- consolidation proposal
+- or return to review
 
-Examples of content that should be rejected back to `review`:
+not “publish another page and hope for the best.”
 
-- placeholder pages with almost no real information
-- pages that repeat obvious fragments without usable guidance
-- pages that are likely duplicates of stronger existing pages
-- pages that need consolidation or deletion more than publication
-
-### Duplicate-title policy
-
-Duplicate titles in published are a curation risk signal.
-
-Default rule:
-
-- the agent should avoid creating them through good curation
-
-If a duplicate title still occurs, Curio may use the explicit duplicate fallback:
-
-- publish the new page as `"{title} (dup)"`
-- add a visible duplicate notice
-- include a reference to the conflicting page
-
-This is an exception path, not the normal curation model.
-
-### Published output in Git
+## Published Output in Git
 
 Published Git content should be:
 
 - human-meaningful
-- routed into the correct tree/subtree path
+- hierarchically well placed
+- traceable
+- free of low-signal placeholders
 - stable enough to mirror to Confluence
-- free of placeholders and junk nodes
 
 ## Published Tree Design
 
-The published tree is defined by `_config/northstar.md`.
+The published tree should be defined by `wiki/_config/northstar.json`.
+
+The hierarchy may have an arbitrary number of nested levels.
+
+It must not be limited conceptually to only one tree plus one subtree layer.
 
 ### Tree semantics
 
-Top-level tree pages represent durable navigation domains.
+Every node in the hierarchy represents an intentional knowledge container.
 
-Subtree pages represent narrower curated domains inside those trees.
+Leaf pages live beneath those nodes.
 
-Published leaf pages live under those nodes.
+### Node creation principle
 
-### When a new branch node is needed
+New nodes should not be proposed because “the stack got too tall.”
 
-If a topic cluster becomes dense enough that flat pages are no longer navigable, the agent should propose a new branch node.
+New nodes should be proposed because they are the best transformation of the information into the right structure for the knowledge base.
 
-Example pattern:
+The agent must continuously reevaluate:
 
-- existing flat sibling set becomes too large or too repetitive
-- the agent identifies a stable organizing dimension
-- the agent proposes a new subtree node
-- child pages move under it
-- the new branch page becomes the landing page and index for those children
-
-This is the correct scaling pattern for 100s or 1000s of pages.
+- what new information exists
+- how it changes the existing structure
+- whether a better node arrangement is now justified
 
 ### Branch node behavior
 
@@ -489,36 +586,36 @@ A real branch node is not a useless summary page.
 
 It should contain:
 
-- a clear description of the topic area
-- navigation to its child pages
-- optional guidance for how to use that section
+- what the node is
+- why the node exists
+- the index of child pages
+- short descriptions of child pages
+- guidance for how the section should be used
 
-It should serve as the human index for that branch.
+Branch nodes need deliberate validation and heal behavior so they never become empty shells.
 
-## Reindexing and Local Navigation
+## Reindexing and Navigation
 
-Git may contain co-located `index.md` files to support local navigation.
+Git may contain co-located `index.md` files for local navigation.
 
-Those indexes are useful on the Git side because they:
+However, the Confluence requirement is stronger:
 
-- summarize the contents of a folder
-- make tree structure visible in-repo
-- help the agent understand local topology
+- every branch page in the Confluence tree must describe what that page is
+- every branch page must show its child index
+- every child in that index should have a brief description
 
-However, not every Git `index.md` should automatically become a Confluence page.
+The distinction is:
 
-The correct rule is:
+- machine-only helper indexes stay out of Confluence
+- intentional branch indexes must be rendered into the parent branch page in Confluence
 
-- only intentional branch indexes should mirror to Confluence
-- raw machine-helper indexes should remain Git-only
-
-That distinction matters because Confluence must stay curated.
+Curio needs validation and healability for this.
 
 ## Sync to Confluence
 
 ### Goal
 
-Mirror the curated Git-published corpus into a human-facing Confluence tree.
+Mirror the curated Git state into a human-facing Confluence tree.
 
 ### Confluence write model
 
@@ -538,143 +635,100 @@ Confluence should receive:
 
 - curated published branch pages
 - curated published leaf pages
-- human-meaningful lane pages where appropriate
+- staged proposals that humans need to inspect
+- review proposals that humans need to inspect
+- branch descriptions and child-page indexes
 - config reference pages under `Config`
 
 ### What should not sync
 
 Confluence should not receive:
 
-- audit trail
-- sharpening proposals
 - raw helper files
 - machine-only indexes
 - low-signal placeholders
-- repo-only operational artifacts
+- repo-only operational artifacts that humans do not need to inspect
 
 ### Sync checks
 
 Before or during sync, Curio must validate:
 
-- all published pages have a valid route
 - all synced pages are intended human-facing content
-- parent-child placement matches the Git tree
+- parent-child placement matches the approved hierarchy
+- every branch page has a description
+- every branch page has a child index with brief descriptions
 - write target is inside the managed Confluence root
-
-### Confluence branch page rule
-
-If a Git node represents a real curated branch, Confluence should get a corresponding branch page.
-
-That branch page should:
-
-- live in the correct place in the page tree
-- include navigational index content for child pages
-
-Without this, the Confluence tree becomes unusable as the corpus grows.
 
 ### Stale page cleanup
 
 The managed Confluence subtree must be pruned when pages are removed or relocated in Git.
 
-Otherwise stale pages accumulate and the mirror stops representing the repo.
+Otherwise the mirror stops representing the repo.
 
-The `Published` subtree should be treated as authoritative under the Curio-managed root.
+## Audit and Proposal Storage
 
-## Audit Trail
+Audit and proposal state should live under `_config`, not under `wiki/.curio`.
 
-Curio maintains a Git-tracked audit trail at `wiki/.curio/audit.jsonl`.
+Target locations should be:
 
-### Purpose
+- `wiki/_config/audit.jsonl`
+- `wiki/_config/sharpening-proposals/`
 
-The audit trail records operational events such as:
+`wiki/.curio` should be eliminated.
 
-- sync actions
-- major pipeline changes
-- exceptional actions
+Audit should remain Git-tracked and should never mirror to Confluence.
 
-### Constraints
-
-Audit should be:
-
-- Git-visible
-- compacted periodically
-- never mirrored to Confluence
+Proposals should remain Git-tracked and should also surface into Confluence `Review` when human review is needed.
 
 ## Self-Sharpening
 
 ### Goal
 
-Review existing curated knowledge and propose structural or content improvements without auto-applying them.
+Review the existing knowledge base and propose improvements without auto-applying them.
 
-This is a periodic curation improvement loop, not the same as intake routing.
-
-### What sharpening should look for
+### What sharpening should detect
 
 Sharpening should detect:
 
-- likely duplicate pages
-- near-duplicate pages
-- oversized pages that should split
-- fragmented clusters that should consolidate
+- semantic duplicates
+- near-duplicates
+- merge opportunities
+- split opportunities
 - weak titles
-- weak routing
-- low-signal pages that should be demoted or removed
-- clusters that justify a new subtree
+- weak routes
+- weak hierarchy
+- low-signal pages
+- opportunities for better node structure
 
-### What sharpening produces
+### Sharpening outputs
 
-Sharpening should produce proposals, not direct automatic mutations.
+Sharpening produces proposals, not direct mutations.
 
-A proposal should include:
+All such proposals must go to `Review`.
 
-- proposal type
-- affected pages
-- rationale
-- evidence
-- confidence
-- expected benefit
+They may also be stored in Git as durable proposal records.
 
-Sharpening proposals may be stored in Git, but proposals requiring human review should also be represented in Confluence `Review`.
+## End-to-End Flow
 
-### Important scaling rule
-
-When a topic cluster becomes too broad, the agent should not create:
-
-- one useless summary plus many siblings
-
-It should propose:
-
-- a real new branch node
-- child pages beneath it
-- a usable branch index
-
-That is the only scalable pattern for large corpora.
-
-## End-to-End Decision Flow
-
-This is the intended operational sequence after content enters Curio.
-
-1. New source material is captured into `intake` with provenance.
-2. Deterministic intake checks confirm the source is usable.
-3. The agent analyzes title, dominant topic, and content.
-4. The agent selects the best existing tree/subtree or determines that no existing subtree fits.
-5. The agent emits a structured routing decision.
-6. Deterministic validation checks the decision against `northstar`.
-7. If the route is valid and confidence is sufficient, the item moves to `staged`.
-8. The item must also clear information quality and usability thresholds before it is eligible to move toward publication.
-9. If the route is ambiguous, the quality is weak, or no good subtree exists, the item moves to `review`.
-10. If no subtree fits, the review item includes a new-subtree proposal.
-11. Review items and proposals that humans need to inspect should surface in Confluence `Review`.
-12. A human or higher-judgment curation pass resolves review items.
-13. Eligible staged content is published into the Git `published/` tree.
-14. Reindex updates local Git navigation.
-15. Sync mirrors the curated published tree to Confluence.
-16. Stale Confluence descendants are removed from the managed subtree.
-17. Periodic sharpening analyzes the published corpus and emits improvement proposals.
+1. One intake request is created with one or more sources.
+2. Curio verifies that the sources are usable for analysis.
+3. The agent inspects the sources and the existing knowledge structure.
+4. The agent decides how many proposals should result from the intake request.
+5. For each proposal, the agent synthesizes:
+   - the proposed page or hierarchy change
+   - the supporting dossier
+6. The agent evaluates route fit, hierarchy fit, overlap, quality, usability, and value of information.
+7. Strong proposals move to `staged`.
+8. Ambiguous, weak, structural, or approval-requiring proposals move to `review`.
+9. Taxonomy mutations produce explicit node proposals targeting `northstar.json`.
+10. Humans review the necessary staged / review items in Confluence and Git.
+11. Approved staged items publish into the Git `published` tree.
+12. Reindex updates local navigation.
+13. Sync mirrors published, staged, and review surfaces into Confluence.
+14. Stale Confluence descendants are removed.
+15. Sharpening periodically creates new review proposals for consolidation or restructuring.
 
 ## Non-Negotiable Rules
-
-The following rules are critical.
 
 ### Rule 1
 
@@ -682,7 +736,7 @@ There is no valid published uncategorized content.
 
 ### Rule 2
 
-Routing is based primarily on title plus dominant content topic.
+Routing and curation are based on title, dominant content topic, value of information, and the existing knowledge structure.
 
 ### Rule 3
 
@@ -690,19 +744,19 @@ Incidental mentions are weak evidence.
 
 ### Rule 4
 
-Confluence is curated output, not a mirror of all repo noise.
+Confluence is curated output and human review surface, not a mirror of repo noise.
 
 ### Rule 5
 
-If the tree is insufficient, the agent must propose a new branch node rather than forcing bad publication.
+If the hierarchy is insufficient, the agent must propose a new node rather than forcing bad publication.
 
 ### Rule 6
 
-Real branch nodes in the tree must have a usable index / landing page in Confluence.
+Real branch nodes must have usable descriptions and child indexes in Confluence.
 
 ### Rule 7
 
-Duplicate titles are a curation warning signal, not a normal operating condition.
+Semantic overlap is a curation warning signal, not just exact duplicate titles.
 
 ### Rule 8
 
@@ -714,7 +768,7 @@ Do not shortcut new curation or structural curation directly into `published`. P
 
 ### Rule 10
 
-Anything a human must review operationally should be visible in Confluence `Review`, not only in Git.
+Anything a human must review operationally must be visible in Confluence `Review`.
 
 ### Rule 11
 
@@ -722,12 +776,10 @@ Low-signal content must be rejected back to `review` for improvement, consolidat
 
 ## Open Design Follow-Ups
 
-These are the next technical design items that follow from this document.
-
-1. Define the exact structure of the routing analysis artifact.
-2. Define the exact structure of the new-subtree proposal artifact.
-3. Distinguish explicitly between Git-only helper indexes and Confluence branch indexes.
-4. Implement branch-node publishing so subtree landing pages in Confluence include their child index.
-5. Tighten duplicate detection so duplicate-title fallback becomes rare.
-6. Add a density / cluster threshold that triggers branch-node proposals earlier.
-7. Define the minimum information quality / usability gate for publish decisions.
+1. Define the exact schema for intake requests with multiple sources.
+2. Define the exact schema for proposal dossiers.
+3. Define the exact schema for `northstar.json`.
+4. Implement branch-page child indexes and descriptions in Confluence as a first-class validated feature.
+5. Replace title-only duplicate logic with stronger semantic overlap checks.
+6. Move audit and proposal storage under `_config` and remove `wiki/.curio`.
+7. Add explicit validation / healing for branch-node descriptions and child indexes.

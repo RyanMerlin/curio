@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "generated_from": "northstar.md",
+  "generated_at": "2026-04-14T03:26:13Z",
+  "nodes": [
+    {
+      "title": "Account-tree",
+      "slug": "account-tree",
+      "description_markdown": "> Customer- and account-specific intelligence, deliverables, and reusable account knowledge.\n> Not a generic catch-all for any page that mentions an account.\n\n**Metadata to track:** source lineage, status, downstream references",
+      "icon": "1f3e2",
+      "children": []
+    },
+    {
+      "title": "Product-tree",
+      "slug": "product-tree",
+      "description_markdown": "> Product-centric guidance, playbooks, and reference content.\n> Not temporary workspace for raw feature notes or launch scraps.\n\n**Metadata to track:** product owner, canonical source, related pages",
+      "icon": "1f4e6",
+      "children": [
+        {
+          "title": "Alteryx Server",
+          "slug": "alteryx-server",
+          "description_markdown": "> Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns.",
+          "icon": "1f5a5",
+          "children": []
+        },
+        {
+          "title": "Alteryx Designer",
+          "slug": "alteryx-designer",
+          "description_markdown": "> Designer-specific guidance: workflow patterns, best practices, and troubleshooting.",
+          "icon": "270f",
+          "children": []
+        },
+        {
+          "title": "Intelligence Suite",
+          "slug": "intelligence-suite",
+          "description_markdown": "> AI/ML tooling guidance, AutoML patterns, and integration playbooks.",
+          "icon": "1f9e0",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Use-Case-tree",
+      "slug": "use-case-tree",
+      "description_markdown": "> Repeatable workflows, scenarios, and operating playbooks.\n> Not a random bucket for one-off content.\n\n**Metadata to track:** trigger conditions, inputs, expected outputs",
+      "icon": "1f504",
+      "children": []
+    },
+    {
+      "title": "Topic-tree",
+      "slug": "topic-tree",
+      "description_markdown": "> Subject matter pages when no stronger route applies.\n> Not a dumping ground.\n\n**Metadata to track:** synonyms, related terms, canonical references",
+      "icon": "1f4da",
+      "children": []
+    }
+  ]
+}

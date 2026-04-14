@@ -406,7 +406,7 @@ fn resolve_env_value(
         "CURIO_SPACE_KEY" => ("CURIO".to_string(), ValueSource::Default),
         "CURIO_CONFLUENCE_PARENT_PAGE_ID" => (String::new(), ValueSource::Default),
         "CURIO_TEMP_DIR" => (String::new(), ValueSource::Default),
-        "CURIO_AUDIT_DIR" => ("${REPO_ROOT}/wiki/.curio".to_string(), ValueSource::Default),
+        "CURIO_AUDIT_DIR" => ("${REPO_ROOT}/wiki/_config".to_string(), ValueSource::Default),
         _ => (String::new(), ValueSource::Missing),
     }
 }

@@ -15,14 +15,15 @@ use std::path::{Path, PathBuf};
 use crate::{
     config::{Config, upsert_repo_env_var},
     confluence::ConfluenceClient,
+    northstar::{load_taxonomy, sync_taxonomy_from_markdown, NorthstarTaxonomy, TaxonomyNode},
     output::emit_json,
+    proposal::load_proposal_record,
     quality::assess_quality,
     reconcile::RoutingAnalysis,
     wiki_fs::{content_hash, parse_wiki_page, strip_frontmatter},
     wiki_index::append_log,
 };
 
-const CHILDREN_MACRO: &str = "";
 const SYNC_PROP_KEY: &str = "curio-sync";
 const ICON_PROP_KEY: &str = "emoji-title-published";
 pub const CURIO_ROOT_TITLE: &str = "CURIO";
@@ -72,6 +73,7 @@ pub async fn run_sync(
 
     let wiki_dir = &config.wiki.wiki_dir;
     let published_dir = wiki_dir.join("published");
+    let _ = sync_taxonomy_from_markdown(wiki_dir);
 
     if !published_dir.exists() {
         anyhow::bail!("wiki/published/ not found. Run `curio init` first.");
@@ -128,7 +130,7 @@ pub async fn run_sync(
                 .with_context(|| format!("Failed to read {}", path.display()))?;
             let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
             let html_body = if stem == "northstar" {
-                let trees = parse_northstar_blueprint(body_md);
+                let trees = taxonomy_to_tree_nodes(&load_taxonomy(wiki_dir)?);
                 render_northstar_for_confluence(body_md, &trees)
             } else if ext == "md" {
                 markdown_to_html(body_md)
@@ -173,14 +175,8 @@ pub async fn run_sync(
         }
     }
 
-    // Parse NORTHSTAR blueprint for tree descriptions
-    let northstar_path = wiki_dir.join("_config").join("northstar.md");
-    let northstar_trees: Vec<TreeNode> = if northstar_path.exists() {
-        let ns_md = std::fs::read_to_string(&northstar_path).unwrap_or_default();
-        parse_northstar_blueprint(&ns_md)
-    } else {
-        Vec::new()
-    };
+    let taxonomy = load_taxonomy(wiki_dir)?;
+    let northstar_trees: Vec<TreeNode> = taxonomy_to_tree_nodes(&taxonomy);
     validate_published_sync_inputs(&published_dir, &northstar_trees)?;
     // Build slug → (title, description_html, icon, subtree_slug → (title, desc_html, icon)) lookup
     type SubMap = HashMap<String, (String, String, Option<String>)>;
@@ -225,13 +221,13 @@ pub async fn run_sync(
             let (page_title, dir_body, ns_icon) = if depth == 1 {
                 // Top-level tree dir: use NORTHSTAR title, description, and icon
                 if let Some((ns_title, ns_desc, icon, _)) = tree_info.get(&name) {
-                    let body = format!(
-                        "{}",
-                        if ns_desc.trim().is_empty() { String::new() } else { ns_desc.clone() }
-                    );
-                    (ns_title.clone(), body, icon.clone())
+                    let page_title = ns_title.clone();
+                    let body = render_branch_page_body(&abs_path, ns_desc, &page_title)?;
+                    (page_title, body, icon.clone())
                 } else {
-                    (to_title(&name), CHILDREN_MACRO.to_string(), None)
+                    let fallback_title = to_title(&name);
+                    let body = render_branch_page_body(&abs_path, "", &fallback_title)?;
+                    (fallback_title, body, None)
                 }
             } else if depth == 2 {
                 // Subtree dir: look up in parent's subtree list
@@ -241,16 +237,17 @@ pub async fn run_sync(
                     .and_then(|(_, _, _, subs)| subs.get(&name))
                     .map(|(t, d, i)| (t.clone(), d.clone(), i.clone()));
                 if let Some((sub_title, sub_desc, sub_icon)) = sub_info {
-                    let body = format!(
-                        "{}",
-                        if sub_desc.trim().is_empty() { String::new() } else { sub_desc }
-                    );
+                    let body = render_branch_page_body(&abs_path, &sub_desc, &sub_title)?;
                     (sub_title, body, sub_icon)
                 } else {
-                    (to_title(&name), CHILDREN_MACRO.to_string(), None)
+                    let fallback_title = to_title(&name);
+                    let body = render_branch_page_body(&abs_path, "", &fallback_title)?;
+                    (fallback_title, body, None)
                 }
             } else {
-                (to_title(&name), CHILDREN_MACRO.to_string(), None)
+                let fallback_title = to_title(&name);
+                let body = render_branch_page_body(&abs_path, "", &fallback_title)?;
+                (fallback_title, body, None)
             };
 
             if dry_run {
@@ -313,10 +310,18 @@ pub async fn run_sync(
         &mut errors,
     )
     .await?;
+    let proposals_dir = {
+        let new_dir = wiki_dir.join("_config").join("sharpening-proposals");
+        if new_dir.exists() {
+            new_dir
+        } else {
+            wiki_dir.join(".curio").join("sharpening-proposals")
+        }
+    };
     sync_review_proposals(
         &client,
         space_key,
-        &wiki_dir.join(".curio").join("sharpening-proposals"),
+        &proposals_dir,
         tree.review_proposals_id.as_str(),
         &mut synced_page_ids,
         &mut skipped,
@@ -409,7 +414,7 @@ pub async fn ensure_curio_confluence_tree(
         Some(page_icon("published").unwrap_or("atlassian-check_mark")),
     )
     .await?;
-    let staged_id = upsert_static_page(
+    let _intake_id = upsert_static_page(
         client,
         space_key,
         Some(root_id.as_str()),
@@ -422,7 +427,7 @@ pub async fn ensure_curio_confluence_tree(
         None,
     )
     .await?;
-    let review_id = upsert_static_page(
+    let staged_id = upsert_static_page(
         client,
         space_key,
         Some(root_id.as_str()),
@@ -435,17 +440,7 @@ pub async fn ensure_curio_confluence_tree(
         None,
     )
     .await?;
-    let review_proposals_id = upsert_static_page(
-        client,
-        space_key,
-        Some(review_id.as_str()),
-        "Review Proposals",
-        "<p>Curio sharpening and taxonomy proposals that require human review.</p>",
-        "proposals",
-        None,
-    )
-    .await?;
-    let _ = upsert_static_page(
+    let review_id = upsert_static_page(
         client,
         space_key,
         Some(root_id.as_str()),
@@ -455,6 +450,16 @@ pub async fn ensure_curio_confluence_tree(
             "Use <code>curio review</code> to inspect them and <code>curio resolve</code> to route them.",
         ),
         "review",
+        None,
+    )
+    .await?;
+    let review_proposals_id = upsert_static_page(
+        client,
+        space_key,
+        Some(review_id.as_str()),
+        "Review Proposals",
+        "<p>Curio sharpening and taxonomy proposals that require human review.</p>",
+        "proposals",
         None,
     )
     .await?;
@@ -492,7 +497,7 @@ pub async fn ensure_curio_confluence_tree(
                 .with_context(|| format!("Failed to read {}", path.display()))?;
             let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
             let html_body = if stem == "northstar" {
-                let trees = parse_northstar_blueprint(body_md);
+                let trees = taxonomy_to_tree_nodes(&load_taxonomy(&config.wiki.wiki_dir)?);
                 render_northstar_for_confluence(body_md, &trees)
             } else if ext == "md" {
                 markdown_to_html(body_md)
@@ -513,19 +518,10 @@ pub async fn ensure_curio_confluence_tree(
         }
     }
 
-    let northstar_path = config.wiki.wiki_dir.join("_config").join("northstar.md");
-    let northstar_md = std::fs::read_to_string(&northstar_path).unwrap_or_default();
-    let trees = if northstar_md.is_empty() {
-        Vec::new()
-    } else {
-        parse_northstar_blueprint(&northstar_md)
-    };
+    let taxonomy = load_taxonomy(&config.wiki.wiki_dir)?;
+    let trees = taxonomy_to_tree_nodes(&taxonomy);
     for tree in &trees {
-        let body = if tree.description_html.trim().is_empty() {
-            CHILDREN_MACRO.to_string()
-        } else {
-            tree.description_html.clone()
-        };
+        let body = render_branch_summary_only(&tree.title, &tree.description_html, &tree.subtrees);
         let _ = upsert_static_page(
             client,
             space_key,
@@ -564,6 +560,7 @@ pub async fn ensure_curio_confluence_tree(
         config_id,
     })
 }
+
 
 async fn ensure_curio_root_page(
     config: &Config,
@@ -657,6 +654,44 @@ fn pipeline_body(summary: &str, detail: &str) -> String {
         "<p>{}</p><p>{}</p><p>This page is maintained automatically by Curio.</p>",
         summary, detail
     )
+}
+
+fn render_branch_summary_only(title: &str, description_html: &str, children: &[TreeNode]) -> String {
+    let mut body = String::new();
+    body.push_str(&format!("<h1>{}</h1>", html_escape(title)));
+    if !description_html.trim().is_empty() {
+        body.push_str(description_html);
+    }
+    if !children.is_empty() {
+        body.push_str("<h2>Child Sections</h2><ul>");
+        for child in children {
+            body.push_str(&format!(
+                "<li><strong>{}</strong>{}</li>",
+                html_escape(&child.title),
+                if child.description_html.trim().is_empty() {
+                    String::new()
+                } else {
+                    format!(" — {}", html_escape(&inline_desc(&child.description_html)))
+                }
+            ));
+        }
+        body.push_str("</ul>");
+    }
+    body
+}
+
+fn render_branch_page_body(dir_path: &Path, fallback_description_html: &str, title: &str) -> Result<String> {
+    let index_path = dir_path.join("index.md");
+    if index_path.exists() {
+        let raw = std::fs::read_to_string(&index_path)
+            .with_context(|| format!("Failed to read {}", index_path.display()))?;
+        let stripped = strip_frontmatter(&raw);
+        let html = markdown_to_html(stripped);
+        if !html.trim().is_empty() {
+            return Ok(html);
+        }
+    }
+    Ok(render_branch_summary_only(title, fallback_description_html, &[]))
 }
 
 fn page_link(space_key: &str, title: &str, label: &str) -> String {
@@ -758,7 +793,7 @@ fn collect_sorted_entries(root: &Path) -> Result<Vec<(PathBuf, bool)>> {
                 continue;
             }
             // Skip *.analysis.json — machine provenance, never synced
-            if name.ends_with(".analysis.json") {
+            if name.ends_with(".analysis.json") || name.ends_with(".proposal.json") {
                 continue;
             }
         }
@@ -793,7 +828,7 @@ fn validate_published_sync_inputs(root: &Path, trees: &[TreeNode]) -> Result<()>
         }
 
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name == "index.md" || name == ".gitkeep" || name.ends_with(".analysis.json") {
+        if name == "index.md" || name == ".gitkeep" || name.ends_with(".analysis.json") || name.ends_with(".proposal.json") {
             continue;
         }
 
@@ -892,12 +927,13 @@ async fn sync_lane_directory(
                 continue;
             }
             let page_title = lane_display_title(lane, &rel_path);
+            let branch_body = render_lane_branch_body(root_dir, &rel_path, lane)?;
             match upsert_page(
                 client,
                 space_key,
                 parent_conf_id.as_deref(),
                 &page_title,
-                CHILDREN_MACRO,
+                &branch_body,
                 &name,
                 None,
             )
@@ -1164,6 +1200,7 @@ async fn sync_page_html(
 fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Result<String> {
     let quality = assess_quality(&page.frontmatter.title, &page.body);
     let analysis = read_analysis_sidecar(path);
+    let proposal = load_proposal_record(path).ok().flatten();
     let route = if page.frontmatter.category.is_empty() {
         "unrouted".to_string()
     } else {
@@ -1188,6 +1225,24 @@ fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Res
         "<tr><th>Usability</th><td>{:.0}%</td></tr>",
         quality.usability * 100.0
     ));
+    if let Some(ref proposal) = proposal {
+        body.push_str(&format!(
+            "<tr><th>Proposal kind</th><td>{}</td></tr>",
+            html_escape(&format!("{:?}", proposal.kind))
+        ));
+        body.push_str(&format!(
+            "<tr><th>Recommended action</th><td>{}</td></tr>",
+            html_escape(&proposal.recommended_action)
+        ));
+        body.push_str(&format!(
+            "<tr><th>Hierarchy fit</th><td>{:.0}%</td></tr>",
+            proposal.scores.hierarchy_fit_confidence * 100.0
+        ));
+        body.push_str(&format!(
+            "<tr><th>Overlap risk</th><td>{:.0}%</td></tr>",
+            proposal.scores.overlap_risk * 100.0
+        ));
+    }
     if !quality.flags.is_empty() {
         body.push_str(&format!(
             "<tr><th>Quality flags</th><td>{}</td></tr>",
@@ -1222,6 +1277,48 @@ fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Res
     }
     body.push_str("</tbody></table>");
     body.push_str(&markdown_to_html(&page.body));
+    Ok(body)
+}
+
+fn render_lane_branch_body(root_dir: &Path, rel_path: &Path, lane: &str) -> Result<String> {
+    let abs_dir = root_dir.join(rel_path);
+    let mut children: Vec<(String, String)> = Vec::new();
+    for entry in std::fs::read_dir(&abs_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_file()
+            || path.extension().and_then(|ext| ext.to_str()) != Some("md")
+            || path.file_name().and_then(|name| name.to_str()) == Some("index.md")
+        {
+            continue;
+        }
+        let page = match parse_wiki_page(&path) {
+            Ok(page) => page,
+            Err(_) => continue,
+        };
+        children.push((page.frontmatter.title, crate::wiki_fs::first_line_summary(&page.body, 160)));
+    }
+    children.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut body = format!(
+        "<p>{} proposal branch for <code>{}</code>.</p>",
+        html_escape(&to_title(lane)),
+        html_escape(&rel_path.display().to_string())
+    );
+    if !children.is_empty() {
+        body.push_str("<h2>Child Proposals</h2><ul>");
+        for (title, summary) in children {
+            body.push_str(&format!(
+                "<li><strong>{}</strong>{}</li>",
+                html_escape(&title),
+                if summary.is_empty() {
+                    String::new()
+                } else {
+                    format!(" — {}", html_escape(&summary))
+                }
+            ));
+        }
+        body.push_str("</ul>");
+    }
     Ok(body)
 }
 
@@ -1589,6 +1686,24 @@ fn html_escape(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
+fn taxonomy_to_tree_nodes(taxonomy: &NorthstarTaxonomy) -> Vec<TreeNode> {
+    taxonomy.nodes.iter().map(tree_node_from_taxonomy).collect()
+}
+
+pub(crate) fn tree_node_from_taxonomy(node: &TaxonomyNode) -> TreeNode {
+    TreeNode {
+        title: node.title.clone(),
+        slug: node.slug.clone(),
+        description_html: if node.description_markdown.trim().is_empty() {
+            String::new()
+        } else {
+            markdown_to_html(&node.description_markdown)
+        },
+        icon: node.icon.clone(),
+        subtrees: node.children.iter().map(tree_node_from_taxonomy).collect(),
+    }
+}
+
 // ─── NORTHSTAR blueprint parser ───────────────────────────────────────────
 
 #[derive(Debug, Default, Clone)]
@@ -1642,7 +1757,12 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
             } else {
                 // Flush description into current tree
                 let html = flush_desc(&mut desc_lines);
-                if let Some(ref mut t) = current_tree { t.description_html = html; }
+                if let Some(ref mut t) = current_tree {
+                    t.description_html = html;
+                }
+            }
+            if current_tree.is_none() {
+                desc_lines.clear();
             }
             // Flush current tree
             if let Some(t) = current_tree.take() {

@@ -41,7 +41,7 @@ pub fn remove_registry_entry(wiki_dir: &Path, id: &str) -> Result<()> {
 // ─── Reindex from filesystem ─────────────────────────────────────────────
 
 /// Walk `wiki_dir/**/*.md`, parse frontmatter, and rebuild `WikiIndex`.
-/// Skips `_config/`, `.curio/`, and generated `index.md` files.
+/// Skips `_config/` and generated `index.md` files.
 pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
     let mut pages = Vec::new();
 
@@ -63,7 +63,7 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
         let first = rel.components().next()
             .map(|c| c.as_os_str().to_string_lossy().into_owned())
             .unwrap_or_default();
-        if matches!(first.as_str(), "_config" | ".curio") {
+        if first == "_config" {
             continue;
         }
 
@@ -216,35 +216,10 @@ pub fn rebuild_colocated_indexes(
         }
     }
 
-    // ── Uncategorized fallback ───────────────────────────────────────────
-    // Pages that don't match any known tree get written to published/uncategorized/index.md
-    let uncategorized: Vec<&&WikiIndexEntry> = published_pages
-        .iter()
-        .filter(|e| {
-            let tree = e.category.first().map(|s| s.as_str()).unwrap_or("uncategorized");
-            !trees.iter().any(|t| t.slug == tree)
-        })
-        .collect();
-
-    if !uncategorized.is_empty() {
-        let unc_dir = published_dir.join("uncategorized");
-        std::fs::create_dir_all(&unc_dir)?;
-        let mut md = format!("# Uncategorized\n> Pages not yet routed to a tree.\n> {} pages | updated {}\n\n", uncategorized.len(), now);
-        md.push_str("| Title | Summary | Updated |\n|-------|---------|--------|\n");
-        for e in &uncategorized {
-            let fname = e.path.split('/').last().unwrap_or(&e.path);
-            md.push_str(&format!(
-                "| [{}]({}) | {} | {} |\n",
-                e.title, fname, e.summary, short_date(&e.updated_at)
-            ));
-        }
-        std::fs::write(unc_dir.join("index.md"), md)?;
-    } else {
-        let unc_dir = published_dir.join("uncategorized");
-        if unc_dir.exists() {
-            let _ = std::fs::remove_file(unc_dir.join("index.md"));
-            let _ = std::fs::remove_dir(&unc_dir);
-        }
+    let unc_dir = published_dir.join("uncategorized");
+    if unc_dir.exists() {
+        let _ = std::fs::remove_file(unc_dir.join("index.md"));
+        let _ = std::fs::remove_dir(&unc_dir);
     }
 
     Ok(())
@@ -360,14 +335,35 @@ pub fn read_index_md(wiki_dir: &Path) -> Result<String> {
 
 /// Rebuild the filesystem-derived catalog and regenerate the co-located indexes.
 pub fn rebuild_index_md(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
-    // Try to load NORTHSTAR trees for richer output
-    let ns_path = wiki_dir.join("_config/northstar.md");
-    let trees = if ns_path.exists() {
-        let md = std::fs::read_to_string(&ns_path).unwrap_or_default();
-        crate::commands::sync::parse_northstar_blueprint(&md)
-    } else {
-        vec![]
-    };
+    let trees = crate::northstar::load_taxonomy(wiki_dir)
+        .map(|taxonomy| {
+            taxonomy
+                .nodes
+                .iter()
+                .map(|node| crate::commands::sync::TreeNode {
+                    title: node.title.clone(),
+                    slug: node.slug.clone(),
+                    description_html: if node.description_markdown.trim().is_empty() {
+                        String::new()
+                    } else {
+                        crate::md_to_confluence::markdown_to_storage(&node.description_markdown).unwrap_or_default()
+                    },
+                    icon: node.icon.clone(),
+                    subtrees: node.children.iter().map(|child| crate::commands::sync::TreeNode {
+                        title: child.title.clone(),
+                        slug: child.slug.clone(),
+                        description_html: if child.description_markdown.trim().is_empty() {
+                            String::new()
+                        } else {
+                            crate::md_to_confluence::markdown_to_storage(&child.description_markdown).unwrap_or_default()
+                        },
+                        icon: child.icon.clone(),
+                        subtrees: vec![],
+                    }).collect(),
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
     let catalog = if index.pages.is_empty() {
         reindex_from_filesystem(wiki_dir)?
     } else {

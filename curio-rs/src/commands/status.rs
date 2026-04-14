@@ -2,7 +2,7 @@
 ///
 /// Shows:
 ///  - Page counts per pipeline stage (intake / staged / review / published)
-///  - Last sync timestamp (from `wiki/.curio/audit.jsonl`)
+///  - Last sync timestamp (from `wiki/_config/audit.jsonl`)
 ///  - Index freshness warning when published pages are newer than published/index.md
 use anyhow::Result;
 use std::path::Path;

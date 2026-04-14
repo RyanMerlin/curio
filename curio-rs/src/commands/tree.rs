@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::{commands::sync::parse_northstar_blueprint, config::Config, git_ops, output::emit_json};
+use crate::{commands::sync::parse_northstar_blueprint, config::Config, git_ops, northstar::sync_taxonomy_from_markdown, output::emit_json};
 
 /// Sync the `wiki/published/` directory tree to match the NORTHSTAR blueprint.
 ///
@@ -20,6 +20,7 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
     }
 
     let ns_md = std::fs::read_to_string(&northstar_path)?;
+    let _ = sync_taxonomy_from_markdown(wiki_dir);
     let trees = parse_northstar_blueprint(&ns_md);
 
     if trees.is_empty() {

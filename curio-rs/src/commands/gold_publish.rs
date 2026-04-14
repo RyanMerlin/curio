@@ -5,7 +5,10 @@ use std::path::PathBuf;
 
 use crate::{
     config::Config,
+    northstar::{load_taxonomy, taxonomy_path_exists},
+    overlap::find_peer_overlap,
     output::emit_json,
+    proposal::load_proposal_record,
     quality::assess_quality,
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
@@ -35,6 +38,7 @@ pub async fn run_publish(
 
     let mut page = parse_wiki_page(&src_path)?;
     let quality = assess_quality(&page.frontmatter.title, &page.body);
+    let taxonomy = load_taxonomy(wiki_dir)?;
     if !quality.publishable {
         anyhow::bail!(
             "Cannot publish '{}' because the content is too weak for published status (information quality {:.0}%, usability {:.0}%). Route it back through review for improvement, consolidation, or deletion.",
@@ -62,6 +66,30 @@ pub async fn run_publish(
             "Cannot publish '{}' without a valid category. Route it back through review instead of inventing a published fallback.",
             slug
         );
+    }
+    if !taxonomy_path_exists(&taxonomy, &cat_segments) {
+        anyhow::bail!(
+            "Cannot publish '{}' to invalid taxonomy path '{}'. Approve a taxonomy change first or keep it in review.",
+            slug,
+            cat_segments.join("/")
+        );
+    }
+    let overlap_matches = find_peer_overlap(wiki_dir, &cat_segments, &page.frontmatter.title, &page.body, Some(&slug))?;
+    if overlap_matches.first().map(|m| m.score).unwrap_or(0.0) >= 0.7 {
+        anyhow::bail!(
+            "Cannot publish '{}' because it semantically overlaps existing peer content (top match: {} at {:.0}%). Route it back through review for merge or consolidation.",
+            slug,
+            overlap_matches[0].path,
+            overlap_matches[0].score * 100.0
+        );
+    }
+    if let Some(proposal) = load_proposal_record(&src_path)? {
+        if !proposal.is_publish_ready() {
+            anyhow::bail!(
+                "Cannot publish '{}' because its proposal record is not yet publish-ready. Keep it in staged or review until the proposal clears quality, hierarchy, and overlap gates.",
+                slug
+            );
+        }
     }
 
     let cat_path: PathBuf = cat_segments.iter().collect();
@@ -103,6 +131,13 @@ pub async fn run_publish(
         let rel_asrc = analysis_src.strip_prefix(repo_root).unwrap_or(&analysis_src);
         let rel_adest = analysis_dest.strip_prefix(repo_root).unwrap_or(&analysis_dest);
         let _ = crate::git_ops::git_mv(repo_root, rel_asrc, rel_adest);
+    }
+    let proposal_src = crate::proposal::proposal_sidecar_path(&src_path);
+    if proposal_src.exists() {
+        let proposal_dest = crate::proposal::proposal_sidecar_path(&dest_path);
+        let rel_psrc = proposal_src.strip_prefix(repo_root).unwrap_or(&proposal_src);
+        let rel_pdest = proposal_dest.strip_prefix(repo_root).unwrap_or(&proposal_dest);
+        let _ = crate::git_ops::git_mv(repo_root, rel_psrc, rel_pdest);
     }
 
     let new_rel = dest_path

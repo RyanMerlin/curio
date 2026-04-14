@@ -1,4 +1,4 @@
 # Curio Wiki Configuration
 
-# Tree structure is defined in _config/northstar.md
+# Tree structure is defined in _config/northstar.json (generated from northstar.md)
 auto_commit: true

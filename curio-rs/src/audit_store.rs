@@ -32,11 +32,15 @@ fn audit_dir(wiki_dir: &Path) -> PathBuf {
             return if path.is_relative() { repo_root.join(path) } else { path };
         }
     }
-    wiki_dir.join(".curio")
+    wiki_dir.join("_config")
 }
 
 fn audit_log_path(wiki_dir: &Path) -> PathBuf {
     audit_dir(wiki_dir).join("audit.jsonl")
+}
+
+fn legacy_audit_log_path(wiki_dir: &Path) -> PathBuf {
+    wiki_dir.join(".curio").join("audit.jsonl")
 }
 
 fn ensure_audit_dir(wiki_dir: &Path) -> Result<()> {
@@ -54,7 +58,11 @@ fn parse_kind(entry: &str) -> String {
 }
 
 fn read_entries(wiki_dir: &Path) -> Result<Vec<AuditEntry>> {
-    let log_path = audit_log_path(wiki_dir);
+    let log_path = if audit_log_path(wiki_dir).exists() {
+        audit_log_path(wiki_dir)
+    } else {
+        legacy_audit_log_path(wiki_dir)
+    };
     if !log_path.exists() {
         return Ok(Vec::new());
     }
@@ -133,6 +141,16 @@ fn maybe_compact(wiki_dir: &Path) -> Result<()> {
 pub fn append_entry(wiki_dir: &Path, entry: &str) -> Result<()> {
     ensure_audit_dir(wiki_dir)?;
     let log_path = audit_log_path(wiki_dir);
+    let legacy_path = legacy_audit_log_path(wiki_dir);
+    if !log_path.exists() && legacy_path.exists() {
+        fs::copy(&legacy_path, &log_path).with_context(|| {
+            format!(
+                "Failed to migrate legacy audit log from {} to {}",
+                legacy_path.display(),
+                log_path.display()
+            )
+        })?;
+    }
     let audit_entry = AuditEntry {
         ts: Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string(),
         kind: parse_kind(entry),

@@ -5,7 +5,9 @@ use std::path::PathBuf;
 
 use crate::{
     config::Config,
+    northstar::{load_taxonomy, taxonomy_path_exists},
     output::emit_json,
+    proposal::{load_proposal_record, save_proposal_record, ProposalLane},
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
     PageStatus,
@@ -46,6 +48,7 @@ async fn do_resolve(
     let wiki_dir = &config.wiki.wiki_dir;
 
     let mut page = parse_wiki_page(src_path)?;
+    let taxonomy = load_taxonomy(wiki_dir)?;
 
     let cat_segments: Vec<String> = category
         .as_deref()
@@ -58,6 +61,19 @@ async fn do_resolve(
             "Cannot resolve '{}' to staged without a category. Keep it in review and attach a subtree proposal instead.",
             slug
         );
+    }
+    if !taxonomy_path_exists(&taxonomy, &cat_segments) {
+        anyhow::bail!(
+            "Cannot resolve '{}' to staged with invalid taxonomy path '{}'. Keep it in review and attach an approved taxonomy change proposal instead.",
+            slug,
+            cat_segments.join("/")
+        );
+    }
+    if let Some(mut proposal) = load_proposal_record(src_path)? {
+        proposal.target_path = cat_segments.clone();
+        proposal.lane = ProposalLane::Staged;
+        proposal.review_reason = None;
+        save_proposal_record(src_path, &proposal)?;
     }
 
     let cat_path: PathBuf = cat_segments.iter().collect();
@@ -87,6 +103,13 @@ async fn do_resolve(
     let rel_src = src_path.strip_prefix(repo_root).unwrap_or(src_path);
     let rel_dest = dest_path.strip_prefix(repo_root).unwrap_or(&dest_path);
     crate::git_ops::git_mv(repo_root, rel_src, rel_dest)?;
+    let proposal_src = crate::proposal::proposal_sidecar_path(src_path);
+    if proposal_src.exists() {
+        let proposal_dest = crate::proposal::proposal_sidecar_path(&dest_path);
+        let rel_psrc = proposal_src.strip_prefix(repo_root).unwrap_or(&proposal_src);
+        let rel_pdest = proposal_dest.strip_prefix(repo_root).unwrap_or(&proposal_dest);
+        crate::git_ops::git_mv(repo_root, rel_psrc, rel_pdest)?;
+    }
 
     let new_rel = dest_path
         .strip_prefix(wiki_dir)
