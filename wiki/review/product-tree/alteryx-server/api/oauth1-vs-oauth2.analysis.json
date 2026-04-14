@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:28Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "OAuth1 vs OAuth2",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640792985",
+    "content_hash": "sha256:eb70bcd8abffed21b09580ae27f8e2962f996f86721417a15aa8e9442401161d",
+    "content_preview": "> **ℹ️ Info**\n>\n> Details on the Server API’s transition from OAuth1 to OAuth2\n\n| **Server** | **OAuth1** | **OAuth2** | n/a |\n| --- | --- | --- | --- |\n| 22.1+ | noRed | yesGreen |  |\n| 21.4 crossover edition | yesGreen | yesGreen |  |\n| 21.3 and prior | yesGreen | noRed |  |\n\n# Links\n\n| **Call Server API from Workflow** | [Server API Tool +](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Server+API+Tool++)  [How to use the V3 API Pack](https://alteryx.atlassian.net/wiki/"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "api"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'api' required under 'product-tree/alteryx-server/api' — pending taxonomy approval",
+    "proposed_new_subtree": "api",
+    "proposal_rationale": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "oauth1",
+      "vs",
+      "oauth2"
+    ],
+    "keywords_extracted": [
+      "OAuth",
+      "call",
+      "Server",
+      "yesGreen",
+      "Make",
+      "they",
+      "talk",
+      "their"
+    ]
+  }
+}

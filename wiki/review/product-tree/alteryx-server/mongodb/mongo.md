@@ -1,21 +1,27 @@
 ---
 id: 71803fb0a56c46d2
 title: Mongo
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640793121
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793121
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- overview
+- hub
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:24Z
+confidence: 0.82
 cross_refs: []
 content_hash: sha256:8a5f857323323748706d9751e57f3b4e4d514d5bf41fa065cd50c4854a476198
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 **Issues / Errors**

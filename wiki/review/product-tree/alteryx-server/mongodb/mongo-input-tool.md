@@ -1,21 +1,29 @@
 ---
 id: 00f28039e7316a01
 title: Mongo Input Tool
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702763531
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702763531
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- input-tool
+- designer
+- query
+- diagnostic
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:23Z
+confidence: 0.83
 cross_refs: []
 content_hash: sha256:a9adaf5baf5fa9b724aae829e8831dc95a207bba6a80c1a209916b495e673350
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,21 +1,28 @@
 ---
 id: 5572620671e964e1
 title: MongoDB to SQL DB Migration
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2188215414
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2188215414
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- sql-db-persistence
+keywords:
+- sql-db
+- mongodb
+- migration
+- persistence
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:26Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:7a3ea731905fb64480223cb2eb04c8ddaf5df5b464c6354804cf5f399987726d
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

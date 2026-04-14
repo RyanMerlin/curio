@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:26Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "MongoDB Transaction Log",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1863156709",
+    "content_hash": "sha256:18a71b18ea0689b64ff87ca7fe56c62661e511b7561ba26a694637f42936e628",
+    "content_preview": "> **ℹ️ Info**\n>\n> Setup low level Mongo transaction logging\n\n| **Enable Logging** | [How To: Enable MongoDB logs in RuntimeSettings.xml](https://knowledge.alteryx.com/index/s/article/How-To-Enable-MongoDB-logs-in-RuntimeSettings-xml-1583461461810) (KB)  Edit RuntimeSettings.xml  ``` ]]> ``` |\n| --- | --- |\n| **Disable Logging** | [How To: Disable MongoDB logs in RuntimeSettings.xml](https://knowledge.alteryx.com/index/s/article/How-To-Disable-MongoDB-logs-in-RuntimeSettings-xml) (KB) |"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.43,
+    "usability": 0.86,
+    "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "mongodb",
+      "transaction",
+      "log"
+    ],
+    "keywords_extracted": [
+      "MongoDB",
+      "logs",
+      "Enable",
+      "Disable",
+      "Logging",
+      "RuntimeSettingsxmlhttpsknowledgealteryxcomindexsarticleHowToEnableMongoDBlogsinRuntimeSettingsxml",
+      "RuntimeSettingsxml",
+      "level"
+    ]
+  }
+}

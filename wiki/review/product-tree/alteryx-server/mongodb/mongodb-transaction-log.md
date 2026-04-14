@@ -1,21 +1,29 @@
 ---
 id: d298dcad71ddd292
 title: MongoDB Transaction Log
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1863156709
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1863156709
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- transaction-log
+- logging
+- debug
+- diagnostic
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:26Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:18a71b18ea0689b64ff87ca7fe56c62661e511b7561ba26a694637f42936e628
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

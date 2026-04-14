@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:24Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Mongo",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793121",
+    "content_hash": "sha256:8a5f857323323748706d9751e57f3b4e4d514d5bf41fa065cd50c4854a476198",
+    "content_preview": "**Issues / Errors**\n > [Issues](https://alteryx.atlassian.net/wiki/search?text=Issues+(Mongo))\n > [Errors](https://alteryx.atlassian.net/wiki/search?text=Errors+(Mongo))\n\n**How to**\n > [Reindex](https://alteryx.atlassian.net/wiki/search?text=Reindex+MongoDB)\n > [Backup](https://alteryx.atlassian.net/wiki/search?text=MongoDB+Backup)\n > [Restore](https://alteryx.atlassian.net/wiki/search?text=MongoDB+Restore)\n > [Repair](https://alteryx.atlassian.net/wiki/search?text=Repair+MongoDB)\n > [General Ho"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.82,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.78,
+    "review_reason": "Hub/index page — route as branch-node proposal for mongodb subtree",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "mongo"
+    ],
+    "keywords_extracted": [
+      "Mongo",
+      "BackuphttpsalteryxatlassiannetwikisearchtextMongoDBBackup",
+      "MongoDB",
+      "Embedded",
+      "RestorehttpsalteryxatlassiannetwikisearchtextMongoDBRestore",
+      "Schema",
+      "upgrhttpsalteryxatlassiannetwikisearchtextmigrationlogembeddedMongoversionupgrade",
+      "diaghttpsalteryxatlassiannetwikisearchtextMongoEntityRelationshipDiagramERD"
+    ]
+  }
+}
