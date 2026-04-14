@@ -1,5 +1,5 @@
 # Curio Knowledge Index
-> 30 pages | updated 2026-04-14 00:10 UTC
+> 30 pages | updated 2026-04-14 00:59 UTC
 
 ## Trees
 
