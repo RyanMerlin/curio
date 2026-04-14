@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:30Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "CryptoMigration in 22.3",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793170",
+    "content_hash": "sha256:fa09e92de0d821be1ca97d2e39ccfb54391a860038efe31f4086273fc24eee5b",
+    "content_preview": "Hub page: CryptoMigration in 22.3\n\n*This page serves as a section index with no prose body.*\n"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.78,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "low_word_count",
+      "thin_structure",
+      "low_unique_term_count"
+    ],
+    "information_quality": 0.0,
+    "usability": 0.26999998,
+    "review_reason": "Hub/section index; requires upgrade subtree taxonomy approval",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "cryptomigration",
+      "in",
+      "22.3"
+    ],
+    "keywords_extracted": [
+      "page",
+      "CryptoMigration",
+      "prose",
+      "index",
+      "This",
+      "section",
+      "serves",
+      "body"
+    ]
+  }
+}

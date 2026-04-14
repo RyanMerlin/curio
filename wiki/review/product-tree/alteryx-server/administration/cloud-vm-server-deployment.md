@@ -1,21 +1,29 @@
 ---
 id: 36b557ee678b5cbc
 title: Cloud / VM Server Deployment
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1698109505
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1698109505
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- cloud
+- aws
+- vm
+- deployment
+- infrastructure
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:27Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:5479258531622844adac7a8c841753ff40c8e18bc496112168842661c10e2a19
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **AWS** | [Best Practices for Deploying Alteryx Server on AWS](https://community.alteryx.com/pvsmt99345/attachments/pvsmt99345/server-discussions/6705/1/best-practices-for-deploying-alteryx-server-on-aws.pdf) (PDF) <== Tim R link |

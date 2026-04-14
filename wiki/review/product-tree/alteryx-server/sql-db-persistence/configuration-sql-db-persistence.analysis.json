@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:29Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Configuration (SQL DB Persistence)",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2650801612",
+    "content_hash": "sha256:6cfe622f43bf5e7543f835be31ca88d5c4684593d628cf7fa31529139e23a0df",
+    "content_preview": "---\n\n---\n\n| **Key Articles** | [How to stand up a new install of Alteryx Server with user-managed MSSQL persistence with custom database names](https://alteryx.lightning.force.com/kA0Uu0000000OtZKAU) (KB) |\n| --- | --- |\n| **Change SQL port** | While port 1433 is specified in the Connection string, to change it, you have to add **tcp:** in front of SQL Server name, ex:  Driver={ODBC Driver 17 for SQL Server};Server=**tcp:**sqlserver.example.com,**5352**;UID=MY_USER;PWD=MY_PSWD;Integrated Securit"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "sql-db-persistence"
+    ],
+    "confidence": 0.8,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.58000004,
+    "usability": 0.86,
+    "review_reason": "Hub/section index; requires sql-db-persistence subtree taxonomy approval",
+    "proposed_new_subtree": "sql-db-persistence",
+    "proposal_rationale": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "configuration",
+      "(sql",
+      "db",
+      "persistence)"
+    ],
+    "keywords_extracted": [
+      "APOD",
+      "Configure",
+      "Persistence",
+      "port",
+      "Server",
+      "MSSQL",
+      "ServertcpsqlserverexamplecomDatabaseAlteryxGalleryUser",
+      "PersistencehttpsalteryxatlassiannetwikispacesSupportCseBasicspagestitleConfigureAPODSQLDBPersistence"
+    ]
+  }
+}

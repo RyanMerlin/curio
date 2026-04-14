@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:30Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Controller Token Length Transition from 21.4 to 22.3",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1778614404",
+    "content_hash": "sha256:3112299704543de941251db0e9b1f922ccc0b180b8aceedfbd1aad1f45b62156",
+    "content_preview": "> **ℹ️ Info**\n>\n> The Controller Token length length changes in different versions\n\n> **⚠️ Warning**\n>\n> **Note**\n> \n> If regenerating the Controller Tolen, save a copy of the\n> \n> - Controller Token\n> - C:\\ProgramData\\Alteryx\\RuntimeSettings.xml\n> \n> These are needed if the customer needs to restore a previous Mongo backup.  Regenerating the Controller Token will also change RuntimeSettings.xml <**StorageKeysEncrypted**>\n> \n> # Controller Token Length and Impact on Host Recovery\n> \n> | **Ver** "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.84999996,
+    "usability": 0.67,
+    "review_reason": "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "controller",
+      "token",
+      "length",
+      "transition",
+      "from",
+      "21.4",
+      "to",
+      "22.3"
+    ],
+    "keywords_extracted": [
+      "Controller",
+      "token",
+      "Token",
+      "Host",
+      "will",
+      "upgrade",
+      "length",
+      "RuntimeSettingsxml"
+    ]
+  }
+}

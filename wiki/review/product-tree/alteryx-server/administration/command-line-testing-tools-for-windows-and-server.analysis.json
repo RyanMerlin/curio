@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:28Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Command line Testing Tools for Windows and Server",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1720391652",
+    "content_hash": "sha256:cdc3c35343e90fffe2c41178a82c7c2d777588b4ca6419b0e04afcd73e4038f3",
+    "content_preview": "> **ℹ️ Info**\n>\n> Common testing tools in a Server environment\n\n| **Key Articles** | [Diagnosing Network Connection Issues](https://knowledge.alteryx.com/index/s/article/Diagnosing-Network-Connection-Issues) (KB) |\n| --- | --- |\n\n---\n\nAlteryxService test\n\nGet-ADPrincipalgroupmembership -Identity ‘FIRST.LAST ’\n\nhostname\n\nipconfig\n\nnetsh http show sslcert\n\nnetsh winhttp show proxy\n\nnetsh winhttp dump > proxy.txt\n\nnetsh http show urlacl\n\nnetstat -an | find \":**80** \" | find \"LISTENING\"\n\nnetstat -ao"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "command",
+      "line",
+      "testing",
+      "tools",
+      "for",
+      "windows",
+      "and",
+      "server"
+    ],
+    "keywords_extracted": [
+      "wmic",
+      "netsh",
+      "show",
+      "nltest",
+      "where",
+      "winhttp",
+      "http",
+      "ipconfig"
+    ]
+  }
+}

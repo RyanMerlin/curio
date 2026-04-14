@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-controller-token-length-transition-from-21-4-to-22-3",
+  "generated_at": "2026-04-14T15:19:30Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "controller-token-length-transition-from-21-4-to-22-3",
+  "title": "Controller Token Length Transition from 21.4 to 22.3",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "upgrade"
+  ],
+  "summary": "Documents controller token length changes across 21.4–22.3 Server versions and transition considerations.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> The Controller Token length length changes in different versions\n\n> **⚠️ Warning**\n>\n> **Note**\n> \n> If regenerating the Controller Tolen, save a copy of the\n> \n> - Controller Token\n> - C:\\ProgramData\\Alteryx\\RuntimeSettings.xml\n> \n> These are needed if the customer needs to restore a previous Mongo backup.  Regenerating the Controller Token will also change RuntimeSettings.xml <**StorageKeysEncrypted**>\n> \n> # Controller Token Length and Impact on Host Recovery\n> \n> | **Ver** | **Upgrade** | **New install** | **Host Recovery requires a token of length** | **Notes** |\n> | --- | --- | --- | --- | --- |\n> |  |  |  |  |  |\n> | **21.3** | 40 | 40 | 40 | All good! |\n> |  |  |  |  |  |\n> | **21.4** | **40** | 64 | 64 | Host recovery fails if a 40-char token is used |\n> | **22.1** | **40** or 64 | 64 | 64 | Host recovery fails if a 40-char token is used |\n> |  |  |  |  |  |\n> | **22.3** | 64 | 64 | 64 | All good!  ---  In an upgrade that lengthens the token from 40 to 64, the Controller and Workers will lengthen in the same way and still connect after upgrade.  Admin should update their Runbook with the new token.  The upgrade will backup RuntimeSettings.xml before re-encrypting it.     - RuntimeSettings.22_2_legacy.xml – the original, pre-upgrade version    - RuntimeSettings.22_2_migration.xml – the re-encrypted version    - RuntimeSettings.xml – a copy of the re-encrypted untimeSettings.22_2_migration.xml  See [FAQ / Help - CryptoMigration](https://alteryx.atlassian.net/wiki/search?text=FAQ+/+Help+-+CryptoMigration) |\n> |  |  |  |  |  |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.87,
+    "quality_confidence": 0.84999996,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.67,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "proposed_node_title": "upgrade",
+    "proposed_node_slug": "upgrade",
+    "node_description": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1778614404"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1778614404"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  }
+}

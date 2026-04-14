@@ -1,21 +1,27 @@
 ---
 id: c64cda50fbe180f3
 title: Community Gallery
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1999243156
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1999243156
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- gallery
+- community
+- workflows
+- utility
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:28Z
+confidence: 0.75
 cross_refs: []
 content_hash: sha256:9485a19b4578326a167b8c0879975374ec891ba39316326033f50d723b100455
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

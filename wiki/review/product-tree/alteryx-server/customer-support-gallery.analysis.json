@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:31Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Customer Support Gallery",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1650787746",
+    "content_hash": "sha256:2e4900e69a12f9aa0597a4b454d42e83dd77d869201d2696e478cac4996498fc",
+    "content_preview": "> **ℹ️ Info**\n>\n> **The Customer Support Gallery** contains workflows that can help troubleshoot Server cases or provide more detailed views of Server activity\n\n| **Access** | <http://ayx-gcs-gal-01/gallery> [00 GCS Gallery Workflow List.yxmd](http://ayx-gcs-gal-01/gallery/#!/app/00-GCS-Gallery-Workflow-List/6492127f4e68ecd6acc30545)  <== **XLSX of all workflows w/ descriptions** [List of Utility Workflows](https://alteryx.atlassian.net/wiki/search?text=LIST+OF+UTILITY+WORKFLOWS)            <== "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.75,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "Reference/utility page; review for integration into administration or server-fundamentals",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "customer",
+      "support",
+      "gallery"
+    ],
+    "keywords_extracted": [
+      "Gallery",
+      "workflows",
+      "Support",
+      "Workflow",
+      "list",
+      "been",
+      "Customer",
+      "Backups"
+    ]
+  }
+}
