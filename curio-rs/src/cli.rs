@@ -7,6 +7,16 @@ pub struct Cli {
     #[arg(long, global = true, help = "Path to the configuration file")]
     pub config: Option<PathBuf>,
 
+    /// Path to the KB store directory to operate on.
+    /// Overrides --workspace and CURIO_REPO_ROOT.
+    #[arg(long, global = true, help = "Path to the KB store directory")]
+    pub kb_dir: Option<PathBuf>,
+
+    /// Named workspace from curio.workspaces.toml.
+    /// Ignored when --kb-dir is provided.
+    #[arg(long, global = true, help = "Named workspace to use")]
+    pub workspace: Option<String>,
+
     #[arg(long, global = true, help = "Print what would be done without making changes")]
     pub dry_run: bool,
 
@@ -121,8 +131,36 @@ pub enum Commands {
         summary: Option<String>,
     },
 
+    /// Initialize a new KB store at the given path.
+    ///
+    /// Creates the wiki/ scaffold, NORTHSTAR.md template, curio.toml template,
+    /// and a .gitignore that excludes .env. Optionally registers the KB in
+    /// curio.workspaces.toml so it can be referenced by --workspace.
+    InitKb {
+        /// Directory to create the KB in. Defaults to ~/curio-kb.
+        #[arg(long)]
+        path: Option<PathBuf>,
+
+        /// Short name to register in curio.workspaces.toml.
+        /// If omitted, the KB is not registered as a named workspace.
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Optional description for the workspace entry.
+        #[arg(long)]
+        description: Option<String>,
+    },
+
+    /// Manage named KB workspaces in curio.workspaces.toml.
+    #[command(subcommand)]
+    Workspace(WorkspaceCommands),
+
     /// Show pipeline status: intake/staged/review/published counts and index freshness.
-    Status,
+    Status {
+        /// Show status for all registered workspaces.
+        #[arg(long)]
+        all: bool,
+    },
 
     /// List items in review/ and staged/ with status summaries.
     Review {
@@ -250,6 +288,33 @@ pub enum Commands {
     /// Harness commands for launching supported agent providers.
     #[command(subcommand)]
     Agent(AgentCommands),
+}
+
+#[derive(Subcommand, Debug)]
+pub enum WorkspaceCommands {
+    /// List all registered KB workspaces.
+    List,
+
+    /// Register a KB directory as a named workspace.
+    Add {
+        /// Short name for the workspace (e.g. "acme", "internal").
+        #[arg(long)]
+        name: String,
+
+        /// Path to the KB store directory.
+        #[arg(long)]
+        path: PathBuf,
+
+        /// Optional human-readable description.
+        #[arg(long)]
+        description: Option<String>,
+    },
+
+    /// Remove a workspace registration (does not delete the KB directory).
+    Remove {
+        /// Name of the workspace to remove.
+        name: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]

@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use dirs;
 use dotenvy;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{env, fs};
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
@@ -145,10 +145,24 @@ pub struct SyncConfig {
     pub confluence_parent_page_id: Option<String>,
 }
 
-pub fn load_config(config_path: Option<&str>) -> Result<Config> {
+/// Load config, optionally targeting a specific KB directory.
+///
+/// `kb_dir` is the root of a KB store (the directory containing `wiki/` and `NORTHSTAR.md`).
+/// When provided it is used as `config_root` — the place where `.curio.yaml` and `.env` are
+/// looked for first. When `None`, the old behaviour applies: CWD / `CURIO_REPO_ROOT`.
+///
+/// Credential resolution order (3-tier):
+///   1. KB `<kb_dir>/.env` — per-KB secrets, git-ignored in the KB repo
+///   2. Shell environment variables — CI/CD, current session
+///   3. Harness `<CURIO_HARNESS_DIR>/.env` — user-level fallback (not KB-specific)
+pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) -> Result<Config> {
     let mut config = Config::default();
-    let config_root = repo_root_override()
-        .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+    let config_root: PathBuf = if let Some(dir) = kb_dir {
+        dir.to_path_buf()
+    } else {
+        repo_root_override()
+            .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+    };
 
     // 1. Load from config files (first match wins)
     let mut candidates = Vec::new();
@@ -205,13 +219,15 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
         }
     }
 
-    // 2. Load .env file
-    let env_path = config_root.join(".env");
-    if env_path.is_file() {
-        dotenvy::from_path(&env_path)
-            .with_context(|| format!("Failed to load env file: {}", env_path.display()))?;
-    } else {
-        dotenvy::dotenv().ok();
+    // 2. Load .env files — KB first, then harness fallback.
+    //    dotenvy does NOT override already-set env vars, so KB values win over harness values.
+    //    Shell env vars are already present and take precedence over both .env files.
+    load_env_tier(&config_root);
+    if let Ok(harness_dir) = env::var("CURIO_HARNESS_DIR") {
+        let harness_path = PathBuf::from(&harness_dir);
+        if harness_path != config_root {
+            load_env_tier(&harness_path);
+        }
     }
 
     // 3. Override with environment variables
@@ -249,12 +265,20 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
         config.runtime.temp_dir = Some(default_temp_dir());
     }
 
-    // wiki_dir defaults to <repo_root>/wiki if not absolute
+    // wiki_dir defaults to <config_root>/wiki if not absolute
     if config.wiki.wiki_dir.is_relative() {
         config.wiki.wiki_dir = config_root.join(&config.wiki.wiki_dir);
     }
 
     Ok(config)
+}
+
+/// Load a .env file from `dir` without overriding already-set env vars.
+fn load_env_tier(dir: &Path) {
+    let env_path = dir.join(".env");
+    if env_path.is_file() {
+        dotenvy::from_path(&env_path).ok();
+    }
 }
 
 fn default_temp_dir() -> PathBuf {
@@ -337,7 +361,7 @@ mod tests {
             env::set_var("CURIO_SPACE_KEY", "TEST");
         }
 
-        let config = load_config(None).unwrap();
+        let config = load_config(None, None).unwrap();
 
         assert_eq!(config.connection.confluence_url, "http://test.confluence.com");
         assert_eq!(config.connection.confluence_email, "test@example.com");
@@ -362,7 +386,7 @@ mod tests {
         }
 
         // Should not bail even with no Confluence config
-        let result = load_config(None);
+        let result = load_config(None, None);
         assert!(result.is_ok());
     }
 

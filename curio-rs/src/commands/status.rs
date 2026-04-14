@@ -4,13 +4,87 @@
 ///  - Page counts per pipeline stage (intake / staged / review / published)
 ///  - Last sync timestamp (from `wiki/_config/audit.jsonl`)
 ///  - Index freshness warning when published pages are newer than published/index.md
+///
+/// With `--all`: prints a summary row per registered workspace (local counts only, fast).
 use anyhow::Result;
 use std::path::Path;
 use walkdir::WalkDir;
 
-use crate::{audit_store, config::Config, output::emit_json};
+use crate::{audit_store, config::{load_config, Config}, output::emit_json, workspace::load_workspaces};
 
-pub async fn run_status(config: &Config, json: bool) -> Result<()> {
+pub async fn run_status(config: &Config, json: bool, all: bool) -> Result<()> {
+    if all {
+        return run_status_all(json).await;
+    }
+    run_status_one(config, json, None).await
+}
+
+async fn run_status_all(json: bool) -> Result<()> {
+    let workspaces = load_workspaces()?;
+    if workspaces.is_empty() {
+        eprintln!("No workspaces registered. Use `curio workspace add` or `curio init-kb`.");
+        return Ok(());
+    }
+
+    let mut rows: Vec<serde_json::Value> = Vec::new();
+    for ws in &workspaces {
+        let kb_path = ws.resolved_path();
+        match load_config(None, Some(&kb_path)) {
+            Ok(config) => {
+                let wiki_dir = &config.wiki.wiki_dir;
+                let intake    = count_md(wiki_dir, "intake");
+                let staged    = count_md_recursive(wiki_dir, "staged");
+                let review    = count_md_recursive(wiki_dir, "review");
+                let published = count_md_content(wiki_dir, "published");
+                let last_sync = read_last_sync(wiki_dir);
+                rows.push(serde_json::json!({
+                    "workspace": ws.name,
+                    "path": ws.path,
+                    "intake": intake,
+                    "staged": staged,
+                    "review": review,
+                    "published": published,
+                    "last_sync": last_sync,
+                    "error": null,
+                }));
+            }
+            Err(e) => {
+                rows.push(serde_json::json!({
+                    "workspace": ws.name,
+                    "path": ws.path,
+                    "error": e.to_string(),
+                }));
+            }
+        }
+    }
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&rows)?);
+        return Ok(());
+    }
+
+    println!();
+    let name_w = workspaces.iter().map(|w| w.name.len()).max().unwrap_or(9).max(9);
+    println!("  {:<name_w$}  {:>6}  {:>6}  {:>6}  {:>9}  last sync", "WORKSPACE", "intake", "staged", "review", "published");
+    println!("  {}", "─".repeat(name_w + 2 + 6 + 2 + 6 + 2 + 6 + 2 + 9 + 2 + 24));
+    for row in &rows {
+        let name = row["workspace"].as_str().unwrap_or("");
+        if let Some(err) = row["error"].as_str() {
+            println!("  {:<name_w$}  ERROR: {}", name, err);
+            continue;
+        }
+        let intake    = row["intake"].as_u64().unwrap_or(0);
+        let staged    = row["staged"].as_u64().unwrap_or(0);
+        let review    = row["review"].as_u64().unwrap_or(0);
+        let published = row["published"].as_u64().unwrap_or(0);
+        let last_sync = row["last_sync"].as_str().unwrap_or("never");
+        println!("  {:<name_w$}  {:>6}  {:>6}  {:>6}  {:>9}  {}", name, intake, staged, review, published, last_sync);
+    }
+    println!();
+    Ok(())
+}
+
+async fn run_status_one(config: &Config, json: bool, label: Option<&str>) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
 
     if !wiki_dir.exists() {
@@ -37,6 +111,7 @@ pub async fn run_status(config: &Config, json: bool) -> Result<()> {
 
     if json {
         let _ = emit_json("status", true, &serde_json::json!({
+            "workspace": label,
             "intake": intake,
             "staged": staged,
             "review": review,
@@ -48,7 +123,11 @@ pub async fn run_status(config: &Config, json: bool) -> Result<()> {
     }
 
     println!();
-    println!("  Curio Pipeline");
+    if let Some(lbl) = label {
+        println!("  Curio Pipeline — {lbl}");
+    } else {
+        println!("  Curio Pipeline");
+    }
     println!("  ──────────────────────────────────");
     println!("  intake      {:>4}  (wiki/intake/)", intake);
     println!("  staged      {:>4}  (wiki/staged/)", staged);
