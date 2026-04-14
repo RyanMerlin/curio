@@ -208,6 +208,17 @@ The main content pipeline is:
 
 `proposal generation` is conceptually separate even if parts of it are implemented inside other commands.
 
+### First-move rule
+
+`published` is never the first move for new intake or new curation.
+
+The first durable output of new work must be:
+
+- `staged`
+- or `review`
+
+Direct creation or reshaping of `published` content is only valid as an explicit user-authorized manual override.
+
 ## Stage 1: Intake
 
 ### Goal
@@ -851,7 +862,7 @@ The Confluence managed subtree must be pruned so the mirror stays faithful to Gi
 
 ### Rule 9
 
-Do not shortcut new curation or structural curation directly into `published`. Proposed changes must pass through `staged` or `review` first unless the user explicitly authorizes a manual override.
+`published` is never the first move. Do not shortcut new curation or structural curation directly into `published`. Proposed changes must pass through `staged` or `review` first unless the user explicitly authorizes a manual override.
 
 ### Rule 10
 

@@ -36,6 +36,7 @@ When launched from Curio, use:
 ## Curation Workflow Rules
 
 - Do not bypass the Curio content process for curation work.
+- `published` is never the first move for new intake or new curation. The first durable artifact must be `staged` or `review` unless the user explicitly authorizes a manual override.
 - Do not directly create, restructure, split, merge, reroute, deduplicate, or substantially rewrite `wiki/published/` content as the first step unless the user explicitly asks for a manual override.
 - For new curation work and structural curation changes, the first artifact must go through `staged` or `review`.
 - Use `review` when the work involves ambiguity, taxonomy changes, subtree proposals, deduplication decisions, low-signal content, consolidation, or deletion candidates.
