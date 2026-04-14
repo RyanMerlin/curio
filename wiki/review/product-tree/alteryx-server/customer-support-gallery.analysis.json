@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:49:52Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Customer Support Gallery",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1650787746",
+    "content_hash": "sha256:2bd517f540f24c03a660d4fe7159279d57114056c8f8a75245e25aca9620d17b",
+    "content_preview": "> **ℹ️ Info**\n>\n> **The Customer Support Gallery** contains workflows that can help troubleshoot Server cases or provide more detailed views of Server activity\n\n| Access | http://ayx-gcs-gal-01/gallery00 GCS Gallery Workflow List.yxmd  <== XLSX of all workflows w/ descriptionsList of Utility Workflows            <== list of key utility workflows |\n| --- | --- |\n| Workflow Template | Template <== Support Gallery |\n| How to publish your workflow | https://alteryx.atlassian.net/wiki/spaces/SupportS"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.75,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "Reference/utility page; review for integration into administration or server-fundamentals",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "customer",
+      "support",
+      "gallery"
+    ],
+    "keywords_extracted": [
+      "Gallery",
+      "workflows",
+      "Support",
+      "Workflow",
+      "Server",
+      "Customer",
+      "Digest",
+      "Enablement"
+    ]
+  }
+}

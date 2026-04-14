@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-browser-login",
+  "generated_at": "2026-04-14T13:49:48Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "browser-login",
+  "title": "Browser Login",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "Hub for browser-based login issues and procedures on Alteryx Server.",
+  "body_markdown": "Hub page: Browser Login\n\n*This page serves as a section index with no prose body.*\n",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.75,
+    "quality_confidence": 0.0,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.19,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Sparse hub page; requires authentication subtree taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1640792680"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640792680"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Sparse hub page; requires authentication subtree taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}

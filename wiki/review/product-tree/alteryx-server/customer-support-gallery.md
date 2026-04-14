@@ -1,21 +1,26 @@
 ---
 id: 20526b0ae55855aa
 title: Customer Support Gallery
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1650787746
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1650787746
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- gallery
+- customer-support
+- utility-workflows
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:52Z
+confidence: 0.75
 cross_refs: []
 content_hash: sha256:2bd517f540f24c03a660d4fe7159279d57114056c8f8a75245e25aca9620d17b
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

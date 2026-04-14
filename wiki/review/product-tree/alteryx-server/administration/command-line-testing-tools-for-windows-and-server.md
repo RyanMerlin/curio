@@ -1,21 +1,29 @@
 ---
 id: 311d01f429737a79
 title: Command line Testing Tools for Windows and Server
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1720391652
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1720391652
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- command-line
+- testing
+- diagnostic
+- windows
+- tools
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:50Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:b3c989515b08648472e18d9b0cc23b3059bfd37bef06bd87596d8775e43f5588
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

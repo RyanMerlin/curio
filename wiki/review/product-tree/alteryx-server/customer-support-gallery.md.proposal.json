@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-customer-support-gallery",
+  "generated_at": "2026-04-14T13:49:52Z",
+  "lane": "review",
+  "kind": "new_page",
+  "subject_slug": "customer-support-gallery",
+  "title": "Customer Support Gallery",
+  "target_path": [
+    "product-tree",
+    "alteryx-server"
+  ],
+  "summary": "Describes the Customer Support Gallery containing utility workflows for customer help.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> **The Customer Support Gallery** contains workflows that can help troubleshoot Server cases or provide more detailed views of Server activity\n\n| Access | http://ayx-gcs-gal-01/gallery00 GCS Gallery Workflow List.yxmd  <== XLSX of all workflows w/ descriptionsList of Utility Workflows            <== list of key utility workflows |\n| --- | --- |\n| Workflow Template | Template <== Support Gallery |\n| How to publish your workflow | https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1632242331/Global+Customer+Support+Gallery#Upload-to-Gallery |\n| Key Articles | Community Gallery |\n| Alternative Site | Another internal Gallery site created by another team:  Alteryx Analytics Server |\n| Managed by | London Hanson, Josh Miller-Lee, Ed Phelps |\n| Backups | Monthly backup of the Gallery to the following folder (IT doesn’t backup the Gallery).   Backups takenJan-28-2024 (Ed P) |\n| OLD links | Old Galleryhttp://den-cs-gcs-01/gallery/      <== GalleryPre-gallery workflows / Original/old workflowsTroubleshooting Assets <== list of old workflowsCUSP Folder                          <== deprecated |\n\n---\n\n---\n\n# Dan Chapman’s Scheduled Workflow\n\n**Jan-16-2024**\n\n[Dan C] I will be uploading and scheduling (weekly on Mondays early a.m.) two workflows on the GCS server. These workflows email enablement status reports (see attached for an example) to CSEs and managers and are named as follows:\n\n- CSE Enablement Digest\n- Manager Enablement Digest\n\nThese reports have been requested by Support management and have already been run manually for the last several weeks.\n\n---\n\ncss hack",
+  "recommended_action": "review before further action",
+  "scores": {
+    "route_confidence": 0.75,
+    "quality_confidence": 0.85,
+    "hierarchy_fit_confidence": 0.75,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Reference/utility page; review for integration into administration or server-fundamentals",
+  "merge_target": null,
+  "taxonomy_mutation": null,
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1650787746"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1650787746"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Reference/utility page; review for integration into administration or server-fundamentals"
+    ],
+    "overlap_candidates": [],
+    "rationale": ""
+  }
+}

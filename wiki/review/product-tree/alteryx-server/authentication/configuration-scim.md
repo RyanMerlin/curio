@@ -1,21 +1,29 @@
 ---
 id: 23af4c1264b174a6
 title: Configuration (SCIM)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2545582282
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2545582282
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- scim
+- configuration
+- sso
+- provisioning
+- authentication
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:51Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:33c364f11b8d25932e731e59e78c58d1e04d522220c0746f9ba791c31568deeb
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,21 +1,28 @@
 ---
 id: 8e77004416c69f7d
 title: Configuration (SQL DB Persistence)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2650801612
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2650801612
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- sql-db-persistence
+keywords:
+- sql-db
+- persistence
+- configuration
+- hub
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:51Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:e3e56dfa2d9b23fb0a8c1c4fc5f4c635a355d5f4b061f00002cccc67f581f7a0
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---
