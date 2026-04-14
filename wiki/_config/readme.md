@@ -26,7 +26,7 @@ All three providers are launched from the same Curio workspace contract:
 Curio content writes are scoped by Confluence space:
 
 - `CURIO_SPACE_KEY` is the authoritative write boundary
-- `NORTHSTAR.md` seeds the charter page with the project intent text
+- `NORTHSTAR.md` seeds the charter branch content under `Config`
 - Curio's onboarding flow keeps `.env` and `.env.example` aligned on the Curio keys
 - Bootstrap creates the `README` landing page plus the structural Confluence layers:
   - `Config`
@@ -56,7 +56,7 @@ Run onboarding with:
 curio onboard
 ```
 
-`curio bootstrap` lays down the README landing page, the Config charter branch, hero artwork, the lifecycle documentation, and the Published blueprint tree inside the configured Curio space. Destructive rebuilds require `--overwrite --confirm-nuke`.
+`curio bootstrap` lays down the README landing page, the Config branch, hero artwork, the lifecycle documentation, and the Published blueprint tree inside the configured Curio space. Destructive rebuilds require `--overwrite --confirm-nuke`.
 `curio onboard` will prompt for NORTHSTAR intent when the corresponding env value is blank, then offer to repair the tree if required pages are missing.
 
 ## Quickstart

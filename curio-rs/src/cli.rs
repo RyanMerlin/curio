@@ -38,9 +38,13 @@ pub enum Commands {
     ///
     /// Idempotent — safe to run on an existing wiki.
     Init {
-        /// Recreate all scaffold files from scratch (preserves existing pages).
+        /// Recreate all scaffold files from scratch and rebuild the managed Confluence tree.
         #[arg(long)]
         reset: bool,
+
+        /// Required with --reset. Allows deleting managed descendants under the CURIO root page.
+        #[arg(long)]
+        confirm_nuke: bool,
     },
 
     /// Ingest content from a URL, file, or Confluence page into wiki/intake/.

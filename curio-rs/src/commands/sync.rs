@@ -28,6 +28,8 @@ const SYNC_PROP_KEY: &str = "curio-sync";
 const ICON_PROP_KEY: &str = "emoji-title-published";
 pub const CURIO_ROOT_TITLE: &str = "CURIO";
 const CURIO_HERO_FILENAME: &str = "Curio_curated_intelligence_operator.png";
+const REQUIRED_CURIO_CHILDREN: &[&str] = &["Published", "Intake", "Staged", "Review", "Config"];
+const REQUIRED_CONFIG_CHILDREN: &[&str] = &["Northstar", "CURIO Readme", "Settings"];
 
 #[derive(Debug, Clone)]
 pub struct CurioConfluenceTree {
@@ -36,6 +38,12 @@ pub struct CurioConfluenceTree {
     pub review_id: String,
     pub published_id: String,
     pub config_id: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct CurioTreeValidation {
+    pub root_id: String,
+    pub checked_pages: usize,
 }
 
 /// Emoji icon for each well-known page title slug.
@@ -538,6 +546,157 @@ pub async fn ensure_curio_confluence_tree(
     })
 }
 
+pub async fn reset_curio_confluence_tree(
+    config: &Config,
+    client: &ConfluenceClient,
+    preferred_root_id: Option<String>,
+    persist_root_id: bool,
+) -> Result<(CurioConfluenceTree, usize)> {
+    let space_key = config.content_model.space_key.as_str();
+    let root_id =
+        ensure_curio_root_page(config, client, space_key, preferred_root_id.as_deref()).await?;
+    let descendants = client.get_page_descendants_v2(&root_id).await.unwrap_or_default();
+
+    let mut pages_to_delete: Vec<(String, usize)> = descendants
+        .into_iter()
+        .filter_map(|page| {
+            let page_id = page["id"].as_str()?.to_string();
+            let parent_id = page["parentId"].as_str().unwrap_or_default().to_string();
+            let depth = descendant_depth(&page, &root_id, &parent_id);
+            Some((page_id, depth))
+        })
+        .collect();
+
+    pages_to_delete.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+
+    let mut deleted = 0usize;
+    for (page_id, _) in pages_to_delete {
+        client.delete_page(&page_id).await?;
+        deleted += 1;
+    }
+
+    let tree = ensure_curio_confluence_tree(config, client, Some(root_id), persist_root_id).await?;
+    Ok((tree, deleted))
+}
+
+pub async fn validate_curio_confluence_tree(
+    config: &Config,
+    client: &ConfluenceClient,
+    preferred_root_id: Option<String>,
+) -> Result<CurioTreeValidation> {
+    let space_key = config.content_model.space_key.as_str();
+    let expected_space_id = client.get_numeric_space_id(space_key).await?;
+    let root_id =
+        ensure_curio_root_page(config, client, space_key, preferred_root_id.as_deref()).await?;
+    let root_page = client
+        .get_page_by_id_v2(&root_id)
+        .await?
+        .context("CURIO root page missing during validation")?;
+
+    let root_title = root_page["title"].as_str().unwrap_or_default();
+    if root_title != CURIO_ROOT_TITLE {
+        anyhow::bail!(
+            "CURIO root validation failed: expected title '{}' but found '{}'",
+            CURIO_ROOT_TITLE,
+            root_title
+        );
+    }
+    let root_space_id = root_page["spaceId"].as_str().unwrap_or_default();
+    if root_space_id != expected_space_id {
+        anyhow::bail!(
+            "CURIO root validation failed: root page {} is in space {} instead of {}",
+            root_id,
+            root_space_id,
+            expected_space_id
+        );
+    }
+    validate_page_body_loaded(client, &root_id, CURIO_ROOT_TITLE).await?;
+    if client
+        .get_attachment_by_filename(&root_id, CURIO_HERO_FILENAME)
+        .await?
+        .is_none()
+    {
+        anyhow::bail!(
+            "CURIO root validation failed: hero attachment '{}' is missing on page {}",
+            CURIO_HERO_FILENAME,
+            root_id
+        );
+    }
+
+    let root_descendants = client.get_page_descendants_v2(&root_id).await?;
+    let root_children = direct_children_from_descendants(&root_descendants, &root_id);
+    let root_children_by_title = map_children_by_title(&root_children);
+    let root_titles: HashSet<String> = root_children_by_title.keys().cloned().collect();
+    let expected_root_titles: HashSet<String> =
+        REQUIRED_CURIO_CHILDREN.iter().map(|title| title.to_string()).collect();
+    if root_titles != expected_root_titles {
+        anyhow::bail!(
+            "CURIO root validation failed: direct children were {:?}, expected {:?}",
+            sorted_titles(&root_titles),
+            sorted_titles(&expected_root_titles)
+        );
+    }
+
+    let mut checked_pages = 1usize;
+    let config_id = root_children_by_title
+        .get("Config")
+        .cloned()
+        .context("CURIO validation failed: Config page missing")?;
+
+    for title in REQUIRED_CURIO_CHILDREN {
+        let page_id = root_children_by_title
+            .get(*title)
+            .cloned()
+            .with_context(|| format!("CURIO validation failed: missing direct child '{}'", title))?;
+        let page = client
+            .get_page_by_id_v2(&page_id)
+            .await?
+            .with_context(|| format!("CURIO validation failed: child page '{}' missing", title))?;
+        if page["parentId"].as_str() != Some(root_id.as_str()) {
+            anyhow::bail!(
+                "CURIO validation failed: '{}' is not a direct child of CURIO",
+                title
+            );
+        }
+        validate_page_body_loaded(client, &page_id, title).await?;
+        checked_pages += 1;
+    }
+
+    let config_children = direct_children_from_descendants(&root_descendants, &config_id);
+    let config_children_by_title = map_children_by_title(&config_children);
+    let config_titles: HashSet<String> = config_children_by_title.keys().cloned().collect();
+    let expected_config_titles: HashSet<String> =
+        REQUIRED_CONFIG_CHILDREN.iter().map(|title| title.to_string()).collect();
+    if config_titles != expected_config_titles {
+        anyhow::bail!(
+            "CURIO validation failed: Config children were {:?}, expected {:?}",
+            sorted_titles(&config_titles),
+            sorted_titles(&expected_config_titles)
+        );
+    }
+
+    for title in REQUIRED_CONFIG_CHILDREN {
+        let page_id = config_children_by_title
+            .get(*title)
+            .cloned()
+            .with_context(|| format!("CURIO validation failed: missing Config child '{}'", title))?;
+        let page = client
+            .get_page_by_id_v2(&page_id)
+            .await?
+            .with_context(|| format!("CURIO validation failed: Config child '{}' missing", title))?;
+        if page["parentId"].as_str() != Some(config_id.as_str()) {
+            anyhow::bail!(
+                "CURIO validation failed: Config child '{}' is not under Config",
+                title
+            );
+        }
+        validate_page_body_loaded(client, &page_id, title).await?;
+        checked_pages += 1;
+    }
+
+    Ok(CurioTreeValidation { root_id, checked_pages })
+}
+
 
 async fn ensure_curio_root_page(
     config: &Config,
@@ -545,10 +704,11 @@ async fn ensure_curio_root_page(
     space_key: &str,
     preferred_root_id: Option<&str>,
 ) -> Result<String> {
+    let expected_space_id = client.get_numeric_space_id(space_key).await?;
     if let Some(root_id) = preferred_root_id {
         if let Some(page) = client.get_page_by_id_v2(root_id).await? {
             let title_matches = page["title"].as_str() == Some(CURIO_ROOT_TITLE);
-            let space_matches = page["spaceId"].as_str().is_some();
+            let space_matches = page["spaceId"].as_str() == Some(expected_space_id.as_str());
             let status_current = page["status"].as_str() == Some("current");
             if title_matches && space_matches && status_current {
                 return Ok(root_id.to_string());
@@ -572,6 +732,76 @@ async fn ensure_curio_root_page(
 
     let _ = upload_root_hero(config, client, &root_id).await;
     Ok(root_id)
+}
+
+fn descendant_depth(page: &serde_json::Value, root_id: &str, parent_id: &str) -> usize {
+    if parent_id == root_id {
+        return 1;
+    }
+    page["depth"].as_u64().unwrap_or(1) as usize
+}
+
+fn map_children_by_title(children: &[serde_json::Value]) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for child in children {
+        let title = child["title"].as_str().unwrap_or_default().to_string();
+        let id = child["id"].as_str().unwrap_or_default().to_string();
+        if !title.is_empty() && !id.is_empty() {
+            map.insert(title, id);
+        }
+    }
+    map
+}
+
+fn direct_children_from_descendants(
+    descendants: &[serde_json::Value],
+    parent_id: &str,
+) -> Vec<serde_json::Value> {
+    descendants
+        .iter()
+        .filter(|page| page["parentId"].as_str() == Some(parent_id))
+        .cloned()
+        .collect()
+}
+
+fn sorted_titles(titles: &HashSet<String>) -> Vec<String> {
+    let mut values: Vec<String> = titles.iter().cloned().collect();
+    values.sort();
+    values
+}
+
+async fn validate_page_body_loaded(
+    client: &ConfluenceClient,
+    page_id: &str,
+    label: &str,
+) -> Result<()> {
+    let page = client
+        .get_page_by_id_with_body_v1(page_id)
+        .await?
+        .with_context(|| format!("Failed to load page body for '{}'", label))?;
+    let body = page["body"]["storage"]["value"].as_str().unwrap_or_default();
+    let text = strip_html_tags(body);
+    if text.trim().len() < 20 {
+        anyhow::bail!(
+            "CURIO validation failed: page '{}' has no meaningful body content",
+            label
+        );
+    }
+    Ok(())
+}
+
+fn strip_html_tags(html: &str) -> String {
+    let mut out = String::new();
+    let mut in_tag = false;
+    for ch in html.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => out.push(ch),
+            _ => {}
+        }
+    }
+    out.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 async fn upload_root_hero(config: &Config, client: &ConfluenceClient, root_id: &str) -> Result<()> {

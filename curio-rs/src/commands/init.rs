@@ -1,10 +1,13 @@
 use anyhow::Result;
 
 use crate::{
-    commands::sync::{ensure_curio_confluence_tree, parse_northstar_blueprint},
+    commands::sync::{
+        ensure_curio_confluence_tree, parse_northstar_blueprint, reset_curio_confluence_tree,
+        validate_curio_confluence_tree,
+    },
     config::Config,
     confluence::ConfluenceClient,
-    northstar::{save_taxonomy, sync_taxonomy_from_markdown},
+    northstar::save_taxonomy,
     output::emit_json,
     wiki_index::{append_log, rebuild_index_md},
     WikiIndex,
@@ -17,12 +20,28 @@ const DEFAULT_TREES: &[(&str, &str)] = &[
     ("topic-tree", "Subject matter pages when no stronger route applies"),
 ];
 
-pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -> Result<()> {
+pub async fn run_init(
+    config: &Config,
+    dry_run: bool,
+    json: bool,
+    reset: bool,
+    confirm_nuke: bool,
+) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
+
+    if reset && !confirm_nuke {
+        anyhow::bail!(
+            "Refusing destructive init reset without --confirm-nuke. Re-run with `curio init --reset --confirm-nuke`."
+        );
+    }
 
     if dry_run {
         if json {
-            let _ = emit_json("init", true, &serde_json::json!({ "wiki_dir": wiki_dir, "dry_run": true }));
+            let _ = emit_json(
+                "init",
+                true,
+                &serde_json::json!({ "wiki_dir": wiki_dir, "dry_run": true, "reset": reset }),
+            );
         } else {
             println!("Would initialise wiki at {}", wiki_dir.display());
         }
@@ -115,7 +134,6 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
     // Generate co-located indexes from the seeded tree structure.
     let empty_index = WikiIndex::default();
     rebuild_index_md(wiki_dir, &empty_index)?;
-    let _ = sync_taxonomy_from_markdown(wiki_dir);
 
     // .gitkeep only in pipeline staging dirs (not in published/ — content is the placeholder)
     for dir in &[
@@ -139,19 +157,38 @@ pub async fn run_init(config: &Config, dry_run: bool, json: bool, reset: bool) -
                 token,
                 None,
             )?;
-            let tree = ensure_curio_confluence_tree(
-                config,
-                &client,
-                config.wiki.sync.confluence_parent_page_id.clone(),
-                true,
-            )
-            .await?;
-            println!("  confluence root: {} ({})", crate::commands::sync::CURIO_ROOT_TITLE, tree.root_id);
+            let preferred_root_id = config.wiki.sync.confluence_parent_page_id.clone();
+            let (tree, deleted_descendants) = if reset {
+                reset_curio_confluence_tree(config, &client, preferred_root_id, true).await?
+            } else {
+                (
+                    ensure_curio_confluence_tree(config, &client, preferred_root_id, true).await?,
+                    0usize,
+                )
+            };
+            let validation =
+                validate_curio_confluence_tree(config, &client, Some(tree.root_id.clone())).await?;
+            println!(
+                "  confluence root: {} ({})",
+                crate::commands::sync::CURIO_ROOT_TITLE,
+                tree.root_id
+            );
+            if reset {
+                println!("  reset deleted {} managed descendant page(s)", deleted_descendants);
+            }
+            println!(
+                "  validation passed: {} checked page(s)",
+                validation.checked_pages
+            );
         }
     }
 
     if json {
-        let _ = emit_json("init", true, &serde_json::json!({ "wiki_dir": wiki_dir, "trees": created_trees }));
+        let _ = emit_json(
+            "init",
+            true,
+            &serde_json::json!({ "wiki_dir": wiki_dir, "trees": created_trees, "reset": reset }),
+        );
     } else {
         println!("Wiki initialised at {}", wiki_dir.display());
         for slug in &created_trees {
