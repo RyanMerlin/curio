@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:35Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Load Balancers",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2398683515",
+    "content_hash": "sha256:77f12173f07ef63af1a17c5a338bd8d0a01d357a404c2d686402ac5ca51afe3f",
+    "content_preview": "| Key Articles | Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy)  (KB)     <== Sophia |\n| --- | --- |\n| Configuration | How to set up Network Load-balancer in AWS for Alteryx Server (KB) |\n| Tutorials | Load Balancer Presentation (Michael Adler) AWS Load Balancers and Alteryx Server (Michael Adler) |"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.33999997,
+    "usability": 0.58,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "load",
+      "balancers"
+    ],
+    "keywords_extracted": [
+      "Load",
+      "Alteryx",
+      "Server",
+      "Adler",
+      "Balancer",
+      "Michael",
+      "Balancers",
+      "Configuration"
+    ]
+  }
+}

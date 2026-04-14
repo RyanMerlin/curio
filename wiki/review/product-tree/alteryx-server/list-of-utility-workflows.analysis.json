@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:34Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "LIST OF UTILITY WORKFLOWS",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2200306970",
+    "content_hash": "sha256:36bfcbc8c737a79cfd48a0753991a0b8f60ff12127719629e576b6d87bd40cf1",
+    "content_preview": "> **ℹ️ Info**\n>\n> List of some  key Utility workflows.\n> \n> See the **Customer Support Gallery** for additional Support Workflows\n> \n> - http://ayx-gcs-gal-01/gallery          <== Support Gallery\n> - 00 GCS Gallery Workflow List.yxmd <== XLSX of all workflows w/ descriptions\n\n---\n\n---\n\nnote 4a0100a8-7f61-4bcb-8c94-0791127f7a32 Version Compatibility column definitions\n\n–** ServiceDataParser **– 23.1 or prior containing **__ServiceData** blob field called that was unpacked by a macro, \n           "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.75,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.5799999,
+    "usability": 0.54999995,
+    "review_reason": "Reference listing — review for integration under support utilities",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-designer",
+    "title_tokens": [
+      "list",
+      "of",
+      "utility",
+      "workflows"
+    ],
+    "keywords_extracted": [
+      "Mongo",
+      "Workflow",
+      "Utility",
+      "Gallery",
+      "Collection",
+      "Support",
+      "workflows",
+      "workflow"
+    ]
+  }
+}

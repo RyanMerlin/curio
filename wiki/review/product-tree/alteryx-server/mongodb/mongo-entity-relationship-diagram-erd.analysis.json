@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:36Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Mongo Entity-Relationship Diagram (ERD)",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1776681530",
+    "content_hash": "sha256:6d8be1b470524124084bf6ca54abc283490055e7dea26e5e29edc3a1642701e4",
+    "content_preview": "> **ℹ️ Info**\n>\n> The Dev Team does not maintain and ERD for Mongo.  Below is what Support has developed.\n\n| Entity-Relation Diagram | London Hanson has carried forward a project Sophia F started to create an ERDERD (Lucid Chart)For an ERD of version 23.1+ (w/o Lucene), scroll to the right  as of Jul-2025 |\n| --- | --- |\n| Schema | https://help.alteryx.com/current/server/alteryxgallery-mongodb-schema https://help.alteryx.com/current/server/alteryxservice-mongodb-schema Example MongoDB Queries / "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.81,
+    "usability": 0.86,
+    "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "mongo",
+      "entity-relationship",
+      "diagram",
+      "(erd)"
+    ],
+    "keywords_extracted": [
+      "Files",
+      "Mongo",
+      "Schema",
+      "temp",
+      "Help",
+      "CryptoMigration",
+      "Collection",
+      "backup"
+    ]
+  }
+}

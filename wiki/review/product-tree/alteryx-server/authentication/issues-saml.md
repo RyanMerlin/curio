@@ -1,21 +1,28 @@
 ---
 id: d767fc0fc9c7d20f
 title: Issues (SAML)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2071069301
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2071069301
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- saml
+- issues
+- sso
+- troubleshooting
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:33Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:ab9512dcc96d10ab28eac6fd7e41df0ddab634bc0ef670d49659583315e8a2d5
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 # SAML Issues
