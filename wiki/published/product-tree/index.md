@@ -1,6 +1,6 @@
 # Product-tree
 > Product-centric guidance, playbooks, and reference content. Not temporary workspace for raw feature notes or launch scraps. Metadata to track: product owner, canonical source, related pages
-> updated 2026-04-14 03:46 UTC
+> updated 2026-04-14 04:21 UTC
 
 ## Subtrees
 
