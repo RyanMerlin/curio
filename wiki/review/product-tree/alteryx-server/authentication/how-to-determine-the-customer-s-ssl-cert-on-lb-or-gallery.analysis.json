@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:56Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How to - Determine the Customer's SSL Cert on LB or Gallery",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1930003044",
+    "content_hash": "sha256:1588329c226523ab66c14e623635c0841e1da96a4046647517b0621c34ca7556",
+    "content_preview": "> **ℹ️ Info**\n>\n> A Server SSL cert must be added in MMC and bound to a specific port to work on a LB or Gallery\n\n---\n\nMultiple certs can be added but only one bound to a specific port\n\n**SAN **shows the FQDNs (with option wildcards) that the cert was created for\n\n**Thumbprint **must match the bound certificate’s **Certificate Hash**\n\n**Certificate Hash** must match certificate’s **Thumbprint **\n\nnetsh http show sslcert"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.45000002,
+    "usability": 0.41,
+    "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+    "proposed_new_subtree": "authentication",
+    "proposal_rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "-",
+      "determine",
+      "the",
+      "customer's",
+      "ssl",
+      "cert",
+      "on",
+      "lb",
+      "or",
+      "gallery"
+    ],
+    "keywords_extracted": [
+      "must",
+      "bound",
+      "Gallery",
+      "Certificate",
+      "added",
+      "Thumbprint",
+      "port",
+      "match"
+    ]
+  }
+}

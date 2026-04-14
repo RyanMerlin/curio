@@ -1,21 +1,30 @@
 ---
 id: b831f95902681d54
 title: How to Allow User's Workflows and Schedules in Collection after User marked Inactive
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640793095
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793095
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- user-management
+keywords:
+- users
+- collections
+- workflows
+- schedules
+- inactive
+- how-to
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:53Z
+confidence: 0.82
 cross_refs: []
 content_hash: sha256:55a286adea960a18a7a8cbb00edc493ca38d396d4d8dbc9059a73daa3477b14a
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 # Below is in development and should get another run-through on a test Server before going live

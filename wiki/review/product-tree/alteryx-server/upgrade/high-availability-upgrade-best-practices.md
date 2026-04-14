@@ -1,21 +1,28 @@
 ---
 id: 2b7216dfee1dd0b9
 title: High Availability Upgrade Best Practices
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2383446384
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2383446384
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- high-availability
+- best-practices
+- ha
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:51Z
+confidence: 0.72
 cross_refs: []
 content_hash: sha256:64894792ec6310156def43ce642e090444b110c16791808a5eee8c1d6f486f98
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 note

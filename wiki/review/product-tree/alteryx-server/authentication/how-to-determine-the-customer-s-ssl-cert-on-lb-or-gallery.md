@@ -1,21 +1,30 @@
 ---
 id: d2ef774371fd5d33
 title: How to - Determine the Customer's SSL Cert on LB or Gallery
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1930003044
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1930003044
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- ssl
+- certificate
+- load-balancer
+- gallery
+- mmc
+- diagnostic
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:56Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:1588329c226523ab66c14e623635c0841e1da96a4046647517b0621c34ca7556
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

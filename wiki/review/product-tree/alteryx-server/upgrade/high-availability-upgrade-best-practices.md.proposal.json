@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-high-availability-upgrade-best-practices",
+  "generated_at": "2026-04-14T15:19:51Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "high-availability-upgrade-best-practices",
+  "title": "High Availability Upgrade Best Practices",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "upgrade"
+  ],
+  "summary": "Best practices for upgrading High Availability Server deployments — note: being re-drafted as '[DRAFT] HA Upgrade Best Practices'.",
+  "body_markdown": "note\n\n# THIS PAGE IS BEING RE-DRAFTED IN\n\n[[DRAFT] High Availability Upgrade Best Pracices](https://alteryx.atlassian.net/wiki/search?text=[DRAFT]+High+Availability+Upgrade+Best+Practices)\n\n# THIS PAGE IS BEING RE-DRAFTED IN\n\n[[DRAFT] High Availability Upgrade Best Pracices](/wiki/spaces/SupportServer/pages/2624061518/DRAFT+High+Availability+Upgrade+Best+Pracices)\n\nHow to Upgrade a Failover Cluster Environment for Alteryx Server\n\nBy following these steps and checks, you can upgrade your Alteryx Server failover cluster environment while minimizing downtime and ensuring service continuity.\n\n---\n\n---\n\n# 1. Overview\n\nAlteryx Server supports high availability and scalability through an Active-Passive Failover configuration. In this setup, one server is active while another is on standby, ready to take over if the active server fails. This ensures minimal downtime, but it is not an active-active configuration since only one server handles the load at any given time.\n\n---\n\n# 2. Pre-Upgrade Checks\n\n## 2.1 Check Customer Environment Configuration\n\n- Active-Passive Configuration: Verify that the environment is set up as an active-passive cluster. Alteryx does not natively support active-active configurations.\n- DNS Configuration: Confirm how the DNS is configured. Is it pointed to the failover cluster IP, or does it have a DNS record that runs the service even if the failover cluster service fails? This is crucial to ensure we can stop the failover cluster and upgrade a single node at a time. If the DNS is configured only to the failover cluster service, the service won't come up on Node 1 when the cluster service is turned off. You might need to add a hosts entry in C:\\Windows\\System32\\Drivers\\etc\\ to bypass this.\n\n## 2.2 Host Recovery and Sync Checks\n\n- Ensure the customer has completed a proper host recovery.\n- Verify that connections sync and credentials are created correctly when switching traffic to Node 2 or Node 3.\n\n## 2.3 Pre-Upgrade Tools\n\n- Pre-Upgrade Check: Run the pre-upgrade check to identify any potential issues in the database.\n- Migration Prep Tool: Use the migration prep tool to check for and resolve any issues before performing the actual upgrade.\n\n---\n\n# 3. Upgrade Steps\n\n## 3.1 Preparation\n\n- Ensure the failover cluster service is stopped before starting the upgrade.\n- Confirm that the service is not running on any other node.\n\n## 3.2 Common Issues\n\n- Active-Active Misconfiguration: Some customers may mistakenly run the service in an active-active state, which is not supported by Alteryx and can cause issues like duplicate key errors.\n- Simultaneous Upgrades: Upgrading controller nodes simultaneously can result in duplicate key errors as the service starts on both nodes at the same time.\n\n## 3.3 Step-by-Step Upgrade\n\n1. Stop Other Services: Ensure services on other nodes, like Gallery and Worker, are stopped.\n2. Upgrade Node 1: Perform the upgrade on Node 1 and ensure it completes successfully.\n3. Sequential Node Upgrades:Stop Node 1.Upgrade Node 2 and Node 3 one at a time.It is possible that the controller token changes as part of upgrade if you are upgrading from a version that has 48 Characters of Controller Token. Hence verify the controller Token and Storage Keys Encrypted value to be identical.If the tokens are different after the upgrade, perform the host recovery on Node 2 and 3\n   - Stop Node 1.\n   - Upgrade Node 2 and Node 3 one at a time.\n   - It is possible that the controller token changes as part of upgrade if you are upgrading from a version that has 48 Characters of Controller Token. Hence verify the controller Token and Storage Keys Encrypted value to be identical.\n   - If the tokens are different after the upgrade, perform the host recovery on Node 2 and 3\n\n4. Upgrade Gallery and Worker Nodes: If Gallery and Worker nodes are separate, upgrade them after the controller nodes.\n\n## 3.4 Recommended Upgrade Order\n\n- Ensure no other services are running during the upgrade.\n- Upgrade one node at a time to avoid duplicate key errors. \"Error Migrating PackageDefinitionMigration <632b0f64e5e49a0f08007586> Error: Mongo error: \"E11000 duplicate key error collection: AlteryxService.AS_PackageDefinitions.22.3 index: _id_ dup key: { _id: ObjectId('632b0f64e5e49a0f08007586') }: generic server error\" code: <mongodb:11000>\"\n- Parallelly upgrade non-controller nodes, but do not start services until the main controller node is up and running post-upgrade.\n\n---\n\n# 4. Post-Upgrade Sanity Checks\n\n## 4.1 Data and Service Verification\n\n- Collections and Indexes: Verify that all collections, users, subscriptions, workflows, etc., are loading correctly to avoid indexing issues.\n- Data Connections: Ensure that data connections, DCM connections are syncing properly. Ensure the credentials are working.\n\n## 4.2 Primary Server Switchover\n\n- Switch Primary Server: Request the customer to switch the primary server to Node 2 and check if the data connections work as expected.\n- Host Recovery Issues: If host recovery fails when switching to another node, switch back to Node 1 and perform proper host recovery on Node 2. Older versions of the server might not show credential issues unless tested, but these issues can arise post-upgrade when switching traffic.",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.72,
+    "quality_confidence": 0.92999995,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Page is noted as being re-drafted — review for staleness vs draft version",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "proposed_node_title": "upgrade",
+    "proposed_node_slug": "upgrade",
+    "node_description": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2383446384"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2383446384"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Page is noted as being re-drafted — review for staleness vs draft version"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  }
+}
