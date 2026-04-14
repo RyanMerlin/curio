@@ -8,6 +8,7 @@ pub mod harness;
 pub mod llm;
 pub mod northstar;
 pub mod output;
+pub mod quality;
 pub mod reconcile;
 pub mod audit_store;
 pub mod wiki_fs;

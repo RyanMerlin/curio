@@ -17,6 +17,7 @@ use std::path::{Path, PathBuf};
 use crate::{
     config::Config,
     output::emit_json,
+    quality::assess_quality,
     reconcile::{ReconcileDecision, RoutingAnalysis},
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
@@ -159,7 +160,8 @@ fn output_routing_manifest(
         "instructions": {
             "task": "Route each page to exactly one wiki subtree.",
                 "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null}",
-            "confidence_rule": "confidence >= 0.75 and a valid existing subtree fit → staged. Otherwise → review.",
+            "confidence_rule": "confidence >= 0.75 and a valid existing subtree fit is necessary but not sufficient for staged. Weak or low-usability content should still go to review.",
+            "quality_rule": "Assess information quality and human usability separately from routing confidence. Low-signal, placeholder-like, or weak-content pages must go to review even if the route is obvious.",
             "new_subtree_rule": "If no existing subtree fits confidently, do not force publication. Route to review, provide the closest category path you can justify, and fill proposed_new_subtree plus proposal_rationale.",
             "apply_command": "curio process --route-file <path-to-decisions.json>"
         }
@@ -211,7 +213,7 @@ fn apply_decisions(
             // Build a RoutingAnalysis sidecar from the decision
             let analysis = build_analysis_from_decision(&decision, &page.frontmatter.title, &page.body, page.frontmatter.source.origin_url.as_deref(), &page.frontmatter.content_hash);
 
-            match apply_routing(config, &src_path, slug, decision.clone(), Some(&analysis), false) {
+            match apply_routing(config, &src_path, slug, decision.clone(), Some(analysis), false) {
                 Ok(()) => {
                     let conf_pct = (decision.confidence * 100.0) as u32;
                     processed.push(serde_json::json!({
@@ -293,13 +295,41 @@ fn apply_routing(
     src_path: &Path,
     slug: &str,
     decision: ReconcileDecision,
-    analysis: Option<&RoutingAnalysis>,
+    analysis: Option<RoutingAnalysis>,
     _dry_run: bool,
 ) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
-    let target_status = if decision.status == "staged" { "staged" } else { "review" };
+    let mut decision = decision;
     if decision.category.is_empty() {
         anyhow::bail!("Routing decision for '{}' is missing a category path", slug);
+    }
+    let mut analysis = analysis;
+    let mut page = parse_wiki_page(src_path)?;
+    let quality = assess_quality(&page.frontmatter.title, &page.body);
+    let mut target_status = if decision.status == "staged" { "staged" } else { "review" };
+    if target_status == "staged" && !quality.publishable {
+        target_status = "review";
+        decision.status = "review".to_string();
+        let fallback_reason = format!(
+            "Low information quality ({:.0}%) or usability ({:.0}%) — requires review before publication",
+            quality.information_quality * 100.0,
+            quality.usability * 100.0
+        );
+        if decision.review_reason.is_none() {
+            decision.review_reason = Some(fallback_reason.clone());
+        }
+        if let Some(ref mut sidecar) = analysis {
+            sidecar.routing.review_reason = Some(
+                sidecar.routing.review_reason.clone().unwrap_or(fallback_reason)
+            );
+            sidecar.routing.information_quality = Some(quality.information_quality);
+            sidecar.routing.usability = Some(quality.usability);
+            sidecar.routing.flags.extend(quality.flags.clone());
+        }
+    } else if let Some(ref mut sidecar) = analysis {
+        sidecar.routing.information_quality = Some(quality.information_quality);
+        sidecar.routing.usability = Some(quality.usability);
+        sidecar.routing.flags.extend(quality.flags.clone());
     }
     let cat_path: PathBuf = decision.category.iter().collect();
     let dest_dir = wiki_dir.join(target_status).join(&cat_path);
@@ -307,7 +337,6 @@ fn apply_routing(
 
     std::fs::create_dir_all(&dest_dir)?;
 
-    let mut page = parse_wiki_page(src_path)?;
     let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     page.frontmatter.status = if target_status == "staged" { PageStatus::Staged } else { PageStatus::Review };
     page.frontmatter.category = decision.category.clone();
@@ -319,7 +348,7 @@ fn apply_routing(
     update_frontmatter(src_path, &page.frontmatter)?;
 
     // Write analysis sidecar before git mv
-    if let Some(a) = analysis {
+    if let Some(ref a) = analysis {
         write_analysis_sidecar(src_path, a)?;
     }
 
@@ -372,6 +401,8 @@ fn build_analysis_from_decision(
             rationale: String::new(), // populated by agent via --route-file if provided
             alternatives_considered: vec![],
             flags: vec![],
+            information_quality: None,
+            usability: None,
             review_reason: decision.review_reason.clone(),
             proposed_new_subtree: decision.proposed_new_subtree.clone(),
             proposal_rationale: decision.proposal_rationale.clone(),

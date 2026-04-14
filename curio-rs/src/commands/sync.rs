@@ -16,6 +16,8 @@ use crate::{
     config::{Config, upsert_repo_env_var},
     confluence::ConfluenceClient,
     output::emit_json,
+    quality::assess_quality,
+    reconcile::RoutingAnalysis,
     wiki_fs::{content_hash, parse_wiki_page, strip_frontmatter},
     wiki_index::append_log,
 };
@@ -29,6 +31,9 @@ const CURIO_HERO_FILENAME: &str = "Curio_curated_intelligence_operator.png";
 #[derive(Debug, Clone)]
 pub struct CurioConfluenceTree {
     pub root_id: String,
+    pub staged_id: String,
+    pub review_id: String,
+    pub review_proposals_id: String,
     pub published_id: String,
     pub config_id: String,
 }
@@ -100,6 +105,7 @@ pub async fn run_sync(
     let mut skipped: Vec<String> = Vec::new();
     let mut errors: Vec<String> = Vec::new();
     let mut synced_page_ids: HashSet<String> = HashSet::new();
+    synced_page_ids.insert(tree.review_proposals_id.clone());
 
     // Sync top-level config pages first (settings, northstar, readme) under CURIO/Config
     let config_dir = wiki_dir.join("_config");
@@ -283,14 +289,56 @@ pub async fn run_sync(
         }
     }
 
+    sync_lane_directory(
+        &client,
+        space_key,
+        &wiki_dir.join("staged"),
+        tree.staged_id.as_str(),
+        "staged",
+        &mut synced_page_ids,
+        &mut skipped,
+        &mut upserted,
+        &mut errors,
+    )
+    .await?;
+    sync_lane_directory(
+        &client,
+        space_key,
+        &wiki_dir.join("review"),
+        tree.review_id.as_str(),
+        "review",
+        &mut synced_page_ids,
+        &mut skipped,
+        &mut upserted,
+        &mut errors,
+    )
+    .await?;
+    sync_review_proposals(
+        &client,
+        space_key,
+        &wiki_dir.join(".curio").join("sharpening-proposals"),
+        tree.review_proposals_id.as_str(),
+        &mut synced_page_ids,
+        &mut skipped,
+        &mut upserted,
+        &mut errors,
+    )
+    .await?;
+
     // Delete stale pages
     if !dry_run {
-        let stale =
-            find_stale_pages(&client, Some(tree.published_id.as_str()), &synced_page_ids).await?;
-        for page_id in &stale {
-            match client.delete_page(page_id).await {
-                Ok(()) => upserted.push(format!("[deleted] {}", page_id)),
-                Err(e) => errors.push(format!("delete {} failed: {}", page_id, e)),
+        let mut stale_deleted = 0usize;
+        for root_id in [&tree.published_id, &tree.staged_id, &tree.review_id] {
+            let stale =
+                find_stale_pages(&client, Some(root_id.as_str()), &synced_page_ids).await?;
+            for page_id in &stale {
+                match client.delete_page(page_id).await {
+                    Ok(()) => {
+                        stale_deleted += 1;
+                        upserted.push(format!("[deleted] {}", page_id))
+                    }
+                    Err(e) => errors.push(format!("delete {} failed: {}", page_id, e)),
+                }
             }
         }
 
@@ -309,7 +357,7 @@ pub async fn run_sync(
                 "sync: {} upserted, {} skipped, {} stale deleted, {} legacy deleted, {} errors",
                 upserted.len(),
                 skipped.len(),
-                stale.len(),
+                stale_deleted,
                 legacy_pages.len(),
                 errors.len()
             ),
@@ -361,7 +409,7 @@ pub async fn ensure_curio_confluence_tree(
         Some(page_icon("published").unwrap_or("atlassian-check_mark")),
     )
     .await?;
-    let _ = upsert_static_page(
+    let staged_id = upsert_static_page(
         client,
         space_key,
         Some(root_id.as_str()),
@@ -374,7 +422,7 @@ pub async fn ensure_curio_confluence_tree(
         None,
     )
     .await?;
-    let _ = upsert_static_page(
+    let review_id = upsert_static_page(
         client,
         space_key,
         Some(root_id.as_str()),
@@ -384,6 +432,16 @@ pub async fn ensure_curio_confluence_tree(
             "Manage staged content with <code>curio resolve</code> and <code>curio publish</code>.",
         ),
         "staged",
+        None,
+    )
+    .await?;
+    let review_proposals_id = upsert_static_page(
+        client,
+        space_key,
+        Some(review_id.as_str()),
+        "Proposals",
+        "<p>Curio sharpening and taxonomy proposals that require human review.</p>",
+        "proposals",
         None,
     )
     .await?;
@@ -499,6 +557,9 @@ pub async fn ensure_curio_confluence_tree(
 
     Ok(CurioConfluenceTree {
         root_id: root_page_id,
+        staged_id,
+        review_id,
+        review_proposals_id,
         published_id,
         config_id,
     })
@@ -791,6 +852,116 @@ fn valid_published_routes(trees: &[TreeNode]) -> HashSet<String> {
     routes
 }
 
+async fn sync_lane_directory(
+    client: &ConfluenceClient,
+    space_key: &str,
+    root_dir: &Path,
+    root_page_id: &str,
+    lane: &str,
+    synced_ids: &mut HashSet<String>,
+    skipped: &mut Vec<String>,
+    upserted: &mut Vec<String>,
+    errors: &mut Vec<String>,
+) -> Result<()> {
+    if !root_dir.exists() {
+        return Ok(());
+    }
+
+    let mut dir_to_page_id: HashMap<PathBuf, Option<String>> = HashMap::new();
+    dir_to_page_id.insert(PathBuf::new(), Some(root_page_id.to_string()));
+
+    for (rel_path, is_dir) in collect_sorted_entries(root_dir)? {
+        let abs_path = root_dir.join(&rel_path);
+        let name = rel_path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_default();
+
+        if name.starts_with('.') || name.starts_with('_') {
+            continue;
+        }
+
+        let parent_rel = rel_path.parent().map(PathBuf::from).unwrap_or_default();
+        let parent_conf_id = dir_to_page_id
+            .get(&parent_rel)
+            .cloned()
+            .unwrap_or_else(|| Some(root_page_id.to_string()));
+
+        if is_dir {
+            if !subtree_has_markdown(&abs_path) {
+                continue;
+            }
+            let page_title = lane_display_title(lane, &rel_path);
+            match upsert_page(
+                client,
+                space_key,
+                parent_conf_id.as_deref(),
+                &page_title,
+                CHILDREN_MACRO,
+                &name,
+                None,
+            )
+            .await
+            {
+                Ok(id) => {
+                    synced_ids.insert(id.clone());
+                    dir_to_page_id.insert(rel_path, Some(id));
+                    upserted.push(format!("[{} dir] {}", lane, page_title));
+                }
+                Err(e) => errors.push(format!("[{} dir] {}: {}", lane, page_title, e)),
+            }
+        } else if rel_path.extension().map_or(false, |ext| ext == "md") {
+            match sync_lane_page(
+                client,
+                space_key,
+                parent_conf_id.as_deref(),
+                &abs_path,
+                lane,
+                synced_ids,
+                skipped,
+            )
+            .await
+            {
+                Ok(title) => upserted.push(format!("[{} page] {}", lane, title)),
+                Err(e) => errors.push(format!("[{} page] {}: {}", lane, abs_path.display(), e)),
+            }
+        }
+    }
+
+    Ok(())
+}
+
+async fn sync_review_proposals(
+    client: &ConfluenceClient,
+    space_key: &str,
+    proposals_dir: &Path,
+    parent_id: &str,
+    synced_ids: &mut HashSet<String>,
+    skipped: &mut Vec<String>,
+    upserted: &mut Vec<String>,
+    errors: &mut Vec<String>,
+) -> Result<()> {
+    if !proposals_dir.exists() {
+        return Ok(());
+    }
+
+    let mut entries: Vec<_> = std::fs::read_dir(proposals_dir)?
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.path().extension().and_then(|ext| ext.to_str()) == Some("json"))
+        .collect();
+    entries.sort_by_key(|entry| entry.file_name());
+
+    for entry in entries {
+        let path = entry.path();
+        match sync_proposal_page(client, space_key, Some(parent_id), &path, synced_ids, skipped).await {
+            Ok(title) => upserted.push(format!("[review proposal] {}", title)),
+            Err(e) => errors.push(format!("[review proposal] {}: {}", path.display(), e)),
+        }
+    }
+
+    Ok(())
+}
+
 // ─── Page operations ──────────────────────────────────────────────────────
 
 async fn sync_page(
@@ -810,73 +981,309 @@ async fn sync_page(
     let body_md = page.body.as_str();
     let hash = content_hash(body_md);
     let html_body = markdown_to_html(body_md);
+    sync_page_html(
+        client,
+        space_key,
+        parent_id,
+        path,
+        &page_title,
+        &hash,
+        &html_body,
+        synced_ids,
+        skipped,
+        true,
+    )
+    .await
+}
+
+async fn sync_lane_page(
+    client: &ConfluenceClient,
+    space_key: &str,
+    parent_id: Option<&str>,
+    path: &Path,
+    lane: &str,
+    synced_ids: &mut HashSet<String>,
+    skipped: &mut Vec<String>,
+) -> Result<String> {
+    let page = parse_wiki_page(path)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let page_title = format!("{} - {}", to_title(lane), page.frontmatter.title.trim());
+    if page_title.is_empty() {
+        anyhow::bail!("Page title is empty for {}", path.display());
+    }
+    let html_body = render_lane_page_body(path, &page, lane)?;
+    let hash = content_hash(&html_body);
+    sync_page_html(
+        client,
+        space_key,
+        parent_id,
+        path,
+        &page_title,
+        &hash,
+        &html_body,
+        synced_ids,
+        skipped,
+        true,
+    )
+    .await
+}
+
+async fn sync_proposal_page(
+    client: &ConfluenceClient,
+    space_key: &str,
+    parent_id: Option<&str>,
+    path: &Path,
+    synced_ids: &mut HashSet<String>,
+    skipped: &mut Vec<String>,
+) -> Result<String> {
+    let raw = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let payload: serde_json::Value = serde_json::from_str(&raw)
+        .with_context(|| format!("Failed to parse proposal JSON {}", path.display()))?;
+    let title = format!(
+        "Sharpening Proposal {}",
+        path.file_stem().and_then(|s| s.to_str()).unwrap_or("untitled")
+    );
+    let html_body = render_proposal_body(&payload);
+    let hash = content_hash(&raw);
+    sync_page_html(
+        client,
+        space_key,
+        parent_id,
+        path,
+        &title,
+        &hash,
+        &html_body,
+        synced_ids,
+        skipped,
+        false,
+    )
+    .await
+}
+
+async fn sync_page_html(
+    client: &ConfluenceClient,
+    space_key: &str,
+    parent_id: Option<&str>,
+    path: &Path,
+    page_title: &str,
+    hash: &str,
+    html_body: &str,
+    synced_ids: &mut HashSet<String>,
+    skipped: &mut Vec<String>,
+    allow_duplicate_fallback: bool,
+) -> Result<String> {
 
     // Check if page already exists and content hasn't changed
-    if let Some(ref existing_page) = client.get_page_by_title(space_key, parent_id, &page_title).await? {
+    if let Some(ref existing_page) = client.get_page_by_title(space_key, parent_id, page_title).await? {
         let page_id = existing_page["id"].as_str().unwrap_or_default().to_string();
         if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
-            if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
+            if prop["value"]["content_hash"].as_str() == Some(hash) {
                 skipped.push(page_title.to_string());
                 synced_ids.insert(page_id);
-                return Ok(page_title);
+                return Ok(page_title.to_string());
             }
         }
         let slug = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
         let page_id = client
-            .create_or_update_page(space_key, parent_id, &page_title, "storage", &html_body)
+            .create_or_update_page(space_key, parent_id, page_title, "storage", html_body)
             .await?;
-        set_sync_prop(client, &page_id, &hash).await?;
+        set_sync_prop(client, &page_id, hash).await?;
         set_page_icon(client, &page_id, slug).await;
         synced_ids.insert(page_id);
-        return Ok(page_title);
+        return Ok(page_title.to_string());
     }
 
-    if let Some(conflicting_page) = client.get_page_by_title(space_key, None, &page_title).await? {
-        let conflicting_id = conflicting_page["id"].as_str().unwrap_or_default().to_string();
-        let duplicate_title = format!("{} (dup)", page_title);
-        let duplicate_html = duplicate_notice_body(client, &conflicting_id, &page_title, &html_body);
-        if let Some(existing_dup_page) =
-            find_existing_page_for_sync(client, space_key, parent_id, &duplicate_title).await?
-        {
-            let page_id = existing_dup_page["id"].as_str().unwrap_or_default().to_string();
-            if let Some(target_parent_id) = parent_id {
-                if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
-                    let current_parent_id = current_page["parentId"].as_str();
-                    if current_parent_id != Some(target_parent_id) {
-                        let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+    if allow_duplicate_fallback {
+        if let Some(conflicting_page) = client.get_page_by_title(space_key, None, page_title).await? {
+            let conflicting_id = conflicting_page["id"].as_str().unwrap_or_default().to_string();
+            let duplicate_title = format!("{} (dup)", page_title);
+            let duplicate_html = duplicate_notice_body(client, &conflicting_id, page_title, html_body);
+            if let Some(existing_dup_page) =
+                find_existing_page_for_sync(client, space_key, parent_id, &duplicate_title).await?
+            {
+                let page_id = existing_dup_page["id"].as_str().unwrap_or_default().to_string();
+                if let Some(target_parent_id) = parent_id {
+                    if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
+                        let current_parent_id = current_page["parentId"].as_str();
+                        if current_parent_id != Some(target_parent_id) {
+                            let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                        }
                     }
                 }
+                client
+                    .update_page_body_by_id(&page_id, "storage", &duplicate_html)
+                    .await?;
+                set_sync_prop(client, &page_id, hash).await?;
+                set_page_icon(
+                    client,
+                    &page_id,
+                    path.file_stem().unwrap_or_default().to_str().unwrap_or(""),
+                )
+                .await;
+                synced_ids.insert(page_id);
+                return Ok(duplicate_title);
             }
-            client
-                .update_page_body_by_id(&page_id, "storage", &duplicate_html)
+            let page_id = client
+                .create_or_update_page(space_key, parent_id, &duplicate_title, "storage", &duplicate_html)
                 .await?;
-            set_sync_prop(client, &page_id, &hash).await?;
-            set_page_icon(
-                client,
-                &page_id,
-                path.file_stem().unwrap_or_default().to_str().unwrap_or(""),
-            )
-            .await;
+            set_sync_prop(client, &page_id, hash).await?;
+            set_page_icon(client, &page_id, path.file_stem().unwrap_or_default().to_str().unwrap_or("")).await;
             synced_ids.insert(page_id);
             return Ok(duplicate_title);
         }
-        let page_id = client
-            .create_or_update_page(space_key, parent_id, &duplicate_title, "storage", &duplicate_html)
+    } else if let Some(existing_global_page) = client.get_page_by_title(space_key, None, page_title).await? {
+        let page_id = existing_global_page["id"].as_str().unwrap_or_default().to_string();
+        if let Some(target_parent_id) = parent_id {
+            if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
+                let current_parent_id = current_page["parentId"].as_str();
+                if current_parent_id != Some(target_parent_id) {
+                    let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                }
+            }
+        }
+        client
+            .update_page_body_by_id(&page_id, "storage", html_body)
             .await?;
-        set_sync_prop(client, &page_id, &hash).await?;
+        set_sync_prop(client, &page_id, hash).await?;
         set_page_icon(client, &page_id, path.file_stem().unwrap_or_default().to_str().unwrap_or("")).await;
         synced_ids.insert(page_id);
-        return Ok(duplicate_title);
+        return Ok(page_title.to_string());
     }
 
     let slug = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
     let page_id = client
-        .create_or_update_page(space_key, parent_id, &page_title, "storage", &html_body)
+        .create_or_update_page(space_key, parent_id, page_title, "storage", html_body)
         .await?;
-    set_sync_prop(client, &page_id, &hash).await?;
+    set_sync_prop(client, &page_id, hash).await?;
     set_page_icon(client, &page_id, slug).await;
     synced_ids.insert(page_id);
-    Ok(page_title)
+    Ok(page_title.to_string())
+}
+
+fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Result<String> {
+    let quality = assess_quality(&page.frontmatter.title, &page.body);
+    let analysis = read_analysis_sidecar(path);
+    let route = if page.frontmatter.category.is_empty() {
+        "unrouted".to_string()
+    } else {
+        page.frontmatter.category.join(" / ")
+    };
+    let confidence = page.frontmatter.confidence.unwrap_or(0.0) * 100.0;
+    let mut body = String::new();
+    let lane_label = if lane == "review" { "Review" } else { "Staged" };
+    body.push_str(&format!(
+        "<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p><strong>{}</strong> item in the Curio workflow.</p></ac:rich-text-body></ac:structured-macro>",
+        lane_label
+    ));
+    body.push_str("<table><tbody>");
+    body.push_str(&format!("<tr><th>Status</th><td>{}</td></tr>", html_escape(page.frontmatter.status.as_str())));
+    body.push_str(&format!("<tr><th>Category</th><td>{}</td></tr>", html_escape(&route)));
+    body.push_str(&format!("<tr><th>Confidence</th><td>{:.0}%</td></tr>", confidence));
+    body.push_str(&format!(
+        "<tr><th>Information quality</th><td>{:.0}%</td></tr>",
+        quality.information_quality * 100.0
+    ));
+    body.push_str(&format!(
+        "<tr><th>Usability</th><td>{:.0}%</td></tr>",
+        quality.usability * 100.0
+    ));
+    if !quality.flags.is_empty() {
+        body.push_str(&format!(
+            "<tr><th>Quality flags</th><td>{}</td></tr>",
+            html_escape(&quality.flags.join(", "))
+        ));
+    }
+    if let Some(ref analysis) = analysis {
+        if !analysis.routing.rationale.trim().is_empty() {
+            body.push_str(&format!(
+                "<tr><th>Rationale</th><td>{}</td></tr>",
+                html_escape(&analysis.routing.rationale)
+            ));
+        }
+        if let Some(ref reason) = analysis.routing.review_reason {
+            body.push_str(&format!(
+                "<tr><th>Review reason</th><td>{}</td></tr>",
+                html_escape(reason)
+            ));
+        }
+        if let Some(ref subtree) = analysis.routing.proposed_new_subtree {
+            body.push_str(&format!(
+                "<tr><th>Proposed subtree</th><td>{}</td></tr>",
+                html_escape(subtree)
+            ));
+        }
+        if let Some(ref rationale) = analysis.routing.proposal_rationale {
+            body.push_str(&format!(
+                "<tr><th>Proposal rationale</th><td>{}</td></tr>",
+                html_escape(rationale)
+            ));
+        }
+    }
+    body.push_str("</tbody></table>");
+    body.push_str(&markdown_to_html(&page.body));
+    Ok(body)
+}
+
+fn render_proposal_body(payload: &serde_json::Value) -> String {
+    let generated_at = payload["generated_at"].as_str().unwrap_or("");
+    let proposals = payload["proposals"].as_array().cloned().unwrap_or_default();
+    let mut out = String::new();
+    out.push_str("<h1>Sharpening Proposal Set</h1>");
+    if !generated_at.is_empty() {
+        out.push_str(&format!("<p>Generated at {}</p>", html_escape(generated_at)));
+    }
+    for proposal in proposals {
+        out.push_str("<ac:structured-macro ac:name=\"info\"><ac:rich-text-body>");
+        out.push_str(&format!(
+            "<p><strong>{}</strong>: {}</p>",
+            html_escape(proposal["type"].as_str().unwrap_or("proposal")),
+            html_escape(proposal["recommended_action"].as_str().unwrap_or(""))
+        ));
+        out.push_str("</ac:rich-text-body></ac:structured-macro>");
+        out.push_str("<table><tbody>");
+        if let Some(paths) = proposal["affected_paths"].as_array() {
+            let joined = paths.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>().join("<br/>");
+            out.push_str(&format!("<tr><th>Affected paths</th><td>{}</td></tr>", joined));
+        }
+        if let Some(rationale) = proposal["rationale"].as_str() {
+            out.push_str(&format!("<tr><th>Rationale</th><td>{}</td></tr>", html_escape(rationale)));
+        }
+        if let Some(confidence) = proposal["confidence"].as_f64() {
+            out.push_str(&format!("<tr><th>Confidence</th><td>{:.0}%</td></tr>", confidence * 100.0));
+        }
+        if let Some(gain) = proposal["expected_signal_gain"].as_str() {
+            out.push_str(&format!("<tr><th>Expected signal gain</th><td>{}</td></tr>", html_escape(gain)));
+        }
+        out.push_str("</tbody></table>");
+    }
+    out
+}
+
+fn read_analysis_sidecar(path: &Path) -> Option<RoutingAnalysis> {
+    let sidecar_path = path.with_extension("analysis.json");
+    let raw = std::fs::read_to_string(sidecar_path).ok()?;
+    serde_json::from_str(&raw).ok()
+}
+
+fn lane_display_title(lane: &str, rel_path: &Path) -> String {
+    let parts: Vec<String> = rel_path
+        .components()
+        .filter_map(|component| component.as_os_str().to_str())
+        .map(to_title)
+        .collect();
+    format!("{} - {}", to_title(lane), parts.join(" - "))
+}
+
+fn subtree_has_markdown(root: &Path) -> bool {
+    walkdir::WalkDir::new(root)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .any(|entry| {
+            entry.file_type().is_file()
+                && entry.path().extension().and_then(|ext| ext.to_str()) == Some("md")
+                && entry.path().file_name().and_then(|name| name.to_str()) != Some("index.md")
+        })
 }
 
 async fn upsert_page(

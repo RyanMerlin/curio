@@ -99,6 +99,10 @@ pub struct AnalysisRouting {
     pub rationale: String,
     pub alternatives_considered: Vec<RoutingAlternative>,
     pub flags: Vec<String>,
+    #[serde(default)]
+    pub information_quality: Option<f32>,
+    #[serde(default)]
+    pub usability: Option<f32>,
     pub review_reason: Option<String>,
     #[serde(default)]
     pub proposed_new_subtree: Option<String>,
@@ -451,6 +455,8 @@ fn parse_llm_response(
             rationale,
             alternatives_considered: alternatives,
             flags: vec![],
+            information_quality: None,
+            usability: None,
             review_reason,
             proposed_new_subtree,
             proposal_rationale,

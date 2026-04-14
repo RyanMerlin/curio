@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use crate::{
     config::Config,
     output::emit_json,
+    quality::assess_quality,
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
     PageStatus,
@@ -33,6 +34,15 @@ pub async fn run_publish(
     };
 
     let mut page = parse_wiki_page(&src_path)?;
+    let quality = assess_quality(&page.frontmatter.title, &page.body);
+    if !quality.publishable {
+        anyhow::bail!(
+            "Cannot publish '{}' because the content is too weak for published status (information quality {:.0}%, usability {:.0}%). Route it back through review for improvement, consolidation, or deletion.",
+            slug,
+            quality.information_quality * 100.0,
+            quality.usability * 100.0
+        );
+    }
 
     // Empty/"-" category means top-level published/ (no subdirectory).
     let cat_segments: Vec<String> = category
