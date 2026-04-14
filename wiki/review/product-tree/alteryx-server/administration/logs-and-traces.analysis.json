@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:21Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Logs and Traces",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1709640770",
+    "content_hash": "sha256:3f270f9ac407780d3bbdde5d9c6a19f7e0d9a186ff622a736c3d2b5e6fd6d668",
+    "content_preview": "> **ℹ️ Info**\n>\n> This page covers Server logs\n> \n> See also: **Support-Desginer > **[Logs and Traces](https://alteryx.atlassian.net/wiki/spaces/SupportDesigner/pages?title=Logs+and+Traces)\n\nToolsAlteryx Workbench (SharePoint) <== Tech Support File ViewerHelphttps://help.alteryx.com/current/en/server/configure/configure-and-use-server-logs.html\n\nLog or TraceDescriptionAlteryx System Settings Change LogRuntimeSettingsAuditLog.csvLog changes made by Alteryx System Settings appCryptoMigration Log F"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.5799999,
+    "usability": 0.54999995,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "logs",
+      "and",
+      "traces"
+    ],
+    "keywords_extracted": [
+      "logs",
+      "Server",
+      "file",
+      "Logs",
+      "Support",
+      "Migration",
+      "System",
+      "workflow"
+    ]
+  }
+}

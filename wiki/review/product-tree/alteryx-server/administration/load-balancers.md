@@ -1,21 +1,28 @@
 ---
 id: 84501aa6bcb93b52
 title: Load Balancers
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2398683515
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2398683515
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- load-balancer
+- infrastructure
+- configuration
+- ssl
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:20Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:59acfa638155aef86d575fb4a2a59fadd247be738fcd868d7f0dc2c0bc949f52
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Key Articles** | [Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy)](https://knowledge.alteryx.com/index/s/article/Requirements-for-Configuring-Alteryx-Server-with-a-Load-Balancer-or-Reverse-Proxy-1628116360935)  (KB)     <== **Sophia** |

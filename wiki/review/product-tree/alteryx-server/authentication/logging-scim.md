@@ -1,21 +1,28 @@
 ---
 id: c9b979627008a0fd
 title: Logging (SCIM)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2675835371
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2675835371
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- scim
+- logging
+- provisioning
+- diagnostic
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:20Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:381f075228ec23728b187b08b658d5d657d8b49c549482fca0ce92fb621c6cc7
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

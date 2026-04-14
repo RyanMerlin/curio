@@ -1,21 +1,29 @@
 ---
 id: 617fc6591c8d4f03
 title: Logs and Traces
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1709640770
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1709640770
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- logs
+- traces
+- diagnostic
+- service-logs
+- debugging
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:21Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:3f270f9ac407780d3bbdde5d9c6a19f7e0d9a186ff622a736c3d2b5e6fd6d668
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

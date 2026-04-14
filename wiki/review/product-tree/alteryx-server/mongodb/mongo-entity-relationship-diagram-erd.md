@@ -1,21 +1,29 @@
 ---
 id: 99312377edaa9ff6
 title: Mongo Entity-Relationship Diagram (ERD)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1776681530
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1776681530
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- erd
+- schema
+- collections
+- reference
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:22Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:d19a9e85533177f1474d8501d5c14e335795e2ff6291351fa9866c4413906be6
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

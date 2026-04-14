@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-issues-saml",
+  "generated_at": "2026-04-14T15:20:17Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "issues-saml",
+  "title": "Issues (SAML)",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "Hub/index for SAML issues on Alteryx Server — blank screens, AAS log references.",
+  "body_markdown": "# SAML Issues\n\n---\n\nBlank screen when configuring SAML Auth\n\n- Troubleshooting: Blank Screen when Configuring SAML Authentication (KB) <== this is for the CONFIGURATION, not login\n\nSAML will only allow logins briefly after Service restart\n\n- TCPE-82077dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira [canceled b/c it’s fixed in 24.2]\n\n[Alteryx Server: Service will not start due to the AlteryxAuthorizationService taking a long time to come up](https://alteryx.lightning.force.com/kA02R0000000v4GSAQ) (KB)\n\n- TCPE-103677dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira <== request to make default timeout longer\n\nStuck on login page **Taking you to your organization’s sign-in page**\n\n- TCPE-70977dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.8,
+    "quality_confidence": 0.69,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.84,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Hub/section index; requires authentication subtree taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2071069301"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2071069301"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Hub/section index; requires authentication subtree taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}

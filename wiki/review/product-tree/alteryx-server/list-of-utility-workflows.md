@@ -1,21 +1,27 @@
 ---
 id: 85a5cc64639539f6
 title: LIST OF UTILITY WORKFLOWS
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2200306970
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2200306970
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- utility-workflows
+- gallery
+- tools
+- list
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:19Z
+confidence: 0.75
 cross_refs: []
 content_hash: sha256:e607fdebc5018e5a7b79c6e05056d2b048f7122746a8cd17cc846256811c1061
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**
