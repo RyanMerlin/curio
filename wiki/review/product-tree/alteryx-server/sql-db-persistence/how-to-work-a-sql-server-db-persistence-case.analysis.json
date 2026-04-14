@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:27Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How to Work a SQL Server DB Persistence Case",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2469298674",
+    "content_hash": "sha256:c4f333f7c3abe75ab65ffb8519492b907273c1a6ca693d32ff82f67d716dcb55",
+    "content_preview": "| Initial Questions |  |\n| --- | --- |\n| Alteryx Server version | Go to the Server Designer and get a screenshot of the Designer version (Help > About) |\n| SQL Server version | Get from the SQL Server Database Admin |\n| SQL Server Driver version | A screenshot of ODBC Data Sources 64-bit app > DriversNote: The SQL persistence connection will only work with 'ODBC Driver 17' and will fail with driver version 18 |\n| What is the error in Alteryx System Settings, if applicable? | A screenshot of erro"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "sql-db-persistence"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'sql-db-persistence' required under 'product-tree/alteryx-server/sql-db-persistence' — pending taxonomy approval",
+    "proposed_new_subtree": "sql-db-persistence",
+    "proposal_rationale": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "work",
+      "a",
+      "sql",
+      "server",
+      "db",
+      "persistence",
+      "case"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "Alteryx",
+      "version",
+      "connection",
+      "authentication",
+      "strings",
+      "should",
+      "using"
+    ]
+  }
+}

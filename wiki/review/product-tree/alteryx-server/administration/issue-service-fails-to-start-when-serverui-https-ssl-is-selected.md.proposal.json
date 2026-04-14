@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-issue-service-fails-to-start-when-serverui-https-ssl-is-selected",
+  "generated_at": "2026-04-14T13:50:30Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "issue-service-fails-to-start-when-serverui-https-ssl-is-selected",
+  "title": "Issue - Service fails to start when ServerUI HTTPS/SSL is selected",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "administration"
+  ],
+  "summary": "Issue documentation for Server service failing to start when ServerUI HTTPS/SSL is selected.",
+  "body_markdown": "| Issue | Service fails to start when ServerUI HTTPS/SSL is selectedService starts when this is unchecked and ServerUI is accessed with HTTP |\n| --- | --- |\n| Screenshot |  |\n| Related Issues |  |\n\n# Troubleshooting\n\n|  | Check | Steps |\n| --- | --- | --- |\n| 1 | Is Controller Global SSL set? |  |\n| 2 | Is Port 443 open? |  |\n| 3 | Is Certificate installed |  |\n| 4 | Is Certificate trusted? |  |\n\n[GCS Operations via Workflows: Card - access it on https://go.skype.com/cards.unsup...](https://teams.microsoft.com/l/message/19:05d469da10bd4f5a99baa1aa0baad90e@thread.skype/1743688069045?tenantId=522f39d9-303d-488f-9deb-a6d77f1eafd8&groupId=d7adbfc0-2b4e-487b-a707-42e478f217b6&parentMessageId=1743688069045&teamName=GRP_Customer%20Support%20-%20Skill%20Teams&channelName=Designer&createdTime=1743688069045)\n\nposted in GRP_Customer Support - Skill Teams / Designer on Thursday, April 3, 2025 9:47 AM\n\nFor enabling SSL , only the SSL option to enable at Server UI > General should be enabled. I would skip the Global and Controller SSL options and leave those off\n\nIf the service isn't starting check the service logs. Are you seeing a bunch of 400 and/or 404 errors? If so then the cert is not configured properly. Check the certificate itself. Go into the MMC and double click the cert and check it's General tab. Does it have information like this?\n\nIf not then it's not trusted and therefore it won't work. If it does have information, I would check the certificate's SAN/DSN names or the certt itself and check to see if it matches the Gallery URL FQDN in the AYX System Settings. Then I would go into the command prompt and check to see that the cert is bound to port 443 on IP 0.0.0.0 by matching the thumbprint of the cert and what shows up in the command prompt.\n\nIf all of that is correct, then I would do an nslookup on the FQDN of that Gallery URL and see if the DNS record shows up correctly.",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.87,
+    "quality_confidence": 0.92999995,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "proposed_node_title": "administration",
+    "proposed_node_slug": "administration",
+    "node_description": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2997911697"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2997911697"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  }
+}

@@ -1,21 +1,26 @@
 ---
 id: 7b6f5f8a263a4322
 title: How-To
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640793078
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793078
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- how-to
+- hub
+- procedures
 created_at: 2026-04-14T13:40:13Z
-updated_at: 2026-04-14T13:40:13Z
-confidence: null
+updated_at: 2026-04-14T13:50:28Z
+confidence: 0.6
 cross_refs: []
 content_hash: sha256:bc79420eed74d3d98a5ab6bcd85d562f046cc61991195555223c80a807ecddfe
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 *[Organized section — child pages listed separately]*
