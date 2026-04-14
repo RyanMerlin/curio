@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:42Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Orasi Labs",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2506621562",
+    "content_hash": "sha256:ce407bbba45971a1c156597e7cf6e891568eac7fa319e6ac0d3d3574f05ea711",
+    "content_preview": "> **📝 Note**\n>\n> **OrasiLabs has been shutdown and the platform is no longer available. As of 10/06/2025 there will not be a replacement. **\n\n> **ℹ️ Info**\n>\n> Orasi Labs allow you to start with a Server that needs some action or is in a failed state and needs troubleshooting.  Each lab has a **ReadMe.txt** on the desktop to help you get started.\n\n| Access | Contact Cameron Settle for an invitation to a lab |\n| --- | --- |\n| Open windows are lost when lab suspends | The lab times out from inacti"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.3,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.87999994,
+    "usability": 0.82,
+    "review_reason": "Obsolete — OrasiLabs has been shutdown; recommend archiving or deleting this page",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "orasi",
+      "labs"
+    ],
+    "keywords_extracted": [
+      "section",
+      "they",
+      "folder",
+      "dont",
+      "which",
+      "files",
+      "Mongo",
+      "step"
+    ]
+  }
+}

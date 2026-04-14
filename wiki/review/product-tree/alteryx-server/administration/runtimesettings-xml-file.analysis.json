@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:45Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "RuntimeSettings.xml file",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1710522478",
+    "content_hash": "sha256:3f3f2121f78f2582e4c4d3057b9f472cedaef67bc0bb9125d5f88eef996aca5c",
+    "content_preview": "Hub page: RuntimeSettings.xml file\n\n*This page serves as a section index with no prose body.*\n"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.75,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "low_word_count",
+      "thin_structure",
+      "low_unique_term_count"
+    ],
+    "information_quality": 0.0,
+    "usability": 0.26999998,
+    "review_reason": "Sparse hub page; requires administration subtree taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": null,
+    "title_tokens": [
+      "runtimesettings.xml",
+      "file"
+    ],
+    "keywords_extracted": [
+      "page",
+      "file",
+      "RuntimeSettingsxml",
+      "serves",
+      "This",
+      "prose",
+      "section",
+      "body"
+    ]
+  }
+}

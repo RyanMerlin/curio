@@ -1,21 +1,29 @@
 ---
 id: 5418b254c430c0d5
 title: Reindex MongoDB
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702893899
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702893899
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- reindex
+- maintenance
+- '24.1'
+- upgrade
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:43Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:188e10c78b645feb976d87cf16aea8ba1d34febffc4af10482d110fc010bbf8d
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---
