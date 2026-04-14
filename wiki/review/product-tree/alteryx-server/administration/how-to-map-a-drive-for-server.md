@@ -1,21 +1,28 @@
 ---
 id: 623122ffdaf6924e
 title: How to Map a Drive for Server
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2999026275
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2999026275
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- drive-mapping
+- network
+- configuration
+- apod
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:58Z
+confidence: 0.82
 cross_refs: []
 content_hash: sha256:a3486b3acd850df42c81579a59e1178efc5ac5465975b01b2550824a97752ff1
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

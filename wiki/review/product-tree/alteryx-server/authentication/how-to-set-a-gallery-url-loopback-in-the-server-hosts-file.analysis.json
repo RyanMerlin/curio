@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:02Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How to Set a Gallery URL loopback in the Server hosts file",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1745944926",
+    "content_hash": "sha256:e9c153b3b53eafb8bdcdae0911e9fb6e2a8b91f6c2d5be63610ed87c91a65d2e",
+    "content_preview": "> **ℹ️ Info**\n>\n> Some Servers experience intermittent or consistent problems if the Server is going outside of itself to resolve its own FQDN name.  This is especially an issue with load balancers.\n> \n> Adding an entry to the **hosts **file allows requests made from the Service to find the Gallery, bypassing any DNS/network entity that may be causing an issue.\n\nAnother issue also referred to as “loopback” <https://docs.google.com/document/d/1Kj0UBGaUhgw8wX0K2izOiEZbKs8yzzxQ718dXSf08H4/edit?usp="
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.78999996,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+    "proposed_new_subtree": "authentication",
+    "proposal_rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "set",
+      "a",
+      "gallery",
+      "url",
+      "loopback",
+      "in",
+      "the",
+      "server",
+      "hosts",
+      "file"
+    ],
+    "keywords_extracted": [
+      "file",
+      "hosts",
+      "issue",
+      "Gallery",
+      "Server",
+      "Service",
+      "loopback",
+      "Edit"
+    ]
+  }
+}

@@ -1,21 +1,29 @@
 ---
 id: a9db67734d8ed998
 title: How to monitor/ping Gallery to ensure it's running?
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2481291417
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2481291417
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- monitoring
+- gallery
+- ping
+- health-check
+- operations
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:59Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:5ca23de4e9e38b28e3648041a9c9bcaedb67e6c79cf54bd89ee75a7372c62f62
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

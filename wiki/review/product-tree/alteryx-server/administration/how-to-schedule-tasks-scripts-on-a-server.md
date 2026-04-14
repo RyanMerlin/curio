@@ -1,21 +1,29 @@
 ---
 id: 531b70d6f42eb06f
 title: How to Schedule Tasks/Scripts on a Server
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2336161925
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2336161925
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- scheduling
+- scripts
+- windows-task-scheduler
+- operations
+- automation
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:01Z
+confidence: 0.83
 cross_refs: []
 content_hash: sha256:b0319280699591d7ddded0143008e51e74c213b111d243d49913ba93e0fd8baa
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 Some articles to point customers to to help them understand how to schedule a task (like a file clean-up script) on Server:

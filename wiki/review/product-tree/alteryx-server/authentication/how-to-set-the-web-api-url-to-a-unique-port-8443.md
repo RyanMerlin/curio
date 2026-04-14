@@ -1,21 +1,30 @@
 ---
 id: 08096e21c47ad4e8
 title: How to Set the Web API URL to a Unique Port (8443)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1766330084
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1766330084
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- ssl
+- api-url
+- port
+- '8443'
+- configuration
+- https
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:02Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:df43e6bf249e62523ea93faeaa798e93a0548fb154e070f79d76cd421a623ca6
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

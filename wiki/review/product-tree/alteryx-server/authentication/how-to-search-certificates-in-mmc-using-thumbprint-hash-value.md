@@ -1,21 +1,30 @@
 ---
 id: 3353b8d9772dc136
 title: How to - Search Certificates in MMC Using Thumbprint/Hash Value
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2036629823
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2036629823
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- ssl
+- certificate
+- mmc
+- thumbprint
+- hash
+- how-to
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:01Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:bbccdbe0f2b23b3a4d966a0ef239c34e34197e74919d88199ce5821ee5e65889
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

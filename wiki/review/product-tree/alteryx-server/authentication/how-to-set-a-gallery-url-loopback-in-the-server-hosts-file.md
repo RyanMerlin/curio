@@ -1,21 +1,29 @@
 ---
 id: 57ce97232ed25a1e
 title: How to Set a Gallery URL loopback in the Server hosts file
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1745944926
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1745944926
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- gallery
+- hosts-file
+- loopback
+- ssl
+- configuration
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:02Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:e9c153b3b53eafb8bdcdae0911e9fb6e2a8b91f6c2d5be63610ed87c91a65d2e
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

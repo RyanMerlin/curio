@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-how-to-set-a-gallery-url-loopback-in-the-server-hosts-file",
+  "generated_at": "2026-04-14T15:20:02Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "how-to-set-a-gallery-url-loopback-in-the-server-hosts-file",
+  "title": "How to Set a Gallery URL loopback in the Server hosts file",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "How to set a Gallery URL loopback in the Server hosts file to resolve intermittent SSL/URL problems.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> Some Servers experience intermittent or consistent problems if the Server is going outside of itself to resolve its own FQDN name.  This is especially an issue with load balancers.\n> \n> Adding an entry to the **hosts **file allows requests made from the Service to find the Gallery, bypassing any DNS/network entity that may be causing an issue.\n\nAnother issue also referred to as “loopback” <https://docs.google.com/document/d/1Kj0UBGaUhgw8wX0K2izOiEZbKs8yzzxQ718dXSf08H4/edit?usp=sharing> (Google)\n\n| **Key Articles** | [How and Why to do a Hosts file modification](https://knowledge.alteryx.com/index/s/article/How-and-Why-to-do-a-Hosts-file-modification) (KB) [Requirements for Configuring Alteryx Server with a Load Balancer (or Reverse Proxy)](https://knowledge.alteryx.com/index/s/article/Requirements-for-Configuring-Alteryx-Server-with-a-Load-Balancer-or-Reverse-Proxy-1628116360935) (KB) |\n| --- | --- |\n\n# Edit the hosts files\n\n1 –  Edit the file\n\n2 – Add a line with 127.0.0.1 and the Base Address of the Gallery (don’t include /gallery).\n\n3 – Restart the Service",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.85,
+    "quality_confidence": 0.78999996,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1745944926"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1745944926"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}
