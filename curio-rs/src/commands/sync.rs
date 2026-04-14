@@ -326,6 +326,20 @@ pub async fn run_sync(
     )
     .await?;
 
+    // Taxonomy reconciliation index: group all review pages that propose the same
+    // new subtree into a single summary page so reviewers can approve or reject as
+    // a coherent batch rather than visiting each proposal in isolation.
+    sync_taxonomy_reconciliation_index(
+        &client,
+        space_key,
+        &wiki_dir.join("review"),
+        tree.review_id.as_str(),
+        &mut synced_page_ids,
+        &mut upserted,
+        &mut errors,
+    )
+    .await?;
+
     // Delete stale pages
     if !dry_run {
         let mut stale_deleted = 0usize;
@@ -1201,6 +1215,97 @@ async fn sync_review_proposals(
             Ok(title) => upserted.push(format!("[review proposal] {}", title)),
             Err(e) => errors.push(format!("[review proposal] {}: {}", path.display(), e)),
         }
+    }
+
+    Ok(())
+}
+
+/// Build a Confluence "Taxonomy Reconciliation" index page that groups all review
+/// pages proposing the same new subtree into one place.  This lets a reviewer
+/// approve or reject a whole batch of related pages in a single decision rather
+/// than visiting 20 individual proposals that each ask for the same new node.
+async fn sync_taxonomy_reconciliation_index(
+    client: &ConfluenceClient,
+    space_key: &str,
+    review_dir: &Path,
+    parent_id: &str,
+    synced_ids: &mut HashSet<String>,
+    upserted: &mut Vec<String>,
+    errors: &mut Vec<String>,
+) -> Result<()> {
+    if !review_dir.exists() {
+        return Ok(());
+    }
+
+    // Collect all .analysis.json files under the review dir and group by proposed_new_subtree
+    let mut groups: std::collections::BTreeMap<String, Vec<(String, String, f32)>> =
+        std::collections::BTreeMap::new();
+
+    for entry in walkdir::WalkDir::new(review_dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.path().extension().and_then(|x| x.to_str()) == Some("json")
+                && e.path().to_str().map_or(false, |s| s.ends_with(".analysis.json"))
+        })
+    {
+        let path = entry.path();
+        let Ok(raw) = std::fs::read_to_string(path) else { continue };
+        let Ok(analysis) = serde_json::from_str::<serde_json::Value>(&raw) else { continue };
+        let Some(subtree) = analysis["routing"]["proposed_new_subtree"].as_str() else { continue };
+        let title = analysis["title"].as_str().unwrap_or("Untitled").to_string();
+        let slug = analysis["slug"].as_str().unwrap_or("").to_string();
+        let confidence = analysis["routing"]["confidence"].as_f64().unwrap_or(0.0) as f32;
+        groups
+            .entry(subtree.to_string())
+            .or_default()
+            .push((title, slug, confidence));
+    }
+
+    if groups.is_empty() {
+        return Ok(());
+    }
+
+    // Build the index page body
+    let mut body = String::new();
+    body.push_str("<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p><strong>Taxonomy Reconciliation Index</strong> — pages grouped by the new subtree they propose. Approve or reject each group as a batch. Once a subtree is approved, add it to <code>northstar.json</code> and re-process the pages.</p></ac:rich-text-body></ac:structured-macro>");
+    body.push_str(&format!("<p><strong>{}</strong> proposed new subtrees across <strong>{}</strong> review items.</p>",
+        groups.len(),
+        groups.values().map(|v| v.len()).sum::<usize>()
+    ));
+
+    for (subtree, mut pages) in &mut groups {
+        pages.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+        body.push_str(&format!("<h2>{}</h2>", html_escape(subtree)));
+        body.push_str(&format!("<p>{} page(s) propose this subtree:</p>", pages.len()));
+        body.push_str("<table><tbody><tr><th>Page</th><th>Confidence</th></tr>");
+        for (title, _slug, confidence) in pages.iter() {
+            body.push_str(&format!(
+                "<tr><td>{}</td><td>{:.0}%</td></tr>",
+                html_escape(title),
+                confidence * 100.0,
+            ));
+        }
+        body.push_str("</tbody></table>");
+        body.push_str("<p><strong>Decision options:</strong></p><ul>");
+        body.push_str("<li>✅ <strong>Approve:</strong> add this path to <code>northstar.json</code> children, then move pages from review → staged</li>");
+        body.push_str("<li>✏️ <strong>Reroute:</strong> pick an existing path for these pages instead and update their category</li>");
+        body.push_str("<li>🗑️ <strong>Reject:</strong> mark pages as out-of-scope and archive</li>");
+        body.push_str("</ul><hr/>");
+    }
+
+    let hash = content_hash(&body);
+    let page_title = "Taxonomy Proposals — Reconciliation Index";
+    match client
+        .create_or_update_page(space_key, Some(parent_id), page_title, "storage", &body)
+        .await
+    {
+        Ok(page_id) => {
+            set_sync_prop(client, &page_id, &hash).await?;
+            synced_ids.insert(page_id);
+            upserted.push(format!("[taxonomy reconciliation index] {} groups", groups.len()));
+        }
+        Err(e) => errors.push(format!("[taxonomy reconciliation index]: {}", e)),
     }
 
     Ok(())

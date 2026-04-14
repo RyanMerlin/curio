@@ -171,7 +171,7 @@ async fn collect_from_url(url: &str, title_hint: &Option<String>) -> Result<Vec<
         .text()
         .await?;
 
-    let text = extract_text_from_html(&html);
+    let text = extract_text_from_html(&html, "");
     let title = title_hint.clone().unwrap_or_else(|| {
         extract_title_from_html(&html).unwrap_or_else(|| url.to_string())
     });
@@ -252,7 +252,8 @@ async fn collect_from_confluence(
         );
 
         let html_body = page["body"]["storage"]["value"].as_str().unwrap_or("").to_string();
-        let mut text = extract_text_from_html(&html_body);
+        let confluence_base = config.connection.confluence_url.trim_end_matches("/wiki").to_string();
+        let mut text = extract_text_from_html(&html_body, &confluence_base);
 
         // Hub/index page synthesis: if the body is sparse (mostly navigation macros,
         // smart links, or children macros with no prose), synthesize a useful body
@@ -358,7 +359,12 @@ fn collect_from_folder(folder: &Path) -> Result<Vec<IntakeItem>> {
 // Recursive top-down walk: each element is processed exactly once, so there
 // are no duplicate lines from parent+child both being selected.
 
-fn extract_text_from_html(html: &str) -> String {
+fn extract_text_from_html(html: &str, confluence_base: &str) -> String {
+    // Make the base URL available to element_to_md via thread-local so we don't
+    // have to thread it through every recursive call.
+    CONFLUENCE_BASE.with(|cell| {
+        *cell.borrow_mut() = confluence_base.trim_end_matches('/').to_string();
+    });
     let doc = scraper::Html::parse_document(html);
     // Confluence storage format has content under <body>; plain HTML pages too.
     let body_sel = scraper::Selector::parse("body").unwrap();
@@ -370,6 +376,10 @@ fn extract_text_from_html(html: &str) -> String {
     // Collapse runs of 3+ blank lines to 2
     let re_blank = regex::Regex::new(r"\n{3,}").unwrap();
     re_blank.replace_all(md.trim(), "\n\n").into_owned()
+}
+
+thread_local! {
+    static CONFLUENCE_BASE: std::cell::RefCell<String> = std::cell::RefCell::new(String::new());
 }
 
 fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
@@ -486,22 +496,41 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         | "html" | "span" | "figure" | "figcaption"
         | "header" | "footer" | "nav" | "aside" => children_to_md(el, depth),
 
-        // Confluence smart links
+        // Confluence internal page links: <ac:link><ri:page ri:content-title="X" ri:space-key="Y"/></ac:link>
+        // Render as a proper markdown link using the Confluence base URL.
         "ac:link" => {
-            // Smart link: extract display text from ac:link-title, then ri:page content-title
+            let ri_page_sel = scraper::Selector::parse("ri\\:page").unwrap();
             let link_title_sel = scraper::Selector::parse("ac\\:link-title").unwrap();
-            if let Some(lt) = el.select(&link_title_sel).next() {
-                let text = lt.text().collect::<String>();
-                let text = text.trim();
-                if !text.is_empty() {
+
+            // Prefer explicit display text from ac:link-title
+            let display = el.select(&link_title_sel).next()
+                .map(|lt| lt.text().collect::<String>())
+                .filter(|t| !t.trim().is_empty());
+
+            if let Some(ri_el) = el.select(&ri_page_sel).next() {
+                let content_title = ri_el.value().attr("ri:content-title").unwrap_or("");
+                let space_key = ri_el.value().attr("ri:space-key").unwrap_or("");
+                let text = display.as_deref().unwrap_or(content_title).trim().to_string();
+                if !content_title.is_empty() {
+                    let base = CONFLUENCE_BASE.with(|c| c.borrow().clone());
+                    if !base.is_empty() && !space_key.is_empty() {
+                        // Encode the title for URL use
+                        let encoded = content_title.replace(' ', "+");
+                        let url = format!("{}/wiki/spaces/{}/pages?title={}", base, space_key, encoded);
+                        return format!("[{}]({})", text, url);
+                    } else if !base.is_empty() {
+                        // No space key — link to search
+                        let encoded = content_title.replace(' ', "+");
+                        let url = format!("{}/wiki/search?text={}", base, encoded);
+                        return format!("[{}]({})", text, url);
+                    }
                     return format!("[{}]", text);
                 }
             }
-            let ri_page_sel = scraper::Selector::parse("ri\\:page").unwrap();
-            if let Some(ri_el) = el.select(&ri_page_sel).next() {
-                if let Some(ct) = ri_el.value().attr("ri:content-title") {
-                    return format!("[{}]", ct);
-                }
+
+            // Fallback: display text only
+            if let Some(text) = display {
+                return format!("[{}]", text.trim());
             }
             children_to_md(el, depth)
         }
@@ -514,12 +543,18 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         "ri:attachment" | "ri:space" | "ri:user" => String::new(),
 
         // Confluence macros: extract text from rich/plain body
+        // ac:parameter is a macro metadata node (e.g. the "title" param of a note macro).
+        // It must be suppressed here — it is NOT body content and renders as duplicate text
+        // if allowed to fall through to the default arm.
+        "ac:parameter" => String::new(),
+
         "ac:structured-macro" => {
             // info/note/warning → blockquote-style callout
             let macro_name = el.value().attr("ac:name").unwrap_or("");
-            // children macro has no body — signal it's a hub/section-index page
+            // children/pagetree macros signal a section-index page.
+            // Return empty — the hub synthesis at the page level already handles this.
             if macro_name == "children" || macro_name == "pagetree" {
-                return "*[Organized section — child pages listed separately]*\n\n".to_string();
+                return String::new();
             }
             let body_sel = scraper::Selector::parse("ac\\:rich-text-body, ac\\:plain-text-body").unwrap();
             let body = el.select(&body_sel)
