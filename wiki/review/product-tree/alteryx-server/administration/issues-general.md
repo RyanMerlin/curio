@@ -1,21 +1,28 @@
 ---
 id: f403d381a1c37739
 title: Issues (General)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2983068071
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2983068071
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- issues
+- general
+- troubleshooting
+- hub
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:15Z
+confidence: 0.75
 cross_refs: []
 content_hash: sha256:6397e93786d327bdfe567582ef4a95970aa55519c34ed5b42f5f1803ddd652e5
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 Hub page: Issues (General)

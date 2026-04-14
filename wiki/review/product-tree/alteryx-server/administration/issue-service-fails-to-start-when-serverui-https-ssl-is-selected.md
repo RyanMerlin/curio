@@ -1,21 +1,29 @@
 ---
 id: 7b4f3bb2fc3300e9
 title: Issue - Service fails to start when ServerUI HTTPS/SSL is selected
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2997911697
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2997911697
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- ssl
+- service-startup
+- https
+- issue
+- troubleshooting
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:13Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:be8f637b43a304f95023ce45b08a151876ce4cf74cd7b480529ac8228a7091dd
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Issue** | > **📝 Note** > > Service fails to start when ServerUI HTTPS/SSL is selected >  > Service starts when this is unchecked and ServerUI is accessed with HTTP |

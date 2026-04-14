@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:13Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Issue - Service fails to start when ServerUI HTTPS/SSL is selected",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2997911697",
+    "content_hash": "sha256:be8f637b43a304f95023ce45b08a151876ce4cf74cd7b480529ac8228a7091dd",
+    "content_preview": "| **Issue** | > **📝 Note** > > Service fails to start when ServerUI HTTPS/SSL is selected >  > Service starts when this is unchecked and ServerUI is accessed with HTTP |\n| --- | --- |\n| **Screenshot** |  |\n| **Related Issues** |  |\n\n# Troubleshooting\n\n|  | **Check** | **Steps** |\n| --- | --- | --- |\n| 1 | **Is Controller Global SSL set?** |  |\n| 2 | **Is Port 443 open?** |  |\n| 3 | **Is Certificate installed** |  |\n| 4 | **Is Certificate trusted?** |  |\n\n[GCS Operations via Workflows: Card - acc"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "issue",
+      "-",
+      "service",
+      "fails",
+      "to",
+      "start",
+      "when",
+      "serverui",
+      "https/ssl",
+      "is",
+      "selected"
+    ],
+    "keywords_extracted": [
+      "check",
+      "cert",
+      "would",
+      "ServerUI",
+      "Service",
+      "then",
+      "when",
+      "Check"
+    ]
+  }
+}

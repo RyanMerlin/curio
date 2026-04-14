@@ -1,21 +1,28 @@
 ---
 id: 3af7e3bf114bd9cd
 title: How to Work an API Case
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1766166726
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1766166726
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- case-handling
+- server-api
+- how-to
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:11Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:99efe36ed3cd192fe1b24fcb478908aae3bc4b7eb43fb8097397abcbd96a3c32
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Initial Questions** |  |
