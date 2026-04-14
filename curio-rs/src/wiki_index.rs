@@ -191,7 +191,7 @@ pub fn rebuild_colocated_indexes(
         // useful in Confluence and to pass the branch-node first-class contract.
         let tree_desc = strip_html_inline(&tree.description_html);
         if tree_desc.trim().is_empty() {
-            branch_issues.push(format!("branch node '{}' ({}) has no description — add description_markdown in northstar.json", tree.title, tree.slug));
+            branch_issues.push(format!("branch node '{}' ({}) has no description — add description_markdown in NORTHSTAR.md", tree.title, tree.slug));
         }
 
         // Pages belonging to this tree but no subtree
@@ -233,11 +233,11 @@ pub fn rebuild_colocated_indexes(
     // Branch nodes without descriptions produce thin Confluence pages that violate
     // the first-class branch-node contract in process.md.
     if !branch_issues.is_empty() {
-        eprintln!("⚠ Branch node description gaps — add description_markdown to northstar.json for:");
+        eprintln!("⚠ Branch node description gaps — add description_markdown to NORTHSTAR.md for:");
         for issue in &branch_issues {
             eprintln!("  {}", issue);
         }
-        eprintln!("  (Re-run `curio reindex` after updating northstar.json to clear these warnings)");
+        eprintln!("  (Re-run `curio reindex` after updating NORTHSTAR.md to clear these warnings)");
     }
 
     let unc_dir = published_dir.join("uncategorized");

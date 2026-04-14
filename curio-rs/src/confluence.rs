@@ -1442,6 +1442,157 @@ impl ConfluenceClient {
         }
     }
 
+    // ─── Feedback read/write endpoints ────────────────────────────────────────
+
+    /// GET /wiki/api/v2/pages/{id}/labels — returns label names
+    pub async fn get_page_labels_v2(&self, page_id: &str) -> Result<Vec<String>> {
+        let url = format!("{}/wiki/api/v2/pages/{}/labels", self.base_url, page_id);
+        let resp = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to fetch page labels")?;
+        if !resp.status().is_success() {
+            return Ok(vec![]);
+        }
+        let body: serde_json::Value = resp.json().await.context("Failed to parse labels response")?;
+        let labels = body["results"]
+            .as_array()
+            .unwrap_or(&vec![])
+            .iter()
+            .filter_map(|l| l["name"].as_str().map(|s| s.to_string()))
+            .collect();
+        Ok(labels)
+    }
+
+    /// GET /wiki/api/v2/pages/{id}/footer-comments — returns comment objects
+    pub async fn get_page_footer_comments(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
+        let url = format!(
+            "{}/wiki/api/v2/pages/{}/footer-comments?body-format=storage",
+            self.base_url, page_id
+        );
+        let resp = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to fetch footer comments")?;
+        if !resp.status().is_success() {
+            return Ok(vec![]);
+        }
+        let body: serde_json::Value = resp.json().await.context("Failed to parse footer comments")?;
+        Ok(body["results"].as_array().cloned().unwrap_or_default())
+    }
+
+    /// GET /wiki/api/v2/pages/{id}/inline-comments — returns comment objects
+    pub async fn get_page_inline_comments(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
+        let url = format!(
+            "{}/wiki/api/v2/pages/{}/inline-comments?body-format=storage",
+            self.base_url, page_id
+        );
+        let resp = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to fetch inline comments")?;
+        if !resp.status().is_success() {
+            return Ok(vec![]);
+        }
+        let body: serde_json::Value = resp.json().await.context("Failed to parse inline comments")?;
+        Ok(body["results"].as_array().cloned().unwrap_or_default())
+    }
+
+    /// GET /wiki/api/v2/footer-comments/{id}/reactions — returns reaction objects
+    pub async fn get_comment_reactions(&self, comment_id: &str) -> Result<Vec<serde_json::Value>> {
+        let url = format!(
+            "{}/wiki/api/v2/footer-comments/{}/reactions",
+            self.base_url, comment_id
+        );
+        let resp = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to fetch comment reactions")?;
+        if !resp.status().is_success() {
+            return Ok(vec![]);
+        }
+        let body: serde_json::Value = resp.json().await.context("Failed to parse reactions")?;
+        Ok(body["results"].as_array().cloned().unwrap_or_default())
+    }
+
+    /// POST /wiki/api/v2/footer-comments — create a footer comment on a page.
+    /// Returns the new comment ID.
+    pub async fn create_footer_comment(&self, page_id: &str, body_storage_xml: &str) -> Result<String> {
+        let url = format!("{}/wiki/api/v2/footer-comments", self.base_url);
+        let payload = serde_json::json!({
+            "pageId": page_id,
+            "body": {
+                "representation": "storage",
+                "value": body_storage_xml
+            }
+        });
+        let resp = self
+            .client
+            .post(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .json(&payload)
+            .send()
+            .await
+            .context("Failed to create footer comment")?;
+        let status = resp.status();
+        let text = resp.text().await.context("Failed to read create-comment response")?;
+        if !status.is_success() {
+            anyhow::bail!("create_footer_comment failed {}: {}", status, text);
+        }
+        let val: serde_json::Value = serde_json::from_str(&text).context("Failed to parse create-comment response")?;
+        val["id"].as_str().map(|s| s.to_string())
+            .ok_or_else(|| anyhow::anyhow!("No id in create-comment response: {}", text))
+    }
+
+    /// PUT /wiki/api/v2/footer-comments/{id} — update an existing footer comment body.
+    pub async fn update_footer_comment(&self, comment_id: &str, body_storage_xml: &str) -> Result<()> {
+        let url = format!("{}/wiki/api/v2/footer-comments/{}", self.base_url, comment_id);
+        // Need current version first
+        let get_resp = self
+            .client
+            .get(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .send()
+            .await
+            .context("Failed to fetch comment for update")?;
+        let current: serde_json::Value = get_resp.json().await.unwrap_or_default();
+        let version = current["version"]["number"].as_u64().unwrap_or(0) + 1;
+
+        let payload = serde_json::json!({
+            "version": { "number": version },
+            "body": {
+                "representation": "storage",
+                "value": body_storage_xml
+            }
+        });
+        let resp = self
+            .client
+            .put(&url)
+            .basic_auth(&self.email, Some(&self.auth_token))
+            .json(&payload)
+            .send()
+            .await
+            .context("Failed to update footer comment")?;
+        let status = resp.status();
+        if !status.is_success() {
+            let text = resp.text().await.unwrap_or_default();
+            anyhow::bail!("update_footer_comment failed {}: {}", status, text);
+        }
+        Ok(())
+    }
+
     pub async fn delete_page(&self, page_id: &str) -> Result<()> {
         self.assert_within_write_root(page_id).await?;
         let url = format!("{}/rest/api/content/{}", self.base_url, page_id);

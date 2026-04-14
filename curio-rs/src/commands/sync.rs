@@ -1268,13 +1268,13 @@ async fn sync_taxonomy_reconciliation_index(
 
     // Build the index page body
     let mut body = String::new();
-    body.push_str("<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p><strong>Taxonomy Reconciliation Index</strong> — pages grouped by the new subtree they propose. Approve or reject each group as a batch. Once a subtree is approved, add it to <code>northstar.json</code> and re-process the pages.</p></ac:rich-text-body></ac:structured-macro>");
+    body.push_str("<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p><strong>Taxonomy Reconciliation Index</strong> — pages grouped by the new subtree they propose. Approve or reject each group as a batch. Once a subtree is approved, add it to <code>NORTHSTAR.md</code> and re-process the pages.</p></ac:rich-text-body></ac:structured-macro>");
     body.push_str(&format!("<p><strong>{}</strong> proposed new subtrees across <strong>{}</strong> review items.</p>",
         groups.len(),
         groups.values().map(|v| v.len()).sum::<usize>()
     ));
 
-    for (subtree, mut pages) in &mut groups {
+    for (subtree, pages) in &mut groups {
         pages.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
         body.push_str(&format!("<h2>{}</h2>", html_escape(subtree)));
         body.push_str(&format!("<p>{} page(s) propose this subtree:</p>", pages.len()));
@@ -1288,7 +1288,7 @@ async fn sync_taxonomy_reconciliation_index(
         }
         body.push_str("</tbody></table>");
         body.push_str("<p><strong>Decision options:</strong></p><ul>");
-        body.push_str("<li>✅ <strong>Approve:</strong> add this path to <code>northstar.json</code> children, then move pages from review → staged</li>");
+        body.push_str("<li>✅ <strong>Approve:</strong> add this path to <code>NORTHSTAR.md</code> children, then move pages from review → staged</li>");
         body.push_str("<li>✏️ <strong>Reroute:</strong> pick an existing path for these pages instead and update their category</li>");
         body.push_str("<li>🗑️ <strong>Reject:</strong> mark pages as out-of-scope and archive</li>");
         body.push_str("</ul><hr/>");
@@ -1362,7 +1362,7 @@ async fn sync_lane_page(
     }
     let html_body = render_lane_page_body(path, &page, lane)?;
     let hash = content_hash(&html_body);
-    sync_page_html(
+    let result_title = sync_page_html(
         client,
         space_key,
         parent_id,
@@ -1374,7 +1374,78 @@ async fn sync_lane_page(
         skipped,
         true,
     )
-    .await
+    .await?;
+
+    // For review-lane pages: persist the Confluence page ID in a .sync-refs.json sidecar
+    // and post/update the single pinned reaction-instruction footer comment so reviewers
+    // can signal approve/reject/rewrite without editing the page.
+    if lane == "review" {
+        if let Ok(Some(existing)) = client.get_page_by_title(space_key, parent_id, &page_title).await {
+            if let Some(page_id) = existing["id"].as_str() {
+                // Upsert the pinned comment ──────────────────────────────────────────
+                let pinned_body = "<p><em>Curio review signals</em>: react \
+                    \u{1F44D} to <strong>approve</strong>, \
+                    \u{1F44E} to <strong>reject</strong>, \
+                    \u{2753} to request a <strong>rewrite</strong>. \
+                    Or apply labels <code>curio:approve</code> / <code>curio:reject</code> / <code>curio:rewrite</code>. \
+                    Free-form comments are captured as reviewer feedback.</p>";
+
+                // Check whether we already have a persisted pinned comment ID
+                let refs_path = path.with_extension("sync-refs.json");
+                let existing_refs: serde_json::Value = if refs_path.exists() {
+                    std::fs::read_to_string(&refs_path)
+                        .ok()
+                        .and_then(|s| serde_json::from_str(&s).ok())
+                        .unwrap_or(serde_json::json!({}))
+                } else {
+                    serde_json::json!({})
+                };
+                let pinned_comment_id = if let Some(existing_id) = existing_refs["pinned_comment_id"].as_str() {
+                    // Try to update existing; if it fails (deleted), create a new one
+                    match client.update_footer_comment(existing_id, pinned_body).await {
+                        Ok(_) => existing_id.to_string(),
+                        Err(_) => {
+                            client.create_footer_comment(page_id, pinned_body).await
+                                .unwrap_or_else(|_| String::new())
+                        }
+                    }
+                } else {
+                    client.create_footer_comment(page_id, pinned_body).await
+                        .unwrap_or_else(|_| String::new())
+                };
+
+                let pinned_id_opt = if pinned_comment_id.is_empty() { None } else { Some(pinned_comment_id.as_str()) };
+                write_sync_refs(path, page_id, pinned_id_opt);
+            }
+        }
+    }
+
+    Ok(result_title)
+}
+
+/// Write (or update) the .sync-refs.json sidecar next to the wiki page.
+/// This persists the Confluence review page ID (and optionally the pinned
+/// comment ID) so `curio feedback` can read labels/reactions without
+/// performing expensive title lookups.
+fn write_sync_refs(wiki_page_path: &Path, confluence_page_id: &str, pinned_comment_id: Option<&str>) {
+    let refs_path = wiki_page_path.with_extension("sync-refs.json");
+    // Merge with any existing refs so we don't overwrite the pinned_comment_id on a hash-skip update
+    let mut refs_value: serde_json::Value = if refs_path.exists() {
+        std::fs::read_to_string(&refs_path)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or(serde_json::json!({}))
+    } else {
+        serde_json::json!({})
+    };
+    refs_value["confluence_review_page_id"] = serde_json::json!(confluence_page_id);
+    if let Some(comment_id) = pinned_comment_id {
+        refs_value["pinned_comment_id"] = serde_json::json!(comment_id);
+    }
+    refs_value["updated_at"] = serde_json::json!(chrono::Utc::now().to_rfc3339());
+    if let Ok(json) = serde_json::to_string_pretty(&refs_value) {
+        let _ = std::fs::write(&refs_path, json);
+    }
 }
 
 async fn sync_proposal_page(

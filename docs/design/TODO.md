@@ -4,6 +4,69 @@ This roadmap tracks the next technical and product-shaping steps for Curio after
 
 It should read as a sequence of capabilities to build, not just a scratchpad of tasks. Future ideas can be added as later phases or as backlog items at the end.
 
+---
+
+## ✅ Consolidated NORTHSTAR.md + northstar.json (complete 2026-04-14)
+
+**Problem:** The taxonomy lives in two files that must be kept in sync manually:
+- `NORTHSTAR.md` — human-readable, authoritative intent and descriptions (92 lines)
+- `wiki/_config/northstar.json` — machine-readable, what `northstar.rs` actually parses (113 lines)
+
+`northstar.json` has `"generated_from": "northstar.md"` but is not actually generated — it is maintained by hand in parallel, which means they can and do drift. Any edit to the taxonomy requires touching both files.
+
+**Goal:** `NORTHSTAR.md` is the single source of truth. The taxonomy is expressed as a YAML fenced block inside it. `northstar.rs` parses that YAML directly — `northstar.json` is eliminated entirely.
+
+**Design:**
+
+`NORTHSTAR.md` structure after the change:
+````markdown
+# Northstar — Knowledge Taxonomy
+
+[prose: purpose, guiding principles, routing rules]
+
+```yaml
+# taxonomy
+schema_version: 2
+nodes:
+  - title: Product Tree
+    slug: product-tree
+    icon: 🌲
+    description_markdown: |
+      Structured knowledge organized by product.
+    children:
+      - title: Alteryx Server
+        slug: alteryx-server
+        ...
+```
+
+[prose: additional notes, routing guidance]
+````
+
+Parsing approach in `northstar.rs`:
+- Read `NORTHSTAR.md` as a string.
+- Find the first fenced block tagged `yaml` (or `yaml\n# taxonomy`).
+- Deserialize via `serde_yaml` into the existing `NorthstarTaxonomy` struct (or a thin new struct that maps to it).
+- No intermediate JSON file written or read.
+
+**Migration steps:**
+1. Add `serde_yaml` to `Cargo.toml`.
+2. Write `parse_northstar_md(path) -> Result<NorthstarTaxonomy>` in `northstar.rs`.
+3. Replace all `northstar.json` load calls with `parse_northstar_md("NORTHSTAR.md")`.
+4. Merge `NORTHSTAR.md` + `wiki/_config/northstar.json` into a single updated `NORTHSTAR.md` with the YAML block.
+5. Delete `wiki/_config/northstar.json`.
+6. Update `curio feedback` (`maybe_update_northstar`) to write back into the YAML block in `NORTHSTAR.md` instead of the JSON file.
+7. Update `curio reindex` and any other command that reads northstar.json.
+
+**Critical files:**
+- `curio-rs/src/northstar.rs` — primary change
+- `curio-rs/Cargo.toml` — add `serde_yaml`
+- `NORTHSTAR.md` — absorbs the taxonomy YAML
+- `wiki/_config/northstar.json` — deleted
+- `curio-rs/src/commands/feedback.rs` — `maybe_update_northstar` writes back to .md
+- Any command importing `northstar.json` path directly
+
+---
+
 ## Phase 1: Intake Fidelity
 
 Objective:
@@ -14,8 +77,7 @@ Planned work:
 - Preserve smart links, children macros, and tables as usable source signal.
 - Ensure hub pages do not collapse into near-empty markdown bodies.
 
-Current driver:
-- The current review item at [troubleshooting.md](/C:/code/agents/curio/wiki/review/product-tree/alteryx-server/troubleshooting.md) is correctly held in `review`, but it cannot be elevated until extraction quality improves.
+Status: **Complete** (commit 752df86 — ac:link rendering, ADF panel dedup, children macro suppression, table cell fix).
 
 ## Phase 2: Hierarchy-First Proposal Quality
 
@@ -47,7 +109,7 @@ Planned work:
 ## Phase 4: Stronger Curation and Overlap Judgment
 
 Objective:
-Improve the agent’s ability to recognize redundancy, consolidation opportunities, and weak published outcomes.
+Improve the agent's ability to recognize redundancy, consolidation opportunities, and weak published outcomes.
 
 Planned work:
 - Move beyond duplicate-title detection to semantic overlap analysis.
@@ -96,6 +158,89 @@ Planned work:
 - Extend tests around reset, validation, malformed live trees, and stale managed pages.
 - Continue reducing hidden state and ambiguous fallbacks.
 
+## Phase 8: Confluence Feedback Loop ✅ (complete 2026-04-14)
+
+Objective:
+Close the round-trip so Confluence reviewer signals drive wiki state changes without requiring hand-edits.
+
+Implemented:
+- **E1** — `.sync-refs.json` sidecar written on sync, persisting `confluence_review_page_id` + `pinned_comment_id`.
+- **E2** — `ConfluenceClient` extended with: `get_page_labels_v2`, `get_page_footer_comments`, `get_page_inline_comments`, `get_comment_reactions`, `create_footer_comment`, `update_footer_comment`.
+- **E3** — `curio sync` posts a pinned reaction-instruction footer comment on every review page and persists the comment ID in the sidecar. Idempotent on re-sync.
+- **E4** — `curio feedback [--dry-run]` command: reads labels + pinned-comment reactions + free-form comments; dispatches approve/reject/rewrite/capture; updates NORTHSTAR.md taxonomy on taxonomy-mutation approvals; appends to `_config/log.md`.
+- **E5** — `curio process` manifest includes `reviewer_feedback` field when a `<slug>.feedback.md` sidecar exists, so the routing LLM sees prior reviewer commentary on resubmitted pages.
+
+Signal map: `curio:approve` label or 👍 reaction → approve; `curio:reject` or 👎 → reject; `curio:rewrite` or ❓ → rewrite; free-form comments → `feedback.md` only.
+
+## Phase 9: Confluence-Native Intake (next)
+
+Objective:
+Let Confluence users submit intake requests directly in the browser without needing CLI access.
+
+Design:
+- A **protected page template** in the CURIO Confluence space provides a structured form:
+  `Source URL`, `Requested by`, `Priority` (high / normal / low), `Notes / context for the router`.
+- Users create a page from this template under an **"Intake Requests"** parent page in the CURIO space.
+- `curio pull` (new command) reads child pages of the Intake Requests parent:
+  1. Skips pages already labelled `curio:processed`.
+  2. Parses the structured fields from storage-format body.
+  3. Runs the normal intake pipeline against `Source URL` (same as `curio intake --url`).
+  4. Labels the request page `curio:processed`.
+  5. Posts a footer comment on the request page: "Intake complete — review proposal at [Confluence review link]".
+- Provenance: the request page ID is stored in the resulting wiki page frontmatter as `intake_request_ref`, so the source of the request is always traceable.
+- `curio sync` can surface a "Pending Requests" count in the CURIO Confluence root page.
+
+Planned work:
+- Create the Confluence page template (storage-format XML) and register it in the CURIO space.
+- Add `curio pull [--dry-run]` command that implements the poll-and-process loop above.
+- Register `pull` in `cli.rs` and `main.rs`.
+- Store `intake_request_ref: Option<String>` in `Frontmatter` (alongside existing `confluence_page_id`).
+- Add `--from-queue` flag to `curio intake` as an alternative entry point if preferred over a separate subcommand.
+
+Critical files:
+- `curio-rs/src/commands/pull.rs` (new)
+- `curio-rs/src/cli.rs`
+- `curio-rs/src/main.rs`
+- `curio-rs/src/lib.rs` (Frontmatter field)
+- `curio-rs/src/confluence.rs` (add_label helper already exists; reuse)
+
+## Phase 10: Slack Integration (planned)
+
+Objective:
+Surface Curio's review queue and curation workflow inside Slack so reviewers never have to leave their primary tool.
+
+Design:
+
+**Inbound (Slack → Curio):**
+- `/curio intake <url>` slash command → triggers `curio intake --url` pipeline; replies with "Queued for intake — [n] pages found."
+- `/curio ask <question>` → runs `curio query`; replies in-thread with the answer and source citations.
+- `/curio status` → replies with current intake/staged/review/published counts.
+
+**Outbound (Curio → Slack):**
+- When `curio sync` creates new review proposals, post a digest to `#curio-review`:
+  - Title, proposed path, confidence score, rationale excerpt.
+  - Block Kit buttons: **Approve** / **Reject** / **Rewrite** (write the corresponding `curio:*` label to Confluence and trigger `curio feedback`).
+- When `curio feedback` processes a batch, post a completion summary.
+
+**Architecture:**
+- Slack app with slash commands + interactive components (Block Kit).
+- Webhook receiver (small HTTP server or AWS Lambda) translates button clicks into Confluence label writes + `curio feedback` invocations.
+- OAuth for workspace install; tokens stored in `.env` / keyring alongside Confluence credentials.
+- The Rust binary remains source-of-truth; Slack is just a UI surface — no business logic lives in the webhook receiver.
+
+Planned work:
+- Create Slack app manifest (slash commands, interactive endpoints, OAuth scopes).
+- Add `CURIO_SLACK_TOKEN` + `CURIO_SLACK_CHANNEL` to config.
+- Add `curio notify` command: takes a JSON payload describing the event, posts to Slack.
+- Hook `curio sync` (end of review sync pass) and `curio feedback` (completion summary) to call `curio notify`.
+- Build minimal webhook receiver (can be a separate binary in `curio-rs/src/bin/curio-slack-webhook.rs`).
+
+Critical files:
+- `curio-rs/src/commands/notify.rs` (new)
+- `curio-rs/src/bin/curio-slack-webhook.rs` (new)
+- `curio-rs/src/cli.rs`, `main.rs`
+- `curio-rs/Cargo.toml` (add `axum` or `warp` for webhook receiver)
+
 ## Test/Dev Run Findings — 2026-04-14 (SupportServer ingest)
 
 ### What was run
@@ -110,19 +255,28 @@ Planned work:
 - Proposal dossier quality: full body preserved, rationale meaningful, overlap candidates listed
 - Narrative log (`_config/log.md`) recording every pipeline action append-only
 - 41 tests all green including new routing_eval integration harness
+- Confluence feedback loop: pinned reaction comments posted on all review pages after sync; `curio feedback --dry-run` operational
+
+### Persistent sync errors (pre-existing, not resolved)
+
+These two pages error on every `curio sync` run and are skipped:
+
+- **`orasi-labs.md`** — Confluence rejects with HTTP 400 `"Content contains unsupported extensions and cannot be edited in Fabric editor"`. The source page uses a Fabric-editor extension that the v1 storage-format API cannot represent. Options: (a) strip the offending extension during intake and re-intake; (b) suppress this page from sync and note it in `log.md`; (c) investigate which macro/extension is the culprit and add a suppression rule to `intake.rs`.
+
+- **`how-to-use-alteryxenginecmd-exe-to-queue-a-job-from-a-bat-using-the-api.md`** — Confluence rejects with HTTP 400 `"A page already exists with the same TITLE in this space"`. The generated title `Review - How to use alteryxEngineCmd.exe to queue a job from a BAT using the API` collides with a pre-existing page (likely from a prior partial sync or a manually created page). Options: (a) detect the collision and append a disambiguator suffix (e.g. `… (2)`); (b) find and delete the orphaned colliding page; (c) truncate titles above a safe length before sync to reduce collision surface.
 
 ### Open issues found
 1. **Query returns 0 results until publish** — expected behavior but needs UX clarity. A `curio query` call against content sitting in `review/` finds nothing. Consider adding a `--include-review` flag or separate `curio review-query` for the curation workflow.
 2. **Process runs 10 pages per invocation** — the `process --route-file` command processes in batches of 10 (appears to be a hard limit). For a 152-page ingest, 15+ re-runs were needed. Either raise the batch size or add a `--all` flag to drain the queue in one pass.
-3. **Branch node descriptions not auto-propagated to northstar.json** — after approving 8 new subtrees via review and adding them to northstar.json manually, reindex does not validate that description_markdown is populated. The branch validation warns on reindex but only for published nodes, not for newly added taxonomy nodes.
+3. **Branch node descriptions not auto-propagated to NORTHSTAR.md** — after approving 8 new subtrees via review and adding them to NORTHSTAR.md manually, reindex does not validate that description_markdown is populated. The branch validation warns on reindex but only for published nodes, not for newly added taxonomy nodes.
 4. **`proposed_new_subtree` path not normalized** — the route file used `"product-tree/alteryx-server/upgrade"` (string), but northstar.rs expects a `Vec<String>` path. The Rust side appears to handle this but the gen-routes script should emit the array form.
 5. **Merge proposal auto-population uses title similarity only** — the draft-HA overlap was caught, but the merge_target population is heuristic. A semantic embedding-based overlap pass would improve precision here.
 
 ### Next iteration priorities
-1. Approve the 8 proposed taxonomy subtrees → promote review items with high confidence to staged → publish first batch
-2. Run `curio sync` to push to Confluence; verify branch pages render correctly with child indexes
-3. Implement `--all` flag (or batch-size config) for `curio process --route-file` to avoid the 10-page limit
-4. Add `curio review-query` or `--include-review` so curation work has search visibility before publish
+1. Validate `curio sync` pinned comments landed correctly on all 153 review pages
+2. Test `curio feedback --dry-run` against a page with a real label or reaction
+3. Implement Phase 9 (Confluence-native intake template + `curio pull`)
+4. Plan Phase 10 (Slack integration)
 
 ## Backlog Ideas
 
@@ -133,3 +287,7 @@ These are valid future directions but are not yet committed to a near-term build
 - deeper proposal state machine
 - automated healing suggestions for weak branch layouts
 - ranking and prioritization of review proposals by expected signal gain
+- `SourceProvider` trait and plugin pattern (Block G from prior design) — filesystem, GitHub wiki, Notion, SharePoint as additional sources
+- Confluence metadata enrichment on intake: labels, owner, last-updated-by, attachments, word count, watcher count (Block F from prior design)
+- `--include-review` flag or `curio review-query` so curation work has search visibility before publish
+- `--all` flag (or configurable batch size) for `curio process --route-file` to drain the queue in one pass

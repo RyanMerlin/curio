@@ -6,16 +6,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const NORTHSTAR_FILENAME: &str = "NORTHSTAR.md";
-pub const NORTHSTAR_CONFIG_MD: &str = "northstar.md";
-pub const NORTHSTAR_CONFIG_JSON: &str = "northstar.json";
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NorthstarTaxonomy {
     pub schema_version: u32,
-    #[serde(default)]
-    pub generated_from: String,
-    #[serde(default)]
-    pub generated_at: String,
     #[serde(default)]
     pub nodes: Vec<TaxonomyNode>,
 }
@@ -43,17 +38,128 @@ impl TaxonomyNode {
     }
 }
 
+// ── Path helpers ─────────────────────────────────────────────────────────────
+
 pub fn northstar_path(repo_root: &Path) -> PathBuf {
     repo_root.join(NORTHSTAR_FILENAME)
 }
 
-pub fn northstar_markdown_path(wiki_dir: &Path) -> PathBuf {
-    wiki_dir.join("_config").join(NORTHSTAR_CONFIG_MD)
+/// Derive the repo root from wiki_dir (wiki_dir is always <repo_root>/wiki/).
+pub fn repo_root_from_wiki(wiki_dir: &Path) -> PathBuf {
+    wiki_dir.parent().unwrap_or(wiki_dir).to_path_buf()
 }
 
-pub fn northstar_json_path(wiki_dir: &Path) -> PathBuf {
-    wiki_dir.join("_config").join(NORTHSTAR_CONFIG_JSON)
+// ── YAML-block parser and writer ─────────────────────────────────────────────
+
+const YAML_FENCE_START: &str = "```yaml";
+const YAML_FENCE_END: &str = "```";
+const TAXONOMY_SECTION: &str = "## Taxonomy";
+
+/// Extract the first ```yaml ... ``` block from a markdown string.
+fn extract_yaml_block(markdown: &str) -> Option<&str> {
+    // Find the opening fence
+    let fence_start = markdown.find("```yaml")?;
+    // Content starts after the opening fence line (past the newline)
+    let content_start = markdown[fence_start..].find('\n')? + fence_start + 1;
+    // Find the closing fence (must be on its own line after the opening)
+    let after_open = &markdown[content_start..];
+    let close_offset = after_open.find("\n```")?;
+    Some(&after_open[..close_offset + 1]) // include the trailing newline
 }
+
+/// Parse a `NorthstarTaxonomy` from the YAML block embedded in a NORTHSTAR.md string.
+pub fn parse_yaml_taxonomy(markdown: &str) -> Result<NorthstarTaxonomy> {
+    let yaml = extract_yaml_block(markdown)
+        .ok_or_else(|| anyhow::anyhow!(
+            "No ```yaml block found in NORTHSTAR.md — add a ## Taxonomy section with a ```yaml block"
+        ))?;
+    serde_yaml::from_str(yaml).context("Failed to parse taxonomy YAML block in NORTHSTAR.md")
+}
+
+/// Replace the YAML block content in a NORTHSTAR.md string with serialized taxonomy.
+/// If no block exists, appends a new ## Taxonomy section at the end.
+fn replace_yaml_block(markdown: &str, taxonomy: &NorthstarTaxonomy) -> Result<String> {
+    let yaml_body = serde_yaml::to_string(taxonomy)
+        .context("Failed to serialize taxonomy to YAML")?;
+
+    // Find the ```yaml ... ``` span and replace it in-place
+    let mut result = String::new();
+    let mut iter = markdown.split_inclusive('\n').peekable();
+    let mut replaced = false;
+
+    while let Some(line) = iter.next() {
+        let trimmed = line.trim_end();
+        if !replaced && (trimmed == YAML_FENCE_START || trimmed.starts_with("```yaml")) {
+            result.push_str(line); // keep the opening fence
+            // Write new YAML content
+            result.push_str(&yaml_body);
+            // Skip old block content until closing fence
+            for inner in iter.by_ref() {
+                if inner.trim_end() == YAML_FENCE_END {
+                    result.push_str(inner); // keep closing fence
+                    break;
+                }
+            }
+            replaced = true;
+        } else {
+            result.push_str(line);
+        }
+    }
+
+    if !replaced {
+        // Append a new Taxonomy section
+        if !result.ends_with('\n') { result.push('\n'); }
+        result.push('\n');
+        result.push_str(TAXONOMY_SECTION);
+        result.push('\n');
+        result.push_str("\n```yaml\n");
+        result.push_str(&yaml_body);
+        result.push_str("```\n");
+    }
+
+    Ok(result)
+}
+
+// ── Public load / save ────────────────────────────────────────────────────────
+
+/// Load the taxonomy from the YAML block in NORTHSTAR.md.
+/// `wiki_dir` is `<repo_root>/wiki/` — the repo root is derived automatically.
+pub fn load_taxonomy(wiki_dir: &Path) -> Result<NorthstarTaxonomy> {
+    let repo_root = repo_root_from_wiki(wiki_dir);
+    let md_path = northstar_path(&repo_root);
+
+    if !md_path.exists() {
+        bail!(
+            "NORTHSTAR.md not found at {}. Run `curio onboard` to create it.",
+            md_path.display()
+        );
+    }
+
+    let markdown = fs::read_to_string(&md_path)
+        .with_context(|| format!("Failed to read {}", md_path.display()))?;
+
+    parse_yaml_taxonomy(&markdown)
+        .with_context(|| format!("Taxonomy parse failed for {}", md_path.display()))
+}
+
+/// Write a mutated taxonomy back into the YAML block in NORTHSTAR.md.
+pub fn save_taxonomy(wiki_dir: &Path, taxonomy: &NorthstarTaxonomy) -> Result<()> {
+    let repo_root = repo_root_from_wiki(wiki_dir);
+    let md_path = northstar_path(&repo_root);
+
+    let current = if md_path.exists() {
+        fs::read_to_string(&md_path)
+            .with_context(|| format!("Failed to read {}", md_path.display()))?
+    } else {
+        String::new()
+    };
+
+    let updated = replace_yaml_block(&current, taxonomy)?;
+    fs::write(&md_path, updated)
+        .with_context(|| format!("Failed to write {}", md_path.display()))
+}
+
+// ── Prose helpers (unchanged) ─────────────────────────────────────────────────
 
 pub fn default_northstar_markdown() -> String {
     include_str!("../../NORTHSTAR.md").to_string()
@@ -64,12 +170,10 @@ pub fn ensure_northstar_markdown(repo_root: &Path, dry_run: bool) -> Result<()> 
     if path.is_file() {
         return Ok(());
     }
-
     if dry_run {
         println!("[WARN] northstar_doc :: missing {}", path.display());
         return Ok(());
     }
-
     fs::write(&path, default_northstar_markdown())
         .with_context(|| format!("Failed to write {}", path.display()))?;
     println!("[OK] northstar_doc :: created {}", path.display());
@@ -84,7 +188,6 @@ pub fn read_northstar_markdown(repo_root: &Path) -> Result<String> {
             path.display()
         );
     }
-
     fs::read_to_string(&path).with_context(|| format!("Failed to read {}", path.display()))
 }
 
@@ -99,137 +202,7 @@ pub fn render_northstar_markdown(markdown: &str) -> String {
     html_output
 }
 
-pub fn parse_markdown_taxonomy(markdown: &str) -> NorthstarTaxonomy {
-    let mut nodes: Vec<TaxonomyNode> = Vec::new();
-    let mut in_blueprint = false;
-    let mut current_tree: Option<TaxonomyNode> = None;
-    let mut current_sub: Option<TaxonomyNode> = None;
-    let mut desc_lines: Vec<String> = Vec::new();
-
-    let flush_markdown = |lines: &mut Vec<String>| -> String {
-        let md = lines.join("\n").trim().to_string();
-        lines.clear();
-        md
-    };
-
-    for line in markdown.lines() {
-        if line.starts_with("## Published Tree Blueprint") {
-            in_blueprint = true;
-            continue;
-        }
-        if in_blueprint && line.starts_with("## ") {
-            break;
-        }
-        if !in_blueprint {
-            continue;
-        }
-
-        if line.starts_with("### ") {
-            if let Some(mut sub) = current_sub.take() {
-                sub.description_markdown = flush_markdown(&mut desc_lines);
-                if let Some(ref mut tree) = current_tree {
-                    tree.children.push(sub);
-                }
-            } else if let Some(ref mut tree) = current_tree {
-                tree.description_markdown = flush_markdown(&mut desc_lines);
-            } else {
-                desc_lines.clear();
-            }
-            if let Some(tree) = current_tree.take() {
-                nodes.push(tree);
-            }
-            let title = line[4..].trim().to_string();
-            current_tree = Some(TaxonomyNode {
-                slug: slugify_title(&title),
-                title,
-                ..Default::default()
-            });
-        } else if line.starts_with("#### ") {
-            if let Some(mut sub) = current_sub.take() {
-                sub.description_markdown = flush_markdown(&mut desc_lines);
-                if let Some(ref mut tree) = current_tree {
-                    tree.children.push(sub);
-                }
-            } else if let Some(ref mut tree) = current_tree {
-                tree.description_markdown = flush_markdown(&mut desc_lines);
-            }
-            let title = line[5..].trim().to_string();
-            current_sub = Some(TaxonomyNode {
-                slug: slugify_title(&title),
-                title,
-                ..Default::default()
-            });
-        } else if let Some(rest) = line.trim().strip_prefix("**Icon:**") {
-            let icon = rest.trim().to_string();
-            if let Some(ref mut sub) = current_sub {
-                sub.icon = Some(icon);
-            } else if let Some(ref mut tree) = current_tree {
-                tree.icon = Some(icon);
-            }
-        } else {
-            desc_lines.push(line.to_string());
-        }
-    }
-
-    if let Some(mut sub) = current_sub.take() {
-        sub.description_markdown = flush_markdown(&mut desc_lines);
-        if let Some(ref mut tree) = current_tree {
-            tree.children.push(sub);
-        }
-    } else if let Some(ref mut tree) = current_tree {
-        tree.description_markdown = flush_markdown(&mut desc_lines);
-    }
-    if let Some(tree) = current_tree.take() {
-        nodes.push(tree);
-    }
-
-    NorthstarTaxonomy {
-        schema_version: 1,
-        generated_from: NORTHSTAR_CONFIG_MD.to_string(),
-        generated_at: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string(),
-        nodes,
-    }
-}
-
-pub fn load_taxonomy(wiki_dir: &Path) -> Result<NorthstarTaxonomy> {
-    let json_path = northstar_json_path(wiki_dir);
-    if json_path.exists() {
-        let raw = fs::read_to_string(&json_path)
-            .with_context(|| format!("Failed to read {}", json_path.display()))?;
-        let taxonomy: NorthstarTaxonomy = serde_json::from_str(&raw)
-            .with_context(|| format!("Failed to parse {}", json_path.display()))?;
-        return Ok(taxonomy);
-    }
-
-    let md_path = northstar_markdown_path(wiki_dir);
-    if !md_path.exists() {
-        bail!("Missing taxonomy source at {}", md_path.display());
-    }
-    let markdown = fs::read_to_string(&md_path)
-        .with_context(|| format!("Failed to read {}", md_path.display()))?;
-    let taxonomy = parse_markdown_taxonomy(&markdown);
-    save_taxonomy(wiki_dir, &taxonomy)?;
-    Ok(taxonomy)
-}
-
-pub fn save_taxonomy(wiki_dir: &Path, taxonomy: &NorthstarTaxonomy) -> Result<()> {
-    let json_path = northstar_json_path(wiki_dir);
-    if let Some(parent) = json_path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("Failed to create {}", parent.display()))?;
-    }
-    fs::write(&json_path, serde_json::to_string_pretty(taxonomy)?)
-        .with_context(|| format!("Failed to write {}", json_path.display()))
-}
-
-pub fn sync_taxonomy_from_markdown(wiki_dir: &Path) -> Result<NorthstarTaxonomy> {
-    let md_path = northstar_markdown_path(wiki_dir);
-    let markdown = fs::read_to_string(&md_path)
-        .with_context(|| format!("Failed to read {}", md_path.display()))?;
-    let taxonomy = parse_markdown_taxonomy(&markdown);
-    save_taxonomy(wiki_dir, &taxonomy)?;
-    Ok(taxonomy)
-}
+// ── Taxonomy query helpers ────────────────────────────────────────────────────
 
 pub fn taxonomy_paths(taxonomy: &NorthstarTaxonomy) -> Vec<Vec<String>> {
     let mut out = Vec::new();

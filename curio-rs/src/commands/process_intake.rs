@@ -150,13 +150,24 @@ fn output_routing_manifest(
     let pages: Vec<serde_json::Value> = intake_pages
         .iter()
         .map(|(slug, page)| {
-            serde_json::json!({
+            // Include reviewer feedback if a .feedback.md sidecar exists for this page
+            let feedback = page.path.with_extension("feedback.md");
+            let reviewer_feedback = if feedback.exists() {
+                std::fs::read_to_string(&feedback).ok()
+            } else {
+                None
+            };
+            let mut entry = serde_json::json!({
                 "slug": slug,
                 "title": page.frontmatter.title,
                 "source_url": page.frontmatter.source.origin_url,
                 "content_hash": page.frontmatter.content_hash,
                 "body_preview": page.body.chars().take(1000).collect::<String>(),
-            })
+            });
+            if let Some(fb) = reviewer_feedback {
+                entry["reviewer_feedback"] = serde_json::json!(fb);
+            }
+            entry
         })
         .collect();
 

@@ -96,7 +96,7 @@ Confluence is not the source of truth.
 
 ## Taxonomy Source of Truth
 
-Taxonomy should be driven by `wiki/_config/northstar.json`.
+Taxonomy should be driven by `NORTHSTAR.md` (yaml block).
 
 That JSON should contain:
 
@@ -388,7 +388,7 @@ over:
 
 Proposal generation must consider:
 
-- `northstar.json`
+- `NORTHSTAR.md`
 - branch-node descriptions
 - co-located `index.md` summaries and metadata
 - relevant peer pages in the likely neighborhood
@@ -484,14 +484,14 @@ The system should verify:
 
 - the proposal record is structurally valid
 - required provenance exists
-- the proposed hierarchical path is valid against `northstar.json`
+- the proposed hierarchical path is valid against `NORTHSTAR.md`
 
 If the path does not exist in the taxonomy, Curio should not pretend the route is already valid.
 
 Instead, the proposal should explicitly include:
 
 - the taxonomy mutation being proposed
-- the new node to add to `northstar.json`
+- the new node to add to `NORTHSTAR.md`
 - the corresponding Git path / page-tree change
 
 That may still land in `staged` if confidence is high and the proposal is complete, but it becomes a taxonomy-change proposal rather than a simple page-route proposal.
@@ -573,7 +573,7 @@ That proposal must include:
 - confidence
 - expected impact on future curation
 
-The taxonomy change should target `northstar.json`, and the corresponding Git path and branch page should be part of the same proposal.
+The taxonomy change should target `NORTHSTAR.md`, and the corresponding Git path and branch page should be part of the same proposal.
 
 ## Stage 5: Publish
 
@@ -599,7 +599,7 @@ At publish time Curio must confirm:
 
 Before publish, Curio should verify:
 
-- the target hierarchical path exists in `northstar.json`, or the approved taxonomy mutation has already been applied
+- the target hierarchical path exists in `NORTHSTAR.md`, or the approved taxonomy mutation has already been applied
 - the target Git path exists or is created as part of the approved change
 - the proposal is not low-signal placeholder material
 - the proposal clears the minimum quality / usability gate
@@ -631,7 +631,7 @@ Published Git content should be:
 
 ## Published Tree Design
 
-The published tree should be defined by `wiki/_config/northstar.json`.
+The published tree should be defined by `NORTHSTAR.md` (yaml block).
 
 The hierarchy may have an arbitrary number of nested levels.
 
@@ -838,7 +838,7 @@ They may also be stored in Git as durable proposal records.
 6. The agent evaluates route fit, hierarchy fit, overlap, quality, usability, and value of information.
 7. Strong proposals move to `staged`.
 8. Ambiguous, weak, structural, or approval-requiring proposals move to `review`.
-9. Taxonomy mutations produce explicit node proposals targeting `northstar.json`.
+9. Taxonomy mutations produce explicit node proposals targeting `NORTHSTAR.md`.
 10. Humans review the necessary staged / review items in Confluence and Git.
 11. Approved staged items publish into the Git `published` tree.
 12. Reindex updates local navigation.
@@ -898,7 +898,7 @@ Low-signal content must be rejected back to `review` for improvement, consolidat
 
 1. Define the exact schema for intake requests with multiple sources.
 2. Define the exact schema for proposal dossiers.
-3. Define the exact schema for `northstar.json`.
+3. Define the exact schema for `NORTHSTAR.md`.
 4. Implement branch-page child indexes and descriptions in Confluence as a first-class validated feature.
 5. Replace title-only duplicate logic with stronger semantic overlap checks.
 6. Move audit and proposal storage under `_config` and remove `wiki/.curio`.

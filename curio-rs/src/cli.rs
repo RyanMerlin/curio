@@ -208,6 +208,17 @@ pub enum Commands {
         dry_run: bool,
     },
 
+    /// Read Confluence review signals (labels, reactions, comments) and apply them to the wiki.
+    ///
+    /// Labels curio:approve / curio:reject / curio:rewrite (or 👍/👎/❓ reactions on the
+    /// pinned comment) drive approve/reject/rewrite actions. Free-form comments are captured
+    /// in <slug>.feedback.md without triggering an automatic state change.
+    Feedback {
+        /// Show planned actions without making any changes.
+        #[arg(long)]
+        dry_run: bool,
+    },
+
     /// Scan the wiki for contradictions, stale claims, and orphaned cross-references.
     Lint {
         /// Auto-fix orphaned cross-references.

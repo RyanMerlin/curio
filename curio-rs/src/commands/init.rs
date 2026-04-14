@@ -7,7 +7,6 @@ use crate::{
     },
     config::Config,
     confluence::ConfluenceClient,
-    northstar::save_taxonomy,
     output::emit_json,
     wiki_index::{append_log, rebuild_index_md},
     WikiIndex,
@@ -125,11 +124,10 @@ pub async fn run_init(
     if !config_settings.exists() || reset {
         std::fs::write(
             &config_settings,
-            "# Curio Wiki Configuration\n\n# Tree structure is defined in _config/northstar.json (generated from northstar.md)\nauto_commit: true\n",
+            "# Curio Wiki Configuration\n\n# Tree structure is defined in NORTHSTAR.md (repo root) as a YAML block.\nauto_commit: true\n",
         )?;
     }
-    let taxonomy = crate::northstar::parse_markdown_taxonomy(&ns_md);
-    save_taxonomy(wiki_dir, &taxonomy)?;
+    // Taxonomy is now embedded as YAML in NORTHSTAR.md — no separate file to write.
 
     // Generate co-located indexes from the seeded tree structure.
     let empty_index = WikiIndex::default();

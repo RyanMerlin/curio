@@ -33,7 +33,7 @@ pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<(
     let trees = crate::northstar::load_taxonomy(wiki_dir)
         .map(|taxonomy| taxonomy.nodes.iter().map(crate::commands::sync::tree_node_from_taxonomy).collect())
         .unwrap_or_else(|_| {
-            eprintln!("Warning: _config/northstar.json not available — indexes will have minimal descriptions.");
+            eprintln!("Warning: NORTHSTAR.md taxonomy block not available — indexes will have minimal descriptions.");
             vec![]
         });
 

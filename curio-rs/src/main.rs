@@ -21,6 +21,7 @@ use curio::{
         sharpen::run_sharpen,
         status::run_status,
         sync::run_sync,
+        feedback::run_feedback,
         tree::run_tree,
     },
     config::load_config,
@@ -123,6 +124,10 @@ async fn main() -> Result<()> {
         Some(Commands::Sync { parent_page_id, dry_run }) => {
             let config = load_config(config_path_str)?;
             run_sync(&config, dry_run || cli.dry_run, cli.json, parent_page_id).await?;
+        }
+        Some(Commands::Feedback { dry_run }) => {
+            let config = load_config(config_path_str)?;
+            run_feedback(&config, dry_run || cli.dry_run).await?;
         }
         Some(Commands::Lint { fix }) => {
             let config = load_config(config_path_str)?;
