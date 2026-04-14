@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-webapi-oauth2-token",
+  "generated_at": "2026-04-14T13:51:08Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "webapi-oauth2-token",
+  "title": "/webapi/oauth2/token",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "api"
+  ],
+  "summary": "Reference for /webapi/oauth2/token endpoint used to obtain Bearer tokens for Alteryx Server API.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> **/webapi/oauth2/token** endpoint is used to get the Bearer Token and is not logged to the Gallery logs as other API endpoints are [tested 23.1]\n\n# How to test in Postman\n\nAdjust for your Server URL, client_id and client_secret\n\nThe following can be imported into Postman and edited, but the above is easy to setup from scratch.",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.88,
+    "quality_confidence": 0.53000003,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.72,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'api' required under 'product-tree/alteryx-server/api' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "api"
+    ],
+    "proposed_node_title": "api",
+    "proposed_node_slug": "api",
+    "node_description": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together.",
+    "rationale": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1911259630"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1911259630"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'api' required under 'product-tree/alteryx-server/api' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together."
+  }
+}

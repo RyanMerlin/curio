@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:51:08Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "V3 Endpoints",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1681363286",
+    "content_hash": "sha256:03cb295f2edc1b8a8d7f21c4716ffe28bcb6fbdc5e3236c5b70b13c32d87de0f",
+    "content_preview": "---\n\n*[Organized section — child pages listed separately]*\n\nnote **Todo** - Document new 23.2 endpoint to run a workflow that was shared with user via Collection.  The old endpoint remains to run your own workflows.\n\n**Todo** - Document new 23.2 endpoint to run a workflow that was shared with user via Collection.  The old endpoint remains to run your own workflows.\n\n---\n\n- API Error - 400 errors on a POST or PUT\n- https://alteryx.atlassian.net/wiki/spaces/SupportServer/pages/1763607185/403+-+API"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "api"
+    ],
+    "confidence": 0.72,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.37000003,
+    "usability": 0.54999995,
+    "review_reason": "Hub with todo status — requires api subtree and content completion review",
+    "proposed_new_subtree": "api",
+    "proposal_rationale": "Alteryx Server API documentation and how-to content is a major, self-contained area of Server support knowledge. A dedicated 'api' subtree under alteryx-server is justified to keep endpoint docs, OAuth guidance, and API case handling together."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "v3",
+      "endpoints"
+    ],
+    "keywords_extracted": [
+      "endpoint",
+      "Collection",
+      "remains",
+      "workflow",
+      "Todo",
+      "Document",
+      "User",
+      "your"
+    ]
+  }
+}
