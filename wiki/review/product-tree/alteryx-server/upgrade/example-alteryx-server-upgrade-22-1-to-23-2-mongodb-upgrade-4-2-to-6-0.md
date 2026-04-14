@@ -1,21 +1,31 @@
 ---
 id: 567092b57260c876
 title: 'Example: Alteryx Server Upgrade 22.1 to 23.2 (MongoDB Upgrade: 4.2 to 6.0)'
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2639659009
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2639659009
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- '22.1'
+- '23.2'
+- mongodb-upgrade
+- '4.2'
+- '6.0'
+- example
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:44Z
+confidence: 0.9
 cross_refs: []
 content_hash: sha256:7856055dc7635a6a7af5dcca29f7cc67c2904cd66bda5127c90aa32a28ea7b53
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

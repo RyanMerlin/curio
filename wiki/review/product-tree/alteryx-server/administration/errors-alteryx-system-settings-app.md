@@ -1,21 +1,27 @@
 ---
 id: db0b629fbec8d713
 title: Errors (Alteryx System Settings App)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1681428842
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1681428842
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- system-settings
+- errors
+- troubleshooting
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:40Z
+confidence: 0.78
 cross_refs: []
 content_hash: sha256:b85bf311c226533c3e41c525fe0fd7192c8099e62c347799d0b4bc943ce2f2c4
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 # Alteryx System Settings App Errors

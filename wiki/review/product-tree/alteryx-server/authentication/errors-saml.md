@@ -1,21 +1,28 @@
 ---
 id: 40b5ef0ea02c2a56
 title: Errors (SAML)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1855128540
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1855128540
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- saml
+- errors
+- sso
+- authentication
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:42Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:7a412c01027cea9c717011d1faaabb07393619b442a5cadd4213a90652aec72c
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 # SAML Errors

@@ -1,21 +1,27 @@
 ---
 id: 97f951f4c6bda82d
 title: Enterprise Utilities
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2398257514
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2398257514
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- utilities
+- enterprise
+- hub
+- tools
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:39Z
+confidence: 0.7
 cross_refs: []
 content_hash: sha256:56b28e1dfa1fcb003c42f64b3485233542713e610eff5f2690442d51c0d5cd06
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---
