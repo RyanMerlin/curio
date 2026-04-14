@@ -1,21 +1,29 @@
 ---
 id: 7cf73ca07c306831
 title: SQL DB Schema and Collation
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2192900191
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2192900191
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- sql-db-persistence
+keywords:
+- sql-db
+- schema
+- collation
+- database
+- configuration
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:47Z
+confidence: 0.78
 cross_refs: []
 content_hash: sha256:a250cb4fe04906d91220f375bb216c973120e7695e1c9ff7d0c0bbfa77bea0be
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

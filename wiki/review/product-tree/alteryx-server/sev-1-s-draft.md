@@ -1,21 +1,27 @@
 ---
 id: 59cb5a62716cffac
 title: Sev 1's [DRAFT]
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640793208
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793208
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- sev1
+- severity
+- escalation
+- draft
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:44Z
+confidence: 0.55
 cross_refs: []
 content_hash: sha256:8f15a4438d24a641269de62e569cabce59e6b4f50e116fac5a697ab61b469222
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Key Articles** | [LasttartUpError.txt Error - There was an error starting the Alteryx Service <Gallery Service failed to start in a timely fashion, exiting.>](https://alteryx.atlassian.net/wiki/search?text=LastStartUpError.txt+Error+-+There+was+an+error+starting+the+Alteryx+Service+<Gallery+Service+failed+to+start+in+a+timely+fashion,+exiting.>)  [Server Sev 1 Flowchart](https://alteryx0.sharepoint.com/sites/GlobalCustomerSupport/CUSP%20Repository/Forms/AllItems.aspx?id=%2Fsites%2FGlobalCustomerSupport%2FCUSP%20Repository%2FServer%20Sev1%20Flowchart%2Epdf&parent=%2Fsites%2FGlobalCustomerSupport%2FCUSP%20Repository) (Sharepoint PDF) |

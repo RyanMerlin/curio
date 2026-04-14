@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-ssl-tls-commands-to-view-bind-add-and-remove-certificates-on-server-ports",
+  "generated_at": "2026-04-14T15:20:47Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "ssl-tls-commands-to-view-bind-add-and-remove-certificates-on-server-ports",
+  "title": "SSL/TLS Commands to View, Bind/Add, and Remove Certificates on Server Ports",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "Commands to view, bind, add, and remove SSL/TLS certificates on Alteryx Server ports.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> See also: [Command line Testing Tools for Windows and Server](https://alteryx.atlassian.net/wiki/search?text=Command+line+Testing+Tools+for+Windows+and+Server)\n\nOpen command prompt **as Administrator**\n\n| **Task** | **Command** |\n| --- | --- |\n| **View bound certificates** | netsh http show sslcert |\n| **Remove certificate from a port** | netsh HTTP delete sslcert ipport=0.0.0.0:**443** [How to Remove the SSL Certificate from Alteryx Server](https://knowledge.alteryx.com/index/s/article/Removing-SSL-Certificate-from-Alteryx-Server) (KB) <== **REMOVE cert** |\n| **Bind certificate to a port** (then restart Service) | netsh http add sslcert ipport=0.0.0.0:**443 **certhash=‎**YOUR_CERT_HASH** appid={eea9431a-a3d4-4c9b-9f9a-b83916c11c67} **appid** doesn’t change and is unique to Alteryx Server  [Configuring Alteryx Server for SSL: Obtaining and Installing Certificates](https://knowledge.alteryx.com/index/s/article/Configuring-Alteryx-Server-for-SSL-Obtaining-and-Installing-Certificates-1583459841225) (KB) <== **ADD cert** |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.9,
+    "quality_confidence": 0.65,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.86,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1744667238"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1744667238"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}
