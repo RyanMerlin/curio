@@ -331,6 +331,7 @@ pub async fn run_sync(
     // a coherent batch rather than visiting each proposal in isolation.
     sync_taxonomy_reconciliation_index(
         &client,
+        config,
         space_key,
         &wiki_dir.join("review"),
         tree.review_id.as_str(),
@@ -1226,6 +1227,7 @@ async fn sync_review_proposals(
 /// than visiting 20 individual proposals that each ask for the same new node.
 async fn sync_taxonomy_reconciliation_index(
     client: &ConfluenceClient,
+    config: &Config,
     space_key: &str,
     review_dir: &Path,
     parent_id: &str,
@@ -1253,8 +1255,19 @@ async fn sync_taxonomy_reconciliation_index(
         let Ok(raw) = std::fs::read_to_string(path) else { continue };
         let Ok(analysis) = serde_json::from_str::<serde_json::Value>(&raw) else { continue };
         let Some(subtree) = analysis["routing"]["proposed_new_subtree"].as_str() else { continue };
-        let title = analysis["title"].as_str().unwrap_or("Untitled").to_string();
-        let slug = analysis["slug"].as_str().unwrap_or("").to_string();
+        // Title lives under inputs.title (the original source page title)
+        let title = analysis["inputs"]["title"]
+            .as_str()
+            .or_else(|| analysis["title"].as_str())
+            .unwrap_or("Untitled")
+            .to_string();
+        // Slug is derived from the .analysis.json filename (strip the suffix)
+        let slug = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .trim_end_matches(".analysis.json")
+            .to_string();
         let confidence = analysis["routing"]["confidence"].as_f64().unwrap_or(0.0) as f32;
         groups
             .entry(subtree.to_string())
@@ -1279,19 +1292,46 @@ async fn sync_taxonomy_reconciliation_index(
         body.push_str(&format!("<h2>{}</h2>", html_escape(subtree)));
         body.push_str(&format!("<p>{} page(s) propose this subtree:</p>", pages.len()));
         body.push_str("<table><tbody><tr><th>Page</th><th>Confidence</th></tr>");
-        for (title, _slug, confidence) in pages.iter() {
+        for (title, slug, confidence) in pages.iter() {
+            // Try to load the .sync-refs.json sidecar to get the Confluence review page ID.
+            // The analysis file path is slug-derived; the sidecar sits next to the .md file.
+            let conf_page_id: Option<String> = {
+                // Walk review_dir to find a sync-refs sidecar whose stem matches slug
+                walkdir::WalkDir::new(review_dir)
+                    .into_iter()
+                    .filter_map(|e| e.ok())
+                    .find(|e| {
+                        e.path()
+                            .file_name()
+                            .and_then(|n| n.to_str())
+                            .map(|n| n == format!("{}.sync-refs.json", slug))
+                            .unwrap_or(false)
+                    })
+                    .and_then(|e| std::fs::read_to_string(e.path()).ok())
+                    .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                    .and_then(|v| v["confluence_review_page_id"].as_str().map(|s| s.to_string()))
+            };
+            let confluence_base = config.connection.confluence_url
+                .trim_end_matches("/wiki")
+                .trim_end_matches('/');
+            let cell = if let Some(page_id) = conf_page_id {
+                format!("<a href=\"{}/wiki/spaces/{}/pages/{}\"><strong>{}</strong></a>",
+                    confluence_base,
+                    space_key,
+                    page_id,
+                    html_escape(title))
+            } else {
+                html_escape(title).to_string()
+            };
             body.push_str(&format!(
                 "<tr><td>{}</td><td>{:.0}%</td></tr>",
-                html_escape(title),
+                cell,
                 confidence * 100.0,
             ));
         }
         body.push_str("</tbody></table>");
-        body.push_str("<p><strong>Decision options:</strong></p><ul>");
-        body.push_str("<li>✅ <strong>Approve:</strong> add this path to <code>NORTHSTAR.md</code> children, then move pages from review → staged</li>");
-        body.push_str("<li>✏️ <strong>Reroute:</strong> pick an existing path for these pages instead and update their category</li>");
-        body.push_str("<li>🗑️ <strong>Reject:</strong> mark pages as out-of-scope and archive</li>");
-        body.push_str("</ul><hr/>");
+        body.push_str("<p><strong>To signal a decision:</strong> open an individual review page above and react 👍 (approve), 👎 (reject), or ❓ (rewrite) on the pinned Curio comment at the bottom of the page. Then run <code>curio feedback</code> to apply.</p>");
+        body.push_str("<p>To approve the entire subtree at once, add the label <code>curio:approve</code> to each page in the group, then run <code>curio feedback</code>.</p><hr/>");
     }
 
     let hash = content_hash(&body);
