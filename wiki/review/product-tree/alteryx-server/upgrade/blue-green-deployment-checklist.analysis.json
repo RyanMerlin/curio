@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:49:36Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Blue-Green Deployment Checklist",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3221160357",
+    "content_hash": "sha256:53f36fe585ef1092b3b17040635a964ffb04d31536101832ab859a991e45db73",
+    "content_preview": "Can build off of the current [Server Upgrade Checklist](https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/server-upgrade-checklist.html#upgrade-7047039), with additional considerations (edits shown in yellow highlight,  removed portions in magenta highlight with strikethrough ):\n\n# [EDITED] Blue-Green Deployment Server Upgrade Checklist\n\nYour Server configuration is unique and upgrading it is a project that requires planning and preparatory work to be successful. This "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "blue-green",
+      "deployment",
+      "checklist"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "your",
+      "upgrade",
+      "version",
+      "environment",
+      "Upgrade",
+      "MongoDB",
+      "Production"
+    ]
+  }
+}

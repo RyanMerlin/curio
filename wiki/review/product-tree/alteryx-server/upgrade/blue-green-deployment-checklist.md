@@ -1,21 +1,29 @@
 ---
 id: 6b531530a731bd65
 title: Blue-Green Deployment Checklist
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3221160357
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3221160357
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- blue-green
+- deployment
+- checklist
+- sandbox
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:49:36Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:53f36fe585ef1092b3b17040635a964ffb04d31536101832ab859a991e45db73
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 Can build off of the current [Server Upgrade Checklist](https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/server-upgrade-checklist.html#upgrade-7047039), with additional considerations (edits shown in yellow highlight,  removed portions in magenta highlight with strikethrough ):

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:49:36Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "ASMongoDBVersion.bin",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2652471356",
+    "content_hash": "sha256:266255e9f596163a7b11f95ce8a9a6c453590fe7df534dbfc6f600f4836d53bc",
+    "content_preview": "> **ℹ️ Info**\n>\n> **ASMongoDBVersion.bin** is a text file in the Mongo database folder.  It's checked during a Server upgrade to determine the Mongo database version and if a Mongo version upgrade is needed.  The first line, with the Mongo version number, is the only line that's needed. Mongo does not create or use this file, it's only used by the Server upgrade process.\n\n| Key Articles | Embedded MongoDB upgrade / migration   <== what folders are created during a MongoDB version upgrade |\n| ---"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.9,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [
+      "placeholder_pattern"
+    ],
+    "information_quality": 0.53,
+    "usability": 0.47,
+    "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "asmongodbversion.bin"
+    ],
+    "keywords_extracted": [
+      "version",
+      "upgrade",
+      "Mongo",
+      "MongoDB",
+      "Server",
+      "ASMongoDBVersionbin",
+      "database",
+      "start"
+    ]
+  }
+}

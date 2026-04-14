@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-alteryx-system-settings-change-log",
+  "generated_at": "2026-04-14T13:49:34Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "alteryx-system-settings-change-log",
+  "title": "Alteryx System Settings Change Log",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "administration"
+  ],
+  "summary": "Change log for Alteryx System Settings — documents 25.1 feature addition of RuntimeSettings audit log.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> 25.1 feature added without detailed explanation\n\n| Access | C:\\ProgramData\\Alteryx\\RuntimeSettingsAuditLog.csv |\n| --- | --- |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.83,
+    "quality_confidence": 0.0,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.65999997,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "proposed_node_title": "administration",
+    "proposed_node_slug": "administration",
+    "node_description": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:3042803855"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3042803855"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  }
+}

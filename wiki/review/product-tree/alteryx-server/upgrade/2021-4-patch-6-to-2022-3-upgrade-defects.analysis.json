@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:49:32Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "2021.4 Patch 6 to 2022.3 Upgrade Defects",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1868234983",
+    "content_hash": "sha256:1cf1e487df05472765c0f5a716474a3ac1f74fd0417df7649523b34cbcd3d8d8",
+    "content_preview": "TCPE-70277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System JIRA (TCPE-702)\n\n**Affected Versions**: 2021.4 Patch 6 to 2022.1 Patch 2\n\n**Symptoms**: Post server host recovery, accessing any data connections will result in the page with a spinning icon.\n\n**Pitfall**: Post server host recovery, if an upgrade is done to 2022.1 or 2022.3 (2023.1 not tested), the entire Gallery will be inaccessible.  You do not want to be asking users to upgrade.  They need to revert back to the pre server host recovery Altery"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.59999996,
+    "usability": 0.78000003,
+    "review_reason": "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval",
+    "proposed_new_subtree": "upgrade",
+    "proposal_rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "2021.4",
+      "patch",
+      "6",
+      "to",
+      "2022.3",
+      "upgrade",
+      "defects"
+    ],
+    "keywords_extracted": [
+      "JIRA",
+      "host",
+      "TGAL",
+      "recovery",
+      "server",
+      "Patch",
+      "TGALdcfcfffefeeffSystem",
+      "TCPEdcfcfffefeeffSystem"
+    ]
+  }
+}
