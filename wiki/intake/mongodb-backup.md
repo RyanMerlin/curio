@@ -1,0 +1,58 @@
+---
+id: 05b942ff49281926
+title: MongoDB Backup
+status: intake
+source:
+  kind: confluence_page
+  id: confluence-page:1997439417
+  origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1997439417
+  summary: null
+category: []
+keywords: []
+created_at: 2026-04-14T13:40:14Z
+updated_at: 2026-04-14T13:40:14Z
+confidence: null
+cross_refs: []
+content_hash: sha256:c33fe867d715b875d283e4dd9bb5c53ccda471bf1e41a73da0b50d2f4f0f4f4b
+confluence_page_id: null
+model_used: null
+---
+
+---
+
+*[Organized section — child pages listed separately]*
+
+---
+
+for embedded mongo onlyPurple
+
+> **ℹ️ Info**
+>
+> How to backup an Embedded MongoDB
+
+| Key Articles | Alteryx Server Backup and Recovery Part 2: Procedures (KB)                                   <== includes PowerShell script to automate backupshttps://help.alteryx.com/current/en/server/install/server-host-recovery-guide/disaster-recovery-preparation.html https://help.alteryx.com/current/en/server/best-practices/backup-best-practices/critical-server-files-and-settings-to-backup.html?lang=en |
+| --- | --- |
+| Alternatives | When Service is stopped (to ensure you don’t capture Mongo DB mid-update)ZIP the Persistence folderSnapshot the entire machine |
+| Tool Updates | Mar-2024 – Mongo backup and Restore tools were updated and backported to older Server versions. The goal was to reduce errors during backup and restore such as memory exhaustion.TCPE-95277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
+| Validate backup counts | Utility Workflow - Validate_Mongo_Dump_Collection_Counts   <== Utility compares mongoDump.log counts to the source MongoDB.            Created for a case where backup didn’t backup all records |
+| Jira | TCPE-95577dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
+| Help | https://help.alteryx.com/current/server/mongodb-backups |
+
+---
+
+X: 
+cd \FOLDER \Alteryx\bin
+net stop alteryxservice
+**AlteryxService.exe emongodump=DRIVE:\PATH_BACKUP**
+
+Failed: error writing data for collection `AlteryxService.AS_ResultsFiles.Files` to disk: error reading collection: (CursorNotFound) cursor id 1079540379547815088 not found
+
+Mongodump failed: 2
+
+AlteryxService.exe uses the mongodump.exe and mongorestore.exe files in the bin folder when performing a backup or restore.  It then copies the two BIN files the Alteryx Service needs to have in the persistence folder.
+
+mongodump --host=localhost:27018 -vvvvv  --out=DRIVE:\PATH 2>DRIVE:\PATH\mongoDump.log
+
+mongodump --uri="mongodb://localhost:27017 " -vvvvv  --out DRIVE:\PATH 2>DRIVE:\PATH\mongoDump.log
+
+Failed: error dumping metadata: error creating directory for metadata file ut=E:\BACKUP\AlteryxService: mkdir ut=E:: The filename, directory name, or volume label syntax is incorrect.

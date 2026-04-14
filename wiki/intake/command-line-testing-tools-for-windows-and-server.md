@@ -1,0 +1,76 @@
+---
+id: 311d01f429737a79
+title: Command line Testing Tools for Windows and Server
+status: intake
+source:
+  kind: confluence_page
+  id: confluence-page:1720391652
+  origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1720391652
+  summary: null
+category: []
+keywords: []
+created_at: 2026-04-14T13:40:14Z
+updated_at: 2026-04-14T13:40:14Z
+confidence: null
+cross_refs: []
+content_hash: sha256:b3c989515b08648472e18d9b0cc23b3059bfd37bef06bd87596d8775e43f5588
+confluence_page_id: null
+model_used: null
+---
+
+> **ℹ️ Info**
+>
+> Common testing tools in a Server environment
+
+| Key Articles | Diagnosing Network Connection Issues (KB) |
+| --- | --- |
+
+---
+
+AlteryxService test
+
+Get-ADPrincipalgroupmembership -Identity ‘FIRST.LAST ’
+
+hostname
+
+ipconfig
+
+netsh http show sslcert
+
+netsh winhttp show proxy
+
+netsh winhttp dump > proxy.txt
+
+netsh http show urlacl
+
+netstat -an | find ":**80** " | find "LISTENING"
+
+netstat -aon
+
+Faled to register Service URL (5).
+
+Please contact your Systems Administrator to ensure that port 443 is unused and open for inbound connections, and verify that the Alteryx Service is not running on this system
+
+ipconfig /flushdns
+
+nltest /dsgetdc:DOMAIN_NAME
+
+nltest /dclist:DOMAIN_NAME
+
+nltest /Server:CLIENT_COMPUTER_NAME /SC_RESET:DOMAIN_NAME \DOMAIN_CONTROLLER_NAME
+
+nslookup alteryx.com
+
+ping **GALLERY.HOST.COM**
+
+Test-NetConnection -ComputerName "CONTROLLER_NAME " -Port 80
+
+C:\temp\latencyOutpu2.txt ]]> whoami /user
+
+wmic memorychip get capacity && wmic cpu get name,numberofcores,numberoflogicalprocessors
+
+wmic computersystem get domain
+
+wmic useraccount where name="**FIRST.LAST**" get sid
+
+wmic useraccount where sid='**S-1-5-21-1777081478-1322062499-644039835-1808318**'
