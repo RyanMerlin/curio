@@ -17,7 +17,7 @@ keywords:
 - jira
 - migration
 created_at: 2026-04-13T01:55:58Z
-updated_at: 2026-04-13T23:20:00Z
+updated_at: 2026-04-13T23:46:00Z
 confidence: 0.82
 cross_refs:
 - published/product-tree/alteryx-server/server-upgrade-version-paths-what-version-can-upgrade-to-what-versions.md
@@ -25,7 +25,7 @@ cross_refs:
 - published/product-tree/alteryx-server/server-upgrade-issues-by-version-24-1.md
 - published/product-tree/alteryx-server/server-upgrade-issues-by-version-23-2-and-23-1.md
 - published/product-tree/alteryx-server/server-upgrade-issues-by-version-22-3-and-22-1.md
-content_hash: sha256:95dc07530ddb3ad796f3e4b0fab90bca769471d9a1dd4da0c8a5fb6d9240b240
+content_hash: sha256:114b749c6822a672ce96880e6d10a343b17314ae8d7513f6827aec870620981f
 confluence_page_id: null
 model_used: codex-curation
 ---
@@ -46,12 +46,3 @@ model_used: codex-curation
 2. [Server Upgrade Issues by Version - 24.1](server-upgrade-issues-by-version-24-1.md)
 3. [Server Upgrade Issues by Version - 23.2 and 23.1](server-upgrade-issues-by-version-23-2-and-23-1.md)
 4. [Server Upgrade Issues by Version - 22.3 and 22.1](server-upgrade-issues-by-version-22-3-and-22-1.md)
-
-## Quick Triage
-
-| Version family | Main themes |
-| --- | --- |
-| 25.1 and 24.2 | Copilot compatibility, credential publish issues, Mongo 7.0 upgrade behavior, CPU growth after patching |
-| 24.1 | Python 3.10 transition, run-count / run-mode regressions, timezone and schema migration issues |
-| 23.2 and 23.1 | Mongo 6.0 transition, `__ServiceData` changes, AS_Versions defects, Lucene / UI framework changes |
-| 22.3 and 22.1 | CryptoMigration, SAML URL / ACS issues, controller token transition, host recovery and gallery migration defects |

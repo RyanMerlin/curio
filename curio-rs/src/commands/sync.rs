@@ -286,7 +286,7 @@ pub async fn run_sync(
     // Delete stale pages
     if !dry_run {
         let stale =
-            find_stale_pages(&client, space_key, Some(tree.published_id.as_str()), &synced_page_ids).await?;
+            find_stale_pages(&client, Some(tree.published_id.as_str()), &synced_page_ids).await?;
         for page_id in &stale {
             match client.delete_page(page_id).await {
                 Ok(()) => upserted.push(format!("[deleted] {}", page_id)),
@@ -942,7 +942,6 @@ async fn set_sync_prop(client: &ConfluenceClient, page_id: &str, hash: &str) -> 
 
 async fn find_stale_pages(
     client: &ConfluenceClient,
-    _space_key: &str,
     parent_id: Option<&str>,
     synced_ids: &HashSet<String>,
 ) -> Result<Vec<String>> {
@@ -961,9 +960,7 @@ async fn find_stale_pages(
         if synced_ids.contains(&page_id) {
             continue;
         }
-        if let Ok(Some(_)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
-            stale.push(page_id);
-        }
+        stale.push(page_id);
     }
     Ok(stale)
 }
