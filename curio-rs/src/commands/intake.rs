@@ -209,13 +209,20 @@ async fn collect_from_confluence(
     let page_id = extract_confluence_page_id(url)
         .ok_or_else(|| anyhow::anyhow!("Could not extract page ID from Confluence URL: {}", url))?;
 
-    // Collect the root page + all descendants if recursive
+    // Collect the root page + all descendants if recursive.
+    // Also build a parent→children title map for hub-page body synthesis.
     let mut page_ids: Vec<String> = vec![page_id.clone()];
+    let mut children_map: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
     if recursive {
         let descendants = client.get_page_descendants_v2(&page_id).await?;
-        for d in descendants {
+        for d in &descendants {
             if let Some(id) = d["id"].as_str() {
                 page_ids.push(id.to_string());
+                // Build parent→children title map using parentId from the API response
+                if let Some(parent_id) = d["parentId"].as_str() {
+                    let child_title = d["title"].as_str().unwrap_or("Untitled").to_string();
+                    children_map.entry(parent_id.to_string()).or_default().push(child_title);
+                }
             }
         }
         eprintln!("Fetching {} pages (root + {} descendants)...", page_ids.len(), page_ids.len() - 1);
@@ -245,7 +252,44 @@ async fn collect_from_confluence(
         );
 
         let html_body = page["body"]["storage"]["value"].as_str().unwrap_or("").to_string();
-        let text = extract_text_from_html(&html_body);
+        let mut text = extract_text_from_html(&html_body);
+
+        // Hub/index page synthesis: if the body is sparse (mostly navigation macros,
+        // smart links, or children macros with no prose), synthesize a useful body
+        // from known child page titles so the routing agent has real signal.
+        let meaningful_chars = text.chars().filter(|c| c.is_alphanumeric()).count();
+        if meaningful_chars < 80 {
+            let child_titles = children_map.get(pid.as_str()).cloned().unwrap_or_default();
+            if !child_titles.is_empty() {
+                text = format!(
+                    "Hub page: {title}\n\nThis page organizes the following sub-pages:\n\n{children}\n",
+                    title = title,
+                    children = child_titles.iter().map(|t| format!("- {}", t)).collect::<Vec<_>>().join("\n")
+                );
+            } else if !recursive {
+                // For a non-recursive single-page intake of a hub, fetch direct children
+                // so we can still produce a useful body.
+                if let Ok(direct_children) = client.get_direct_children_v2(pid).await {
+                    let child_titles: Vec<String> = direct_children
+                        .iter()
+                        .filter_map(|c| c["title"].as_str().map(|t| t.to_string()))
+                        .collect();
+                    if !child_titles.is_empty() {
+                        text = format!(
+                            "Hub page: {title}\n\nThis page organizes the following sub-pages:\n\n{children}\n",
+                            title = title,
+                            children = child_titles.iter().map(|t| format!("- {}", t)).collect::<Vec<_>>().join("\n")
+                        );
+                    } else {
+                        text = format!("Hub page: {title}\n\n*This page serves as a section index with no prose body.*\n", title = title);
+                    }
+                }
+            } else {
+                text = format!("Hub page: {title}\n\n*This page serves as a section index with no prose body.*\n", title = title);
+            }
+            eprintln!("  [hub] synthesized body for sparse page: {}", title);
+        }
+
         let id = generate_id(&format!("confluence-page:{}", pid));
 
         if recursive {
@@ -442,10 +486,41 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         | "html" | "span" | "figure" | "figcaption"
         | "header" | "footer" | "nav" | "aside" => children_to_md(el, depth),
 
+        // Confluence smart links
+        "ac:link" => {
+            // Smart link: extract display text from ac:link-title, then ri:page content-title
+            let link_title_sel = scraper::Selector::parse("ac\\:link-title").unwrap();
+            if let Some(lt) = el.select(&link_title_sel).next() {
+                let text = lt.text().collect::<String>();
+                let text = text.trim();
+                if !text.is_empty() {
+                    return format!("[{}]", text);
+                }
+            }
+            let ri_page_sel = scraper::Selector::parse("ri\\:page").unwrap();
+            if let Some(ri_el) = el.select(&ri_page_sel).next() {
+                if let Some(ct) = ri_el.value().attr("ri:content-title") {
+                    return format!("[{}]", ct);
+                }
+            }
+            children_to_md(el, depth)
+        }
+        "ri:page" => {
+            if let Some(ct) = el.value().attr("ri:content-title") {
+                return ct.to_string();
+            }
+            String::new()
+        }
+        "ri:attachment" | "ri:space" | "ri:user" => String::new(),
+
         // Confluence macros: extract text from rich/plain body
         "ac:structured-macro" => {
             // info/note/warning → blockquote-style callout
             let macro_name = el.value().attr("ac:name").unwrap_or("");
+            // children macro has no body — signal it's a hub/section-index page
+            if macro_name == "children" || macro_name == "pagetree" {
+                return "*[Organized section — child pages listed separately]*\n\n".to_string();
+            }
             let body_sel = scraper::Selector::parse("ac\\:rich-text-body, ac\\:plain-text-body").unwrap();
             let body = el.select(&body_sel)
                 .map(|b| element_to_md(b, depth))

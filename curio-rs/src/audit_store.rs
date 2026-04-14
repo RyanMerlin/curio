@@ -188,6 +188,31 @@ pub fn append_entry(wiki_dir: &Path, entry: &str) -> Result<()> {
     maybe_compact(wiki_dir)
 }
 
+/// Append a human-readable entry to the narrative log at `wiki/_config/log.md`.
+///
+/// Karpathy-style: append-only, one dated line per intake/process/publish/query,
+/// so the log compounds into a readable history of what the KB has learned.
+pub fn append_log_md(wiki_dir: &Path, entry: &str) -> Result<()> {
+    let log_path = wiki_dir.join("_config").join("log.md");
+    let ts = Utc::now().format("%Y-%m-%d %H:%M UTC").to_string();
+    let line = format!("- {} — {}\n", ts, entry);
+
+    // Initialise with a header if the file is new
+    let needs_header = !log_path.exists() || std::fs::metadata(&log_path).map(|m| m.len() == 0).unwrap_or(true);
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_path)
+        .with_context(|| format!("Failed to open log.md for append: {}", log_path.display()))?;
+    if needs_header {
+        use std::io::Write;
+        writeln!(file, "# Curio Knowledge Log\n\nAppend-only record of ingests, routing runs, publications, and queries.\n")?;
+    }
+    use std::io::Write;
+    file.write_all(line.as_bytes())
+        .with_context(|| format!("Failed to append to log.md: {}", log_path.display()))
+}
+
 pub fn read_last_sync(wiki_dir: &Path) -> Result<Option<String>> {
     let marker_path = sync_marker_path(wiki_dir);
     if marker_path.exists() {

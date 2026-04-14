@@ -180,10 +180,18 @@ pub fn rebuild_colocated_indexes(
         .with_context(|| format!("Failed to write {}", root_path.display()))?;
 
     // ── Tree and leaf indexes ────────────────────────────────────────────
+    let mut branch_issues: Vec<String> = Vec::new();
     for tree in trees {
         let tree_dir = published_dir.join(&tree.slug);
         if !tree_dir.exists() {
             std::fs::create_dir_all(&tree_dir)?;
+        }
+
+        // Validate branch description — branch nodes must have descriptions to be
+        // useful in Confluence and to pass the branch-node first-class contract.
+        let tree_desc = strip_html_inline(&tree.description_html);
+        if tree_desc.trim().is_empty() {
+            branch_issues.push(format!("branch node '{}' ({}) has no description — add description_markdown in northstar.json", tree.title, tree.slug));
         }
 
         // Pages belonging to this tree but no subtree
@@ -204,6 +212,11 @@ pub fn rebuild_colocated_indexes(
                 std::fs::create_dir_all(&sub_dir)?;
             }
 
+            let sub_desc = strip_html_inline(&sub.description_html);
+            if sub_desc.trim().is_empty() {
+                branch_issues.push(format!("  branch node '{}/{}' ({}/{}) has no description", tree.slug, sub.slug, tree.title, sub.title));
+            }
+
             let sub_pages: Vec<&&WikiIndexEntry> = published_pages
                 .iter()
                 .filter(|e| {
@@ -214,6 +227,17 @@ pub fn rebuild_colocated_indexes(
 
             write_leaf_index(&sub_dir, sub, &sub_pages, now.as_str())?;
         }
+    }
+
+    // Report branch-node description defects so they are visible and actionable.
+    // Branch nodes without descriptions produce thin Confluence pages that violate
+    // the first-class branch-node contract in process.md.
+    if !branch_issues.is_empty() {
+        eprintln!("⚠ Branch node description gaps — add description_markdown to northstar.json for:");
+        for issue in &branch_issues {
+            eprintln!("  {}", issue);
+        }
+        eprintln!("  (Re-run `curio reindex` after updating northstar.json to clear these warnings)");
     }
 
     let unc_dir = published_dir.join("uncategorized");
@@ -374,9 +398,14 @@ pub fn rebuild_index_md(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
 
 // ─── audit.jsonl ─────────────────────────────────────────────────────────
 
-/// Append an entry to the Git-tracked audit log.
+/// Append an entry to the Git-tracked audit log (JSONL) and the human-readable log.md.
 pub fn append_log(wiki_dir: &Path, entry: &str) -> Result<()> {
-    audit_store::append_entry(wiki_dir, entry)
+    audit_store::append_entry(wiki_dir, entry)?;
+    // Best-effort: log.md write failure does not abort the primary operation
+    if let Err(e) = audit_store::append_log_md(wiki_dir, entry) {
+        eprintln!("warning: could not append to log.md: {}", e);
+    }
+    Ok(())
 }
 
 // ─── Lookup helpers ──────────────────────────────────────────────────────

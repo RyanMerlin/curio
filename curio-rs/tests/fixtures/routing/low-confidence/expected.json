@@ -1,0 +1,4 @@
+{
+  "expected_lane_options": ["review"],
+  "description": "Low-signal meeting notes with no clear product/topic — should always land in review due to quality gate"
+}

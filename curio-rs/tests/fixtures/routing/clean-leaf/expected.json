@@ -1,0 +1,6 @@
+{
+  "expected_min_category_depth": 2,
+  "expected_category_contains": "product-tree",
+  "expected_lane_options": ["staged", "review"],
+  "description": "Technical upgrade guide with clear product + version signals — should route to product-tree/alteryx-server or deeper"
+}

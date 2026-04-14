@@ -21,7 +21,64 @@
           "slug": "alteryx-server",
           "description_markdown": "> Server-specific knowledge: upgrade guides, operational playbooks, and support escalation patterns.",
           "icon": "1f5a5",
-          "children": []
+          "children": [
+            {
+              "title": "API",
+              "slug": "api",
+              "description_markdown": "> REST API documentation, endpoint references, and integration examples for Alteryx Server.",
+              "icon": "1f517",
+              "children": []
+            },
+            {
+              "title": "MongoDB",
+              "slug": "mongodb",
+              "description_markdown": "> MongoDB internal database operations, tooling, and troubleshooting for Alteryx Server.",
+              "icon": "1f4be",
+              "children": []
+            },
+            {
+              "title": "Upgrade",
+              "slug": "upgrade",
+              "description_markdown": "> Upgrade guides, migration checklists, patch notes, and deployment procedures for Alteryx Server.",
+              "icon": "1f504",
+              "children": []
+            },
+            {
+              "title": "Authentication",
+              "slug": "authentication",
+              "description_markdown": "> Authentication configuration: SAML, Windows Auth, OAuth, Kerberos, and credential management.",
+              "icon": "1f512",
+              "children": []
+            },
+            {
+              "title": "Administration",
+              "slug": "administration",
+              "description_markdown": "> System administration, service management, configuration, and operational runbooks.",
+              "icon": "2699",
+              "children": []
+            },
+            {
+              "title": "SQL DB Persistence",
+              "slug": "sql-db-persistence",
+              "description_markdown": "> SQL Server and PostgreSQL persistence layer configuration, migration, and troubleshooting.",
+              "icon": "1f5c4",
+              "children": []
+            },
+            {
+              "title": "High Availability",
+              "slug": "high-availability",
+              "description_markdown": "> High availability deployment patterns, worker node configuration, and failover procedures.",
+              "icon": "1f4aa",
+              "children": []
+            },
+            {
+              "title": "User Management",
+              "slug": "user-management",
+              "description_markdown": "> User roles, permissions, analytic app access, and gallery management.",
+              "icon": "1f465",
+              "children": []
+            }
+          ]
         },
         {
           "title": "Alteryx Designer",

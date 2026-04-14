@@ -169,14 +169,16 @@ fn output_routing_manifest(
         "hierarchy_context": hierarchy_context,
         "pages": pages,
         "instructions": {
-            "task": "Turn each intake page into a hierarchy-first proposal with a defensible full path, overlap assessment, and review/staged lane.",
-                "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\", \"optional-deeper-node\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null, \"merge_target\": null}",
+            "task": "Turn each intake page into a hierarchy-first proposal with a defensible FULL PATH, overlap assessment, and review/staged lane. You are the information architect — not a page router.",
+            "output_format": "JSON array of routing decisions. Each element: {\"slug\": \"...\", \"category\": [\"tree\", \"subtree\", \"optional-deeper-node\", \"optional-leaf-node\"], \"confidence\": 0.0-1.0, \"status\": \"staged|review\", \"keywords\": [...], \"summary\": \"max 200 chars\", \"rationale\": \"...\", \"alternatives_considered\": [{\"path\": [...], \"score\": 0.0, \"ruled_out_because\": \"...\"}], \"review_reason\": null, \"proposed_new_subtree\": null, \"proposal_rationale\": null, \"merge_target\": null}",
             "confidence_rule": "confidence >= 0.75 and a valid existing subtree fit is necessary but not sufficient for staged. Weak or low-usability content should still go to review.",
-            "quality_rule": "Assess information quality and human usability separately from routing confidence. Low-signal, placeholder-like, or weak-content pages must go to review even if the route is obvious.",
-            "hierarchy_rule": "Hierarchy is the primary design goal. Use the taxonomy plus recursive branch index context to find the best full path. Do not stop at the first acceptable shallow match if the information clearly implies a deeper structure.",
-            "recursive_index_rule": "Use hierarchy_context and branch indexes religiously. Keep traversing likely branch paths and nearby peers until you believe you have found the relevant surrounding structure and overlaps.",
-            "new_subtree_rule": "If no existing subtree fits confidently, do not force publication. Route to review, provide the closest category path you can justify, and fill proposed_new_subtree plus proposal_rationale.",
-            "overlap_rule": "If the material appears semantically duplicative with likely peers, prefer review with merge or consolidation guidance instead of staged.",
+            "quality_rule": "Assess information quality and human usability separately from routing confidence. Low-signal, placeholder-like, hub-only, or weak-content pages must go to review even if the route is obvious.",
+            "hierarchy_rule": "Hierarchy is the PRIMARY design goal. Use the taxonomy plus recursive branch index context to propose the DEEPEST defensible path, not the first acceptable shallow match. A 1-component category (tree only) is almost never correct for leaf content — it means you stopped too early.",
+            "depth_rule": "Default to paths with 3+ components for technical, operational, troubleshooting, version-specific, scenario-specific, or procedural content. Only use a 1- or 2-component path when the content is explicitly broad, cross-cutting, or designed as a branch landing page. If you choose a shallow path for technical content, you MUST explicitly rule out deeper alternatives in alternatives_considered.",
+            "recursive_index_rule": "Traverse hierarchy_context exhaustively. Read every index.md summary in the relevant branch neighborhood. Do not propose a path until you have looked one level deeper than you think is needed.",
+            "new_subtree_rule": "If the ideal path does not yet exist in the taxonomy, route to review, use the closest justified path, and fill proposed_new_subtree (the new node slug) plus proposal_rationale (why this node is necessary and where it belongs). Do NOT force content into a wrong existing node just to avoid a new-subtree proposal.",
+            "overlap_rule": "If the material is semantically duplicative with a likely peer, set merge_target to the peer path, route to review, and explain in review_reason what a merge would produce. Do not publish a duplicate.",
+            "hub_page_rule": "Hub/index pages (those whose body is mainly child-page lists) should be routed as branch-node proposals, not leaf pages. Their category should point to the branch they organize. Mark them review unless the branch is already well-defined.",
             "apply_command": "curio process --route-file <path-to-decisions.json>"
         }
     });
@@ -377,10 +379,20 @@ fn apply_routing(
     if required_lane == ProposalLane::Review {
         target_status = "review";
         decision.status = "review".to_string();
+
+        // Auto-populate merge_target from the top overlap candidate when the agent
+        // didn't provide one explicitly. This gives reviewers an actionable pointer.
+        if overlap_risk >= 0.7 && decision.merge_target.is_none() {
+            if let Some(top_candidate) = overlap_candidates.first() {
+                decision.merge_target = Some(top_candidate.path.clone());
+            }
+        }
+
         let fallback_reason = if overlap_risk >= 0.7 {
             format!(
-                "High semantic overlap ({:.0}%) with existing peer content — requires review for merge or consolidation",
-                overlap_risk * 100.0
+                "High semantic overlap ({:.0}%) with existing peer content at '{}' — requires review for merge or consolidation",
+                overlap_risk * 100.0,
+                decision.merge_target.as_deref().unwrap_or("unknown peer")
             )
         } else if !taxonomy_has_path {
             "Proposed taxonomy path does not exist yet — requires review with a taxonomy mutation".to_string()
@@ -409,6 +421,40 @@ fn apply_routing(
         sidecar.routing.flags.extend(quality.flags.clone());
         sidecar.routing.flags.extend(overlap_candidates.iter().take(3).map(|candidate| format!("overlap:{}", candidate.path)));
     }
+
+    // Shallow-route guard: if a leaf page was routed to a single-component category
+    // (tree-level only) and the content signals technical/operational depth, demote to
+    // review so a human can verify the path is intentional, not premature.
+    if target_status == "staged" && decision.category.len() == 1 {
+        let body_lower = page.body.to_lowercase();
+        let title_lower = page.frontmatter.title.to_lowercase();
+        let technical_signals = [
+            "troubleshoot", "install", "configur", "version", "upgrade", "migrat",
+            "error", "debug", "procedure", "step-by-step", "how to", "howto",
+        ];
+        let is_technical = technical_signals.iter().any(|sig| {
+            title_lower.contains(sig) || body_lower.contains(sig)
+        });
+        if is_technical {
+            target_status = "review";
+            decision.status = "review".to_string();
+            let shallow_reason = format!(
+                "Shallow-route warning: content appears technical/operational but was routed to a top-level category '{}' with no subtree. \
+                Verify this is the correct final depth or propose a deeper path.",
+                decision.category[0]
+            );
+            if decision.review_reason.is_none() {
+                decision.review_reason = Some(shallow_reason.clone());
+            }
+            if let Some(ref mut sidecar) = analysis {
+                sidecar.routing.flags.push("shallow_route_warning".to_string());
+                if sidecar.routing.review_reason.is_none() {
+                    sidecar.routing.review_reason = Some(shallow_reason);
+                }
+            }
+        }
+    }
+
     let cat_path: PathBuf = decision.category.iter().collect();
     let dest_dir = wiki_dir.join(target_status).join(&cat_path);
     let dest_path = dest_dir.join(format!("{}.md", slug));
@@ -559,6 +605,13 @@ fn build_proposal_record(
         body_markdown: body.to_string(),
         recommended_action: if target_status == "staged" {
             "stage for approval".to_string()
+        } else if decision.merge_target.is_some() {
+            format!(
+                "review for merge into '{}'",
+                decision.merge_target.as_deref().unwrap_or("target page")
+            )
+        } else if decision.proposed_new_subtree.is_some() {
+            "review taxonomy mutation proposal before publication".to_string()
         } else {
             "review before further action".to_string()
         },

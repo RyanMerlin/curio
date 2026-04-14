@@ -320,14 +320,34 @@ If these checks fail, the request should not silently proceed.
 
 ### Goal
 
-#TODO - Make this overly explicit.  PUT IT EVERWHERE it needs to be so this is ALWAYS FRONT AND CENTER
-**IMPORTANT** the main
-  drive for the agent, by far and away, should be toward hierarchy. yes, HIERARCHY.  
-  NOT dumping files in a basic match.
-  THAT MEANS, that when the agent is creating the proposal, it should first do a full semantic anlaysis to identify the hierarchical branches needed.  Tell me what you need for policies, logic, etc.  But i see it like this.  Agent see northstar and understands the basic structure.  It reads 2 urls with help docs that talk about ALteryx Server Installation Issues with ODBC driver for 23.2 24.2 and 25.1.   The agent should be harnessed and prompted to decide that that should end up in a tree structure: Alteyx Server - Installation - Troubleshooting - versions ### and depending on how much content 1-3 leaf pages under versions: 23.2 - 24.2 - 25.1.
-  Another example: 
-
 Convert one intake request with one or more sources into one or more proposed knowledge changes.
+
+This stage must be explicitly hierarchy-first.
+
+The main drive of the agent is not route matching. It is structural transformation of information into the best hierarchy for long-term retrieval, maintenance, and future curation.
+
+The agent must not dump material into the first acceptable existing category. It must first do enough semantic analysis to determine:
+
+- the dominant topic
+- the surrounding branch neighborhood
+- the likely intermediate nodes required
+- the right leaf breakdown
+- whether an existing path is sufficient
+- whether new intermediate nodes are needed before any leaf page should exist
+
+When the information is technical and detailed, the default bias is toward deeper structure, not flatter placement.
+
+For example, if the agent reads multiple sources about Alteryx Server installation issues involving ODBC driver behavior across versions `23.2`, `24.2`, and `25.1`, the target proposal should lean toward a hierarchy such as:
+
+- `Product-tree`
+- `Alteryx Server`
+- `Installation`
+- `Troubleshooting`
+- `Versions`
+
+with one or more version-family leaf pages beneath that branch, depending on signal and natural clustering.
+
+The correct output is often a proposed path tree, not just a proposed page.
 
 ### Agent responsibilities
 
