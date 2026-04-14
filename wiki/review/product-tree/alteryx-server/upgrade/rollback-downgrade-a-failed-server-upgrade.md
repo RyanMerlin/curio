@@ -1,21 +1,29 @@
 ---
 id: 564f90efd2a29dbe
 title: Rollback / Downgrade a Failed Server Upgrade
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1709050604
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1709050604
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- rollback
+- downgrade
+- failure-recovery
+- procedure
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:33Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:92af7534b3401a365536bda28a84e9bcedabee1bf367b7eba50df3fdf81e33ee
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

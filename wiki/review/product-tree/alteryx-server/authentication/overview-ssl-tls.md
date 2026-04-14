@@ -1,21 +1,29 @@
 ---
 id: 739baffaa1e3989a
 title: Overview SSL/TLS
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1739490453
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1739490453
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- ssl
+- tls
+- https
+- overview
+- certificates
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:30Z
+confidence: 0.83
 cross_refs: []
 content_hash: sha256:90613ada9f90242a472e54018a05cf0547eb056f73d30bb2c9b60ced1f0f98cb
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 The following is from the Troubleshooting Tools Lessonly

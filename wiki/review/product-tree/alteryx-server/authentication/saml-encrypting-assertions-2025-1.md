@@ -1,21 +1,29 @@
 ---
 id: 7c38a39859629956
 title: SAML Encrypting Assertions 2025.1
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3061187123
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3061187123
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- saml
+- encryption
+- assertions
+- '2025.1'
+- sso
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:34Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:cf767912592201c53b3eecc56054a8e4af5ec274a2f1db918933ef96963fb81b
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**
