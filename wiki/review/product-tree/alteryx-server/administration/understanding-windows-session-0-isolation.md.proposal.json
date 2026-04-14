@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-understanding-windows-session-0-isolation",
+  "generated_at": "2026-04-14T13:51:04Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "understanding-windows-session-0-isolation",
+  "title": "Understanding Windows Session 0 Isolation",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "administration"
+  ],
+  "summary": "Deep dive into Windows Session 0 isolation and its implications for Alteryx Server running as a service.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> This page digs into the Service running in Session 0 and the impact that has on the ability to run Batch Scripts via the Run Command\n\n| Author | Michael Adler |\n| --- | --- |\n| CSU | Understanding Windows Session 0 Isolation (Michael Adler) 30m |\n| Key Articles | How-To (Excel)  <== search for “Server” articles |\n\n---\n\n---\n\n# Scope of Document\n\n## In Scope\n\n- Provide background to understand issues faced by customers using Excel automation in non-attended environment\n- Provide customers with directions to Microsoft-supported solutions for implementation by customer.\n- Provide customer with directions for solutions that work for some customers but are outside of Alteryx or Microsoft Support scope.\n\n## Out of Scope\n\n- Technical analysis, why Excel automation in non-attended environment works in one Server environment, but not in the other.\n- Provide end to end solution for customer for Microsoft-supported solutions for Excel automation on their Server environment.\n\n# Motivation\n\nOften, a customer might run a VB Script to perform programmatically changes to an Excel file.\n\nIn a typical use case, the user will execute a[batch file](https://en.wikipedia.org/wiki/Batch_file) from Designer via **Run Command** tool. This batch file in turn will call a **VB Script** to perform changes to an Excel file. This will typically require the Excel application to be installed on the Alteryx Server machine. **VB Script** commands such as below will require Excel to be installed on the machine where the script runs:\n\n> **📝 Note**\n>\n> While the workflow might run fine on a local Designer and from Designer on the Alteryx Server; running it on the Alteryx Server might fail. Why is this happening? First, we need to go a few steps back and review some Windows background.\n\n---\n\n# Applications, Processes, and Services\n\nTechnically, speaking from the perspective of Windows OS, an *application* comprises multiple *processes*. A process could be seen as an executing program.\n\nThe process also has the following attributes:\n\n- Unique identifier (PID),\n- Environment variables,\n- Virtual memory address space,\n- Executable code and many more\n\nProcesses can be seen in **Windows Task Manger** and Service in the **Windows Services app**.\n\n*Windows Services, extended view*\n\nDifferences between **Applications** and **Services** (not exhaustive).\n\n| Application | Service |\n| --- | --- |\n| Runs in Session above 0 | Started in Session 0 |\n| Interactive | Non-interactive |\n| Multiple instances can run at the same time | Only one instance can run at the same time |\n| Exits when user logs off | Keeps running as long as OS is running. Can be stopped manually via Services. |\n| Uses the user’s home folder as the working directory. | Use %SYSTEM%/System32 as the default working directory. |\n\nAn in-depth description of this can be also found in the [Windows Internals Book](https://learn.microsoft.com/en-us/sysinternals/resources/windows-internals).\n\n---\n\n# Sessions Explained\n\nWhat are Sessions - in this context?\n\nRunning the **tasklist** command will return a list of processes running under the local or remote computer.\n\nFor instance:\n\n| Image Name | PID | Session Name | Session# | Mem Usage |\n| --- | --- | --- | --- | --- |\n| Wireshark.exe | 29316 | Console | 13 | 99,260 K |\n| pgbouncer.exe | 6752 | Services | 0 | 8,040 K |\n\nEach process has a session.\n\nOn Windows startup **SMSS.exe** (**Session Manager Subsystem**) amongst its multiple tasks starts Windows **Session 0**; this is the first and privileged session. Later sessions are user sessions with session ID greater or equal to **1**.\n\n---\n\n# Session 0 Isolation\n\nWith Windows Vista (released January 2007), Microsoft introduced a new security feature. All *services *would run in non-interactive (or console mode), isolated, and privileged **Session 0**. This was called **Session 0 Isolation**.\n\nHowever, User process would run in the non-privileged **Session 1** with UI. This change dramatically improved Windows OS security (see below).\n\nAdditionally, **User Interfaces** (**UIs**) are not supported in **Session 0**. Thus, **UIs**, cannot be directly displayed in **Session 0**.\n\n> **📝 Note**\n>\n> Prior to the release of Windows Vista, **Session 0** **Processes **and **Services** would both run in the same privileged **Session 0**. This is the session of the first Windows logon user on system startup.\n> \n> This opened the door for malicious actors to gain privileged access and perform a [Shatter Attack](https://en.wikipedia.org/wiki/Shatter_attack).\n\n---\n\n# Limitations of Running Interactive Scripts on Server\n\nMicrosoft explicitly excludes support for automation of office in an unattended, i.e. Server, environment; please find below the verbiage:\n\n> **📝 Note**\n>\n> Microsoft does not currently recommend, and does not support, Automation of Microsoft Office applications from any unattended, non-interactive client application or component (including ASP, [ASP.NET Core | Open-source web framework for .NET](http://asp.net/) , DCOM, and NT Services), because Office may exhibit unstable behavior and/or deadlock when Office is run in this environment. For more information, see [Considerations for server-side Automation of Office](https://learn.microsoft.com/en-us/topic/considerations-for-server-side-automation-of-office-48bcfe93-8a89-47f1-0bce-017433ad79e2).\n\nMicrosoft provides us with an incomplete list of the reasons why one shouldn’t use run automated Office in an unattended environment and provides alternatives in the article - [Considerations for unattended automation of Office in the Microsoft 365 for unattended RPA environment](https://learn.microsoft.com/en-us/office/client-developer/integration/considerations-unattended-automation-office-microsoft-365-for-unattended-rpa).\n\n**Based on this, Support can go the extra mile to help customers who want to use office automation on an Alteryx Server, however, we should be aware of the best practices and limitations; importantly, Microsoft discourages automation for Office on a non-interactive client.**\n\nAmongst others, one issue is running an inherently interactive process in the context of a non-interactive **Windows Session 0** on a Windows Server environment.\n\n---\n\n# Task Scheduler – Interactive and Non-Interactive Mode\n\nIs it at least partially possible to simulate a non-interactive task? For instance, is it possible to simulate running a **VB Script** with interactive elements in non-interactive mode?\n\nOne powerful tool that can be used for this is the **Windows Task Scheduler**.\n\n1. Go to Task Scheduler,\n2. Select Action > Create Task\n3. Select:The correct user the task will run under,The correct run mode:Run only when user is logged on (interactive mode)Run whether user is logged on or not (non-interactive mode)Optionally: Run with highest privileges (administrative permissions).In Triggers select the frequency of the task and,Under Actions select the actual task.\n   1. The correct user the task will run under,\n   2. The correct run mode:Run only when user is logged on (interactive mode)Run whether user is logged on or not (non-interactive mode)Optionally: Run with highest privileges (administrative permissions).\n      - Run only when user is logged on (interactive mode)\n      - Run whether user is logged on or not (non-interactive mode)\n      - Optionally: Run with highest privileges (administrative permissions).\n\n   3. In Triggers select the frequency of the task and,\n   4. Under Actions select the actual task.\n\nWindows Task Scheduler can be a powerful tool when comparing non-interactive and interactive mode. If an automation doesn’t run in non-interactive mode on the Server from **Task Scheduler** it would not be expected to run successfully when run from Alteryx Server.\n\n---\n\n# Workarounds\n\nNot supported by Microsoft, but some customers have seen success (Alteryx articles provided “as is”):\n\n- How to enable COM object on the server\n- How to: Enable Interactive User mode for Excel Macros on Alteryx Server\n\nRecommended by Microsoft:\n\n- Use Microsoft Graph PAI\n- Use Open XML file formats and use methods that support making changes from service\n\n---\n\n# Additional References\n\n*Windows Session 0 Isolation*\n\n- Microsoft Tech Community post on Windows Session 0 Isolation\n- Microsoft Tech Community post on Windows Session from a user account control perspective\n\n*Windows Task Scheduler*\n\n- Task Scheduler for developers | Microsoft Learn\n\n*Miscellaneous Windows OS Internals*\n\n- Sysinternals Resources - Sysinternals | Microsoft Learn (advanced resources)\n\n*Office Automation in Server Environments*\n\n- Considerations for server-side Automation of Office\n- Considerations for unattended automation of Office in the Microsoft 365 for unattended RPA environment | Microsoft Learn",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.87,
+    "quality_confidence": 0.92999995,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "proposed_node_title": "administration",
+    "proposed_node_slug": "administration",
+    "node_description": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2125332821"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2125332821"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  }
+}

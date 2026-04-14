@@ -1,21 +1,29 @@
 ---
 id: d28eb8deb756efad
 title: Understand Mongo _id Field
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3018981768
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3018981768
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- _id
+- field
+- collections
+- reference
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:51:03Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:48bd750ad5a23020b56807fd143aa84353c2d187983eeab626360cbc03e6a48c
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

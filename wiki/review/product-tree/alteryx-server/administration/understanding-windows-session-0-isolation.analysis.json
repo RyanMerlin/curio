@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:51:04Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Understanding Windows Session 0 Isolation",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2125332821",
+    "content_hash": "sha256:a364ed8d8def7cd0d874adb8588c3b46aa8e22de2ee5b058fc101c4620c83c59",
+    "content_preview": "> **ℹ️ Info**\n>\n> This page digs into the Service running in Session 0 and the impact that has on the ability to run Batch Scripts via the Run Command\n\n| Author | Michael Adler |\n| --- | --- |\n| CSU | Understanding Windows Session 0 Isolation (Michael Adler) 30m |\n| Key Articles | How-To (Excel)  <== search for “Server” articles |\n\n---\n\n---\n\n# Scope of Document\n\n## In Scope\n\n- Provide background to understand issues faced by customers using Excel automation in non-attended environment\n- Provide "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "administration"
+    ],
+    "confidence": 0.87,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'administration' required under 'product-tree/alteryx-server/administration' — pending taxonomy approval",
+    "proposed_new_subtree": "administration",
+    "proposal_rationale": "Server administration spans system settings, AlteryxService diagnostics, command-line tools, disk cleanup, logging, health checks, load balancers, and cloud deployment. An 'administration' subtree organizes this operational domain."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "understanding",
+      "windows",
+      "session",
+      "0",
+      "isolation"
+    ],
+    "keywords_extracted": [
+      "Windows",
+      "Session",
+      "Microsoft",
+      "Server",
+      "user",
+      "noninteractive",
+      "Task",
+      "automation"
+    ]
+  }
+}

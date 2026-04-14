@@ -1,21 +1,29 @@
 ---
 id: eaee0c5e0d92a988
 title: Understanding MigrationInProcess / PostMigration collections
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2266399210
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2266399210
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- migration
+- collections
+- migrationinprocess
+- postmigration
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:51:04Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:e2180ae8401874bdd8bc508eace329e5d93deaabcfdbf24f72080787b616d3d8
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

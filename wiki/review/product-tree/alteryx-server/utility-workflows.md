@@ -1,21 +1,27 @@
 ---
 id: 8dcedcad9a6540c0
 title: Utility Workflows
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1941112486
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1941112486
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+keywords:
+- utility-workflows
+- hub
+- tools
+- automation
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:51:06Z
+confidence: 0.75
 cross_refs: []
 content_hash: sha256:0439bad4ec66bd40ab4a012fc7f650817b9f4747a2d84229779a370ac1b5db48
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---
