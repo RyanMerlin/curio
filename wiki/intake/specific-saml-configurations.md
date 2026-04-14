@@ -9,32 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c1d12b083395174e7d6aa5e49b60e1f3dc34e2396d1cca6b27a46eee3c50820e
+content_hash: sha256:3003abe9ea26404ba911c715e23520fd69e551a14c89ee4ca685a2d4d0f42c4d
 confluence_page_id: null
 model_used: null
 ---
 
----
+Hub page: SPECIFIC SAML CONFIGURATIONS
 
----
-
-> **ℹ️ Info**
->
-> SAMLis one of the Authentication methods used by Server
-
-| Key Articles | SCIM  <== auto-create Server Customer Groups to match SAML groups |
-| --- | --- |
-
----
-
----
-
-| Configuration | ADFSConfiguring SAML on Alteryx Server for ADFS (KB)JumpCloudConfigure SAML on Alteryx Server with JumpCloud  (KB)OktaConfiguring SAML on Alteryx Server for Okta (KB)SCIM Provisioning with OKTA Error authenticating Gateway Time-out (KB)OneLoginConfiguring SAML on Alteryx Server for OneLogin (KB)PingOneConfiguring SAML on Alteryx Server for PingOne (KB)PingFederatePingFederate (SAML) |
-| --- | --- |
-| APOD Setup | How to configure SAML on an APOD |
-| What IDPs are compatible? | We should be able to connect if the IDP supports:SAML 2.0 protocolSHA2Sending the claims we require (firstName, lastName, email) |
-| Using an IDP with multiple Servers | Most IDPs can only handle ONE Alteryx Server.  So a seperate IPD application needs to be created to support each Alteryx Server.  If setting up multiple Alteryx Servers with SAML, each will likely need to use a unique IDP application.  With so many different IDPs some may be able to handle multiple Servers.Example:  With a Prod and Dev env, they should have two separate IDP applications in most IDPs (federated can behave differently). |
+*This page serves as a section index with no prose body.*

@@ -9,24 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:96a6ae2c4e6a86d499f6a21490ea1c61939ebd99e7645017e91edccad24cf59a
+content_hash: sha256:05a980f12e95f6d225d6535406c19b1b827d0419f632fff6255e7f8e49a6b737
 confluence_page_id: null
 model_used: null
 ---
 
-| Context |  |
-| --- | --- |
-| Error | Error 1069: The service did not start due to logon failure |
-| Screenshot |  |
-| Related Errors |  |
-| Versions |  |
+Hub page: Error Starting Service - Error 1069: The service did not start due to logon failure
 
-# Troubleshooting
-
-|  | Check | Steps |
-| --- | --- | --- |
-| 1 | Service Log On user | CauseService Logon User is not working - bad password or insufficient permissionsResolutionUpdate the Service Logon user password or switch to an account that has admin access on the Server machine.Cases00757664 |
+*This page serves as a section index with no prose body.*

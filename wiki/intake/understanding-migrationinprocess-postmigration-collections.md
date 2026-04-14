@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:e2180ae8401874bdd8bc508eace329e5d93deaabcfdbf24f72080787b616d3d8
+content_hash: sha256:594f6eb397cca03f5e2ef7f0937c8b4b79ead632fec83e1ac5a1ebdc3c196f17
 confluence_page_id: null
 model_used: null
 ---
@@ -22,9 +22,9 @@ model_used: null
 >
 > Explanation of the Miongo collections with names like **usersMigrationInProgress **and **usersPostMigration_45 **and how to use them for rollbacks
 
-| Logs | Schema Migration logs for Gallery and Service (alteryx-XXX-migration.csv) |
+|  |  |
 | --- | --- |
-| Help | https://help.alteryx.com/current/en/server/configure/database-management/mongodb-management/mongodb-schema-reference.html |
+|  |  |
 
 ---
 
@@ -38,11 +38,11 @@ During Server Upgrade, developers often update the schema (record definition) of
 
 # Collections created during Upgrade / Schema Migration
 
-| Collection | What is it |
+|  |  |
 | --- | --- |
-| collectionX | Initial collection |
-| collectionXMigrationInProcess | Records are being actively migrated from collectionX to this collection during upgrade / schema migration.If schema migration is stuck, It’s safe to rename this collection so schema migration will re-attempt migrating collectionX.  If the Service is still starting, this collection will be immediately recreated as schema migration continues. |
-| collectionXPostMigration_## | After the schema migration completes collections are rotated:ORIGINAL collectionX  ==> collectionXPostMigration_##collectionXMigrationInProcess  ==>  NEW collectionXIf there is a schema migration error that collectionXPostMigration_## already exists, it’s safe to rename this collection.  If the Service is still starting, this collection will soon be recreated as schema migration continues. |
+|  |  |
+|  |  |
+|  |  |
 
 ---
 

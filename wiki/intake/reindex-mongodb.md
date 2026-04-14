@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:188e10c78b645feb976d87cf16aea8ba1d34febffc4af10482d110fc010bbf8d
+content_hash: sha256:3c2c9800198e042c4cc59f0c67430710d1d6aede59f14d10c93ed17c6e9c83a5
 confluence_page_id: null
 model_used: null
 ---
@@ -52,11 +52,11 @@ model_used: null
 >
 > **23.1** moved from Lucene Indexes to Index collections we manage in AlteryxGallery.  The AlteryxGallery_Lucene database can be deleted in 23.1+.
 
-| Access | How to and When to Run a Re-index (Manual) (KB)https://drive.google.com/file/d/1IaOip50GnJjFbLF8WMO4aqR8LWOnJ17-/view?usp=sharing   <== reindexing workflowhttps://docs.google.com/document/d/1Oqh0SqKTRfBsJF695286xmyBs7K4Y_g3tTJq7wSFxRY/edit?usp=sharing (Google)            <== how to reindex |
+|  |  |
 | --- | --- |
-| Key Articles | Using command line to rebuild indexes when you cant use API (internal KB)Users added to Server's Gallery not showing up in user list for the Administrator (KB)OldChecklist Manual Re-index (KB) |
-| Logs | Gallery Logging of 24.1+ MongoDB Reindexing Gallery Logging of 23.1/23.2 MongoDB Reindexing Gallery Logging of 22.3 and prior MongoDB Reindexing |
-| Tutorials | https://www.youtube.com/watch?v=odiVUivMjVs   54m2022-07-19 - Server Reindexing (CSU) <== Michael Adler |
+|  |  |
+|  |  |
+|  |  |
 
 ---
 

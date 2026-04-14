@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:bc4b14fd83f96580acd430a038b19f81639ffe931f743dfa6cb9da0897a1f6cd
+content_hash: sha256:ff158c9ea11d34680d39cb935a1a1a54ee0145f3c51d8be77afa7621f0c02439
 confluence_page_id: null
 model_used: null
 ---
@@ -26,8 +26,8 @@ note Open command prompt **as Administrator**
 
 Open command prompt **as Administrator**
 
-| Task | Command |
+|  |  |
 | --- | --- |
-| View bound certificates | #E3FCEFnetsh http show sslcert |
-| Remove certificate from a port | #E3FCEFnetsh HTTP delete sslcert ipport=0.0.0.0:443How to Remove the SSL Certificate from Alteryx Server (KB) <== REMOVE cert |
-| Bind certificate to a port(then restart Service) | #E3FCEFnetsh http add sslcert ipport=0.0.0.0:443 certhash=‎YOUR_CERT_HASH appid={eea9431a-a3d4-4c9b-9f9a-b83916c11c67}appid doesn’t change and is unique to Alteryx ServerConfiguring Alteryx Server for SSL: Obtaining and Installing Certificates (KB) <== ADD cert |
+|  |  |
+|  |  |
+|  |  |

@@ -9,21 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:0eb5f095ed022dff1e14f237259c85abe961d22e19715ccbea9a816cf6f03c96
+content_hash: sha256:483b6d1f30d0877a0bd911c8781689b4c978389aa3379cc05b583fae6dd945aa
 confluence_page_id: null
 model_used: null
 ---
 
-> **ℹ️ Info**
->
-> Setup low level Mongo transaction logging
+Hub page: MongoDB Transaction Log
 
-| Enable Logging | How To: Enable MongoDB logs in RuntimeSettings.xml (KB)Edit RuntimeSettings.xml
-  
-  ]]> |
-| --- | --- |
-| Disable Logging | How To: Disable MongoDB logs in RuntimeSettings.xml (KB) |
+*This page serves as a section index with no prose body.*

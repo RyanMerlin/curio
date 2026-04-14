@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:a2a21dc826bc0419d225f039a65f0a6252f012b5199b3e7fdbb11d7dd0f1194e
+content_hash: sha256:7cc14788f2448a151542a4e89a6c7ae5763bcf0ffc08d41c5f472e97a2568d01
 confluence_page_id: null
 model_used: null
 ---
@@ -22,9 +22,9 @@ model_used: null
 >
 > There are multiple ways to configure Microsoft failover environments which largely depends on the customers requirements and current infrastructure used to support high availability. The following articles/help documents refer different architectures and resiliency options, together with setup instructions on how to build the environment. Please review the article and ensure you have a good understanding of the requirements before continuing.
 
-| Key Articles | Alteryx Architectures - Resiliency and High Availability <== Michael SpoulaHigh-Availability Controller                                            <== Zach HamiltonImplementing Microsoft Windows Failover Cluster and SQL 20212 Availability Groups |
+|  |  |
 | --- | --- |
-| Help | https://help.alteryx.com/current/en/server/best-practices/high-availability-best-practices.html#high-availability-best-practices |
+|  |  |
 
 ---
 

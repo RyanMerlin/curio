@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:962fbec6840c45dded1a37a0306e84a53929c6d1ac6d883e789c9e566d4ec9a0
+content_hash: sha256:7eacff058cc9228280eebc497405ecc0d620f3eb8f0bcad87561b8304b59559c
 confluence_page_id: null
 model_used: null
 ---
@@ -30,9 +30,9 @@ model_used: null
 > 
 > - How to Cancel Manual Jobs in Alteryx Server <== not sure which versions it works on
 
-| Using | Steps |
+|  |  |
 | --- | --- |
-| Server UI | Click the delete icon (looks like a do not enter sign) to the right of the Job. |
-| Legacy Scheduler | Connect to the Server from the Designer Legacy Scheduler (Options > View Schedules) and stop the job.  The Alteryx Service must be running for this to work (ie, not Stopping).  This tends to work even if the Server UI is failing to display Jobs.Stop a Long Running App/Workflow on a Private Gallery  (KB) |
-| Task Manager | View Task Manager > Details and delete the AlteryxEngineCMD.exe instance(s).Each Workflow has its own AlteryxEngineCMD.exe.  If more than one job is running you'll have to guess which it is.  This could leave the AS_Queue record in an odd state and you'll may need to edit it to Status = Error and set CompletionDateTime.Alteryx Service Stuck in Stopping State (144673) |
-| AS_Queue | If it's stuck (not really running) edit AS_Queue and set its Status = Error and set CompletionDateTime.  [This was mentioned elsewhere but not tested] |
+|  |  |
+|  |  |
+|  |  |
+|  |  |

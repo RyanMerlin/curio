@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:99079de7bcb6978a4fd2b16f5370aa93fdde7dd442ca1cf398cf8295819d9040
+content_hash: sha256:084428e7f8a4624051ea9ddd82753a0debc4f725c5a89442a293ee0a33dbafbb
 confluence_page_id: null
 model_used: null
 ---
@@ -28,7 +28,7 @@ model_used: null
 > 
 > Mongo Entity-Relationship Diagram / ERD
 
-| Database+Schema names | Confusing:AlteryxGallery is the database, alteryx_server is the SQL schemaAlteryxService is the database, alteryx_service is the SQL schemaSo the full name of a table in SQL DB is:AlteryxGallery.alteryx_server.TABLE_NAMEAlteryxService.alteryx_service.TABLE_NAME |
+|  |  |
 | --- | --- |
-| SQL DB Schema Version | SQL DB schema version replaces separate schema versions for AlteryxGallery and AlteryxServicehttps://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/sql-db-schema-reference.html |
-| Help | https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/sql-db-schema-reference/alteryxgallery-sql-db-schema.html https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/sql-db-schema-reference/alteryxservice-sql-db-schema.html |
+|  |  |
+|  |  |

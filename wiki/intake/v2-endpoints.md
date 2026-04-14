@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:59f082171f0a828aa773e3c3848d79a3df564fce96d2cdea581348a04cdd1190
+content_hash: sha256:d64c115c6c8bcb68d2fed438d10eae7024a9b309dfb7f1c348da4c35b7005e19
 confluence_page_id: null
 model_used: null
 ---
@@ -27,5 +27,5 @@ model_used: null
 
 ---
 
-| Key Articles | Admin vs User endpoints  <== scroll right to User column |
+|  |  |
 | --- | --- |

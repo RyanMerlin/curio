@@ -9,18 +9,18 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:fc05b588cab53273c579968a24537626d01b1101fd1777ea100da5c06340a564
+content_hash: sha256:82104ff53eede5b1285458dabcfe2827c933b6dcec91dc6e8d27961b8e385bbc
 confluence_page_id: null
 model_used: null
 ---
 
-| AWS | Best Practices for Deploying Alteryx Server on AWS (PDF) <== Tim R link |
+|  |  |
 | --- | --- |
-| Azure | Alteryx Server on Azure (24395)Alteryx Server on Azure (whitepaper) |
+|  |  |
 
 # Moving On-Prem to VM
 

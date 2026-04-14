@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:7f7a0c0a84a24da467b71057d127bc4ec9f237ec990ae3f58010b7c6057006c7
+content_hash: sha256:6445ee79f5f26fd6caae48dd9ae3f9b992a476b3344c4aaadd8346ba4d0fe8a9
 confluence_page_id: null
 model_used: null
 ---
@@ -26,9 +26,9 @@ model_used: null
 >
 > Orasi Labs allow you to start with a Server that needs some action or is in a failed state and needs troubleshooting.  Each lab has a **ReadMe.txt** on the desktop to help you get started.
 
-| Access | Contact Cameron Settle for an invitation to a lab |
+|  |  |
 | --- | --- |
-| Open windows are lost when lab suspends | The lab times out from inactivity and acts like an APOD that you’ve paused. |
+|  |  |
 
 ---
 

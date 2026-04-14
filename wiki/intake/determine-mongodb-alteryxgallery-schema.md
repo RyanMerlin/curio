@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:70701edb3dc26f514023b6fd00223b4cf4572a74c94cc6174c0cb614d0fc4b2e
+content_hash: sha256:c7d7131e38e3833c4599ec674745bf36170f35502eb0ae434ed0ac812a66b8d0
 confluence_page_id: null
 model_used: null
 ---
@@ -24,7 +24,7 @@ model_used: null
 > 
 > This process is a common point of failure, leading to the Service failing to start after the upgrade.
 
-| Key Articles | https://help.alteryx.com/current/en/server/configure/mongodb-management/mongodb-schema-reference.html  <== matches Server version to Schema |
+|  |  |
 | --- | --- |
 
 ---

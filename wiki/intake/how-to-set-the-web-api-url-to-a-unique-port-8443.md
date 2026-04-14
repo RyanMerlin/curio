@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:45c946f151a749f66fdacdf237d79e0c64aac72f6cdd201aa317a165e6bd7a33
+content_hash: sha256:d88cc584d3d80b10fa46d9f4030b57c556860428e27f5e9d318e3febebfae09f
 confluence_page_id: null
 model_used: null
 ---
@@ -32,9 +32,9 @@ model_used: null
 
 Choose an available port.  In the example below we assume SSL is enabled and (arbitrarily) choose 8443.
 
-| 1 | Set the WebAPI URL to use port 8443 (this is an arbitrary port number)#E3FCEFhttps://my.domain.com:8443/webapi/ |
+|  |  |
 | --- | --- |
-| 2 | If using SSL, the certificate will need to be bound to port 8443View the current certificate#E3FCEFnetsh http show sslcertBind the certificate to port 8443 #E3FCEFnetsh http add sslcert ipport=0.0.0.0:8443 certhash=‎YOUR_CERT_HASH appid={eea9431a-a3d4-4c9b-9f9a-b83916c11c67} |
-| 3 | Restart the Service |
+|  |  |
+|  |  |
 
 [How to Run Alteryx Server on a port other than 80](https://knowledge.alteryx.com/index/s/article/Running-Alteryx-Server-on-a-port-other-than-80-1583460188680)  <== Old KB with partial explanation

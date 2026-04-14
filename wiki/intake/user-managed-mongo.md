@@ -9,23 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:54bebc4c2340860442625f2d3b3a9be79c400e57b8d249e2d18a1e9948355b7f
+content_hash: sha256:449b1573c8c55eec3e4f23313af760c58eeb98b9b1d3a5f2f4da2c338cccd486
 confluence_page_id: null
 model_used: null
 ---
 
----
+Hub page: User-Managed Mongo
 
----
-
-> **ℹ️ Info**
->
-> User-managed Mongo is out of scope for support.
-
-| Key Articles | How to Create a User-Managed MongoDB Instance (KB)Migrate between Embedded and User-Managed Mongo (KB) |
-| --- | --- |
-| Connect to User-Managed | How to Connect to a User-Managed MongoDB with Studio 3T (KB)How To: Connect to a user-managed MongoDB with Robo 3T (KB)Connecting to MongoDB Replica Set on Atlas using Robo3T (KB)https://www.mongodb.com/docs/atlas/data-federation/query/sql/drivers/odbc/connect/ https://help.alteryx.com/current/en/server/configure/mongodb-management/mongodb-advanced-connection-strings.html |
+*This page serves as a section index with no prose body.*

@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:6fa7b5af9da701d76144cbddeea656667748d9c93b17174383e2885d377c99ee
+content_hash: sha256:33598c533749c2227d6d04d486a57cc520ac75fc666fa195e942c8d6b99cdf50
 confluence_page_id: null
 model_used: null
 ---
@@ -30,7 +30,7 @@ for embedded mongo onlyPurple
 
 ---
 
-| Start MongoDB Shell | Get the Alteryx System Settings > Controller > Persistence > Non-Admin PasswordIf the Service isn’t running, then Start MongoDB.Open a Command Prompt As AdministratorNavigate to the \Alteryx\bin folderEnter commands below for the AlteryxGallery database#E3FCEF[ for 23.2+ ]mongosh -u user -p USER_PSWD -host localhost:27018 AlteryxGallery[ for 23.1 and prior ] mongo -u user -p USER_PSWD -host localhost:27018 AlteryxGalleryOr open the AlteryxService database#E3FCEF[ for 23.2+ ]mongosh -u user -p USER_PSWD -host localhost:27018 AlteryxService[ for 23.1 and prior ]mongo -u user -p USER_PSWD -host localhost:27018 AlteryxServiceYou may now enter commands, see Example MongoDB Queries / Commands Note:  If you started MongoDB manually withOUT the --auth flag you do need to include the following to start the Shell#E3FCEF-u user -p USER_PSWDType Ctrl-C to exit the Shell.How to connect to MongoDB from the Command Line (KB) |
+|  |  |
 | --- | --- |
-| Troubleshooting | Error: couldn't connect to server localhost:27018, connection attempt failed: SocketException: Error connecting to localhost:27018 (127.0.0.1:27018) :: caused by :: No connection could be made because the target machine actively refused it.The above error indicates the Mongo DB isn’t running, see Start MongoDB |
-| Older version of mongo.exe | An older version of mongo.exe is in the BIN folder as well, to be used if you used an older version of mongod.exe to start the Database. |
+|  |  |
+|  |  |

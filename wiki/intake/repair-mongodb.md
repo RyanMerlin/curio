@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:590eaa2c42a91d191afb61f2c10aebc20dc9fab50f33ec4a792a313925ec97b0
+content_hash: sha256:09809363fcc28ab53e04f73bbb763c7478f010fb4339e7ff1d5645f54c3cf155
 confluence_page_id: null
 model_used: null
 ---
@@ -24,6 +24,6 @@ for embedded mongo onlyPurple
 >
 > Mongo provides and in-place “repair” function that can help if you cant start MongoDB (with errors such as 'item not found ') or experience odd behavior (such as not being able to start the Shell)
 
-| Repair MongoDB | #E3FCEFc:cd %ProgramFiles%\Alteryx\binmongod.exe --dbpath "DRIVE:\PERSISTENCE_FOLDER" --port 27018 --repair |
+|  |  |
 | --- | --- |
-| Troubleshooting | For the following error running --repaircan't start without --journal enabled when journal files are present, terminatingadd  --nojournal flag after --repair#E3FCEFc:cd %ProgramFiles%\Alteryx\binmongod.exe --dbpath "DRIVE:\FOLDER" --port 27018 --repair --nojournal |
+|  |  |

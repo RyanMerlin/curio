@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:52de66c38489f4b6aade9e4fa0b6e2f69dfb31413cfa8ba443e97d3e208c2ee6
+content_hash: sha256:f40b9f7f2c2994f9b61bcf43f9131105ebeefda1e207f74332132c2539b31368
 confluence_page_id: null
 model_used: null
 ---
@@ -41,7 +41,7 @@ model_used: null
 > - See Multiple domain environments requirements for Server:https://help.alteryx.com/current/en/server/configure/configure-alteryx-server-authentication.html#idp412701_body > Set Up Integrated Windows Authentication
 >    - https://help.alteryx.com/current/en/server/configure/configure-alteryx-server-authentication.html#idp412701_body > Set Up Integrated Windows Authentication
 
-| Key Articles | How To Manually Change A Domain User To New Domain (KB) |
+|  |  |
 | --- | --- |
 
 ---
@@ -80,11 +80,11 @@ model_used: null
 > 
 > **That’s a problem!**  If we simply update their **ORIGINAL **address with the new domain we’ll have two records with the same email address, which will confuse Server.  We need to obscure the **NEW **records (by adding “_old” to the end), then update the **ORIGINAL **emails with the new domain.
 
-| Find users with multiple  domains | These users must have their NEW domain records obscured before their ORIGINAL domain records can be updated with the NEW domainThese are users records for users who have signed in with BOTH their ORIGINAL and NEW domains.  The records with the NEW domain should be obscured.Example results of query showing two users who have multiple users collection records with the EXISTING and NEW domains.#E3FCEFdb.users.aggregate([  {    $project: {      sameNameWithMultipleDomains: { $toLower: { $arrayElemAt: [{ $split: ["$Email", "@"] }, 0] } },      domainPart: { $toLower: { $arrayElemAt: [{ $split: ["$Email", "@"] }, 1] } },      Email: 1    }  },  {    $group: {      _id: "$sameNameWithMultipleDomains",      emails: { $addToSet: "$Email" },      domains: { $addToSet: "$domainPart" },      count: { $sum: 1 }    }  },  {    $match: {      count: { $gt: 1 }, // Ensure there are multiple records with the same local part      "domains.1": { $exists: true } // Ensure there is more than one distinct domain    }  },  {    $project: {      _id: 0,      sameNameWithMultipleDomains: "$_id",      emails: 1,      domains: 1    }  }]);*** ChatGPT requests to get the above query ***(Q1) Create a Mongo query for the example record below that will find duplicate Email addresses with possibly different domains.{    "_id" : ObjectId("678d7744d934606b31204982"),    "Role" : "Evaluated",    "Email" : "ed.phelps@origDomain.com",    "FirstName" : "Ed",    "LastName" : "Phelps"}(A1) Explanation:$project: This stage splits the Email field into two parts: localPart (the part before @) and domainPart (the part after @). It retains the original email for reference.$group: Groups the records by localPart (the part of the email before @). It collects all the distinct emails and domains associated with the same local part and counts the number of records.$match: Filters out the records that don't have multiple occurrences of the same localPart with different domains.$project: Finally, it outputs the localPart, associated emails, and distinct domains.This query helps identify cases where the same localPart (e.g., ed.phelps) is used with different domain names (e.g., origDomain.com and possibly others).(Q2)  Can you change that query to be case insensitive?(A2)  Explanation of changes:$toLower: This operator is used on both the localPart and domainPart to convert them to lowercase before performing the operations. This ensures that email comparisons are case-insensitive, so Ed.Phelps@OrigDomain.com and ed.phelps@origdomain.com will be considered the same.Now the query will treat email addresses as case-insensitive, ensuring duplicates are identified regardless of letter casing. |
+|  |  |
 | --- | --- |
-| Find users with the NEW domain | Search specifically for the NEW domain#E3FCEFdb.users.find({"Email": /newDomain.com/i }) |
-| Obscure NEW domain users that were accidentally created by logging in with the NEW domain | Make a copy of the users collection to users_bkp_YYYYMMDD in Studio3T before running the update queryReindex MongoDB after updating the users collectionQuery will add _old to the LastName and Email fields for all users records in the NEW domain.  This is useful if users logged in with the NEW domain and created duplicate users collection records for themselves.After running this query move to the query to update the ORIGINAL users records to the NEW domain.#E3FCEFdb.users.updateMany(  {    "Email": { $regex: "@newDomain.com$", $options: "i" } // Match emails with domain  },  [    {      $set: {        "Email": {          $concat: [            { $arrayElemAt: [{ $split: ["$Email", "@"] }, 0] }, // Local part of the email            "_old@",            { $arrayElemAt: [{ $split: ["$Email", "@"] }, 1] } // Domain part of the email          ]        },        "LastName": { $concat: ["$LastName", "_old"] }      }    }  ]);*** ChatGPT request to get the above query ***(Q3) Write a MongoDB query to add "_old" to the LastName field and "_old" to the Email field before the "@" sign for email addresses with domain "newDomain.com"(A3) Explanation:$regex: "@newDomain.com$": This condition ensures that the Email field ends with "newDomain.com", matching all email addresses with this domain. The $ ensures the match happens at the end of the string, and the i option makes the match case-insensitive.$set: The $set operator is used to modify the Email and LastName fields.Email field:The local part (before the @) is extracted using $split and $arrayElemAt."_old@" is appended to the local part.The domain part (after the @) is preserved as is.LastName field: "_old" is appended to the existing value in the LastName field.$split: This operator splits the Email field at the @ symbol. The local part is accessed using $arrayElemAt at index 0, and the domain part is accessed at index 1.ResultThis query will update all records where the Email domain is "newDomain.com", appending "_old" to both the LastName field and the local part of the Email field (before the @). The domain part of the Email remains unchanged. |
-| Update ORIGINAL domain to NEW domain | Make a copy of the users collection to users_bkp_YYYYMMDD in Studio3TOnly perform this update after running the query above to look for duplicate user email addresses with multiple domains.  Running query below when a record already exists with the NEW domain will cause duplicate email addresses in the users collection, which confuses/breaks Server.#E3FCEFdb.users.updateMany(  {    "Email": { $regex: "@origDomain.com$", $options: "i" }  },  [    {      $set: {        "Email": {          $concat: [            { $arrayElemAt: [{ $split: ["$Email", "@"] }, 0] },            "@newDomain.com"          ]        }      }    }  ]); |
+|  |  |
+|  |  |
+|  |  |
 
 ## Option 2 - Analytic App
 

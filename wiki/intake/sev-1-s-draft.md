@@ -9,17 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:e1f13beb909966c6e8637182f09f65f1f75b0c34019d3f7eacbe074de6e1916d
+content_hash: sha256:6f27e53d384d69005351989d90f815c3b5547e04f7464c6c2ac6fb7f92402b1a
 confluence_page_id: null
 model_used: null
 ---
 
-| Key Articles | LasttartUpError.txt Error - There was an error starting the Alteryx Service <Gallery Service failed to start in a timely fashion, exiting.> Server Sev 1 Flowchart (Sharepoint PDF) |
-| --- | --- |
-| Help | https://help.alteryx.com/current/en/server/install/server-host-recovery-guide.html  https://help.alteryx.com/current/en/server/install/server-processes-reference.html  https://help.alteryx.com/current/en/designer/system-requirements.html |
-| Sev 1’s | Sev 1 Resource Center and Training (Google) -- prepare to resolve Sev 1'sOrient (Google)Understand MongoDB (Google)Rollback / Downgrade a Failed Server Upgrade Encryption Grid (Google)Server Encryption Grid Schema Migration and Pre-Upgrade Checks (Google)Issues / Resolutions (Google) |
-| DRAFTS | Following are just draftsSev 1 Flowchart ideas Cameron Training |
+Hub page: Sev 1's [DRAFT]
+
+*This page serves as a section index with no prose body.*

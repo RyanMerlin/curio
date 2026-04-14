@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:c4ab83977e12084996e671b27dae7a8dd4ae717650b64dcd3f04997b4f042e58
+content_hash: sha256:beccf477feccaf0b5a97c8512094d5762eb03c020dc26c0b5b2cb01d820b006d
 confluence_page_id: null
 model_used: null
 ---
@@ -35,13 +35,13 @@ model_used: null
 > 
 > # Controller Token Length and Impact on Host Recovery
 > 
-> | Ver | Upgrade | New install | Host Recovery requires a token of length | Notes |
+> |  |  |  |  |  |
 > | --- | --- | --- | --- | --- |
 > |  |  |  |  |  |
-> | 21.3 | 40 | 40 | 40 | All good! |
 > |  |  |  |  |  |
-> | 21.4 | 40 | 64 | 64 | Host recovery fails if a 40-char token is used |
-> | 22.1 | 40 or 64 | 64 | 64 | Host recovery fails if a 40-char token is used |
 > |  |  |  |  |  |
-> | 22.3 | 64 | 64 | 64 | All good!In an upgrade that lengthens the token from 40 to 64, the Controller and Workers will lengthen in the same way and still connect after upgrade.  Admin should update their Runbook with the new token.The upgrade will backup RuntimeSettings.xml before re-encrypting it.RuntimeSettings.22_2_legacy.xml – the original, pre-upgrade versionRuntimeSettings.22_2_migration.xml – the re-encrypted versionRuntimeSettings.xml – a copy of the re-encrypted untimeSettings.22_2_migration.xmlSee FAQ / Help - CryptoMigration |
+> |  |  |  |  |  |
+> |  |  |  |  |  |
+> |  |  |  |  |  |
+> |  |  |  |  |  |
 > |  |  |  |  |  |

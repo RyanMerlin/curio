@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:ccf3682b55144f6d01ac5010ee787219526b79495ca9dba024550a3468f62d7d
+content_hash: sha256:d778640d23df4c51a3686d17c0fe78c74c0590360d625236e15db4e0c0b61d72
 confluence_page_id: null
 model_used: null
 ---
@@ -31,7 +31,7 @@ note **Todo** - Document new 23.2 endpoint to run a workflow that was shared wit
 
 ---
 
-| Key articles | Admin vs User endpoints  <== scroll right to User column |
+|  |  |
 | --- | --- |
-| Help | https://help.alteryx.com/current/server/server-api-v3-objects <== Parameter documentation |
-| Tutorials | Workflow / Slides / Recording <== Matt H CSU on V3 API |
+|  |  |
+|  |  |

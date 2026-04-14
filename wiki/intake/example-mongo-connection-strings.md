@@ -9,18 +9,15 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:6dfe0c55bfdf3b7968bd656f8e55f61bb0767f6ab410e65404b7813b419d6d07
+content_hash: sha256:beccb49c66c9dbaffc6adfa31d3c1409c05788329f27f53ed723655362dc87ad
 confluence_page_id: null
 model_used: null
 ---
 
-> **ℹ️ Info**
->
-> Connection strings to connect to Mongo
+Hub page: Example Mongo Connection Strings
 
-| Key Articles | https://help.alteryx.com/current/server/mongodb-advanced-connection-strings  which links to https://www.mongodb.com/docs/v5.0/reference/connection-string/ Mongo ODBC Driver |
-| --- | --- |
+*This page serves as a section index with no prose body.*

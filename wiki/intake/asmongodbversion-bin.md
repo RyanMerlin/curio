@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:266255e9f596163a7b11f95ce8a9a6c453590fe7df534dbfc6f600f4836d53bc
+content_hash: sha256:f574d1230646dc81b2b9bb229ba62132d3604417a2a87e33fd9980519aa5a118
 confluence_page_id: null
 model_used: null
 ---
@@ -22,9 +22,9 @@ model_used: null
 >
 > **ASMongoDBVersion.bin** is a text file in the Mongo database folder.  It's checked during a Server upgrade to determine the Mongo database version and if a Mongo version upgrade is needed.  The first line, with the Mongo version number, is the only line that's needed. Mongo does not create or use this file, it's only used by the Server upgrade process.
 
-| Key Articles | Embedded MongoDB upgrade / migration   <== what folders are created during a MongoDB version upgrade |
+|  |  |
 | --- | --- |
-| File Location | Found in the Persistence Folder as set in the Alteryx System Settings > Controller > Persistence > Data Folder |
+|  |  |
 
 ---
 
@@ -36,14 +36,14 @@ model_used: null
 >
 > While the original **ASMongoDBVersion.bin** contents may include several lines, the file only needs to contain the version number on a line of its own
 
-| Content ofASMongoDBVersion.bin(nothing else needed) | First Server Version | Can Upgrade to | Notes |
+|  |  |  |  |
 | --- | --- | --- | --- |
-| 8.tbd | 25.2 | tbd |  |
-| 7.0.9 | 24.2 | 8.tbd |  |
-| 6.0.5 | 23.2 | 7.0.9 | Upgrade errors for 6.0.5Could not finalize mongodb restore the mongodb database failed to start with exit code 100 (KB)Alteryx Server Upgrade "Error: Could not start previous version of MongoDB: The MongoDB database failed to start with exit code: 14." (KB) |
-| 4.2.22 | 22.322.1.1_Patch321.4.2_Patch521.3.8_Stable | 6.05 | We did a minor upgrade to 4.2.22 in several patches, see TGAL-677277dcf2c9-72f3-3ff6-8e99-fe88e9f473f1System Jira |
-| 4.2.15 | 21.3.6 | 6.05 | 6.05Edit ASMongoDBVersion.bin to contain 4.2.22 prior to upgrading to a Mongo 6.0.5 version of Server |
-| 4.0.10 | 19.3 | 4.2.154.2.226.05 w/ chg | 6.05Edit ASMongoDBVersion.bin to contain 4.2.22 prior to upgrading to a Mongo 6.0.5 version of Server |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
 
 ---
 

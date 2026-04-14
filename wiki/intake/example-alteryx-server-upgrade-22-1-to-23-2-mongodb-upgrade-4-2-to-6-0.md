@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:18Z
-updated_at: 2026-04-14T15:02:18Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:ff8395bcb3dfcd369738738194ade85a6ab14d83bb993e13875dd12d08dcdc66
+content_hash: sha256:b0fd7f1545430d4772b057115ed8517de2ab9cc439767ac95118036a36df2ca0
 confluence_page_id: null
 model_used: null
 ---
@@ -142,14 +142,14 @@ After completing the Service DB schema migration, the process moves to the **Gal
 
 ### Summary of Logs by Stage
 
-| Stage | Log File | Location |
+|  |  |  |
 | --- | --- | --- |
-| Migration Prep Tool | AlteryxServiceMigrator_X.log | C:\ProgramData\Alteryx\Service |
-| Upgrade CryptoMigration | n/a | n/a |
-| CryptoMigration of RuntimeSettings.xml | AlteryxServiceMigrator_X.log | C:\ProgramData\Alteryx\Service |
-| CryptoMigration of remaining collections | AlteryxServiceMigrator_X.log | configured path for Service logs |
-| Schema Migration(Service DB) | alteryx-migration.csv | configured path for Sevice logs |
-| Schema Migration(Gallery DB) | alteryx-migration.csv | configured path for Gallery logs |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 ---
 

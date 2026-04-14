@@ -9,11 +9,11 @@ source:
   summary: null
 category: []
 keywords: []
-created_at: 2026-04-14T15:02:19Z
-updated_at: 2026-04-14T15:02:19Z
+created_at: 2026-04-14T15:06:10Z
+updated_at: 2026-04-14T15:06:10Z
 confidence: null
 cross_refs: []
-content_hash: sha256:7fdd27763c8a7c6dfa3d071faa574733046c6310888721ae7984e8817aa00da4
+content_hash: sha256:c84fc8805d0cd7c3b8ed5f2bf66afda5ac2b1346ccf96499d7108d8fef7b953c
 confluence_page_id: null
 model_used: null
 ---
@@ -24,11 +24,11 @@ model_used: null
 > 
 > Too many **sessions **records can cause various timeout errors on Server
 
-| Count all sessions | #E3FCEFdb.sessions.count() |
+|  |  |
 | --- | --- |
-| Count sessions > 30 days old | #E3FCEFdb.sessions.find({UpdateDate:{$lt: new Date(ISODate().getTime() - 1000 * 86400 * 30)}}).count() |
-| Delete sessions >30 days old | #E3FCEFdb.sessions.remove({UpdateDate:{$lt: new Date(ISODate().getTime() - 1000 * 86400 * 30)}}) |
-| Add an index to make access faster | #E3FCEFdb.getCollection('sessions').createIndex({SessionId: -1}) |
+|  |  |
+|  |  |
+|  |  |
 
 ---
 
