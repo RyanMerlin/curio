@@ -1,21 +1,29 @@
 ---
 id: cb7c556a7dc01feb
 title: Example MongoDB Queries / Commands
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702828808
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702828808
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- queries
+- commands
+- reference
+- shell
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:46Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:df9054611a5fb3b4a83d397c3d07d888fd8a02ce662a8fb2b63ebf04c74739f0
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Key Articles** | [How-To-Query-Mongo-Effectively-List-of-MongoDB-Queries](https://community.alteryx.com/t5/Product-Resources/How-To-Query-Mongo-Effectively-List-of-MongoDB-Queries/ta-p/1053007) (1053007)  <= London H [How-To-Query-MongoDB-efficiently](https://community.alteryx.com/t5/Alteryx-Server-Knowledge-Base/How-To-Query-MongoDB-efficiently/ta-p/443533) (443533)  [Mongo Query examples](https://docs.google.com/document/d/1F1I1ygzXucMuNrwJWvPfr7jYefNeHGcGk6nS3xszV4o/edit?usp=sharing) (Google) <== Ralph Kong <https://www.mongodb.com/docs/manual/tutorial/query-documents/> (MongoDB Help) |

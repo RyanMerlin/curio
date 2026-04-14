@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:50Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "High Availability (HA) Server",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2001832000",
+    "content_hash": "sha256:3c1d470042749e308b79aead87126fb5ea1f939428520b921e12c06a606f1ed5",
+    "content_preview": "Hub page: High Availability (HA) Server\n\nThis page organizes the following sub-pages:\n\n- How to Setup Microsoft failover cluster service in AWS\n- Understanding DCM in Failover Servers\n- High Availability Upgrade Best Practices\n- [DRAFT] High Availability Upgrade Best Practices\n"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "high-availability"
+    ],
+    "confidence": 0.82,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.38,
+    "usability": 0.64000005,
+    "review_reason": "Hub/index page; requires high-availability subtree taxonomy approval",
+    "proposed_new_subtree": "high-availability",
+    "proposal_rationale": "High Availability Server configuration, upgrade practices, and failover cluster setup form a specialized operational domain with fewer but high-importance pages. An 'high-availability' subtree is appropriate."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "high",
+      "availability",
+      "(ha)",
+      "server"
+    ],
+    "keywords_extracted": [
+      "High",
+      "Availability",
+      "Best",
+      "Practices",
+      "Server",
+      "Upgrade",
+      "page",
+      "following"
+    ]
+  }
+}

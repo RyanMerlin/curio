@@ -1,21 +1,29 @@
 ---
 id: bc722dd840b197b8
 title: Get MongoDB Non-Admin Password
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702763820
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702763820
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- password
+- non-admin
+- embedded-mongo
+- credentials
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:49Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:4102f363f3967f8421e75ee582439996949eb12b1ba2243b9b0936e4c86d6bfc
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 for embedded mongo onlyPurple

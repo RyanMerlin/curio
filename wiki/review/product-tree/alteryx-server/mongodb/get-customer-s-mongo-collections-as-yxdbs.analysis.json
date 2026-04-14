@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:19:48Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Get Customer's Mongo Collections as YXDBs",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1840678524",
+    "content_hash": "sha256:83c02c33ed42b3e6b68f38f686b9b2f605616c71fcd191efac313d98643e28ca",
+    "content_preview": "> **ℹ️ Info**\n>\n> This article explains the first of the options below for reviewing a customer’s database\n> \n> - have the user dump Mongo collections to YXDB files and upload them to a Drop link\n> - run diagnostic workfows in the user’s environment\n> - have customer provide a Mongo backup, RuntimeSettings.xml. and Controller token so you can perform a Host Recovery\n\n# How to get Embedded Mongo Collections From a Customer\n\n> **ℹ️ Info**\n>\n> Configure and send the workflow below to the customer. "
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.87999994,
+    "usability": 0.82,
+    "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "get",
+      "customer's",
+      "mongo",
+      "collections",
+      "as",
+      "yxdbs"
+    ],
+    "keywords_extracted": [
+      "Mongo",
+      "Collections",
+      "workflow",
+      "files",
+      "Drop",
+      "link",
+      "collections",
+      "below"
+    ]
+  }
+}

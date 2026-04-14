@@ -1,21 +1,27 @@
 ---
 id: 08179feba856139b
 title: General Issues (API)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640792916
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640792916
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- issues
+- server-api
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:48Z
+confidence: 0.78
 cross_refs: []
 content_hash: sha256:7ff5c7eaf36f7eeda6426d0f3c0f128258932e3cbe3407c5496abb7d5a681267
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 Hub page: General Issues (API)

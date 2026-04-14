@@ -1,21 +1,29 @@
 ---
 id: ad1a99aa0837c73d
 title: FAQ (SQL DB)
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2164064683
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2164064683
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- sql-db-persistence
+keywords:
+- sql-db
+- faq
+- persistence
+- authentication
+- kerberos
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:19:46Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:1e63dcafce5911ba040eb34db5161f7f7e9a8a52ab537687257a1c3478e4cce9
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Requirements**  as of 2025 | **Authentication**     - Winauth SQL Auth    - Kerberos SQL Auth (optional)    - SSL/TLS (optional to SQL Server)  **2x the size of MongoDB**  **SQL Server Version**     - 2019    - 2022  **Azure SQL and Cloud versions**     - Not tested/supported, but may work |
