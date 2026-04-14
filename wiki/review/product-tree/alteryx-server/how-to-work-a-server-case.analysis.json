@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:26Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "How to Work a Server Case",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2947253108",
+    "content_hash": "sha256:8a6f635be62341eabfce952d149b271b4d55ee6055e1c4ff167d3509e1749d68",
+    "content_preview": "| Questions | Steps/Notes |\n| --- | --- |\n| What version of Server are they using? | Important to know the full version of Server. With the full version of Server you can determine the patch they are on from the Release notes for that version. |\n| What is the architecture of of the Server environment? | Single-node or multi-node environment? If multi-node, please describe the role for each node. |\n| What Server authentication is currently setup? | Built-In, SAML, Integrated Windows Auth, Integra"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server"
+    ],
+    "confidence": 0.85,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.87999994,
+    "usability": 0.82,
+    "review_reason": "First ingest — requires review before publication",
+    "proposed_new_subtree": null,
+    "proposal_rationale": null
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "how",
+      "to",
+      "work",
+      "a",
+      "server",
+      "case"
+    ],
+    "keywords_extracted": [
+      "Server",
+      "issue",
+      "version",
+      "What",
+      "logs",
+      "Designer",
+      "help",
+      "request"
+    ]
+  }
+}

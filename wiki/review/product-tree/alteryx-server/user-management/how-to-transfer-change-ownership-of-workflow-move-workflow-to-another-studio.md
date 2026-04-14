@@ -1,21 +1,29 @@
 ---
 id: 326c3e215c588136
 title: How to Transfer/Change Ownership of Workflow / Move Workflow to Another Studio
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1695484187
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1695484187
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- user-management
+keywords:
+- workflows
+- ownership
+- transfer
+- studio
+- how-to
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:24Z
+confidence: 0.78
 cross_refs: []
 content_hash: sha256:196dd8c4ac82a2e56d08ceaaf18ca70d3005079f2cc40074f754b89b764665c7
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---
