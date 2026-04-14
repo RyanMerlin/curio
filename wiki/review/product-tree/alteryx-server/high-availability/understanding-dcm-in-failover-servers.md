@@ -1,21 +1,28 @@
 ---
 id: a28543d7b010e27a
 title: Understanding DCM in Failover Servers
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2011236267
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2011236267
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- high-availability
+keywords:
+- high-availability
+- dcm
+- failover
+- data-connection-manager
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:57Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:c6ddd01d803f2cc4c89f33abc4bed54347e683cd3454f166ae17e908f1703228
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,21 +1,29 @@
 ---
 id: 0bbcd7bb8ce5d994
 title: Understanding Windows Session 0 Isolation
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2125332821
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2125332821
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- windows
+- session-0
+- service
+- isolation
+- security
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:58Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:22861183e13aba978aa37bf04b059003408a1371c89a78e52e7063f5c58565b7
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,21 +1,28 @@
 ---
 id: 02305063b5259b27
 title: User-Managed Mongo
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2205942404
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2205942404
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- user-managed
+- external-mongo
+- configuration
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:59Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:09ae3795c0ef53e9105bb7a19b9775dc0736773e12cdc37b9d2da8e543a6e8ae
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

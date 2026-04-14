@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:57Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Understanding DCM in Failover Servers",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2011236267",
+    "content_hash": "sha256:c6ddd01d803f2cc4c89f33abc4bed54347e683cd3454f166ae17e908f1703228",
+    "content_preview": "> **ℹ️ Info**\n>\n> In following the HA Server Setup process in Help or Confluence\n> \n> - https://help.alteryx.com/current/en/server/best-practices/high-availability-best-practices.html\n> - How to Setup Microsoft failover cluster service in AWS\n> \n> you would have been directed to follow steps from the [Server Host Recovery Guide](https://help.alteryx.com/current/en/server/install/server-host-recovery-guide.html) including the<https://help.alteryx.com/current/en/server/install/server-host-recovery"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "high-availability"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'high-availability' required under 'product-tree/alteryx-server/high-availability' — pending taxonomy approval",
+    "proposed_new_subtree": "high-availability",
+    "proposal_rationale": "High Availability Server configuration, upgrade practices, and failover cluster setup form a specialized operational domain with fewer but high-importance pages. An 'high-availability' subtree is appropriate."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "understanding",
+      "dcm",
+      "in",
+      "failover",
+      "servers"
+    ],
+    "keywords_extracted": [
+      "DCMSecretEncrypted",
+      "RuntimeSettingsxml",
+      "Failover",
+      "Server",
+      "will",
+      "Encryption",
+      "transfer",
+      "steps"
+    ]
+  }
+}
