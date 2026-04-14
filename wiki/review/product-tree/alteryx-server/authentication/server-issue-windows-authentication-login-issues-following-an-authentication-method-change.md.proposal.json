@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-server-issue-windows-authentication-login-issues-following-an-authentication-method-change",
+  "generated_at": "2026-04-14T15:20:38Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "server-issue-windows-authentication-login-issues-following-an-authentication-method-change",
+  "title": "Server Issue - Windows Authentication Login Issues Following an Authentication Method Change",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "authentication"
+  ],
+  "summary": "Documents login issues when changing Server authentication type to Windows Authentication.",
+  "body_markdown": "| **Issue** | Changing server authentication type to Windows Authentication can cause Gallery menu to disappear or profile page lacks permission etc. after login. |\n| --- | --- |\n| **Screenshot** |  |\n| **Possible Cause** | Existing Gallery user records may contain incomplete identity information after the authentication change. e.g. If the `WindowsIdentity` field in MongoDB is `null`, Gallery access may fail. |\n| **Resolution Overview** | Remove the affected user record from MongoDB so it can be automatically re-created on the next login.  Two remediation methods are available:     - Method 1: Robo 3T (GUI)    - Method 2: MongoDB via Command Line (CMD)Requires ability to run Command Prompt as Administrator       - Requires ability to run Command Prompt as Administrator |\n\n# Method 1: Using Robo 3T (Recommended)\n\n|  | **Steps ** | **Detail** |\n| --- | --- | --- |\n| 1 | Step 1: Configure the Robo 3T Connection | Additionprocedure is described in [How To: Connect to a user-managed MongoDB with Robo 3T](https://knowledge.alteryx.com/index/s/article/How-To-Connect-to-a-user-managed-MongoDB-with-Robo-3T)  **Connection Tab** Name: *[Any, used Alteryx Gallery in this example]* Host: localhost Port: 27018  **Authentication Tab** Check Perform authentication Database: AlteryxGallery Username: user Password: *[Copy the value from Alteryx System Settings → Persistence → Database → Password]* |\n| 2 | Step 2: Access the Users Collection | After connecting:     1. Expand AlteryxGallery    2. Expand AlteryxGallery (database)    3. Expand Collections    4. Double-click users  The objects displayed on the right represent user information stored in MongoDB.  Identify the Target User by expanding the user objects and identify the affected account using fields such as: Email Name Within the same object, locate the **WindowsIdentity **field |\n| 3 | Step 3: Validate `WindowsIdentity` (Decision Point) | If `WindowsIdentity` is **Null**, this is highly likely to be the cause of the login issue, continue the procedure follows. If not, this article doesn’t match  > **📝 Note** > > **Sid **mismatch could also cause this issue.  > **⚠️ Warning** > > If the description here does not match your situation, this article does **not** apply to your issue. |\n| 4 | Step 4: Delete the Invalid User Document | To correct the issue:     1. Right-click the affected user object    2. Select Delete Document |\n| 5 | Step 5: After Check | 1. Click the Play (▶) button in the upper-left corner to reload the data    2. Confirm that the deleted user object no longer appears    3. Log in to Alteryx Server (the Gallery menu should now display correctly.)    4. (Optional) If click the Play (▶) button and reload the data again, a new user object will be created again with correct info as shown in Step 3. |\n\n# Method 2: Using Command Line (CMD)\n\n|  | **Steps ** | **Detail** |\n| --- | --- | --- |\n| 1 | Step 1: Open Command Prompt and Connect to MongoDB | 1. On the Alteryx Server machine, open Command Prompt, right-click → Run as administrator.    2. Change directory to the Alteryx bin directoryFor the default installation path:  (Adjust the path if Alteryx is installed elsewhere.) |\n| 2 | Step 2: Retrieve the MongoDB (non-admin) password used by Alteryx Server | After connecting, run:  Example:  Copy the returned password string. You will use this value in the next step. |\n| 3 | Step 3: Connect to MongoDB shell (mongosh) | Run:  Replace `passwordstring` with the password from step 2.  Example:  > **ℹ️ Info** > > Please use non-admin password |\n| 4 | Step 4: Query the user record (identify the affected account) | Example: search by email (recommended):  If you don’t know the exact email, you can list a subset of fields (useful for searching): |\n| 5 | Step 5: Validate `WindowsIdentity` (Decision Point) | In the returned user document, locate the field below, if the value is null, proceed to next step.     - WindowsIdentity  > **📝 Note** > > **Sid **mismatch could also cause this issue.  > **⚠️ Warning** > > If the description here does not match your situation, this article does **not** apply to your issue. |\n| 6 | Step 6: Delete the Invalid User Document | Delete the specific user record by email:  Example output: |\n| 7 | Step 7: After Check | 1. To confirm deletion, run the command in step 4 again, make sure no user info returns.     1. Log in to Alteryx Server (the Gallery menu should now display correctly.)    2. (Optional) If run the command in step 4 again, a new user object will be created again with correct info as shown in Step 4. |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.88,
+    "quality_confidence": 0.92999995,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "proposed_node_title": "authentication",
+    "proposed_node_slug": "authentication",
+    "node_description": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:3701637234"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3701637234"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-server-upgrade-version-paths-what-version-can-upgrade-to-what-versions",
+  "generated_at": "2026-04-14T15:20:41Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "server-upgrade-version-paths-what-version-can-upgrade-to-what-versions",
+  "title": "Server Upgrade Version Paths - What version can upgrade to what versions?",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "upgrade"
+  ],
+  "summary": "Reference guide for supported upgrade paths between Alteryx Server versions — what version can upgrade to what.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> This document helps plan what versions you can upgrade to directly\n\n| **Key Articles** | [Server Upgrade Issues-by-Version](https://alteryx.atlassian.net/wiki/search?text=Server+Upgrade+Issues-by-Version)  [MongoDB Upgrade Folder Structure](https://alteryx.atlassian.net/wiki/search?text=MongoDB+Upgrade+Folder+Structure) |\n| --- | --- |\n| **Help** | <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-supported-versions.html>       > <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-unsupported-versions.html>  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/server-upgrade-checklist.html>  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server.html>  <https://help.alteryx.com/current/en/server/configure/database-management/mongodb-management/mongodb-schema-reference.html> |\n\n# Embedded Mongo\n\n| **Version** |  |  |  |  |  |  |  |  |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **25.2** | Mongo 8.0 |  |  |  |  |  |  |  |\n| **25.1** | Mongo 7.0 | Mongo 7.0 | Mongo 7.0 | Mongo 7.0 |  |  |  |  |\n| **24.2** |  | Mongo 7.0 | Mongo 7.0 | Mongo 7.0 |  |  |  |  |\n| **24.1** |  |  | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 |\n|  |  |  |  | - Python 3.8.16 to 3.10.13 requires reinstalling connectors (Help / Confluence) |  |  |  |  |\n| **23.2** |  |  |  | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 | Mongo 6.0 |\n|  |  |  |  |  | - __ServiceData blob removed (Confluence) |  |  |  |\n| **23.1** |  |  |  |  | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 |\n| **22.3** |  |  |  |  |  | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 |\n|  |  |  |  |  | - Run CryptoMigration Prep before upgrade to 22.3 (requires 64-char Token)   (Help / Conf_1 / Conf_2)    - Designer 22.3_Patch3 req’d for Server 22.3+ (Help)    - SAML Auth: SAML ACS endpoint must be all lowercase (KB)    - Controller Token auto lengthened 40- to 64-char (Confluence) |  |  |  |\n| **22.1** |  |  |  |  |  |  | Mongo 4.2 **Patch_9+** | Mongo 4.2 |\n|  |  |  |  |  | - API OAuth1 deprecated in 22.1 (Help / Confluence)    - Built-In Authentication pit-stop at 22.1 to reset passwords (Help) |  |  |  |\n|  |  |  |  |  |  |  |  | Mongo 4.2 |\n|  |  |  |  |  |  |  |  |  |\n| **Starting ver** | **25.1** | **24.2** | **24.1** | **23.2** | **23.1** | **22.3** | **22.1_Patch_9+** | **21.4** |\n|  |  |  |  | **       ^ ^              ** 22.1.1.9.42691 Patch_9 or higher before upgrading to or through 22.3 to avoid the defect TCPE-1100 (this may not be true [EdP]) | [Old V2V Guide](https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-unsupported-versions.html)** ** |  |  |  |\n\n# 21.4-\n\n| **Version** |  |  |  |  |  |\n| --- | --- | --- | --- | --- | --- |\n| **21.4** | Mongo 4.2 |  |  |  |  |\n| \\| \\| \\| | **<< Stop at 21.4 and regenerate Controller Token before upgrade to 22.1+ >> **  [Controller Token Length Transition from 21.4 to 22.3](https://alteryx.atlassian.net/wiki/search?text=Controller+Token+Length+Transition+from+21.4+to+22.3)  <https://help.alteryx.com/current/en/server/install/install-or-upgrade-server/version-to-version-server-upgrade-guide-unsupported-versions.html#2021-4:~:text=Internal%20Change%3A%20Controller%20Token%20length%20extended> |  |  |  |  |\n| **21.4** |  | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 |\n| **21.3.6+** |  | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 | Mongo 4.2 |\n| **21.3.5-** |  |  | Mongo 4.0 | n/a | n/a |\n| **21.2** |  |  |  | Mongo 4.0 | Mongo 4.0 |\n| **19.3 - 21.1 ** |  |  |  |  | Mongo 4.0 |\n|  |  |  |  |  |  |\n| **Starting ver** | **21.4** | **21.3.6+** | **23.1.5-** | **21.2** | **19.3 - 21.1** |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.9,
+    "quality_confidence": 0.92999995,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "upgrade"
+    ],
+    "proposed_node_title": "upgrade",
+    "proposed_node_slug": "upgrade",
+    "node_description": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2843344956"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2843344956"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'upgrade' required under 'product-tree/alteryx-server/upgrade' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "Server upgrade guidance spans version paths, upgrade defects by version, HA upgrade practices, rollback procedures, and migration steps. A dedicated 'upgrade' subtree groups this coherently for support engineers."
+  }
+}

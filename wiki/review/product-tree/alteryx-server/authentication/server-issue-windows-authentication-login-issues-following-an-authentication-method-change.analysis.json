@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T15:20:38Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Server Issue - Windows Authentication Login Issues Following an Authentication Method Change",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3701637234",
+    "content_hash": "sha256:c0af747eecd76c3cbd2fd35f7bc491eb56cd4c199ad31144f677adf3e511568c",
+    "content_preview": "| **Issue** | Changing server authentication type to Windows Authentication can cause Gallery menu to disappear or profile page lacks permission etc. after login. |\n| --- | --- |\n| **Screenshot** |  |\n| **Possible Cause** | Existing Gallery user records may contain incomplete identity information after the authentication change. e.g. If the `WindowsIdentity` field in MongoDB is `null`, Gallery access may fail. |\n| **Resolution Overview** | Remove the affected user record from MongoDB so it can b"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "authentication"
+    ],
+    "confidence": 0.88,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.92999995,
+    "usability": 0.9,
+    "review_reason": "New taxonomy node 'authentication' required under 'product-tree/alteryx-server/authentication' — pending taxonomy approval",
+    "proposed_new_subtree": "authentication",
+    "proposal_rationale": "Authentication (SAML, SCIM, SSL/TLS, NTLM, Windows Auth, Built-in Auth) is a broad, self-contained domain with its own errors, configuration, logging, and troubleshooting patterns. An 'authentication' subtree is strongly justified."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "server",
+      "issue",
+      "-",
+      "windows",
+      "authentication",
+      "login",
+      "issues",
+      "following",
+      "an",
+      "authentication",
+      "method",
+      "change"
+    ],
+    "keywords_extracted": [
+      "Step",
+      "user",
+      "Alteryx",
+      "MongoDB",
+      "Gallery",
+      "issue",
+      "Command",
+      "WindowsIdentity"
+    ]
+  }
+}

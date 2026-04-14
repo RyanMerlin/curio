@@ -1,21 +1,28 @@
 ---
 id: c1609b7c480436b5
 title: Server Upgrade Best Practices
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3208446355
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3208446355
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- best-practices
+- planning
+- procedure
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:39Z
+confidence: 0.85
 cross_refs: []
 content_hash: sha256:cf386a389635495e1b46fe81fecfdba41c9b22d56708cfc901e2f3b4b6ab3ad5
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ## Redesign Help page

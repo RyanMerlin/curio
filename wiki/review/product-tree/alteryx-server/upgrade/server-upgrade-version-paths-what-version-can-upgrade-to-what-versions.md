@@ -1,21 +1,28 @@
 ---
 id: b9ac518153229f71
 title: Server Upgrade Version Paths - What version can upgrade to what versions?
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2843344956
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2843344956
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- upgrade
+keywords:
+- upgrade
+- version-paths
+- supported-upgrades
+- planning
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:41Z
+confidence: 0.9
 cross_refs: []
 content_hash: sha256:50a8fd4b5972944eac2bd33c911bb486c6727b66e4b4ddcd6b79a14d65d76979
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

@@ -1,21 +1,29 @@
 ---
 id: 7b91168d1dc895c4
 title: Server Issue - Windows Authentication Login Issues Following an Authentication Method Change
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:3701637234
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/3701637234
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- authentication
+keywords:
+- authentication
+- windows-auth
+- login-issues
+- method-change
+- issue
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:38Z
+confidence: 0.88
 cross_refs: []
 content_hash: sha256:c0af747eecd76c3cbd2fd35f7bc491eb56cd4c199ad31144f677adf3e511568c
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | **Issue** | Changing server authentication type to Windows Authentication can cause Gallery menu to disappear or profile page lacks permission etc. after login. |

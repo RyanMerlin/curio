@@ -1,21 +1,29 @@
 ---
 id: 3eea4a24505d9806
 title: Server Health Check
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:2002419792
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2002419792
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- administration
+keywords:
+- health-check
+- monitoring
+- server
+- support
+- review
 created_at: 2026-04-14T15:18:28Z
-updated_at: 2026-04-14T15:18:28Z
-confidence: null
+updated_at: 2026-04-14T15:20:37Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:dab38bc7c5507f103e66e1c9886ebd6f47874074945e390c1cbc48ee508e2dd8
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**
