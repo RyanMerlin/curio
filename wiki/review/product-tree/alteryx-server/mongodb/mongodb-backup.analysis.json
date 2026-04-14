@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:38Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "MongoDB Backup",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1997439417",
+    "content_hash": "sha256:c33fe867d715b875d283e4dd9bb5c53ccda471bf1e41a73da0b50d2f4f0f4f4b",
+    "content_preview": "---\n\n*[Organized section — child pages listed separately]*\n\n---\n\nfor embedded mongo onlyPurple\n\n> **ℹ️ Info**\n>\n> How to backup an Embedded MongoDB\n\n| Key Articles | Alteryx Server Backup and Recovery Part 2: Procedures (KB)                                   <== includes PowerShell script to automate backupshttps://help.alteryx.com/current/en/server/install/server-host-recovery-guide/disaster-recovery-preparation.html https://help.alteryx.com/current/en/server/best-practices/backup-best-practice"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.8,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.85,
+    "usability": 0.9,
+    "review_reason": "Hub/section index; requires mongodb subtree taxonomy approval",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "mongodb",
+      "backup"
+    ],
+    "keywords_extracted": [
+      "backup",
+      "error",
+      "MongoDB",
+      "Jira",
+      "counts",
+      "Backup",
+      "Utility",
+      "DRIVEPATHmongoDumplog"
+    ]
+  }
+}

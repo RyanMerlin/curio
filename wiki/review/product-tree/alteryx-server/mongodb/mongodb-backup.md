@@ -1,21 +1,28 @@
 ---
 id: 05b942ff49281926
 title: MongoDB Backup
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1997439417
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1997439417
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- backup
+- embedded-mongo
+- operations
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:38Z
+confidence: 0.8
 cross_refs: []
 content_hash: sha256:c33fe867d715b875d283e4dd9bb5c53ccda471bf1e41a73da0b50d2f4f0f4f4b
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 ---

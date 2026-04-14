@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-mongodb-to-sql-db-migration",
+  "generated_at": "2026-04-14T13:50:39Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "mongodb-to-sql-db-migration",
+  "title": "MongoDB to SQL DB Migration",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "sql-db-persistence"
+  ],
+  "summary": "Hub/index for migrating from MongoDB to SQL DB persistence on Alteryx Server.",
+  "body_markdown": "---\n\n*[Organized section — child pages listed separately]*\n\n---\n\nnote Asked Michael P where to place this error.  If it’s the Service Log it would be good to have the lead-in to show the full error messages.  And since this error refers to looking into the “Migrator” logs, it would be good to understand which of the many migration logs this is and get that error as well (likely the Service Schema migration).\n\n- Server Migrator failed with exit code 2993\n\nAsked Michael P where to place this error.  If it’s the Service Log it would be good to have the lead-in to show the full error messages.  And since this error refers to looking into the “Migrator” logs, it would be good to understand which of the many migration logs this is and get that error as well (likely the Service Schema migration).\n\n- Server Migrator failed with exit code 2993\n\n---\n\n> **ℹ️ Info**\n>\n> 24.1+ Server Mongo to SQL DB Migration process.\n\n> **📝 Note**\n>\n> After upgrade, Service must be started to perform Mongo Schema Migration before attempting Mongo to SQL DB Migration\n\n| Access | Migration workflowhttps://us1.alteryxcloud.com/license-portal/ > Server > VERSION >        Workflow to migrate from MongoDB to SQLMicrosoft ODBC Driver 18 for SQL Server (x64)https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16 Simba MongoDB 2.3.22.1024 64-bit Driverhttps://us1.alteryxcloud.com/license-portal/ > Drivers > MongoDB >        Simba MongoDB 2.3.22.1024 64-bitSimba SchemaUnpack Migration Workflow YXZP for \\Resources\\MongoDB_Schema.json needed to configure the Simba driver |\n| --- | --- |\n| Tutorials | https://youtu.be/RUytFrg5Bcc?si=fYT3h-sIKoCT6gbs   16m   <== Jarrod’s walk-through of configuring the SQL DB migration |\n| Help | https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/mongo-to-sql-migration-guide.html https://help.alteryx.com/current/en/server/configure/database-management/sql-db-management/server-sql-db-customer-faq.html#mongodb-to-mssql-migrator-faq > MongoDB to MSSQL Migrator FAQ |",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.8,
+    "quality_confidence": 0.92999995,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.9,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Hub/section index; requires sql-db-persistence subtree taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "sql-db-persistence"
+    ],
+    "proposed_node_title": "sql db persistence",
+    "proposed_node_slug": "sql-db-persistence",
+    "node_description": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path.",
+    "rationale": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:2188215414"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/2188215414"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Hub/section index; requires sql-db-persistence subtree taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "SQL DB Persistence is a distinct persistence mode for Alteryx Server with its own configuration, schema, FAQ, migration path, and troubleshooting. A 'sql-db-persistence' subtree separates it clearly from the default MongoDB path."
+  }
+}

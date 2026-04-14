@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-not-on-home-page",
+  "generated_at": "2026-04-14T13:50:40Z",
+  "lane": "review",
+  "kind": "new_page",
+  "subject_slug": "not-on-home-page",
+  "title": "Not on Home Page",
+  "target_path": [
+    "product-tree",
+    "alteryx-server"
+  ],
+  "summary": "Hub for content not featured on the home page — Server Fundamentals, Enterprise Utilities, etc.",
+  "body_markdown": "Hub page: Not on Home Page\n\nThis page organizes the following sub-pages:\n\n- Server Upgrade Best Practices\n- Blue-Green Deployment Checklist\n",
+  "recommended_action": "review before further action",
+  "scores": {
+    "route_confidence": 0.55,
+    "quality_confidence": 0.16,
+    "hierarchy_fit_confidence": 0.55,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.58,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "Navigation organizing page — low standalone value; content covered by subtree pages",
+  "merge_target": null,
+  "taxonomy_mutation": null,
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1891860890"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1891860890"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "Navigation organizing page — low standalone value; content covered by subtree pages"
+    ],
+    "overlap_candidates": [],
+    "rationale": ""
+  }
+}

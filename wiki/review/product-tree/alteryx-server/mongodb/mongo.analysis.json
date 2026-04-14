@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "analyzed_at": "2026-04-14T13:50:38Z",
+  "model": "claude-sonnet-4-6",
+  "inputs": {
+    "title": "Mongo",
+    "source_url": "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640793121",
+    "content_hash": "sha256:8f7cdab860397c99aec1435033696c8c387bae2864e98b41190b295593dc48df",
+    "content_preview": "**Issues / Errors**\n > Issues\n > Errors\n\n**How to**\n > Reindex\n > Backup\n > Restore\n > Repair\n > General How to\n\n**Start**\n > Mongo DB\n > Mongo Shell\n\n**Delete**\n > locks\n > sessions\n > mongod.lock\n\n**Get**\n > Persistence folder location\n > Non-admin password\n > Schema version\n > Mongo version\n > Collections as yxdb’s\n\n**Connect to Mongo**\n > 3rd-party GUIs\n > MongoDB Input Tool\n > ODBC Driver\n\n**Upgrade**\n > Schema migration \n > Embedded Mongo upgr \n     > PreUpgrade folder\n     > migration.log"
+  },
+  "routing": {
+    "decision": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "confidence": 0.82,
+    "rationale": "",
+    "alternatives_considered": [],
+    "flags": [],
+    "information_quality": 0.8,
+    "usability": 0.7,
+    "review_reason": "Hub/index page — route as branch-node proposal for mongodb subtree",
+    "proposed_new_subtree": "mongodb",
+    "proposal_rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  },
+  "signals": {
+    "heuristic_pre_signal": "alteryx-server",
+    "title_tokens": [
+      "mongo"
+    ],
+    "keywords_extracted": [
+      "Mongo",
+      "migrationlog",
+      "Embedded",
+      "folder",
+      "Backup",
+      "Schema",
+      "version",
+      "Restore"
+    ]
+  }
+}

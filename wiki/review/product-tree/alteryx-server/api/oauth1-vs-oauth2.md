@@ -1,21 +1,29 @@
 ---
 id: 5daa2ec356c501fa
 title: OAuth1 vs OAuth2
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1640792985
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1640792985
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- api
+keywords:
+- api
+- oauth
+- oauth1
+- oauth2
+- authentication
 created_at: 2026-04-14T13:40:13Z
-updated_at: 2026-04-14T13:40:13Z
-confidence: null
+updated_at: 2026-04-14T13:50:41Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:4591f21c36986303ed5c5dba3e27a01ad95f980dead77c0d71868be33b1f9b6a
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

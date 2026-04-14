@@ -1,21 +1,29 @@
 ---
 id: e36bdc5f3d94406f
 title: MongoDB Restore
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1997472512
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1997472512
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- restore
+- backup
+- embedded-mongo
+- recovery
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:39Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:0fead09492ea702815557c72d531c48bc091b2021b5faea8da33f0f54133e75a
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 for embedded mongo onlyPurple
