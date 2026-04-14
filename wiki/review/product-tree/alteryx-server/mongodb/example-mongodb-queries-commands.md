@@ -1,21 +1,29 @@
 ---
 id: cb7c556a7dc01feb
 title: Example MongoDB Queries / Commands
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1702828808
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1702828808
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- queries
+- commands
+- reference
+- shell
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:08Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:5a91f949e9fd716668853bd0c192c973c8d12cb4643a9aaeb447954063bdf2ae
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 | Key Articles | How-To-Query-Mongo-Effectively-List-of-MongoDB-Queries (1053007)  <= London HHow-To-Query-MongoDB-efficiently (443533) Mongo Query examples (Google) <== Ralph Konghttps://www.mongodb.com/docs/manual/tutorial/query-documents/ (MongoDB Help) |

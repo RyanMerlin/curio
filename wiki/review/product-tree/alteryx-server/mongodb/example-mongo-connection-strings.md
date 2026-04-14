@@ -1,21 +1,28 @@
 ---
 id: 3f91ff591894174b
 title: Example Mongo Connection Strings
-status: intake
+status: review
 source:
   kind: confluence_page
   id: confluence-page:1797161333
   origin_url: https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1797161333
   summary: null
-category: []
-keywords: []
+category:
+- product-tree
+- alteryx-server
+- mongodb
+keywords:
+- mongodb
+- connection-strings
+- embedded-mongo
+- admin
 created_at: 2026-04-14T13:40:14Z
-updated_at: 2026-04-14T13:40:14Z
-confidence: null
+updated_at: 2026-04-14T13:50:07Z
+confidence: 0.87
 cross_refs: []
 content_hash: sha256:6dfe0c55bfdf3b7968bd656f8e55f61bb0767f6ab410e65404b7813b419d6d07
 confluence_page_id: null
-model_used: null
+model_used: claude-sonnet-4-6
 ---
 
 > **ℹ️ Info**

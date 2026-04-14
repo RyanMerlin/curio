@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "proposal_id": "proposal-get-customer-s-mongo-collections-as-yxdbs",
+  "generated_at": "2026-04-14T13:50:10Z",
+  "lane": "review",
+  "kind": "taxonomy_change",
+  "subject_slug": "get-customer-s-mongo-collections-as-yxdbs",
+  "title": "Get Customer's Mongo Collections as YXDBs",
+  "target_path": [
+    "product-tree",
+    "alteryx-server",
+    "mongodb"
+  ],
+  "summary": "How to extract MongoDB collections as YXDB files for customer support analysis.",
+  "body_markdown": "> **ℹ️ Info**\n>\n> This article explains the first of the options below for reviewing a customer’s database\n> \n> - have the user dump Mongo collections to YXDB files and upload them to a Drop link\n> - run diagnostic workfows in the user’s environment\n> - have customer provide a Mongo backup, RuntimeSettings.xml. and Controller token so you can perform a Host Recovery\n\n# How to get Embedded Mongo Collections From a Customer\n\n> **ℹ️ Info**\n>\n> Configure and send the workflow below to the customer. It will save the contents of the collections you need to YXDB files. Collections with a **ServiceData** blob will unpack the fields from the blob.\n\n(1) Download and configure ayxGetCollections.yxmc for the Collections you want.\n\n(2) Configure the **macro** by enabling the Containers for the Collections you want from the user.\n\n(3) Edit the files in Notepad++ and set the version number at the top of the XML to match customer’s version so they can run the macro in the workflow.\n\n(4) **ZIP** the files\n\n(5) Create a **Drop link**\n\n(6) Send **ZIP** and **Drop link** with the directions below\n\nTo gather the Mongo Collections for further analysis can you please :\n\n(1) Open the attached **ayxGetMongoCollections_v##.zip** file in Designer on your Server machine.\n\n(2) Enter your **Mongo Non-Admin password **in the workflow as instructed in the workflow instructions.\n\n(3) **Run **the workflow\n\n(4) **ZIP** the files created in collections subfolder\n\n(5) Upload the **ZIP file** to the following secure **Drop location**:\n\n– DROP_LINK\n– password:  PASSWORD\n## Old versions",
+  "recommended_action": "review taxonomy mutation proposal before publication",
+  "scores": {
+    "route_confidence": 0.85,
+    "quality_confidence": 0.87999994,
+    "hierarchy_fit_confidence": 0.5,
+    "overlap_risk": 0.0,
+    "evidence_completeness": 0.7,
+    "usability": 0.82,
+    "freshness_confidence": 1.0
+  },
+  "review_reason": "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval",
+  "merge_target": null,
+  "taxonomy_mutation": {
+    "proposed_parent_path": [
+      "product-tree",
+      "alteryx-server",
+      "mongodb"
+    ],
+    "proposed_node_title": "mongodb",
+    "proposed_node_slug": "mongodb",
+    "node_description": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted.",
+    "rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted.",
+    "rejected_nearby_nodes": []
+  },
+  "dossier": {
+    "source_ids": [
+      "confluence-page:1840678524"
+    ],
+    "source_locations": [
+      "https://alteryx.atlassian.net/wiki/spaces/CURIO/pages/1840678524"
+    ],
+    "fetched_artifacts": [
+      "confluence_page"
+    ],
+    "compared_pages": [],
+    "alternatives_considered": [
+      "Primary route candidate: product-tree"
+    ],
+    "unresolved_questions": [
+      "New taxonomy node 'mongodb' required under 'product-tree/alteryx-server/mongodb' — pending taxonomy approval"
+    ],
+    "overlap_candidates": [],
+    "rationale": "MongoDB (both embedded and user-managed) is a deep area of Server support with its own commands, error patterns, version grids, backup/restore procedures, and schema understanding. A 'mongodb' subtree is strongly warranted."
+  }
+}
