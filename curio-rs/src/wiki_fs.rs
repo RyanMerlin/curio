@@ -117,16 +117,47 @@ pub fn content_hash(content: &str) -> String {
     format!("sha256:{:x}", Sha256::digest(content.as_bytes()))
 }
 
-/// Return the first non-empty line of `body` as a summary, truncated to `max_chars`.
+/// Return the first line of `body` that contains substantive text, truncated to `max_chars`.
+///
+/// Skips lines that are pure markdown decoration (blockquote markers with only bold/emoji,
+/// heading-only lines, horizontal rules, etc.) so that callout bodies like
+/// `> **ℹ️ Info**\n> Actual content` surface the actual content as the summary.
 pub fn first_line_summary(body: &str, max_chars: usize) -> String {
-    let line = body.lines().find(|l| !l.trim().is_empty()).unwrap_or("").trim();
-    // Strip leading markdown heading markers
-    let line = line.trim_start_matches('#').trim();
-    if line.len() <= max_chars {
-        line.to_string()
-    } else {
-        format!("{}…", &line[..max_chars])
+    for raw in body.lines() {
+        // Strip leading blockquote markers and whitespace
+        let line = raw.trim().trim_start_matches('>').trim();
+        // Strip leading heading markers
+        let line = line.trim_start_matches('#').trim();
+        // Skip empty lines
+        if line.is_empty() {
+            continue;
+        }
+        // Skip lines that are purely markdown decoration:
+        // - horizontal rules: ---, ***, ___
+        // - lines consisting only of bold/italic markers + emoji + punctuation (no letters/digits)
+        if line.chars().all(|c| matches!(c, '-' | '*' | '_' | ' ')) {
+            continue;
+        }
+        // Strip bold/italic markers (**text** or *text*) to get plain text for the check
+        let stripped: String = line
+            .replace("**", "")
+            .replace('*', "")
+            .replace("__", "")
+            .replace('_', "");
+        let plain = stripped.trim();
+        // Skip if no ASCII letters or digits remain (pure emoji/punctuation decoration line)
+        if !plain.chars().any(|c| c.is_alphanumeric() && c.is_ascii()) {
+            continue;
+        }
+        // This line has real content — use it
+        let summary = if line.len() <= max_chars {
+            line.to_string()
+        } else {
+            format!("{}…", &line[..max_chars])
+        };
+        return summary;
     }
+    String::new()
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────
