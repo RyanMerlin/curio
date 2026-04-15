@@ -7,6 +7,7 @@ pub mod error;
 pub mod freshness;
 pub mod git_ops;
 pub mod harness;
+pub mod heal_types;
 pub mod llm;
 pub mod northstar;
 pub mod overlap;
