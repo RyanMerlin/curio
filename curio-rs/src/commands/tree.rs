@@ -48,9 +48,17 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
         for entry in std::fs::read_dir(&published_dir)? {
             let entry = entry?;
             let path = entry.path();
-            if !path.is_dir() { continue; }
-            let slug = path.file_name().unwrap_or_default().to_string_lossy().to_string();
-            if slug.starts_with('_') { continue; } // skip hidden workspace folders
+            if !path.is_dir() {
+                continue;
+            }
+            let slug = path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+            if slug.starts_with('_') {
+                continue;
+            } // skip hidden workspace folders
 
             if !expected.contains(&slug) {
                 let is_empty = std::fs::read_dir(&path)?.next().is_none();
@@ -70,10 +78,20 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
             }
         }
     }
-    prune_unexpected_dirs(&published_dir, &expected, dry_run, &mut removed, &mut skipped, Vec::new())?;
+    prune_unexpected_dirs(
+        &published_dir,
+        &expected,
+        dry_run,
+        &mut removed,
+        &mut skipped,
+        Vec::new(),
+    )?;
 
     // Also sync wiki/_config/northstar.md ← NORTHSTAR.md if repo root copy is newer
-    let repo_northstar = wiki_dir.parent().map(|p| p.join("NORTHSTAR.md")).filter(|p| p.exists());
+    let repo_northstar = wiki_dir
+        .parent()
+        .map(|p| p.join("NORTHSTAR.md"))
+        .filter(|p| p.exists());
     if let Some(src) = repo_northstar {
         let src_mtime = src.metadata().and_then(|m| m.modified()).ok();
         let dst_mtime = northstar_path.metadata().and_then(|m| m.modified()).ok();
@@ -177,7 +195,11 @@ fn prune_unexpected_dirs(
         if !path.is_dir() {
             continue;
         }
-        let slug = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        let slug = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
         if slug.starts_with('_') {
             continue;
         }

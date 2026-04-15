@@ -1,10 +1,10 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use std::env;
 
 const MAX_AUDIT_LINES: usize = 1000;
 const RETAIN_AUDIT_LINES: usize = 250;
@@ -29,7 +29,11 @@ fn audit_dir(wiki_dir: &Path) -> PathBuf {
                 .replace("${REPO_ROOT}", &repo_root.to_string_lossy())
                 .replace("$REPO_ROOT", &repo_root.to_string_lossy());
             let path = PathBuf::from(expanded);
-            return if path.is_relative() { repo_root.join(path) } else { path };
+            return if path.is_relative() {
+                repo_root.join(path)
+            } else {
+                path
+            };
         }
     }
     wiki_dir.join("_config")
@@ -56,8 +60,12 @@ fn ensure_audit_dir(wiki_dir: &Path) -> Result<()> {
 fn write_sync_marker(wiki_dir: &Path, ts: &str) -> Result<()> {
     let marker_path = sync_marker_path(wiki_dir);
     if let Some(parent) = marker_path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("Failed to create sync marker directory: {}", parent.display()))?;
+        fs::create_dir_all(parent).with_context(|| {
+            format!(
+                "Failed to create sync marker directory: {}",
+                parent.display()
+            )
+        })?;
     }
     fs::write(&marker_path, format!("{}\n", ts))
         .with_context(|| format!("Failed to write sync marker: {}", marker_path.display()))
@@ -175,7 +183,12 @@ pub fn append_entry(wiki_dir: &Path, entry: &str) -> Result<()> {
         .create(true)
         .append(true)
         .open(&log_path)
-        .with_context(|| format!("Failed to open audit log for append: {}", log_path.display()))?;
+        .with_context(|| {
+            format!(
+                "Failed to open audit log for append: {}",
+                log_path.display()
+            )
+        })?;
 
     let line = serde_json::to_string(&audit_entry).context("Failed to serialize audit entry")?;
     writeln!(file, "{}", line).context("Failed to append audit entry")?;
@@ -198,7 +211,10 @@ pub fn append_log_md(wiki_dir: &Path, entry: &str) -> Result<()> {
     let line = format!("- {} — {}\n", ts, entry);
 
     // Initialise with a header if the file is new
-    let needs_header = !log_path.exists() || std::fs::metadata(&log_path).map(|m| m.len() == 0).unwrap_or(true);
+    let needs_header = !log_path.exists()
+        || std::fs::metadata(&log_path)
+            .map(|m| m.len() == 0)
+            .unwrap_or(true);
     let mut file = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
@@ -206,7 +222,10 @@ pub fn append_log_md(wiki_dir: &Path, entry: &str) -> Result<()> {
         .with_context(|| format!("Failed to open log.md for append: {}", log_path.display()))?;
     if needs_header {
         use std::io::Write;
-        writeln!(file, "# Curio Knowledge Log\n\nAppend-only record of ingests, routing runs, publications, and queries.\n")?;
+        writeln!(
+            file,
+            "# Curio Knowledge Log\n\nAppend-only record of ingests, routing runs, publications, and queries.\n"
+        )?;
     }
     use std::io::Write;
     file.write_all(line.as_bytes())

@@ -68,8 +68,14 @@ pub async fn run_heal_prepare(
     let mut pages: Vec<ManifestPage> = Vec::new();
 
     for path in &page_paths {
-        let Ok(page) = parse_wiki_page(path) else { continue };
-        let slug = path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+        let Ok(page) = parse_wiki_page(path) else {
+            continue;
+        };
+        let slug = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_string();
 
         let freshness = freshness_score_from_str(&page.frontmatter.updated_at).unwrap_or(1.0);
         let quality = assess_quality(&page.frontmatter.title, &page.body);
@@ -85,10 +91,7 @@ pub async fn run_heal_prepare(
         .into_iter()
         .filter(|m| m.score >= 0.45)
         .filter_map(|m| {
-            let peer_slug = Path::new(&m.path)
-                .file_stem()?
-                .to_str()?
-                .to_string();
+            let peer_slug = Path::new(&m.path).file_stem()?.to_str()?.to_string();
             let peer_path = wiki_dir.join(&m.path);
             let peer_title = parse_wiki_page(&peer_path)
                 .map(|p| p.frontmatter.title.clone())
@@ -124,7 +127,11 @@ pub async fn run_heal_prepare(
     // Thin branch structural issues
     let mut structural_issues: Vec<StructuralIssue> = Vec::new();
     let min_body_words = config.heal.min_body_words() as usize;
-    for entry in WalkDir::new(&scan_root).min_depth(1).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(&scan_root)
+        .min_depth(1)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         if !entry.file_type().is_dir() {
             continue;
         }
@@ -163,12 +170,15 @@ pub async fn run_heal_prepare(
         },
         apply_command: format!(
             "curio heal --apply-file /tmp/heal-routes.json{}",
-            scope.as_deref().map(|s| format!(" --scope {}", s)).unwrap_or_default()
+            scope
+                .as_deref()
+                .map(|s| format!(" --scope {}", s))
+                .unwrap_or_default()
         ),
     };
 
-    let manifest_json = serde_json::to_string_pretty(&manifest)
-        .context("Failed to serialize manifest")?;
+    let manifest_json =
+        serde_json::to_string_pretty(&manifest).context("Failed to serialize manifest")?;
 
     if let Some(ref path) = out_file {
         std::fs::write(path, &manifest_json)
@@ -221,7 +231,14 @@ pub async fn run_heal_apply(
                 let src_path = find_published_page(wiki_dir, &action.slug)?;
 
                 if action.confidence >= threshold {
-                    apply_auto_approve(wiki_dir, action, &src_path, &timestamp, dry_run, &mut log_lines)?;
+                    apply_auto_approve(
+                        wiki_dir,
+                        action,
+                        &src_path,
+                        &timestamp,
+                        dry_run,
+                        &mut log_lines,
+                    )?;
                     auto_approved += 1;
                 } else {
                     apply_to_review(wiki_dir, action, &timestamp, dry_run, &mut log_lines)?;
@@ -238,8 +255,10 @@ pub async fn run_heal_apply(
     }
 
     if dry_run {
-        println!("[dry-run] auto-approve: {} | to-review: {} | no-action: {}",
-            auto_approved, routed_to_review, no_action);
+        println!(
+            "[dry-run] auto-approve: {} | to-review: {} | no-action: {}",
+            auto_approved, routed_to_review, no_action
+        );
     } else {
         println!("Heal apply complete:");
         println!("  auto-approved (published): {}", auto_approved);
@@ -254,7 +273,9 @@ fn find_published_page(wiki_dir: &Path, slug: &str) -> Result<PathBuf> {
     // Search published first, then review and staged.
     for lane in &["published", "review", "staged"] {
         let lane_dir = wiki_dir.join(lane);
-        if !lane_dir.exists() { continue; }
+        if !lane_dir.exists() {
+            continue;
+        }
         for entry in WalkDir::new(&lane_dir).into_iter().filter_map(|e| e.ok()) {
             if entry.path().extension().map_or(false, |e| e == "md") {
                 if entry.path().file_stem().map_or(false, |s| s == slug) {
@@ -277,7 +298,10 @@ fn apply_auto_approve(
     let slug = &action.slug;
 
     if dry_run {
-        println!("[dry-run] AUTO-APPROVE  {} ({:?}, confidence {:.2})", slug, action.kind, action.confidence);
+        println!(
+            "[dry-run] AUTO-APPROVE  {} ({:?}, confidence {:.2})",
+            slug, action.kind, action.confidence
+        );
         return Ok(());
     }
 
@@ -303,7 +327,8 @@ fn apply_auto_approve(
             })?;
 
             // Inject auto_healed frontmatter fields before closing ---
-            let final_content = inject_auto_heal_frontmatter(new_content, timestamp, action.confidence);
+            let final_content =
+                inject_auto_heal_frontmatter(new_content, timestamp, action.confidence);
             std::fs::write(src_path, &final_content)?;
 
             // Delete merge source pages
@@ -313,7 +338,9 @@ fn apply_auto_approve(
                         std::fs::remove_file(&mp).ok();
                         for ext in &["analysis.json", "sync-refs.json"] {
                             let sidecar = mp.with_extension(ext);
-                            if sidecar.exists() { std::fs::remove_file(&sidecar).ok(); }
+                            if sidecar.exists() {
+                                std::fs::remove_file(&sidecar).ok();
+                            }
                         }
                     }
                 }
@@ -348,7 +375,10 @@ fn apply_to_review(
     let slug = &action.slug;
 
     if dry_run {
-        println!("[dry-run] TO-REVIEW  {} ({:?}, confidence {:.2})", slug, action.kind, action.confidence);
+        println!(
+            "[dry-run] TO-REVIEW  {} ({:?}, confidence {:.2})",
+            slug, action.kind, action.confidence
+        );
         return Ok(());
     }
 
@@ -377,11 +407,7 @@ fn apply_to_review(
     Ok(())
 }
 
-fn write_auto_approve_record(
-    auto_dir: &Path,
-    action: &HealAction,
-    timestamp: &str,
-) -> Result<()> {
+fn write_auto_approve_record(auto_dir: &Path, action: &HealAction, timestamp: &str) -> Result<()> {
     let record = serde_json::json!({
         "slug": action.slug,
         "kind": format!("{:?}", action.kind),
@@ -399,7 +425,12 @@ fn write_auto_approve_record(
     let sources_md = if action.sources_consulted.is_empty() {
         "_none_".to_string()
     } else {
-        action.sources_consulted.iter().map(|s| format!("- {}", s)).collect::<Vec<_>>().join("\n")
+        action
+            .sources_consulted
+            .iter()
+            .map(|s| format!("- {}", s))
+            .collect::<Vec<_>>()
+            .join("\n")
     };
     let md = format!(
         "---\ntitle: \"Auto-Approved: {slug}\"\nstatus: auto-approved\nauto_healed_at: \"{timestamp}\"\nauto_healed_confidence: {confidence}\n---\n\n\

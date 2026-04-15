@@ -24,7 +24,12 @@ pub fn run_workspace_list(json: bool) -> Result<()> {
         return Ok(());
     }
 
-    let name_w = workspaces.iter().map(|w| w.name.len()).max().unwrap_or(4).max(4);
+    let name_w = workspaces
+        .iter()
+        .map(|w| w.name.len())
+        .max()
+        .unwrap_or(4)
+        .max(4);
     println!("{:<name_w$}  {}", "NAME", "PATH");
     println!("{}", "-".repeat(name_w + 2 + 60));
     for ws in &workspaces {
@@ -38,7 +43,12 @@ pub fn run_workspace_list(json: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn run_workspace_add(name: String, path: PathBuf, description: Option<String>, json: bool) -> Result<()> {
+pub fn run_workspace_add(
+    name: String,
+    path: PathBuf,
+    description: Option<String>,
+    json: bool,
+) -> Result<()> {
     let abs_path = if path.is_absolute() {
         path.clone()
     } else {
@@ -48,7 +58,11 @@ pub fn run_workspace_add(name: String, path: PathBuf, description: Option<String
     if !abs_path.exists() {
         eprintln!("Warning: path does not exist: {}", abs_path.display());
         eprintln!("  The workspace will be registered but may not work until the KB is created.");
-        eprintln!("  Run `curio init-kb --name {} --path {}` to create it.", name, abs_path.display());
+        eprintln!(
+            "  Run `curio init-kb --name {} --path {}` to create it.",
+            name,
+            abs_path.display()
+        );
     }
 
     let ws_file = upsert_workspace(&name, &abs_path, description.as_deref())?;
@@ -76,7 +90,10 @@ pub fn run_workspace_add(name: String, path: PathBuf, description: Option<String
 pub fn run_workspace_remove(name: String, json: bool) -> Result<()> {
     let removed = remove_workspace(&name)?;
     if json {
-        println!("{}", serde_json::json!({ "removed": removed, "name": name }));
+        println!(
+            "{}",
+            serde_json::json!({ "removed": removed, "name": name })
+        );
     } else if removed {
         println!("Workspace '{}' removed.", name);
         println!("(The KB directory itself was not deleted.)");

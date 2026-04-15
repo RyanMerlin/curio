@@ -22,7 +22,11 @@ pub fn parse_wiki_page(path: &Path) -> Result<WikiPage> {
         .with_context(|| format!("Failed to read {}", path.display()))?;
     let (frontmatter, body) = split_frontmatter(&content)
         .with_context(|| format!("Failed to parse frontmatter in {}", path.display()))?;
-    Ok(WikiPage { path: path.to_path_buf(), frontmatter, body })
+    Ok(WikiPage {
+        path: path.to_path_buf(),
+        frontmatter,
+        body,
+    })
 }
 
 /// Split a raw file string into (Frontmatter, body).
@@ -53,10 +57,10 @@ pub fn write_wiki_page(path: &Path, page: &WikiPage) -> Result<()> {
         std::fs::create_dir_all(parent)
             .with_context(|| format!("Failed to create directory {}", parent.display()))?;
     }
-    let yaml = serde_yaml::to_string(&page.frontmatter).context("Failed to serialise frontmatter")?;
+    let yaml =
+        serde_yaml::to_string(&page.frontmatter).context("Failed to serialise frontmatter")?;
     let content = format!("---\n{}---\n\n{}", yaml, page.body);
-    std::fs::write(path, content)
-        .with_context(|| format!("Failed to write {}", path.display()))?;
+    std::fs::write(path, content).with_context(|| format!("Failed to write {}", path.display()))?;
     Ok(())
 }
 

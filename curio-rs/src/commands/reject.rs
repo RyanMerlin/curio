@@ -48,7 +48,10 @@ pub async fn run_reject(
     let reason_str = reason.as_deref().unwrap_or("manually rejected");
 
     if dry_run {
-        println!("[dry-run] REJECT  {} ({}) — {}", page.frontmatter.title, lane, reason_str);
+        println!(
+            "[dry-run] REJECT  {} ({}) — {}",
+            page.frontmatter.title, lane, reason_str
+        );
         println!("[dry-run]   path: {}", md_path.display());
         return Ok(());
     }
@@ -152,14 +155,16 @@ fn find_by_slug(dir: &Path, slug: &str) -> Result<Option<PathBuf>> {
 
 fn detect_lane(wiki_dir: &Path, md_path: &Path) -> &'static str {
     let rel = md_path.strip_prefix(wiki_dir).unwrap_or(md_path);
-    let first = rel.components().next()
+    let first = rel
+        .components()
+        .next()
         .and_then(|c| c.as_os_str().to_str())
         .unwrap_or("");
     match first {
-        "review"    => "review",
-        "staged"    => "staged",
-        "intake"    => "intake",
+        "review" => "review",
+        "staged" => "staged",
+        "intake" => "intake",
         "published" => "published",
-        _           => "unknown",
+        _ => "unknown",
     }
 }

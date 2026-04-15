@@ -19,6 +19,8 @@ pub struct Config {
     pub llm: LlmConfig,
     #[serde(default)]
     pub heal: HealConfig,
+    #[serde(default)]
+    pub slack: SlackConfig,
 }
 
 /// LLM inference settings — required for `curio process` (routing) and `curio query`.
@@ -102,7 +104,9 @@ pub struct ContentModelConfig {
 }
 
 impl ContentModelConfig {
-    fn default_label_namespace() -> String { "curio".to_string() }
+    fn default_label_namespace() -> String {
+        "curio".to_string()
+    }
 }
 
 impl Default for ContentModelConfig {
@@ -147,6 +151,34 @@ pub struct SyncConfig {
     pub confluence_parent_page_id: Option<String>,
 }
 
+/// Slack integration policy and runtime configuration.
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
+pub struct SlackConfig {
+    pub enabled: bool,
+    pub workspace_id: Option<String>,
+    pub app_id: Option<String>,
+    #[serde(default)]
+    pub admin_user_ids: Vec<String>,
+    #[serde(default)]
+    pub intake_channels: Vec<String>,
+    #[serde(default)]
+    pub notification_channels: Vec<String>,
+    #[serde(default)]
+    pub allowed_trigger_channels: Vec<String>,
+    pub job_provider_default: Option<String>,
+    pub require_confirmation_for_actions: Option<bool>,
+}
+
+impl SlackConfig {
+    pub fn require_confirmation_for_actions(&self) -> bool {
+        self.require_confirmation_for_actions.unwrap_or(true)
+    }
+
+    pub fn job_provider_default(&self) -> &str {
+        self.job_provider_default.as_deref().unwrap_or("gemini")
+    }
+}
+
 /// Self-healing configuration, read from `wiki/_config/settings.yaml`.
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct HealConfig {
@@ -168,7 +200,9 @@ impl HealConfig {
         self.show_auto_heal_callout.unwrap_or(true)
     }
     pub fn auto_heal_label(&self) -> &str {
-        self.auto_heal_label.as_deref().unwrap_or("curio:auto-healed")
+        self.auto_heal_label
+            .as_deref()
+            .unwrap_or("curio:auto-healed")
     }
     pub fn max_pages_per_run(&self) -> u32 {
         self.max_pages_per_run.unwrap_or(20)
@@ -193,6 +227,8 @@ impl HealConfig {
 pub(crate) struct WikiSettingsFile {
     #[serde(default)]
     pub heal: Option<HealConfig>,
+    #[serde(default)]
+    pub slack: Option<SlackConfig>,
 }
 
 /// Load config, optionally targeting a specific KB directory.
@@ -243,7 +279,8 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
             if !loaded.content_model.space_key.is_empty() {
                 config.content_model.space_key = loaded.content_model.space_key;
             }
-            if loaded.content_model.label_namespace != ContentModelConfig::default().label_namespace {
+            if loaded.content_model.label_namespace != ContentModelConfig::default().label_namespace
+            {
                 config.content_model.label_namespace = loaded.content_model.label_namespace;
             }
             if loaded.runtime.temp_dir.is_some() {
@@ -330,9 +367,15 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
                     if let Some(heal) = ws.heal {
                         config.heal = heal;
                     }
+                    if let Some(slack) = ws.slack {
+                        config.slack = slack;
+                    }
                 }
                 Err(e) => {
-                    eprintln!("curio: warning: failed to parse {}: {e}", wiki_settings_path.display());
+                    eprintln!(
+                        "curio: warning: failed to parse {}: {e}",
+                        wiki_settings_path.display()
+                    );
                 }
             }
         }
@@ -355,7 +398,11 @@ fn default_temp_dir() -> PathBuf {
 
 fn repo_root_override() -> Option<PathBuf> {
     let value = env::var_os("CURIO_REPO_ROOT")?;
-    if value.is_empty() { None } else { Some(PathBuf::from(value)) }
+    if value.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(value))
+    }
 }
 
 pub fn repo_root() -> PathBuf {
@@ -441,7 +488,10 @@ mod tests {
 
         let config = load_config(None, None).unwrap();
 
-        assert_eq!(config.connection.confluence_url, "http://test.confluence.com");
+        assert_eq!(
+            config.connection.confluence_url,
+            "http://test.confluence.com"
+        );
         assert_eq!(config.connection.confluence_email, "test@example.com");
         assert_eq!(config.content_model.space_key, "TEST");
         assert_eq!(config.runtime.temp_dir, Some(env::temp_dir().join("curio")));
@@ -510,6 +560,15 @@ mod tests {
     }
 
     #[test]
+    fn test_slack_config_defaults() {
+        let s = SlackConfig::default();
+        assert!(!s.enabled);
+        assert!(s.admin_user_ids.is_empty());
+        assert!(s.require_confirmation_for_actions());
+        assert_eq!(s.job_provider_default(), "gemini");
+    }
+
+    #[test]
     fn test_settings_yaml_is_loaded() {
         // Verify the actual wiki/_config/settings.yaml can be parsed.
         let settings_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -518,7 +577,8 @@ mod tests {
             .join("wiki/_config/settings.yaml");
         if settings_path.exists() {
             let raw = std::fs::read_to_string(&settings_path).unwrap();
-            let ws: WikiSettingsFile = serde_yaml::from_str(&raw).expect("settings.yaml should parse cleanly");
+            let ws: WikiSettingsFile =
+                serde_yaml::from_str(&raw).expect("settings.yaml should parse cleanly");
             if let Some(heal) = ws.heal {
                 // Confirm defaults are in-range
                 assert!(heal.confidence_threshold() >= 0.0 && heal.confidence_threshold() <= 1.0);
@@ -537,7 +597,9 @@ mod tests {
                     if trimmed.is_empty() || trimmed.starts_with('#') {
                         None
                     } else {
-                        trimmed.split_once('=').map(|(key, _)| key.trim().to_string())
+                        trimmed
+                            .split_once('=')
+                            .map(|(key, _)| key.trim().to_string())
                     }
                 })
                 .collect()

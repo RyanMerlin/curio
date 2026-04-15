@@ -1,10 +1,6 @@
 use anyhow::Result;
 
-use crate::{
-    config::Config,
-    output::emit_json,
-    wiki_index::load_registry,
-};
+use crate::{config::Config, output::emit_json, wiki_index::load_registry};
 
 pub async fn run_search(
     config: &Config,
@@ -91,7 +87,11 @@ pub async fn run_search(
     }
 
     if json {
-        let _ = emit_json("search", true, &serde_json::json!({ "results": results, "count": results.len() }));
+        let _ = emit_json(
+            "search",
+            true,
+            &serde_json::json!({ "results": results, "count": results.len() }),
+        );
     } else {
         if results.is_empty() {
             println!("No results found");
@@ -111,7 +111,8 @@ fn grep_wiki_bodies(wiki_dir: &std::path::Path, text: &str, limit: usize) -> Res
     let output = std::process::Command::new("rg")
         .args([
             "--files-with-matches",
-            "--glob", "**/*.md",
+            "--glob",
+            "**/*.md",
             "--no-heading",
             text,
             wiki_dir.to_str().unwrap_or("."),

@@ -196,8 +196,8 @@ pub fn heuristic_pre_signal(title: &str, body: &str) -> Option<String> {
 /// Extract up to `n` naive keywords from lowercased text.
 pub fn extract_keywords(text: &str, n: usize) -> Vec<String> {
     const STOP: &[&str] = &[
-        "the", "a", "an", "is", "in", "of", "and", "or", "to", "for", "with", "this", "that",
-        "be", "are", "was", "were", "it", "as", "at", "by", "on", "from", "has", "have",
+        "the", "a", "an", "is", "in", "of", "and", "or", "to", "for", "with", "this", "that", "be",
+        "are", "was", "were", "it", "as", "at", "by", "on", "from", "has", "have",
     ];
     let mut freq: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
     for word in text.split_whitespace() {
@@ -231,7 +231,10 @@ pub async fn route_with_llm(
     trees: &[TreeNode],
 ) -> Result<(ReconcileDecision, RoutingAnalysis)> {
     let pre_signal = heuristic_pre_signal(title, body);
-    let title_tokens = title.split_whitespace().map(|w| w.to_lowercase()).collect::<Vec<_>>();
+    let title_tokens = title
+        .split_whitespace()
+        .map(|w| w.to_lowercase())
+        .collect::<Vec<_>>();
 
     let system_prompt = build_system_prompt(trees);
     let user_prompt = build_user_prompt(title, body, pre_signal.as_deref());
@@ -258,7 +261,16 @@ pub async fn route_with_llm(
         }
     };
 
-    parse_llm_response(json, model, title, body, source_url, content_hash, pre_signal, title_tokens)
+    parse_llm_response(
+        json,
+        model,
+        title,
+        body,
+        source_url,
+        content_hash,
+        pre_signal,
+        title_tokens,
+    )
 }
 
 fn build_system_prompt(trees: &[TreeNode]) -> String {
@@ -334,12 +346,15 @@ fn build_user_prompt(title: &str, body: &str, pre_signal: Option<&str>) -> Strin
     let body_preview: String = body.chars().take(3000).collect();
 
     let hint = match pre_signal {
-        Some(s) => format!("\n## Heuristic pre-signal (hint — override freely if wrong)\nTitle keyword match suggests: {}\n", s),
+        Some(s) => format!(
+            "\n## Heuristic pre-signal (hint — override freely if wrong)\nTitle keyword match suggests: {}\n",
+            s
+        ),
         None => String::new(),
     };
 
     format!(
-            "## Article to Route\nTitle: {title}\n{hint}\nFocus on the dominant topic and the main content subject. Treat secondary product mentions in the body as weak evidence.\nBody:\n{body_preview}"
+        "## Article to Route\nTitle: {title}\n{hint}\nFocus on the dominant topic and the main content subject. Treat secondary product mentions in the body as weak evidence.\nBody:\n{body_preview}"
     )
 }
 
@@ -356,7 +371,11 @@ fn parse_llm_response(
 ) -> Result<(ReconcileDecision, RoutingAnalysis)> {
     let category: Vec<String> = json["category"]
         .as_array()
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
         .unwrap_or_default();
 
     if category.is_empty() {
@@ -392,7 +411,11 @@ fn parse_llm_response(
 
     let keywords: Vec<String> = json["keywords"]
         .as_array()
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
         .unwrap_or_else(|| extract_keywords(&format!("{} {}", title, body), 8));
 
     let summary = json["summary"]
@@ -415,11 +438,23 @@ fn parse_llm_response(
                 .filter_map(|v| {
                     let path: Vec<String> = v["path"]
                         .as_array()
-                        .map(|a| a.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect())
+                        .map(|a| {
+                            a.iter()
+                                .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                                .collect()
+                        })
                         .unwrap_or_default();
                     let score = v["score"].as_f64().unwrap_or(0.0) as f32;
                     let reason = v["ruled_out_because"].as_str().unwrap_or("").to_string();
-                    if path.is_empty() { None } else { Some(RoutingAlternative { path, score, ruled_out_because: reason }) }
+                    if path.is_empty() {
+                        None
+                    } else {
+                        Some(RoutingAlternative {
+                            path,
+                            score,
+                            ruled_out_because: reason,
+                        })
+                    }
                 })
                 .collect()
         })

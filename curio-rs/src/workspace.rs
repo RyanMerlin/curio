@@ -103,8 +103,7 @@ pub fn save_workspaces(workspaces: &[Workspace]) -> Result<()> {
     let file = WorkspaceFile {
         workspaces: workspaces.to_vec(),
     };
-    let content = toml::to_string_pretty(&file)
-        .context("Failed to serialize workspaces")?;
+    let content = toml::to_string_pretty(&file).context("Failed to serialize workspaces")?;
     std::fs::write(&path, content)
         .with_context(|| format!("Failed to write {}", path.display()))?;
     Ok(())
@@ -144,10 +143,7 @@ pub fn remove_workspace(name: &str) -> Result<bool> {
 /// Resolve a KB directory from CLI flags.
 ///
 /// Returns `Err` with a helpful message if neither `--kb-dir` nor `--workspace` was given.
-pub fn resolve_kb_dir(
-    kb_dir: Option<&PathBuf>,
-    workspace_name: Option<&str>,
-) -> Result<PathBuf> {
+pub fn resolve_kb_dir(kb_dir: Option<&PathBuf>, workspace_name: Option<&str>) -> Result<PathBuf> {
     // Explicit path wins
     if let Some(dir) = kb_dir {
         let abs = if dir.is_absolute() {

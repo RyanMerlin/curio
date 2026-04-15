@@ -23,13 +23,7 @@ const CURIO_ENV_KEYS: &[&str] = &[
 ];
 
 const CURIO_ROOT_TITLE: &str = "CURIO";
-const CURIO_ROOT_STRUCTURE_PAGES: &[&str] = &[
-    "Intake",
-    "Staged",
-    "Review",
-    "Published",
-    "Config",
-];
+const CURIO_ROOT_STRUCTURE_PAGES: &[&str] = &["Intake", "Staged", "Review", "Published", "Config"];
 
 const CURIO_CONFIG_STRUCTURE_PAGES: &[&str] = &["Northstar", "CURIO Readme", "Settings"];
 
@@ -283,7 +277,10 @@ async fn validate_structure_pages(
         .await?;
     let Some(root_page) = root_page else {
         *warning_issues += 1;
-        println!("[WARN] structure_page :: {} root page is missing", CURIO_ROOT_TITLE);
+        println!(
+            "[WARN] structure_page :: {} root page is missing",
+            CURIO_ROOT_TITLE
+        );
         return Ok(());
     };
     let root_page_id = root_page["id"].as_str().unwrap_or_default();
@@ -406,7 +403,10 @@ fn resolve_env_value(
         "CURIO_SPACE_KEY" => ("CURIO".to_string(), ValueSource::Default),
         "CURIO_CONFLUENCE_PARENT_PAGE_ID" => (String::new(), ValueSource::Default),
         "CURIO_TEMP_DIR" => (String::new(), ValueSource::Default),
-        "CURIO_AUDIT_DIR" => ("${REPO_ROOT}/wiki/_config".to_string(), ValueSource::Default),
+        "CURIO_AUDIT_DIR" => (
+            "${REPO_ROOT}/wiki/_config".to_string(),
+            ValueSource::Default,
+        ),
         _ => (String::new(), ValueSource::Missing),
     }
 }
@@ -573,6 +573,7 @@ fn build_onboard_config(state: &OnboardState) -> Config {
         },
         llm: Default::default(),
         heal: Default::default(),
+        slack: Default::default(),
     }
 }
 
@@ -630,7 +631,10 @@ async fn validate_confluence(
             true,
         )
         .await?;
-        println!("[OK] confluence_root :: {} ({})", CURIO_ROOT_TITLE, tree.root_id);
+        println!(
+            "[OK] confluence_root :: {} ({})",
+            CURIO_ROOT_TITLE, tree.root_id
+        );
     }
 
     validate_structure_pages(&client, config, warning_issues).await?;

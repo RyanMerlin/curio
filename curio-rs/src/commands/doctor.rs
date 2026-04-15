@@ -9,12 +9,8 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 use crate::{
-    config::Config,
-    freshness::freshness_score_from_str,
-    output::emit_json,
-    overlap::find_peer_overlap,
-    quality::assess_quality,
-    wiki_fs::parse_wiki_page,
+    config::Config, freshness::freshness_score_from_str, output::emit_json,
+    overlap::find_peer_overlap, quality::assess_quality, wiki_fs::parse_wiki_page,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -121,8 +117,14 @@ pub async fn run_doctor(
         .collect();
 
     for path in &pages {
-        let Ok(page) = parse_wiki_page(path) else { continue };
-        let slug = path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+        let Ok(page) = parse_wiki_page(path) else {
+            continue;
+        };
+        let slug = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_string();
         let path_str = path.display().to_string();
 
         // 1. Quality check
@@ -154,8 +156,7 @@ pub async fn run_doctor(
                 path: path_str.clone(),
                 detail: format!(
                     "freshness {:.2} (last updated: {})",
-                    freshness,
-                    &page.frontmatter.updated_at
+                    freshness, &page.frontmatter.updated_at
                 ),
                 overlap_peer: None,
                 overlap_score: None,
@@ -232,7 +233,11 @@ pub async fn run_doctor(
     }
 
     // 6. Thin branch check — directories with < min_body_words words in index.md
-    for entry in WalkDir::new(&scan_root).min_depth(1).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(&scan_root)
+        .min_depth(1)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         if !entry.file_type().is_dir() {
             continue;
         }
@@ -267,14 +272,38 @@ pub async fn run_doctor(
 
     // Build summary
     let summary = DoctorSummary {
-        errors:           findings.iter().filter(|f| f.severity == Severity::Error).count(),
-        warnings:         findings.iter().filter(|f| f.severity == Severity::Warn).count(),
-        low_quality:      findings.iter().filter(|f| f.kind == FindingKind::LowQuality).count(),
-        high_overlap:     findings.iter().filter(|f| f.kind == FindingKind::HighOverlap).count(),
-        stale:            findings.iter().filter(|f| f.kind == FindingKind::Stale).count(),
-        orphaned_xrefs:   findings.iter().filter(|f| f.kind == FindingKind::OrphanedXref).count(),
-        thin_branches:    findings.iter().filter(|f| f.kind == FindingKind::ThinBranch).count(),
-        missing_keywords: findings.iter().filter(|f| f.kind == FindingKind::MissingKeywords).count(),
+        errors: findings
+            .iter()
+            .filter(|f| f.severity == Severity::Error)
+            .count(),
+        warnings: findings
+            .iter()
+            .filter(|f| f.severity == Severity::Warn)
+            .count(),
+        low_quality: findings
+            .iter()
+            .filter(|f| f.kind == FindingKind::LowQuality)
+            .count(),
+        high_overlap: findings
+            .iter()
+            .filter(|f| f.kind == FindingKind::HighOverlap)
+            .count(),
+        stale: findings
+            .iter()
+            .filter(|f| f.kind == FindingKind::Stale)
+            .count(),
+        orphaned_xrefs: findings
+            .iter()
+            .filter(|f| f.kind == FindingKind::OrphanedXref)
+            .count(),
+        thin_branches: findings
+            .iter()
+            .filter(|f| f.kind == FindingKind::ThinBranch)
+            .count(),
+        missing_keywords: findings
+            .iter()
+            .filter(|f| f.kind == FindingKind::MissingKeywords)
+            .count(),
     };
 
     let report = DoctorReport {
@@ -293,7 +322,10 @@ pub async fn run_doctor(
     println!("KB Doctor — scope: {}", scope_label);
     println!("Pages scanned: {}", report.pages_scanned);
     println!();
-    println!("Findings: {} errors, {} warnings", report.summary.errors, report.summary.warnings);
+    println!(
+        "Findings: {} errors, {} warnings",
+        report.summary.errors, report.summary.warnings
+    );
     println!("  low-quality:      {}", report.summary.low_quality);
     println!("  high-overlap:     {}", report.summary.high_overlap);
     println!("  stale (>8 mo):    {}", report.summary.stale);
@@ -304,7 +336,11 @@ pub async fn run_doctor(
     if !report.findings.is_empty() {
         println!();
         for f in &report.findings {
-            let icon = if f.severity == Severity::Error { "✖" } else { "⚠" };
+            let icon = if f.severity == Severity::Error {
+                "✖"
+            } else {
+                "⚠"
+            };
             println!("  {} [{:?}] {} — {}", icon, f.kind, f.slug, f.detail);
         }
     }

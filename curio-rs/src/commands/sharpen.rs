@@ -3,12 +3,7 @@ use chrono::Utc;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::{
-    config::Config,
-    output::emit_json,
-    wiki_fs::parse_wiki_page,
-    wiki_index::append_log,
-};
+use crate::{config::Config, output::emit_json, wiki_fs::parse_wiki_page, wiki_index::append_log};
 
 pub async fn run_sharpen(
     config: &Config,
@@ -25,21 +20,28 @@ pub async fn run_sharpen(
     if let Some(proposal_path) = proposal_file {
         let raw = std::fs::read_to_string(&proposal_path)
             .with_context(|| format!("Failed to read proposal file {}", proposal_path.display()))?;
-        let payload: serde_json::Value = serde_json::from_str(&raw)
-            .context("Sharpen proposal file must be valid JSON")?;
+        let payload: serde_json::Value =
+            serde_json::from_str(&raw).context("Sharpen proposal file must be valid JSON")?;
         let wrapped = wrap_proposals_payload(payload);
 
         if dry_run {
             if json {
-                let _ = emit_json("sharpen", true, &serde_json::json!({
-                    "mode": "persist_proposals",
-                    "dry_run": true,
-                    "proposal_count": wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
-                }));
+                let _ = emit_json(
+                    "sharpen",
+                    true,
+                    &serde_json::json!({
+                        "mode": "persist_proposals",
+                        "dry_run": true,
+                        "proposal_count": wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
+                    }),
+                );
             } else {
                 println!(
                     "Would persist {} sharpening proposal(s) into {}",
-                    wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
+                    wrapped["proposals"]
+                        .as_array()
+                        .map(|items| items.len())
+                        .unwrap_or(0),
                     proposals_dir.display()
                 );
             }
@@ -53,18 +55,28 @@ pub async fn run_sharpen(
         std::fs::write(&dest_path, serde_json::to_string_pretty(&wrapped)?)
             .with_context(|| format!("Failed to write {}", dest_path.display()))?;
         compact_proposal_store(&proposals_dir, 20)?;
-        append_log(wiki_dir, &format!("sharpen: stored proposals at {}", dest_path.display()))?;
+        append_log(
+            wiki_dir,
+            &format!("sharpen: stored proposals at {}", dest_path.display()),
+        )?;
 
         if json {
-            let _ = emit_json("sharpen", true, &serde_json::json!({
-                "mode": "persist_proposals",
-                "stored_at": dest_path,
-                "proposal_count": wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
-            }));
+            let _ = emit_json(
+                "sharpen",
+                true,
+                &serde_json::json!({
+                    "mode": "persist_proposals",
+                    "stored_at": dest_path,
+                    "proposal_count": wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
+                }),
+            );
         } else {
             println!(
                 "Stored {} sharpening proposal(s) at {}",
-                wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
+                wrapped["proposals"]
+                    .as_array()
+                    .map(|items| items.len())
+                    .unwrap_or(0),
                 dest_path.display()
             );
         }
@@ -84,7 +96,11 @@ pub async fn run_sharpen(
     Ok(())
 }
 
-fn build_sharpen_manifest(published_dir: &Path, wiki_dir: &Path, limit: u32) -> Result<serde_json::Value> {
+fn build_sharpen_manifest(
+    published_dir: &Path,
+    wiki_dir: &Path,
+    limit: u32,
+) -> Result<serde_json::Value> {
     let northstar_path = wiki_dir.join("_config").join("northstar.md");
     let northstar_md = std::fs::read_to_string(&northstar_path).unwrap_or_default();
 
@@ -158,21 +174,25 @@ fn build_sharpen_manifest(published_dir: &Path, wiki_dir: &Path, limit: u32) -> 
     let duplicate_titles: Vec<_> = by_title
         .into_iter()
         .filter(|(_, paths)| paths.len() > 1)
-        .map(|(title, paths)| serde_json::json!({
-            "title": title,
-            "paths": paths,
-            "suggested_action": "review_for_consolidation_or_rename",
-        }))
+        .map(|(title, paths)| {
+            serde_json::json!({
+                "title": title,
+                "paths": paths,
+                "suggested_action": "review_for_consolidation_or_rename",
+            })
+        })
         .collect();
 
     let duplicate_hashes: Vec<_> = by_hash
         .into_iter()
         .filter(|(_, paths)| paths.len() > 1)
-        .map(|(content_hash, paths)| serde_json::json!({
-            "content_hash": content_hash,
-            "paths": paths,
-            "suggested_action": "review_for_merge",
-        }))
+        .map(|(content_hash, paths)| {
+            serde_json::json!({
+                "content_hash": content_hash,
+                "paths": paths,
+                "suggested_action": "review_for_merge",
+            })
+        })
         .collect();
 
     Ok(serde_json::json!({
@@ -241,8 +261,12 @@ fn compact_proposal_store(dir: &Path, keep: usize) -> Result<()> {
     let remove_count = files.len().saturating_sub(keep);
     for entry in files.into_iter().take(remove_count) {
         let path = entry.path();
-        std::fs::remove_file(&path)
-            .with_context(|| format!("Failed to remove old sharpening proposal {}", path.display()))?;
+        std::fs::remove_file(&path).with_context(|| {
+            format!(
+                "Failed to remove old sharpening proposal {}",
+                path.display()
+            )
+        })?;
     }
 
     Ok(())

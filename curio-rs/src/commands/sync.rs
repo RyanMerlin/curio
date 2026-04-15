@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use crate::{
     config::{Config, upsert_repo_env_var},
     confluence::ConfluenceClient,
-    northstar::{load_taxonomy, NorthstarTaxonomy, TaxonomyNode},
+    northstar::{NorthstarTaxonomy, TaxonomyNode, load_taxonomy},
     output::emit_json,
     proposal::load_proposal_record,
     quality::assess_quality,
@@ -49,24 +49,24 @@ pub struct CurioTreeValidation {
 /// Emoji icon for each well-known page title slug.
 fn page_icon(slug: &str) -> Option<&'static str> {
     match slug {
-        "curio-readme" | "readme"   => Some("atlassian-info"),
-        "northstar"                  => Some("1f9ed"),   // 🧭
-        "config"                     => Some("2699"),    // ⚙️
-        "intake"                     => Some("1f4e5"),   // 📥
-        "staged"                     => Some("atlassian-logo_projects"),
-        "review"                     => Some("atlassian-logo_opsgenie"),
-        "published"                  => Some("atlassian-check_mark"),
-        "accounts" | "account-tree" => Some("1f3e2"),   // 🏢
-        "product-tree"              => Some("1f4e6"),   // 📦
-        "audience-tree"             => Some("1f465"),   // 👥
-        "use-case-tree"             => Some("1f527"),   // 🔧
-        "topic-tree"                => Some("1f4da"),   // 📚
-        "alteryx-server"   => Some("1f5a5"),   // 🖥️
-        "alteryx-designer" => Some("1f3a8"),   // 🎨
-        "intelligence-suite" => Some("1f9e0"), // 🧠
-        "technical-cse"    => Some("1f527"),   // 🔧
-        "executive-business" => Some("1f4ca"), // 📊
-        _                            => None,
+        "curio-readme" | "readme" => Some("atlassian-info"),
+        "northstar" => Some("1f9ed"), // 🧭
+        "config" => Some("2699"),     // ⚙️
+        "intake" => Some("1f4e5"),    // 📥
+        "staged" => Some("atlassian-logo_projects"),
+        "review" => Some("atlassian-logo_opsgenie"),
+        "published" => Some("atlassian-check_mark"),
+        "accounts" | "account-tree" => Some("1f3e2"), // 🏢
+        "product-tree" => Some("1f4e6"),              // 📦
+        "audience-tree" => Some("1f465"),             // 👥
+        "use-case-tree" => Some("1f527"),             // 🔧
+        "topic-tree" => Some("1f4da"),                // 📚
+        "alteryx-server" => Some("1f5a5"),            // 🖥️
+        "alteryx-designer" => Some("1f3a8"),          // 🎨
+        "intelligence-suite" => Some("1f9e0"),        // 🧠
+        "technical-cse" => Some("1f527"),             // 🔧
+        "executive-business" => Some("1f4ca"),        // 📊
+        _ => None,
     }
 }
 
@@ -86,8 +86,8 @@ pub async fn run_sync(
     }
 
     let space_key = &config.content_model.space_key;
-    let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
-        .context("CURIO_CONFLUENCE_TOKEN not set")?;
+    let token =
+        std::env::var("CURIO_CONFLUENCE_TOKEN").context("CURIO_CONFLUENCE_TOKEN not set")?;
     let bootstrap_client = ConfluenceClient::new(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
@@ -97,8 +97,7 @@ pub async fn run_sync(
     let tree = ensure_curio_confluence_tree(
         config,
         &bootstrap_client,
-        parent_page_id_override
-            .or_else(|| config.wiki.sync.confluence_parent_page_id.clone()),
+        parent_page_id_override.or_else(|| config.wiki.sync.confluence_parent_page_id.clone()),
         !dry_run,
     )
     .await?;
@@ -118,21 +117,32 @@ pub async fn run_sync(
     if config_dir.exists() && !dry_run {
         // Sort entries so config is processed first (alphabetically: config < northstar < readme)
         let mut config_entries: Vec<_> = std::fs::read_dir(&config_dir)
-            .into_iter().flatten().filter_map(|e| e.ok()).collect();
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .collect();
         config_entries.sort_by_key(|e| e.file_name());
 
         for entry in config_entries {
             let path = entry.path();
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-            if ext != "md" && ext != "yaml" && ext != "yml" { continue; }
+            if ext != "md" && ext != "yaml" && ext != "yml" {
+                continue;
+            }
             let stem = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
-            if stem.starts_with('_') { continue; }
+            if stem.starts_with('_') {
+                continue;
+            }
 
             let page_title = config_page_title(stem);
 
             let raw = std::fs::read_to_string(&path)
                 .with_context(|| format!("Failed to read {}", path.display()))?;
-            let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
+            let body_md = if ext == "md" {
+                strip_frontmatter(&raw)
+            } else {
+                raw.as_str()
+            };
             let html_body = if stem == "northstar" {
                 let trees = taxonomy_to_tree_nodes(&load_taxonomy(wiki_dir)?);
                 render_northstar_for_confluence(body_md, &trees)
@@ -152,12 +162,15 @@ pub async fn run_sync(
             if let Some(ref page) = existing {
                 let page_id = page["id"].as_str().unwrap_or_default().to_string();
                 let page_v2 = client.get_page_by_id_v2(&page_id).await.ok().flatten();
-                let current_title = page_v2.as_ref()
+                let current_title = page_v2
+                    .as_ref()
                     .and_then(|p| p["title"].as_str())
                     .unwrap_or("");
                 let title_matches = current_title == page_title;
                 if title_matches {
-                    if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
+                    if let Ok(Some(prop)) =
+                        client.get_content_property(&page_id, SYNC_PROP_KEY).await
+                    {
                         if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
                             skipped.push(format!("[config] {}", page_title));
                             synced_page_ids.insert(page_id);
@@ -167,7 +180,16 @@ pub async fn run_sync(
                 }
             }
 
-            match client.create_or_update_page(space_key, Some(tree.config_id.as_str()), &page_title, "storage", &html_body).await {
+            match client
+                .create_or_update_page(
+                    space_key,
+                    Some(tree.config_id.as_str()),
+                    &page_title,
+                    "storage",
+                    &html_body,
+                )
+                .await
+            {
                 Ok(page_id) => {
                     let _ = set_sync_prop(&client, &page_id, &hash).await;
                     set_page_icon(&client, &page_id, stem).await;
@@ -189,9 +211,20 @@ pub async fn run_sync(
     for t in &northstar_trees {
         let mut sub_map: SubMap = HashMap::new();
         for s in &t.subtrees {
-            sub_map.insert(s.slug.clone(), (s.title.clone(), s.description_html.clone(), s.icon.clone()));
+            sub_map.insert(
+                s.slug.clone(),
+                (s.title.clone(), s.description_html.clone(), s.icon.clone()),
+            );
         }
-        tree_info.insert(t.slug.clone(), (t.title.clone(), t.description_html.clone(), t.icon.clone(), sub_map));
+        tree_info.insert(
+            t.slug.clone(),
+            (
+                t.title.clone(),
+                t.description_html.clone(),
+                t.icon.clone(),
+                sub_map,
+            ),
+        );
     }
 
     // Map from relative directory path → confluence page id (root = CURIO/Published).
@@ -235,9 +268,12 @@ pub async fn run_sync(
                 }
             } else if depth == 2 {
                 // Subtree dir: look up in parent's subtree list
-                let parent_name = parent_rel.file_name()
-                    .and_then(|n| n.to_str()).unwrap_or("");
-                let sub_info = tree_info.get(parent_name)
+                let parent_name = parent_rel
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("");
+                let sub_info = tree_info
+                    .get(parent_name)
                     .and_then(|(_, _, _, subs)| subs.get(&name))
                     .map(|(t, d, i)| (t.clone(), d.clone(), i.clone()));
                 if let Some((sub_title, sub_desc, sub_icon)) = sub_info {
@@ -259,7 +295,12 @@ pub async fn run_sync(
                 dir_to_page_id.insert(rel_path.clone(), Some(format!("dry-run:{}", page_title)));
             } else {
                 match upsert_page(
-                    &client, space_key, parent_conf_id.as_deref(), &page_title, &dir_body, &name,
+                    &client,
+                    space_key,
+                    parent_conf_id.as_deref(),
+                    &page_title,
+                    &dir_body,
+                    &name,
                     ns_icon.as_deref(),
                 )
                 .await
@@ -278,8 +319,12 @@ pub async fn run_sync(
                 upserted.push(format!("[page] {}", page_title));
             } else {
                 match sync_page(
-                    &client, space_key, parent_conf_id.as_deref(), &abs_path,
-                    &mut synced_page_ids, &mut skipped,
+                    &client,
+                    space_key,
+                    parent_conf_id.as_deref(),
+                    &abs_path,
+                    &mut synced_page_ids,
+                    &mut skipped,
                 )
                 .await
                 {
@@ -352,8 +397,7 @@ pub async fn run_sync(
     if !dry_run && full_refresh {
         let mut stale_deleted = 0usize;
         for root_id in [&tree.published_id, &tree.staged_id, &tree.review_id] {
-            let stale =
-                find_stale_pages(&client, Some(root_id.as_str()), &synced_page_ids).await?;
+            let stale = find_stale_pages(&client, Some(root_id.as_str()), &synced_page_ids).await?;
             for page_id in &stale {
                 match client.delete_page(page_id).await {
                     Ok(()) => {
@@ -420,7 +464,8 @@ pub async fn ensure_curio_confluence_tree(
     persist_root_id: bool,
 ) -> Result<CurioConfluenceTree> {
     let space_key = config.content_model.space_key.as_str();
-    let root_id = ensure_curio_root_page(config, client, space_key, preferred_root_id.as_deref()).await?;
+    let root_id =
+        ensure_curio_root_page(config, client, space_key, preferred_root_id.as_deref()).await?;
 
     let published_id = upsert_static_page(
         client,
@@ -503,7 +548,11 @@ pub async fn ensure_curio_confluence_tree(
 
             let raw = std::fs::read_to_string(&path)
                 .with_context(|| format!("Failed to read {}", path.display()))?;
-            let body_md = if ext == "md" { strip_frontmatter(&raw) } else { raw.as_str() };
+            let body_md = if ext == "md" {
+                strip_frontmatter(&raw)
+            } else {
+                raw.as_str()
+            };
             let html_body = if stem == "northstar" {
                 let trees = taxonomy_to_tree_nodes(&load_taxonomy(&config.wiki.wiki_dir)?);
                 render_northstar_for_confluence(body_md, &trees)
@@ -577,7 +626,10 @@ pub async fn reset_curio_confluence_tree(
     let space_key = config.content_model.space_key.as_str();
     let root_id =
         ensure_curio_root_page(config, client, space_key, preferred_root_id.as_deref()).await?;
-    let descendants = client.get_page_descendants_v2(&root_id).await.unwrap_or_default();
+    let descendants = client
+        .get_page_descendants_v2(&root_id)
+        .await
+        .unwrap_or_default();
 
     let mut pages_to_delete: Vec<(String, usize)> = descendants
         .into_iter()
@@ -649,8 +701,10 @@ pub async fn validate_curio_confluence_tree(
     let root_children = direct_children_from_descendants(&root_descendants, &root_id);
     let root_children_by_title = map_children_by_title(&root_children);
     let root_titles: HashSet<String> = root_children_by_title.keys().cloned().collect();
-    let expected_root_titles: HashSet<String> =
-        REQUIRED_CURIO_CHILDREN.iter().map(|title| title.to_string()).collect();
+    let expected_root_titles: HashSet<String> = REQUIRED_CURIO_CHILDREN
+        .iter()
+        .map(|title| title.to_string())
+        .collect();
     if root_titles != expected_root_titles {
         anyhow::bail!(
             "CURIO root validation failed: direct children were {:?}, expected {:?}",
@@ -669,7 +723,9 @@ pub async fn validate_curio_confluence_tree(
         let page_id = root_children_by_title
             .get(*title)
             .cloned()
-            .with_context(|| format!("CURIO validation failed: missing direct child '{}'", title))?;
+            .with_context(|| {
+                format!("CURIO validation failed: missing direct child '{}'", title)
+            })?;
         let page = client
             .get_page_by_id_v2(&page_id)
             .await?
@@ -687,8 +743,10 @@ pub async fn validate_curio_confluence_tree(
     let config_children = direct_children_from_descendants(&root_descendants, &config_id);
     let config_children_by_title = map_children_by_title(&config_children);
     let config_titles: HashSet<String> = config_children_by_title.keys().cloned().collect();
-    let expected_config_titles: HashSet<String> =
-        REQUIRED_CONFIG_CHILDREN.iter().map(|title| title.to_string()).collect();
+    let expected_config_titles: HashSet<String> = REQUIRED_CONFIG_CHILDREN
+        .iter()
+        .map(|title| title.to_string())
+        .collect();
     if config_titles != expected_config_titles {
         anyhow::bail!(
             "CURIO validation failed: Config children were {:?}, expected {:?}",
@@ -701,11 +759,12 @@ pub async fn validate_curio_confluence_tree(
         let page_id = config_children_by_title
             .get(*title)
             .cloned()
-            .with_context(|| format!("CURIO validation failed: missing Config child '{}'", title))?;
-        let page = client
-            .get_page_by_id_v2(&page_id)
-            .await?
-            .with_context(|| format!("CURIO validation failed: Config child '{}' missing", title))?;
+            .with_context(|| {
+                format!("CURIO validation failed: missing Config child '{}'", title)
+            })?;
+        let page = client.get_page_by_id_v2(&page_id).await?.with_context(|| {
+            format!("CURIO validation failed: Config child '{}' missing", title)
+        })?;
         if page["parentId"].as_str() != Some(config_id.as_str()) {
             anyhow::bail!(
                 "CURIO validation failed: Config child '{}' is not under Config",
@@ -716,9 +775,11 @@ pub async fn validate_curio_confluence_tree(
         checked_pages += 1;
     }
 
-    Ok(CurioTreeValidation { root_id, checked_pages })
+    Ok(CurioTreeValidation {
+        root_id,
+        checked_pages,
+    })
 }
-
 
 async fn ensure_curio_root_page(
     config: &Config,
@@ -738,7 +799,10 @@ async fn ensure_curio_root_page(
         }
     }
 
-    if let Some(page) = client.get_page_by_title(space_key, None, CURIO_ROOT_TITLE).await? {
+    if let Some(page) = client
+        .get_page_by_title(space_key, None, CURIO_ROOT_TITLE)
+        .await?
+    {
         return Ok(page["id"].as_str().unwrap_or_default().to_string());
     }
 
@@ -801,7 +865,9 @@ async fn validate_page_body_loaded(
         .get_page_by_id_with_body_v1(page_id)
         .await?
         .with_context(|| format!("Failed to load page body for '{}'", label))?;
-    let body = page["body"]["storage"]["value"].as_str().unwrap_or_default();
+    let body = page["body"]["storage"]["value"]
+        .as_str()
+        .unwrap_or_default();
     let text = strip_html_tags(body);
     if text.trim().len() < 20 {
         anyhow::bail!(
@@ -833,7 +899,10 @@ async fn upload_root_hero(config: &Config, client: &ConfluenceClient, root_id: &
         .parent()
         .map(PathBuf::from)
         .unwrap_or_else(|| crate::config::repo_root());
-    let hero_path = repo_root.join("docs").join("assets").join(CURIO_HERO_FILENAME);
+    let hero_path = repo_root
+        .join("docs")
+        .join("assets")
+        .join(CURIO_HERO_FILENAME);
     if !hero_path.exists() {
         return Ok(());
     }
@@ -886,7 +955,11 @@ fn pipeline_body(summary: &str, detail: &str) -> String {
     )
 }
 
-fn render_branch_summary_only(title: &str, description_html: &str, children: &[TreeNode]) -> String {
+fn render_branch_summary_only(
+    title: &str,
+    description_html: &str,
+    children: &[TreeNode],
+) -> String {
     let mut body = String::new();
     body.push_str(&format!("<h1>{}</h1>", html_escape(title)));
     if !description_html.trim().is_empty() {
@@ -910,7 +983,11 @@ fn render_branch_summary_only(title: &str, description_html: &str, children: &[T
     body
 }
 
-fn render_branch_page_body(dir_path: &Path, fallback_description_html: &str, title: &str) -> Result<String> {
+fn render_branch_page_body(
+    dir_path: &Path,
+    fallback_description_html: &str,
+    title: &str,
+) -> Result<String> {
     let index_path = dir_path.join("index.md");
     if index_path.exists() {
         let raw = std::fs::read_to_string(&index_path)
@@ -921,7 +998,11 @@ fn render_branch_page_body(dir_path: &Path, fallback_description_html: &str, tit
             return Ok(html);
         }
     }
-    Ok(render_branch_summary_only(title, fallback_description_html, &[]))
+    Ok(render_branch_summary_only(
+        title,
+        fallback_description_html,
+        &[],
+    ))
 }
 
 fn page_link(space_key: &str, title: &str, label: &str) -> String {
@@ -957,7 +1038,9 @@ async fn upsert_static_page(
             if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
                 let current_parent_id = current_page["parentId"].as_str();
                 if current_parent_id != Some(target_parent_id) {
-                    let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                    let _ = client
+                        .migrate_page_to_parent(&page_id, target_parent_id)
+                        .await;
                 }
             }
         }
@@ -1032,12 +1115,7 @@ fn collect_sorted_entries(root: &Path) -> Result<Vec<(PathBuf, bool)>> {
             .strip_prefix(root)
             .map(PathBuf::from)
             .unwrap_or_default();
-        if rel
-            .components()
-            .next()
-            .and_then(|c| c.as_os_str().to_str())
-            == Some("uncategorized")
-        {
+        if rel.components().next().and_then(|c| c.as_os_str().to_str()) == Some("uncategorized") {
             continue;
         }
         entries.push((rel, e.file_type().is_dir()));
@@ -1051,14 +1129,23 @@ fn validate_published_sync_inputs(root: &Path, trees: &[TreeNode]) -> Result<()>
     let valid_routes = valid_published_routes(trees);
     let mut errors = Vec::new();
 
-    for entry in WalkDir::new(root).into_iter().filter_map(|entry| entry.ok()) {
+    for entry in WalkDir::new(root)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
         let path = entry.path();
-        if !entry.file_type().is_file() || path.extension().and_then(|ext| ext.to_str()) != Some("md") {
+        if !entry.file_type().is_file()
+            || path.extension().and_then(|ext| ext.to_str()) != Some("md")
+        {
             continue;
         }
 
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name == "index.md" || name == ".gitkeep" || name.ends_with(".analysis.json") || name.ends_with(".proposal.json") {
+        if name == "index.md"
+            || name == ".gitkeep"
+            || name.ends_with(".analysis.json")
+            || name.ends_with(".proposal.json")
+        {
             continue;
         }
 
@@ -1076,8 +1163,8 @@ fn validate_published_sync_inputs(root: &Path, trees: &[TreeNode]) -> Result<()>
             continue;
         }
 
-        let page = parse_wiki_page(path)
-            .with_context(|| format!("Failed to parse {}", path.display()))?;
+        let page =
+            parse_wiki_page(path).with_context(|| format!("Failed to parse {}", path.display()))?;
         if page.frontmatter.title.trim().is_empty() {
             errors.push(format!("{} is missing a frontmatter title", rel.display()));
         }
@@ -1102,7 +1189,10 @@ fn validate_published_sync_inputs(root: &Path, trees: &[TreeNode]) -> Result<()>
     if errors.is_empty() {
         Ok(())
     } else {
-        anyhow::bail!("Published sync validation failed:\n- {}", errors.join("\n- "));
+        anyhow::bail!(
+            "Published sync validation failed:\n- {}",
+            errors.join("\n- ")
+        );
     }
 }
 
@@ -1223,7 +1313,16 @@ async fn sync_review_proposals(
 
     for entry in entries {
         let path = entry.path();
-        match sync_proposal_page(client, space_key, Some(parent_id), &path, synced_ids, skipped).await {
+        match sync_proposal_page(
+            client,
+            space_key,
+            Some(parent_id),
+            &path,
+            synced_ids,
+            skipped,
+        )
+        .await
+        {
             Ok(title) => upserted.push(format!("[review proposal] {}", title)),
             Err(e) => errors.push(format!("[review proposal] {}: {}", path.display(), e)),
         }
@@ -1259,13 +1358,21 @@ async fn sync_taxonomy_reconciliation_index(
         .filter_map(|e| e.ok())
         .filter(|e| {
             e.path().extension().and_then(|x| x.to_str()) == Some("json")
-                && e.path().to_str().map_or(false, |s| s.ends_with(".analysis.json"))
+                && e.path()
+                    .to_str()
+                    .map_or(false, |s| s.ends_with(".analysis.json"))
         })
     {
         let path = entry.path();
-        let Ok(raw) = std::fs::read_to_string(path) else { continue };
-        let Ok(analysis) = serde_json::from_str::<serde_json::Value>(&raw) else { continue };
-        let Some(subtree) = analysis["routing"]["proposed_new_subtree"].as_str() else { continue };
+        let Ok(raw) = std::fs::read_to_string(path) else {
+            continue;
+        };
+        let Ok(analysis) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+        let Some(subtree) = analysis["routing"]["proposed_new_subtree"].as_str() else {
+            continue;
+        };
         // Title lives under inputs.title (the original source page title)
         let title = analysis["inputs"]["title"]
             .as_str()
@@ -1293,7 +1400,8 @@ async fn sync_taxonomy_reconciliation_index(
     // Build the index page body
     let mut body = String::new();
     body.push_str("<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p><strong>Taxonomy Reconciliation Index</strong> — pages grouped by the new subtree they propose. Approve or reject each group as a batch. Once a subtree is approved, add it to <code>NORTHSTAR.md</code> and re-process the pages.</p></ac:rich-text-body></ac:structured-macro>");
-    body.push_str(&format!("<p><strong>{}</strong> proposed new subtrees across <strong>{}</strong> review items.</p>",
+    body.push_str(&format!(
+        "<p><strong>{}</strong> proposed new subtrees across <strong>{}</strong> review items.</p>",
         groups.len(),
         groups.values().map(|v| v.len()).sum::<usize>()
     ));
@@ -1301,7 +1409,10 @@ async fn sync_taxonomy_reconciliation_index(
     for (subtree, pages) in &mut groups {
         pages.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
         body.push_str(&format!("<h2>{}</h2>", html_escape(subtree)));
-        body.push_str(&format!("<p>{} page(s) propose this subtree:</p>", pages.len()));
+        body.push_str(&format!(
+            "<p>{} page(s) propose this subtree:</p>",
+            pages.len()
+        ));
         body.push_str("<table><tbody><tr><th>Page</th><th>Confidence</th></tr>");
         for (title, slug, confidence) in pages.iter() {
             // Try to load the .sync-refs.json sidecar to get the Confluence review page ID.
@@ -1320,17 +1431,25 @@ async fn sync_taxonomy_reconciliation_index(
                     })
                     .and_then(|e| std::fs::read_to_string(e.path()).ok())
                     .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-                    .and_then(|v| v["confluence_review_page_id"].as_str().map(|s| s.to_string()))
+                    .and_then(|v| {
+                        v["confluence_review_page_id"]
+                            .as_str()
+                            .map(|s| s.to_string())
+                    })
             };
-            let confluence_base = config.connection.confluence_url
+            let confluence_base = config
+                .connection
+                .confluence_url
                 .trim_end_matches("/wiki")
                 .trim_end_matches('/');
             let cell = if let Some(page_id) = conf_page_id {
-                format!("<a href=\"{}/wiki/spaces/{}/pages/{}\"><strong>{}</strong></a>",
+                format!(
+                    "<a href=\"{}/wiki/spaces/{}/pages/{}\"><strong>{}</strong></a>",
                     confluence_base,
                     space_key,
                     page_id,
-                    html_escape(title))
+                    html_escape(title)
+                )
             } else {
                 html_escape(title).to_string()
             };
@@ -1354,7 +1473,10 @@ async fn sync_taxonomy_reconciliation_index(
         Ok(page_id) => {
             set_sync_prop(client, &page_id, &hash).await?;
             synced_ids.insert(page_id);
-            upserted.push(format!("[taxonomy reconciliation index] {} groups", groups.len()));
+            upserted.push(format!(
+                "[taxonomy reconciliation index] {} groups",
+                groups.len()
+            ));
         }
         Err(e) => errors.push(format!("[taxonomy reconciliation index]: {}", e)),
     }
@@ -1372,8 +1494,8 @@ async fn sync_page(
     synced_ids: &mut HashSet<String>,
     skipped: &mut Vec<String>,
 ) -> Result<String> {
-    let page = parse_wiki_page(path)
-        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let page =
+        parse_wiki_page(path).with_context(|| format!("Failed to parse {}", path.display()))?;
     let page_title = page.frontmatter.title.trim().to_string();
     if page_title.is_empty() {
         anyhow::bail!("Page title is empty for {}", path.display());
@@ -1407,9 +1529,11 @@ async fn sync_lane_page(
     skipped: &mut Vec<String>,
     auto_heal_label: &str,
 ) -> Result<String> {
-    let page = parse_wiki_page(path)
-        .with_context(|| format!("Failed to parse {}", path.display()))?;
-    let raw_title = page.frontmatter.title
+    let page =
+        parse_wiki_page(path).with_context(|| format!("Failed to parse {}", path.display()))?;
+    let raw_title = page
+        .frontmatter
+        .title
         .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
@@ -1454,7 +1578,10 @@ async fn sync_lane_page(
             && existing_refs["pinned_comment_id"].is_string();
         if !full_refresh && already_set {
             // Incremental: sidecar is complete, skip API calls.
-        } else if let Ok(Some(existing)) = client.get_page_by_title(space_key, parent_id, &result_title).await {
+        } else if let Ok(Some(existing)) = client
+            .get_page_by_title(space_key, parent_id, &result_title)
+            .await
+        {
             if let Some(page_id) = existing["id"].as_str() {
                 // Upsert the pinned comment ──────────────────────────────────────────
                 let pinned_body = "<p><em>Curio review signals</em>: react \
@@ -1474,16 +1601,24 @@ async fn sync_lane_page(
                 } else {
                     serde_json::json!({})
                 };
-                let pinned_comment_id = if let Some(existing_id) = existing_refs["pinned_comment_id"].as_str() {
+                let pinned_comment_id = if let Some(existing_id) =
+                    existing_refs["pinned_comment_id"].as_str()
+                {
                     // Try to update existing; if it fails (deleted), create a new one
                     match client.update_footer_comment(existing_id, pinned_body).await {
                         Ok(_) => existing_id.to_string(),
                         Err(e) => {
-                            eprintln!("  [warn] update pinned comment {} failed ({}), creating new one", existing_id, e);
+                            eprintln!(
+                                "  [warn] update pinned comment {} failed ({}), creating new one",
+                                existing_id, e
+                            );
                             match client.create_footer_comment(page_id, pinned_body).await {
                                 Ok(id) => id,
                                 Err(e2) => {
-                                    eprintln!("  [warn] create_footer_comment for page {} failed: {}", page_id, e2);
+                                    eprintln!(
+                                        "  [warn] create_footer_comment for page {} failed: {}",
+                                        page_id, e2
+                                    );
                                     String::new()
                                 }
                             }
@@ -1493,18 +1628,31 @@ async fn sync_lane_page(
                     match client.create_footer_comment(page_id, pinned_body).await {
                         Ok(id) => id,
                         Err(e) => {
-                            eprintln!("  [warn] create_footer_comment for page {} failed: {}", page_id, e);
+                            eprintln!(
+                                "  [warn] create_footer_comment for page {} failed: {}",
+                                page_id, e
+                            );
                             String::new()
                         }
                     }
                 };
 
-                let pinned_id_opt = if pinned_comment_id.is_empty() { None } else { Some(pinned_comment_id.as_str()) };
+                let pinned_id_opt = if pinned_comment_id.is_empty() {
+                    None
+                } else {
+                    Some(pinned_comment_id.as_str())
+                };
                 write_sync_refs(path, page_id, pinned_id_opt);
                 // Apply auto-heal label if this page was auto-healed.
                 if page.frontmatter.auto_healed_at.is_some() && !auto_heal_label.is_empty() {
-                    if let Err(e) = client.add_labels(page_id, vec![auto_heal_label.to_string()]).await {
-                        eprintln!("  [warn] Failed to apply auto-heal label to page {}: {}", page_id, e);
+                    if let Err(e) = client
+                        .add_labels(page_id, vec![auto_heal_label.to_string()])
+                        .await
+                    {
+                        eprintln!(
+                            "  [warn] Failed to apply auto-heal label to page {}: {}",
+                            page_id, e
+                        );
                     }
                 }
             }
@@ -1518,7 +1666,11 @@ async fn sync_lane_page(
 /// This persists the Confluence review page ID (and optionally the pinned
 /// comment ID) so `curio feedback` can read labels/reactions without
 /// performing expensive title lookups.
-fn write_sync_refs(wiki_page_path: &Path, confluence_page_id: &str, pinned_comment_id: Option<&str>) {
+fn write_sync_refs(
+    wiki_page_path: &Path,
+    confluence_page_id: &str,
+    pinned_comment_id: Option<&str>,
+) {
     let refs_path = wiki_page_path.with_extension("sync-refs.json");
     // Merge with any existing refs so we don't overwrite the pinned_comment_id on a hash-skip update
     let mut refs_value: serde_json::Value = if refs_path.exists() {
@@ -1553,21 +1705,14 @@ async fn sync_proposal_page(
         .with_context(|| format!("Failed to parse proposal JSON {}", path.display()))?;
     let title = format!(
         "Sharpening Proposal {}",
-        path.file_stem().and_then(|s| s.to_str()).unwrap_or("untitled")
+        path.file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("untitled")
     );
     let html_body = render_proposal_body(&payload);
     let hash = content_hash(&raw);
     sync_page_html(
-        client,
-        space_key,
-        parent_id,
-        path,
-        &title,
-        &hash,
-        &html_body,
-        synced_ids,
-        skipped,
-        false,
+        client, space_key, parent_id, path, &title, &hash, &html_body, synced_ids, skipped, false,
     )
     .await
 }
@@ -1584,9 +1729,11 @@ async fn sync_page_html(
     skipped: &mut Vec<String>,
     allow_duplicate_fallback: bool,
 ) -> Result<String> {
-
     // Check if page already exists and content hasn't changed
-    if let Some(ref existing_page) = client.get_page_by_title(space_key, parent_id, page_title).await? {
+    if let Some(ref existing_page) = client
+        .get_page_by_title(space_key, parent_id, page_title)
+        .await?
+    {
         let page_id = existing_page["id"].as_str().unwrap_or_default().to_string();
         if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
             if prop["value"]["content_hash"].as_str() == Some(hash) {
@@ -1606,19 +1753,31 @@ async fn sync_page_html(
     }
 
     if allow_duplicate_fallback {
-        if let Some(conflicting_page) = client.get_page_by_title(space_key, None, page_title).await? {
-            let conflicting_id = conflicting_page["id"].as_str().unwrap_or_default().to_string();
+        if let Some(conflicting_page) = client
+            .get_page_by_title(space_key, None, page_title)
+            .await?
+        {
+            let conflicting_id = conflicting_page["id"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string();
             let duplicate_title = format!("{} (dup)", page_title);
-            let duplicate_html = duplicate_notice_body(client, &conflicting_id, page_title, html_body);
+            let duplicate_html =
+                duplicate_notice_body(client, &conflicting_id, page_title, html_body);
             if let Some(existing_dup_page) =
                 find_existing_page_for_sync(client, space_key, parent_id, &duplicate_title).await?
             {
-                let page_id = existing_dup_page["id"].as_str().unwrap_or_default().to_string();
+                let page_id = existing_dup_page["id"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_string();
                 if let Some(target_parent_id) = parent_id {
                     if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
                         let current_parent_id = current_page["parentId"].as_str();
                         if current_parent_id != Some(target_parent_id) {
-                            let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                            let _ = client
+                                .migrate_page_to_parent(&page_id, target_parent_id)
+                                .await;
                         }
                     }
                 }
@@ -1636,20 +1795,39 @@ async fn sync_page_html(
                 return Ok(duplicate_title);
             }
             let page_id = client
-                .create_or_update_page(space_key, parent_id, &duplicate_title, "storage", &duplicate_html)
+                .create_or_update_page(
+                    space_key,
+                    parent_id,
+                    &duplicate_title,
+                    "storage",
+                    &duplicate_html,
+                )
                 .await?;
             set_sync_prop(client, &page_id, hash).await?;
-            set_page_icon(client, &page_id, path.file_stem().unwrap_or_default().to_str().unwrap_or("")).await;
+            set_page_icon(
+                client,
+                &page_id,
+                path.file_stem().unwrap_or_default().to_str().unwrap_or(""),
+            )
+            .await;
             synced_ids.insert(page_id);
             return Ok(duplicate_title);
         }
-    } else if let Some(existing_global_page) = client.get_page_by_title(space_key, None, page_title).await? {
-        let page_id = existing_global_page["id"].as_str().unwrap_or_default().to_string();
+    } else if let Some(existing_global_page) = client
+        .get_page_by_title(space_key, None, page_title)
+        .await?
+    {
+        let page_id = existing_global_page["id"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string();
         if let Some(target_parent_id) = parent_id {
             if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
                 let current_parent_id = current_page["parentId"].as_str();
                 if current_parent_id != Some(target_parent_id) {
-                    let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                    let _ = client
+                        .migrate_page_to_parent(&page_id, target_parent_id)
+                        .await;
                 }
             }
         }
@@ -1657,7 +1835,12 @@ async fn sync_page_html(
             .update_page_body_by_id(&page_id, "storage", html_body)
             .await?;
         set_sync_prop(client, &page_id, hash).await?;
-        set_page_icon(client, &page_id, path.file_stem().unwrap_or_default().to_str().unwrap_or("")).await;
+        set_page_icon(
+            client,
+            &page_id,
+            path.file_stem().unwrap_or_default().to_str().unwrap_or(""),
+        )
+        .await;
         synced_ids.insert(page_id);
         return Ok(page_title.to_string());
     }
@@ -1689,9 +1872,18 @@ fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Res
         lane_label
     ));
     body.push_str("<table><tbody>");
-    body.push_str(&format!("<tr><th>Status</th><td>{}</td></tr>", html_escape(page.frontmatter.status.as_str())));
-    body.push_str(&format!("<tr><th>Category</th><td>{}</td></tr>", html_escape(&route)));
-    body.push_str(&format!("<tr><th>Confidence</th><td>{:.0}%</td></tr>", confidence));
+    body.push_str(&format!(
+        "<tr><th>Status</th><td>{}</td></tr>",
+        html_escape(page.frontmatter.status.as_str())
+    ));
+    body.push_str(&format!(
+        "<tr><th>Category</th><td>{}</td></tr>",
+        html_escape(&route)
+    ));
+    body.push_str(&format!(
+        "<tr><th>Confidence</th><td>{:.0}%</td></tr>",
+        confidence
+    ));
     body.push_str(&format!(
         "<tr><th>Information quality</th><td>{:.0}%</td></tr>",
         quality.information_quality * 100.0
@@ -1785,7 +1977,10 @@ fn render_lane_branch_body(root_dir: &Path, rel_path: &Path, lane: &str) -> Resu
             Ok(page) => page,
             Err(_) => continue,
         };
-        children.push((page.frontmatter.title, crate::wiki_fs::first_line_summary(&page.body, 160)));
+        children.push((
+            page.frontmatter.title,
+            crate::wiki_fs::first_line_summary(&page.body, 160),
+        ));
     }
     children.sort_by(|a, b| a.0.cmp(&b.0));
     let mut body = format!(
@@ -1817,7 +2012,10 @@ fn render_proposal_body(payload: &serde_json::Value) -> String {
     let mut out = String::new();
     out.push_str("<h1>Sharpening Proposal Set</h1>");
     if !generated_at.is_empty() {
-        out.push_str(&format!("<p>Generated at {}</p>", html_escape(generated_at)));
+        out.push_str(&format!(
+            "<p>Generated at {}</p>",
+            html_escape(generated_at)
+        ));
     }
     for proposal in proposals {
         out.push_str("<ac:structured-macro ac:name=\"info\"><ac:rich-text-body>");
@@ -1829,17 +2027,33 @@ fn render_proposal_body(payload: &serde_json::Value) -> String {
         out.push_str("</ac:rich-text-body></ac:structured-macro>");
         out.push_str("<table><tbody>");
         if let Some(paths) = proposal["affected_paths"].as_array() {
-            let joined = paths.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>().join("<br/>");
-            out.push_str(&format!("<tr><th>Affected paths</th><td>{}</td></tr>", joined));
+            let joined = paths
+                .iter()
+                .filter_map(|v| v.as_str())
+                .collect::<Vec<_>>()
+                .join("<br/>");
+            out.push_str(&format!(
+                "<tr><th>Affected paths</th><td>{}</td></tr>",
+                joined
+            ));
         }
         if let Some(rationale) = proposal["rationale"].as_str() {
-            out.push_str(&format!("<tr><th>Rationale</th><td>{}</td></tr>", html_escape(rationale)));
+            out.push_str(&format!(
+                "<tr><th>Rationale</th><td>{}</td></tr>",
+                html_escape(rationale)
+            ));
         }
         if let Some(confidence) = proposal["confidence"].as_f64() {
-            out.push_str(&format!("<tr><th>Confidence</th><td>{:.0}%</td></tr>", confidence * 100.0));
+            out.push_str(&format!(
+                "<tr><th>Confidence</th><td>{:.0}%</td></tr>",
+                confidence * 100.0
+            ));
         }
         if let Some(gain) = proposal["expected_signal_gain"].as_str() {
-            out.push_str(&format!("<tr><th>Expected signal gain</th><td>{}</td></tr>", html_escape(gain)));
+            out.push_str(&format!(
+                "<tr><th>Expected signal gain</th><td>{}</td></tr>",
+                html_escape(gain)
+            ));
         }
         out.push_str("</tbody></table>");
     }
@@ -1888,7 +2102,9 @@ async fn upsert_page(
             if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
                 let current_parent_id = current_page["parentId"].as_str();
                 if current_parent_id != Some(target_parent_id) {
-                    let _ = client.migrate_page_to_parent(&page_id, target_parent_id).await;
+                    let _ = client
+                        .migrate_page_to_parent(&page_id, target_parent_id)
+                        .await;
                 }
             }
         }
@@ -1922,7 +2138,10 @@ async fn find_existing_page_for_sync(
     parent_id: Option<&str>,
     title: &str,
 ) -> Result<Option<serde_json::Value>> {
-    if let Some(page) = client.get_page_by_title(space_key, parent_id, title).await? {
+    if let Some(page) = client
+        .get_page_by_title(space_key, parent_id, title)
+        .await?
+    {
         return Ok(Some(page));
     }
     client.get_page_by_title(space_key, None, title).await
@@ -1930,7 +2149,9 @@ async fn find_existing_page_for_sync(
 
 async fn set_sync_prop(client: &ConfluenceClient, page_id: &str, hash: &str) -> Result<()> {
     let value = serde_json::json!({ "content_hash": hash, "synced_by": "curio" });
-    client.set_content_property(page_id, SYNC_PROP_KEY, value).await
+    client
+        .set_content_property(page_id, SYNC_PROP_KEY, value)
+        .await
 }
 
 async fn find_stale_pages(
@@ -1994,17 +2215,16 @@ fn is_legacy_sync_title(title: &str, tree_titles: &HashSet<String>) -> bool {
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 fn markdown_to_html(md: &str) -> String {
-    crate::md_to_confluence::markdown_to_storage(md)
-        .unwrap_or_else(|_| {
-            // Fallback: plain pulldown_cmark if macro parsing fails
-            use pulldown_cmark::{html, Options, Parser};
-            let mut opts = Options::empty();
-            opts.insert(Options::ENABLE_TABLES);
-            let parser = Parser::new_ext(md, opts);
-            let mut out = String::new();
-            html::push_html(&mut out, parser);
-            out
-        })
+    crate::md_to_confluence::markdown_to_storage(md).unwrap_or_else(|_| {
+        // Fallback: plain pulldown_cmark if macro parsing fails
+        use pulldown_cmark::{Options, Parser, html};
+        let mut opts = Options::empty();
+        opts.insert(Options::ENABLE_TABLES);
+        let parser = Parser::new_ext(md, opts);
+        let mut out = String::new();
+        html::push_html(&mut out, parser);
+        out
+    })
 }
 
 /// Set the emoji icon on a Confluence page using a hardcoded slug → emoji map. Best-effort.
@@ -2017,7 +2237,9 @@ async fn set_page_icon(client: &ConfluenceClient, page_id: &str, slug: &str) {
 /// Set the emoji icon on a Confluence page using a raw emoji value (e.g. "1f4e6"). Best-effort.
 async fn set_page_icon_value(client: &ConfluenceClient, page_id: &str, icon: &str) {
     let val = serde_json::json!(icon);
-    let _ = client.set_content_property(page_id, ICON_PROP_KEY, val).await;
+    let _ = client
+        .set_content_property(page_id, ICON_PROP_KEY, val)
+        .await;
 }
 
 /// Convert slug/filename to a display title.
@@ -2041,8 +2263,8 @@ fn to_title(name: &str) -> String {
 }
 
 fn published_page_title(path: &Path) -> Result<String> {
-    let page = parse_wiki_page(path)
-        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let page =
+        parse_wiki_page(path).with_context(|| format!("Failed to parse {}", path.display()))?;
     let title = page.frontmatter.title.trim().to_string();
     if title.is_empty() {
         anyhow::bail!("Published page {} is missing a title", path.display());
@@ -2050,7 +2272,12 @@ fn published_page_title(path: &Path) -> Result<String> {
     Ok(title)
 }
 
-fn duplicate_notice_body(client: &ConfluenceClient, conflicting_page_id: &str, original_title: &str, html_body: &str) -> String {
+fn duplicate_notice_body(
+    client: &ConfluenceClient,
+    conflicting_page_id: &str,
+    original_title: &str,
+    html_body: &str,
+) -> String {
     let conflicting_url = client.page_web_url(conflicting_page_id);
     format!(
         concat!(
@@ -2083,10 +2310,7 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
     });
 
     let (pre_md, post_md) = match (blueprint_start, after_blueprint) {
-        (Some(start), Some(end)) => (
-            &northstar_md[..start],
-            &northstar_md[end..],
-        ),
+        (Some(start), Some(end)) => (&northstar_md[..start], &northstar_md[end..]),
         (Some(start), None) => (&northstar_md[..start], ""),
         _ => (northstar_md, ""),
     };
@@ -2106,7 +2330,9 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
     } else {
         out.push_str("<ul>\n");
         for tree in trees {
-            let icon = tree.icon.as_deref()
+            let icon = tree
+                .icon
+                .as_deref()
                 .and_then(|cp| u32::from_str_radix(cp, 16).ok())
                 .and_then(char::from_u32)
                 .map(|c| format!("{} ", c))
@@ -2126,7 +2352,9 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
             if !tree.subtrees.is_empty() {
                 out.push_str("<ul>\n");
                 for sub in &tree.subtrees {
-                    let sub_icon = sub.icon.as_deref()
+                    let sub_icon = sub
+                        .icon
+                        .as_deref()
                         .and_then(|cp| u32::from_str_radix(cp, 16).ok())
                         .and_then(char::from_u32)
                         .map(|c| format!("{} ", c))
@@ -2164,15 +2392,20 @@ fn render_northstar_for_confluence(northstar_md: &str, trees: &[TreeNode]) -> St
 /// inline inside <li> elements without causing wide block containers.
 fn inline_desc(html: &str) -> String {
     let text = html
-        .replace("<blockquote>", "").replace("</blockquote>", " ")
-        .replace("<p>", "").replace("</p>", " ")
-        .replace("<br/>", " ").replace("<br />", " ");
+        .replace("<blockquote>", "")
+        .replace("</blockquote>", " ")
+        .replace("<p>", "")
+        .replace("</p>", " ")
+        .replace("<br/>", " ")
+        .replace("<br />", " ");
     // Collapse runs of whitespace / newlines
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn html_escape(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 fn taxonomy_to_tree_nodes(taxonomy: &NorthstarTaxonomy) -> Vec<TreeNode> {
@@ -2222,7 +2455,9 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
     let flush_desc = |lines: &mut Vec<String>| -> String {
         let md = lines.join("\n");
         lines.clear();
-        if md.trim().is_empty() { return String::new(); }
+        if md.trim().is_empty() {
+            return String::new();
+        }
         crate::md_to_confluence::markdown_to_storage(&md).unwrap_or_default()
     };
 
@@ -2236,13 +2471,17 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
         if in_blueprint && line.starts_with("## ") {
             break;
         }
-        if !in_blueprint { continue; }
+        if !in_blueprint {
+            continue;
+        }
 
         if line.starts_with("### ") {
             // Flush previous subtree into current tree
             if let Some(mut sub) = current_sub.take() {
                 sub.description_html = flush_desc(&mut desc_lines);
-                if let Some(ref mut t) = current_tree { t.subtrees.push(sub); }
+                if let Some(ref mut t) = current_tree {
+                    t.subtrees.push(sub);
+                }
             } else {
                 // Flush description into current tree
                 let html = flush_desc(&mut desc_lines);
@@ -2259,22 +2498,31 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
             }
             let title = line[4..].trim().to_string();
             let slug = title.to_lowercase().replace(' ', "-");
-            current_tree = Some(TreeNode { title, slug, ..Default::default() });
+            current_tree = Some(TreeNode {
+                title,
+                slug,
+                ..Default::default()
+            });
         } else if line.starts_with("#### ") {
             // Flush previous subtree (or tree description if this is the first subtree)
             if let Some(mut sub) = current_sub.take() {
                 sub.description_html = flush_desc(&mut desc_lines);
-                if let Some(ref mut t) = current_tree { t.subtrees.push(sub); }
+                if let Some(ref mut t) = current_tree {
+                    t.subtrees.push(sub);
+                }
             } else {
                 // First subtree — flush accumulated lines as the parent tree's description
                 let html = flush_desc(&mut desc_lines);
                 if let Some(ref mut t) = current_tree {
-                    if t.description_html.is_empty() { t.description_html = html; }
+                    if t.description_html.is_empty() {
+                        t.description_html = html;
+                    }
                 }
             }
             let title = line[5..].trim().to_string();
             // "Technical / CSE" → "technical-cse", collapsing runs of non-alpha chars
-            let slug: String = title.to_lowercase()
+            let slug: String = title
+                .to_lowercase()
                 .chars()
                 .map(|c| if c.is_alphanumeric() { c } else { '-' })
                 .collect::<String>()
@@ -2282,7 +2530,11 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
                 .filter(|s| !s.is_empty())
                 .collect::<Vec<_>>()
                 .join("-");
-            current_sub = Some(TreeNode { title, slug, ..Default::default() });
+            current_sub = Some(TreeNode {
+                title,
+                slug,
+                ..Default::default()
+            });
         } else {
             // Check for **Icon:** metadata line — extract icon value, don't add to desc
             if let Some(rest) = line.trim().strip_prefix("**Icon:**") {
@@ -2300,10 +2552,14 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
     // Flush trailing
     if let Some(mut sub) = current_sub.take() {
         sub.description_html = flush_desc(&mut desc_lines);
-        if let Some(ref mut t) = current_tree { t.subtrees.push(sub); }
+        if let Some(ref mut t) = current_tree {
+            t.subtrees.push(sub);
+        }
     } else {
         let html = flush_desc(&mut desc_lines);
-        if let Some(ref mut t) = current_tree { t.description_html = html; }
+        if let Some(ref mut t) = current_tree {
+            t.description_html = html;
+        }
     }
     if let Some(t) = current_tree.take() {
         trees.push(t);

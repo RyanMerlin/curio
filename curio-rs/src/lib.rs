@@ -1,7 +1,7 @@
+pub mod audit_store;
 pub mod cli;
 pub mod commands;
 pub mod config;
-pub mod workspace;
 pub mod confluence;
 pub mod error;
 pub mod freshness;
@@ -10,14 +10,14 @@ pub mod harness;
 pub mod heal_types;
 pub mod llm;
 pub mod northstar;
-pub mod overlap;
 pub mod output;
+pub mod overlap;
 pub mod proposal;
 pub mod quality;
 pub mod reconcile;
-pub mod audit_store;
 pub mod wiki_fs;
 pub mod wiki_index;
+pub mod workspace;
 
 pub use error::Result;
 use serde::{Deserialize, Serialize};
@@ -52,7 +52,7 @@ impl std::fmt::Display for PageStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SourceRef {
-    pub kind: String, // "url" | "file" | "confluence_page"
+    pub kind: String, // "url" | "file" | "confluence_page" | "slack_message"
     pub id: String,
     pub origin_url: Option<String>,
     pub summary: Option<String>,
@@ -127,12 +127,25 @@ pub enum SourceKind {
         path: String,
         mime: String,
     },
+    SlackMessage {
+        workspace_id: Option<String>,
+        channel_id: String,
+        message_ts: String,
+        user_id: Option<String>,
+        thread_ts: Option<String>,
+        permalink: Option<String>,
+    },
 }
 
 impl SourceKind {
     /// True for sources that have a durable origin URL — Curio writes a reference card, not a copy.
     pub fn is_reference(&self) -> bool {
-        matches!(self, SourceKind::ConfluencePage { .. } | SourceKind::Url { .. })
+        matches!(
+            self,
+            SourceKind::ConfluencePage { .. }
+                | SourceKind::Url { .. }
+                | SourceKind::SlackMessage { .. }
+        )
     }
 
     /// The label-safe content_type string stored in curio_metadata and Confluence labels.
@@ -140,6 +153,7 @@ impl SourceKind {
         match self {
             SourceKind::ConfluencePage { .. } => "confluence_page",
             SourceKind::Url { .. } => "web_page",
+            SourceKind::SlackMessage { .. } => "slack_message",
             SourceKind::File { mime, .. } => mime.as_str(),
         }
     }
@@ -163,15 +177,30 @@ impl SourceKind {
                 .last()
                 .unwrap_or(source_id)
                 .to_string();
-            return SourceKind::ConfluencePage { page_id, webui_path: None };
+            return SourceKind::ConfluencePage {
+                page_id,
+                webui_path: None,
+            };
         }
         if let Some(url) = source_id.strip_prefix("url:") {
-            return SourceKind::Url { url: url.to_string() };
+            return SourceKind::Url {
+                url: url.to_string(),
+            };
         }
         if let Some(path) = source_id.strip_prefix("file:") {
             return SourceKind::File {
                 path: path.to_string(),
                 mime: "application/octet-stream".to_string(),
+            };
+        }
+        if let Some(rest) = source_id.strip_prefix("slack:") {
+            return SourceKind::SlackMessage {
+                workspace_id: None,
+                channel_id: rest.to_string(),
+                message_ts: String::new(),
+                user_id: None,
+                thread_ts: None,
+                permalink: None,
             };
         }
         // Unknown format: treat as file
@@ -184,18 +213,31 @@ impl SourceKind {
     /// The full clickable URL for the source origin, or None for files.
     pub fn origin_url(&self, confluence_base_url: &str) -> Option<String> {
         match self {
-            SourceKind::ConfluencePage { webui_path: Some(path), .. } => {
-                Some(format!("{}{}", confluence_base_url.trim_end_matches('/'), path))
-            }
-            SourceKind::ConfluencePage { page_id, webui_path: None } => {
-                Some(format!(
-                    "{}/wiki/pages/viewpage.action?pageId={}",
-                    confluence_base_url.trim_end_matches('/'),
-                    page_id
-                ))
-            }
+            SourceKind::ConfluencePage {
+                webui_path: Some(path),
+                ..
+            } => Some(format!(
+                "{}{}",
+                confluence_base_url.trim_end_matches('/'),
+                path
+            )),
+            SourceKind::ConfluencePage {
+                page_id,
+                webui_path: None,
+            } => Some(format!(
+                "{}/wiki/pages/viewpage.action?pageId={}",
+                confluence_base_url.trim_end_matches('/'),
+                page_id
+            )),
             SourceKind::Url { url } => Some(url.clone()),
+            SourceKind::SlackMessage {
+                permalink: Some(url),
+                ..
+            } => Some(url.clone()),
             SourceKind::File { .. } => None,
+            SourceKind::SlackMessage {
+                permalink: None, ..
+            } => None,
         }
     }
 }
@@ -223,19 +265,27 @@ mod source_kind_tests {
 
     #[test]
     fn confluence_page_is_reference() {
-        let kind = SourceKind::ConfluencePage { page_id: "123".into(), webui_path: None };
+        let kind = SourceKind::ConfluencePage {
+            page_id: "123".into(),
+            webui_path: None,
+        };
         assert!(kind.is_reference());
     }
 
     #[test]
     fn url_is_reference() {
-        let kind = SourceKind::Url { url: "https://example.com".into() };
+        let kind = SourceKind::Url {
+            url: "https://example.com".into(),
+        };
         assert!(kind.is_reference());
     }
 
     #[test]
     fn file_is_not_reference() {
-        let kind = SourceKind::File { path: "/tmp/notes.txt".into(), mime: "text/plain".into() };
+        let kind = SourceKind::File {
+            path: "/tmp/notes.txt".into(),
+            mime: "text/plain".into(),
+        };
         assert!(!kind.is_reference());
     }
 
@@ -266,14 +316,36 @@ mod source_kind_tests {
     #[test]
     fn from_source_id_file() {
         let kind = SourceKind::from_source_id("file:/home/user/notes.txt");
-        assert!(matches!(kind, SourceKind::File { ref path, .. } if path == "/home/user/notes.txt"));
+        assert!(
+            matches!(kind, SourceKind::File { ref path, .. } if path == "/home/user/notes.txt")
+        );
     }
 
     #[test]
     fn content_type_values() {
-        assert_eq!(SourceKind::ConfluencePage { page_id: "1".into(), webui_path: None }.content_type(), "confluence_page");
-        assert_eq!(SourceKind::Url { url: "https://x.com".into() }.content_type(), "web_page");
-        assert_eq!(SourceKind::File { path: "f".into(), mime: "text/plain".into() }.content_type(), "text/plain");
+        assert_eq!(
+            SourceKind::ConfluencePage {
+                page_id: "1".into(),
+                webui_path: None
+            }
+            .content_type(),
+            "confluence_page"
+        );
+        assert_eq!(
+            SourceKind::Url {
+                url: "https://x.com".into()
+            }
+            .content_type(),
+            "web_page"
+        );
+        assert_eq!(
+            SourceKind::File {
+                path: "f".into(),
+                mime: "text/plain".into()
+            }
+            .content_type(),
+            "text/plain"
+        );
     }
 
     #[test]
@@ -290,13 +362,21 @@ mod source_kind_tests {
 
     #[test]
     fn origin_url_url_source() {
-        let kind = SourceKind::Url { url: "https://example.com".into() };
-        assert_eq!(kind.origin_url("https://ignored"), Some("https://example.com".into()));
+        let kind = SourceKind::Url {
+            url: "https://example.com".into(),
+        };
+        assert_eq!(
+            kind.origin_url("https://ignored"),
+            Some("https://example.com".into())
+        );
     }
 
     #[test]
     fn origin_url_file_is_none() {
-        let kind = SourceKind::File { path: "/tmp/f".into(), mime: "text/plain".into() };
+        let kind = SourceKind::File {
+            path: "/tmp/f".into(),
+            mime: "text/plain".into(),
+        };
         assert_eq!(kind.origin_url("https://ignored"), None);
     }
 

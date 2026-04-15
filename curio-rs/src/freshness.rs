@@ -18,7 +18,10 @@ pub fn freshness_score(updated_at: DateTime<Utc>) -> f64 {
 /// Parse an RFC-3339 timestamp string and return a freshness score.
 /// Returns `None` if the string cannot be parsed.
 pub fn freshness_score_from_str(updated_at: &str) -> Option<f64> {
-    updated_at.parse::<DateTime<Utc>>().ok().map(freshness_score)
+    updated_at
+        .parse::<DateTime<Utc>>()
+        .ok()
+        .map(freshness_score)
 }
 
 #[cfg(test)]

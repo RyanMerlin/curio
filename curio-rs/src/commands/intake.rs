@@ -4,11 +4,11 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use crate::{
+    Frontmatter, PageStatus, SourceRef, WikiPage,
     config::Config,
     output::emit_json,
     wiki_fs::{content_hash, generate_id, slug_from_title, write_wiki_page},
     wiki_index::{append_log, load_registry, rebuild_index_md},
-    Frontmatter, PageStatus, SourceRef, WikiPage,
 };
 
 pub async fn run_intake(
@@ -71,14 +71,21 @@ pub async fn run_intake(
             auto_healed_confidence: None,
         };
 
-        let page = WikiPage { path: dest.clone(), frontmatter: fm.clone(), body: item.text.clone() };
+        let page = WikiPage {
+            path: dest.clone(),
+            frontmatter: fm.clone(),
+            body: item.text.clone(),
+        };
         write_wiki_page(&dest, &page)?;
         ingested.push(item.title.clone());
     }
 
     if !dry_run && !ingested.is_empty() {
         rebuild_index_md(wiki_dir, &registry)?;
-        append_log(wiki_dir, &format!("intake: {} items ingested", ingested.len()))?;
+        append_log(
+            wiki_dir,
+            &format!("intake: {} items ingested", ingested.len()),
+        )?;
 
         if config.wiki.auto_commit {
             let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
@@ -174,9 +181,9 @@ async fn collect_from_url(url: &str, title_hint: &Option<String>) -> Result<Vec<
         .await?;
 
     let text = extract_text_from_html(&html, "");
-    let title = title_hint.clone().unwrap_or_else(|| {
-        extract_title_from_html(&html).unwrap_or_else(|| url.to_string())
-    });
+    let title = title_hint
+        .clone()
+        .unwrap_or_else(|| extract_title_from_html(&html).unwrap_or_else(|| url.to_string()));
     let id = generate_id(&format!("url:{}", url));
 
     Ok(vec![IntakeItem {
@@ -199,8 +206,8 @@ async fn collect_from_confluence(
     recursive: bool,
 ) -> Result<Vec<IntakeItem>> {
     config.connection.require_confluence()?;
-    let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
-        .context("CURIO_CONFLUENCE_TOKEN not set")?;
+    let token =
+        std::env::var("CURIO_CONFLUENCE_TOKEN").context("CURIO_CONFLUENCE_TOKEN not set")?;
     let client = crate::confluence::ConfluenceClient::new(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
@@ -214,7 +221,8 @@ async fn collect_from_confluence(
     // Collect the root page + all descendants if recursive.
     // Also build a parent→children title map for hub-page body synthesis.
     let mut page_ids: Vec<String> = vec![page_id.clone()];
-    let mut children_map: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    let mut children_map: std::collections::HashMap<String, Vec<String>> =
+        std::collections::HashMap::new();
     if recursive {
         let descendants = client.get_page_descendants_v2(&page_id).await?;
         for d in &descendants {
@@ -223,11 +231,18 @@ async fn collect_from_confluence(
                 // Build parent→children title map using parentId from the API response
                 if let Some(parent_id) = d["parentId"].as_str() {
                     let child_title = d["title"].as_str().unwrap_or("Untitled").to_string();
-                    children_map.entry(parent_id.to_string()).or_default().push(child_title);
+                    children_map
+                        .entry(parent_id.to_string())
+                        .or_default()
+                        .push(child_title);
                 }
             }
         }
-        eprintln!("Fetching {} pages (root + {} descendants)...", page_ids.len(), page_ids.len() - 1);
+        eprintln!(
+            "Fetching {} pages (root + {} descendants)...",
+            page_ids.len(),
+            page_ids.len() - 1
+        );
     }
 
     let mut items = Vec::new();
@@ -235,13 +250,20 @@ async fn collect_from_confluence(
         let page = match client.get_page_body(pid).await? {
             Some(p) => p,
             None => {
-                eprintln!("  [{}/{}] page {} not found — skipping", i + 1, page_ids.len(), pid);
+                eprintln!(
+                    "  [{}/{}] page {} not found — skipping",
+                    i + 1,
+                    page_ids.len(),
+                    pid
+                );
                 continue;
             }
         };
 
         let title = if pid == &page_id {
-            title_hint.clone().unwrap_or_else(|| page["title"].as_str().unwrap_or("Untitled").to_string())
+            title_hint
+                .clone()
+                .unwrap_or_else(|| page["title"].as_str().unwrap_or("Untitled").to_string())
         } else {
             page["title"].as_str().unwrap_or("Untitled").to_string()
         };
@@ -253,8 +275,15 @@ async fn collect_from_confluence(
             pid
         );
 
-        let html_body = page["body"]["storage"]["value"].as_str().unwrap_or("").to_string();
-        let confluence_base = config.connection.confluence_url.trim_end_matches("/wiki").to_string();
+        let html_body = page["body"]["storage"]["value"]
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+        let confluence_base = config
+            .connection
+            .confluence_url
+            .trim_end_matches("/wiki")
+            .to_string();
         let mut text = extract_text_from_html(&html_body, &confluence_base);
 
         // Hub/index page synthesis: if the body is sparse (mostly navigation macros,
@@ -267,7 +296,11 @@ async fn collect_from_confluence(
                 text = format!(
                     "Hub page: {title}\n\nThis page organizes the following sub-pages:\n\n{children}\n",
                     title = title,
-                    children = child_titles.iter().map(|t| format!("- {}", t)).collect::<Vec<_>>().join("\n")
+                    children = child_titles
+                        .iter()
+                        .map(|t| format!("- {}", t))
+                        .collect::<Vec<_>>()
+                        .join("\n")
                 );
             } else if !recursive {
                 // For a non-recursive single-page intake of a hub, fetch direct children
@@ -281,14 +314,24 @@ async fn collect_from_confluence(
                         text = format!(
                             "Hub page: {title}\n\nThis page organizes the following sub-pages:\n\n{children}\n",
                             title = title,
-                            children = child_titles.iter().map(|t| format!("- {}", t)).collect::<Vec<_>>().join("\n")
+                            children = child_titles
+                                .iter()
+                                .map(|t| format!("- {}", t))
+                                .collect::<Vec<_>>()
+                                .join("\n")
                         );
                     } else {
-                        text = format!("Hub page: {title}\n\n*This page serves as a section index with no prose body.*\n", title = title);
+                        text = format!(
+                            "Hub page: {title}\n\n*This page serves as a section index with no prose body.*\n",
+                            title = title
+                        );
                     }
                 }
             } else {
-                text = format!("Hub page: {title}\n\n*This page serves as a section index with no prose body.*\n", title = title);
+                text = format!(
+                    "Hub page: {title}\n\n*This page serves as a section index with no prose body.*\n",
+                    title = title
+                );
             }
             eprintln!("  [hub] synthesized body for sparse page: {}", title);
         }
@@ -306,7 +349,11 @@ async fn collect_from_confluence(
             source_ref: SourceRef {
                 kind: "confluence_page".to_string(),
                 id: format!("confluence-page:{}", pid),
-                origin_url: Some(if pid == &page_id { url.to_string() } else { page_url }),
+                origin_url: Some(if pid == &page_id {
+                    url.to_string()
+                } else {
+                    page_url
+                }),
                 summary: None,
             },
         });
@@ -370,7 +417,9 @@ fn extract_text_from_html(html: &str, confluence_base: &str) -> String {
     let doc = scraper::Html::parse_document(html);
     // Confluence storage format has content under <body>; plain HTML pages too.
     let body_sel = scraper::Selector::parse("body").unwrap();
-    let root = doc.select(&body_sel).next()
+    let root = doc
+        .select(&body_sel)
+        .next()
         .map(|el| el.id())
         .and_then(|id| scraper::ElementRef::wrap(doc.tree.get(id).unwrap()))
         .unwrap_or_else(|| scraper::ElementRef::wrap(doc.tree.root()).unwrap());
@@ -400,7 +449,11 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         // Paragraphs
         "p" => {
             let t = inline_children(el, depth);
-            if t.trim().is_empty() { String::new() } else { format!("{}\n\n", t.trim()) }
+            if t.trim().is_empty() {
+                String::new()
+            } else {
+                format!("{}\n\n", t.trim())
+            }
         }
 
         // Lists
@@ -430,15 +483,22 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
                     idx += 1;
                 }
             }
-            if out.is_empty() { String::new() } else { format!("{}\n", out) }
+            if out.is_empty() {
+                String::new()
+            } else {
+                format!("{}\n", out)
+            }
         }
         "li" => String::new(), // handled by parent ul/ol
 
         // Code blocks
         "pre" | "code" if tag == "pre" => {
             let code: String = el.text().collect();
-            if code.trim().is_empty() { String::new() }
-            else { format!("```\n{}\n```\n\n", code.trim_end()) }
+            if code.trim().is_empty() {
+                String::new()
+            } else {
+                format!("```\n{}\n```\n\n", code.trim_end())
+            }
         }
         "code" => format!("`{}`", el.text().collect::<String>().trim()),
 
@@ -466,7 +526,8 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             let mut rows: Vec<Vec<String>> = Vec::new();
             let tr_sel = scraper::Selector::parse("tr").unwrap();
             for tr in el.select(&tr_sel) {
-                let cells: Vec<String> = tr.children()
+                let cells: Vec<String> = tr
+                    .children()
                     .filter_map(scraper::ElementRef::wrap)
                     .filter(|c| matches!(c.value().name(), "td" | "th"))
                     .map(|c| {
@@ -484,7 +545,9 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
                     rows.push(cells);
                 }
             }
-            if rows.is_empty() { return String::new(); }
+            if rows.is_empty() {
+                return String::new();
+            }
             let cols = rows.iter().map(|r| r.len()).max().unwrap_or(1);
             let separator = format!("| {} |", vec!["---"; cols].join(" | "));
             let mut out = String::new();
@@ -503,9 +566,8 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         "tr" | "td" | "th" | "thead" | "tbody" => String::new(), // handled by table
 
         // Block-level containers — recurse into children
-        "div" | "section" | "article" | "main" | "body"
-        | "html" | "span" | "figure" | "figcaption"
-        | "header" | "footer" | "nav" | "aside" => children_to_md(el, depth),
+        "div" | "section" | "article" | "main" | "body" | "html" | "span" | "figure"
+        | "figcaption" | "header" | "footer" | "nav" | "aside" => children_to_md(el, depth),
 
         // Confluence internal page links: <ac:link><ri:page ri:content-title="X" ri:space-key="Y"/></ac:link>
         // Render as a proper markdown link using the Confluence base URL.
@@ -513,9 +575,11 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             let ri_page_sel = scraper::Selector::parse("ri\\:page").unwrap();
             // Display text can be in ac:link-title or ac:link-body (new ADF format)
             let link_title_sel = scraper::Selector::parse("ac\\:link-title").unwrap();
-            let link_body_sel  = scraper::Selector::parse("ac\\:link-body").unwrap();
+            let link_body_sel = scraper::Selector::parse("ac\\:link-body").unwrap();
 
-            let display = el.select(&link_title_sel).next()
+            let display = el
+                .select(&link_title_sel)
+                .next()
                 .or_else(|| el.select(&link_body_sel).next())
                 .map(|lt| lt.text().collect::<String>())
                 .filter(|t| !t.trim().is_empty());
@@ -523,19 +587,28 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             if let Some(ri_el) = el.select(&ri_page_sel).next() {
                 // Namespace prefixes are stripped from attribute names by HTML parsers:
                 // "ri:content-title" → "content-title", "ri:space-key" → "space-key"
-                let content_title = ri_el.value().attr("ri:content-title")
+                let content_title = ri_el
+                    .value()
+                    .attr("ri:content-title")
                     .or_else(|| ri_el.value().attr("content-title"))
                     .unwrap_or("");
-                let space_key = ri_el.value().attr("ri:space-key")
+                let space_key = ri_el
+                    .value()
+                    .attr("ri:space-key")
                     .or_else(|| ri_el.value().attr("space-key"))
                     .unwrap_or("");
-                let text = display.as_deref().unwrap_or(content_title).trim().to_string();
+                let text = display
+                    .as_deref()
+                    .unwrap_or(content_title)
+                    .trim()
+                    .to_string();
                 if !content_title.is_empty() {
                     let base = CONFLUENCE_BASE.with(|c| c.borrow().clone());
                     if !base.is_empty() && !space_key.is_empty() {
                         // Encode the title for URL use
                         let encoded = content_title.replace(' ', "+");
-                        let url = format!("{}/wiki/spaces/{}/pages?title={}", base, space_key, encoded);
+                        let url =
+                            format!("{}/wiki/spaces/{}/pages?title={}", base, space_key, encoded);
                         return format!("[{}]({})", text, url);
                     } else if !base.is_empty() {
                         // No space key — link to search
@@ -554,7 +627,9 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             children_to_md(el, depth)
         }
         "ri:page" => {
-            let ct = el.value().attr("ri:content-title")
+            let ct = el
+                .value()
+                .attr("ri:content-title")
                 .or_else(|| el.value().attr("content-title"));
             if let Some(ct) = ct {
                 return ct.to_string();
@@ -584,12 +659,16 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             // Panel nodes (note/warning/info/tip) — render their children as a blockquote callout.
             let panel_type = el.value().attr("type").unwrap_or("");
             let content = children_to_md(el, depth);
-            if content.trim().is_empty() { return String::new(); }
+            if content.trim().is_empty() {
+                return String::new();
+            }
             match panel_type {
                 "panel" => {
                     // panel-type attribute is in a child ac:adf-attribute — read it from child text
                     // or just use a generic blockquote (panel-type already suppressed by ac:adf-attribute rule).
-                    let indented = content.trim().lines()
+                    let indented = content
+                        .trim()
+                        .lines()
                         .map(|l| format!("> {}", l))
                         .collect::<Vec<_>>()
                         .join("\n");
@@ -604,7 +683,9 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             // info/note/warning → blockquote-style callout
             // HTML parsers strip namespace prefixes from attribute names, so
             // "ac:name" is stored as just "name" in the DOM.
-            let macro_name = el.value().attr("ac:name")
+            let macro_name = el
+                .value()
+                .attr("ac:name")
                 .or_else(|| el.value().attr("name"))
                 .unwrap_or("");
             // children/pagetree macros signal a section-index page.
@@ -612,21 +693,27 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
             if macro_name == "children" || macro_name == "pagetree" {
                 return String::new();
             }
-            let body_sel = scraper::Selector::parse("ac\\:rich-text-body, ac\\:plain-text-body").unwrap();
-            let body = el.select(&body_sel)
+            let body_sel =
+                scraper::Selector::parse("ac\\:rich-text-body, ac\\:plain-text-body").unwrap();
+            let body = el
+                .select(&body_sel)
                 .map(|b| element_to_md(b, depth))
                 .collect::<String>();
-            if body.trim().is_empty() { return String::new(); }
+            if body.trim().is_empty() {
+                return String::new();
+            }
             match macro_name {
                 "info" | "note" | "warning" | "tip" => {
                     let label = match macro_name {
                         "warning" => "⚠️ Warning",
-                        "note"    => "📝 Note",
-                        "tip"     => "💡 Tip",
-                        _         => "ℹ️ Info",
+                        "note" => "📝 Note",
+                        "tip" => "💡 Tip",
+                        _ => "ℹ️ Info",
                     };
                     // Indent each line of the body with "> "
-                    let indented = body.trim().lines()
+                    let indented = body
+                        .trim()
+                        .lines()
                         .map(|l| format!("> {}", l))
                         .collect::<Vec<_>>()
                         .join("\n");
@@ -634,9 +721,16 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
                 }
                 "code" => {
                     // Try both namespaced and non-namespaced attribute selectors
-                    let lang = el.select(&scraper::Selector::parse("ac\\:parameter[name=language]").unwrap())
+                    let lang = el
+                        .select(&scraper::Selector::parse("ac\\:parameter[name=language]").unwrap())
                         .next()
-                        .or_else(|| el.select(&scraper::Selector::parse("ac\\:parameter[ac\\:name=language]").unwrap()).next())
+                        .or_else(|| {
+                            el.select(
+                                &scraper::Selector::parse("ac\\:parameter[ac\\:name=language]")
+                                    .unwrap(),
+                            )
+                            .next()
+                        })
                         .map(|p| p.text().collect::<String>())
                         .unwrap_or_default();
                     format!("```{}\n{}\n```\n\n", lang, body.trim())
@@ -648,11 +742,15 @@ fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         "ac:task-list" => children_to_md(el, depth),
         "ac:task" => {
             let status_sel = scraper::Selector::parse("ac\\:task-status").unwrap();
-            let body_sel   = scraper::Selector::parse("ac\\:task-body").unwrap();
-            let done = el.select(&status_sel).next()
+            let body_sel = scraper::Selector::parse("ac\\:task-body").unwrap();
+            let done = el
+                .select(&status_sel)
+                .next()
                 .map(|s| s.text().collect::<String>().trim().to_lowercase() == "complete")
                 .unwrap_or(false);
-            let body = el.select(&body_sel).next()
+            let body = el
+                .select(&body_sel)
+                .next()
                 .map(|b| inline_text(b))
                 .unwrap_or_default();
             format!("- [{}] {}\n", if done { "x" } else { " " }, body.trim())
@@ -676,7 +774,9 @@ fn inline_children(el: scraper::ElementRef<'_>, depth: usize) -> String {
         match child.value() {
             scraper::node::Node::Text(t) => {
                 let s = t.trim_matches('\n');
-                if !s.is_empty() { out.push_str(s); }
+                if !s.is_empty() {
+                    out.push_str(s);
+                }
             }
             scraper::node::Node::Element(_) => {
                 if let Some(child_el) = scraper::ElementRef::wrap(child) {
@@ -711,7 +811,10 @@ fn children_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {
         match child.value() {
             scraper::node::Node::Text(t) => {
                 let s = t.trim_matches('\n').trim();
-                if !s.is_empty() { out.push_str(s); out.push(' '); }
+                if !s.is_empty() {
+                    out.push_str(s);
+                    out.push(' ');
+                }
             }
             scraper::node::Node::Element(_) => {
                 if let Some(child_el) = scraper::ElementRef::wrap(child) {

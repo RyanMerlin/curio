@@ -4,13 +4,13 @@ use chrono::Utc;
 use std::path::PathBuf;
 
 use crate::{
+    PageStatus,
     config::Config,
     northstar::{load_taxonomy, taxonomy_path_exists},
     output::emit_json,
-    proposal::{load_proposal_record, save_proposal_record, ProposalLane},
+    proposal::{ProposalLane, load_proposal_record, save_proposal_record},
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
-    PageStatus,
 };
 
 pub async fn run_resolve(
@@ -27,9 +27,8 @@ pub async fn run_resolve(
     if !src_path.exists() {
         // Also check review subdirs
         let found = find_in_dir(&review_dir, &slug)?;
-        let src_path = found.ok_or_else(|| {
-            anyhow::anyhow!("No review page found for slug: {}", slug)
-        })?;
+        let src_path =
+            found.ok_or_else(|| anyhow::anyhow!("No review page found for slug: {}", slug))?;
 
         return do_resolve(config, &src_path, &slug, category, dry_run, json).await;
     }
@@ -53,9 +52,7 @@ async fn do_resolve(
     let cat_segments: Vec<String> = category
         .as_deref()
         .map(|c| c.split('/').map(|s| s.to_string()).collect())
-        .unwrap_or_else(|| {
-            page.frontmatter.category.clone()
-        });
+        .unwrap_or_else(|| page.frontmatter.category.clone());
     if cat_segments.is_empty() {
         anyhow::bail!(
             "Cannot resolve '{}' to staged without a category. Keep it in review and attach a subtree proposal instead.",
@@ -82,9 +79,18 @@ async fn do_resolve(
     let dest_path = dest_dir.join(&filename);
 
     if dry_run {
-        let msg = format!("Would move {} → staged/{}/{}", slug, cat_path.display(), filename);
+        let msg = format!(
+            "Would move {} → staged/{}/{}",
+            slug,
+            cat_path.display(),
+            filename
+        );
         if json {
-            let _ = emit_json("resolve", true, &serde_json::json!({ "slug": slug, "would_move_to": dest_path, "dry_run": true }));
+            let _ = emit_json(
+                "resolve",
+                true,
+                &serde_json::json!({ "slug": slug, "would_move_to": dest_path, "dry_run": true }),
+            );
         } else {
             println!("{}", msg);
         }
@@ -106,8 +112,12 @@ async fn do_resolve(
     let proposal_src = crate::proposal::proposal_sidecar_path(src_path);
     if proposal_src.exists() {
         let proposal_dest = crate::proposal::proposal_sidecar_path(&dest_path);
-        let rel_psrc = proposal_src.strip_prefix(repo_root).unwrap_or(&proposal_src);
-        let rel_pdest = proposal_dest.strip_prefix(repo_root).unwrap_or(&proposal_dest);
+        let rel_psrc = proposal_src
+            .strip_prefix(repo_root)
+            .unwrap_or(&proposal_src);
+        let rel_pdest = proposal_dest
+            .strip_prefix(repo_root)
+            .unwrap_or(&proposal_dest);
         crate::git_ops::git_mv(repo_root, rel_psrc, rel_pdest)?;
     }
 
@@ -128,7 +138,11 @@ async fn do_resolve(
     }
 
     if json {
-        let _ = emit_json("resolve", true, &serde_json::json!({ "slug": slug, "moved_to": new_rel }));
+        let _ = emit_json(
+            "resolve",
+            true,
+            &serde_json::json!({ "slug": slug, "moved_to": new_rel }),
+        );
     } else {
         println!("Resolved: {} → staged/{}", slug, new_rel);
     }
@@ -139,7 +153,10 @@ fn find_in_dir(dir: &std::path::Path, slug: &str) -> Result<Option<std::path::Pa
     if !dir.exists() {
         return Ok(None);
     }
-    for entry in walkdir::WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in walkdir::WalkDir::new(dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         let path = entry.path();
         if path.extension().map_or(false, |e| e == "md") {
             if path.file_stem().map_or(false, |s| s == slug) {

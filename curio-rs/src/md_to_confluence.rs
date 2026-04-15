@@ -12,7 +12,6 @@
 ///   ```confluence-storage\n...\n```          → raw Confluence XML passthrough
 ///
 /// All other markdown is converted via pulldown_cmark.
-
 use anyhow::Result;
 use pulldown_cmark::{Options, Parser, html};
 use regex::Regex;
@@ -75,7 +74,14 @@ fn replace_macro_blocks(markdown: &str) -> Result<(String, Vec<String>)> {
                 let prefix = format!(":::confluence-{t}");
                 if line.starts_with(&prefix) {
                     let title = line[prefix.len()..].trim();
-                    Some((t, if title.is_empty() { None } else { Some(title.to_string()) }))
+                    Some((
+                        t,
+                        if title.is_empty() {
+                            None
+                        } else {
+                            Some(title.to_string())
+                        },
+                    ))
                 } else {
                     None
                 }
@@ -97,15 +103,15 @@ fn replace_macro_blocks(markdown: &str) -> Result<(String, Vec<String>)> {
             // Confluence Cloud's Fabric editor rejects <ac:structured-macro> tags.
             // Render as an HTML panel using a table with a left border colour strip.
             let icon = match macro_name {
-                "info"    => "ℹ️",
-                "tip"     => "💡",
-                "note"    => "⚠️",
+                "info" => "ℹ️",
+                "tip" => "💡",
+                "note" => "⚠️",
                 "warning" => "🚨",
-                _         => "▶",
+                _ => "▶",
             };
             let title_html = match title {
                 Some(t) => format!("<strong>{icon} {}</strong><br/>", escape_xml(&t)),
-                None    => format!("<strong>{icon}</strong><br/>"),
+                None => format!("<strong>{icon}</strong><br/>"),
             };
             let fragment = format!(
                 "<blockquote>{title_html}{body_storage}</blockquote>",

@@ -8,8 +8,10 @@ use curio::{
             run_agent_list_skills, run_agent_prepare, run_agent_print_env,
         },
         doctor::run_doctor,
+        feedback::run_feedback,
         gold_publish::run_publish,
         gold_resolve::run_resolve,
+        heal::{run_heal_apply, run_heal_prepare},
         init::run_init,
         init_kb::run_init_kb,
         intake::run_intake,
@@ -18,14 +20,12 @@ use curio::{
         process_intake::run_process,
         query::run_query,
         reindex::run_reindex,
+        reject::run_reject,
         review::run_review,
         search::run_search,
         sharpen::run_sharpen,
         status::run_status,
         sync::run_sync,
-        feedback::run_feedback,
-        heal::{run_heal_apply, run_heal_prepare},
-        reject::run_reject,
         tree::run_tree,
         workspace_cmd::{run_workspace_add, run_workspace_list, run_workspace_remove},
     },
@@ -73,13 +73,36 @@ async fn main() -> Result<()> {
                 run_agent_print_env(provider, cli.json)?;
             }
         },
+        Some(Commands::Slack(slack_commands)) => match slack_commands {
+            curio::cli::SlackCommands::Process { payload_file } => {
+                let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+                curio::commands::slack::run_slack_process(&config, payload_file, cli.json).await?;
+            }
+            curio::cli::SlackCommands::Authorize {
+                user_id,
+                channel_id,
+            } => {
+                let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+                curio::commands::slack::run_slack_authorize(
+                    &config, user_id, channel_id, cli.json,
+                )?;
+            }
+            curio::cli::SlackCommands::Contract => {
+                let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+                curio::commands::slack::run_slack_contract(&config, cli.json)?;
+            }
+        },
 
         // ── Workspace management (no KB required) ──────────────────────────
         Some(Commands::Workspace(ws_cmd)) => match ws_cmd {
             WorkspaceCommands::List => {
                 run_workspace_list(cli.json)?;
             }
-            WorkspaceCommands::Add { name, path, description } => {
+            WorkspaceCommands::Add {
+                name,
+                path,
+                description,
+            } => {
                 run_workspace_add(name, path, description, cli.json)?;
             }
             WorkspaceCommands::Remove { name } => {
@@ -88,18 +111,43 @@ async fn main() -> Result<()> {
         },
 
         // ── KB initialisation (no existing KB required) ────────────────────
-        Some(Commands::InitKb { path, name, description }) => {
+        Some(Commands::InitKb {
+            path,
+            name,
+            description,
+        }) => {
             run_init_kb(path, name, description, cli.dry_run).await?;
         }
 
         // ── All commands below require a KB dir ────────────────────────────
-        Some(Commands::Init { reset, confirm_nuke }) => {
+        Some(Commands::Init {
+            reset,
+            confirm_nuke,
+        }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_init(&config, cli.dry_run, cli.json, reset, confirm_nuke).await?;
         }
-        Some(Commands::Intake { url, file, folder, title, subject_hint, recursive }) => {
+        Some(Commands::Intake {
+            url,
+            file,
+            folder,
+            title,
+            subject_hint,
+            recursive,
+        }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
-            run_intake(&config, cli.dry_run, cli.json, &url, &file, &folder, &title, &subject_hint, recursive).await?;
+            run_intake(
+                &config,
+                cli.dry_run,
+                cli.json,
+                &url,
+                &file,
+                &folder,
+                &title,
+                &subject_hint,
+                recursive,
+            )
+            .await?;
         }
         Some(Commands::Process {
             limit,
@@ -115,10 +163,21 @@ async fn main() -> Result<()> {
         }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_process(
-                &config, cli.dry_run, cli.json,
-                limit, all, prepare, route_file,
-                slug, category, status, keywords, confidence, summary,
-            ).await?;
+                &config,
+                cli.dry_run,
+                cli.json,
+                limit,
+                all,
+                prepare,
+                route_file,
+                slug,
+                category,
+                status,
+                keywords,
+                confidence,
+                summary,
+            )
+            .await?;
         }
         Some(Commands::Status { all }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
@@ -136,13 +195,41 @@ async fn main() -> Result<()> {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_publish(&config, cli.dry_run, cli.json, slug, category).await?;
         }
-        Some(Commands::Search { keywords, category, status, text, limit }) => {
+        Some(Commands::Search {
+            keywords,
+            category,
+            status,
+            text,
+            limit,
+        }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
-            run_search(&config, cli.dry_run, cli.json, keywords, category, status, text, limit).await?;
+            run_search(
+                &config,
+                cli.dry_run,
+                cli.json,
+                keywords,
+                category,
+                status,
+                text,
+                limit,
+            )
+            .await?;
         }
-        Some(Commands::Sharpen { prepare, proposal_file, limit }) => {
+        Some(Commands::Sharpen {
+            prepare,
+            proposal_file,
+            limit,
+        }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
-            run_sharpen(&config, cli.dry_run, cli.json, prepare, proposal_file, limit).await?;
+            run_sharpen(
+                &config,
+                cli.dry_run,
+                cli.json,
+                prepare,
+                proposal_file,
+                limit,
+            )
+            .await?;
         }
         Some(Commands::Reindex) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
@@ -152,15 +239,33 @@ async fn main() -> Result<()> {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_tree(&config, cli.dry_run, cli.json).await?;
         }
-        Some(Commands::Sync { parent_page_id, dry_run, all }) => {
+        Some(Commands::Sync {
+            parent_page_id,
+            dry_run,
+            all,
+        }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
-            run_sync(&config, dry_run || cli.dry_run, cli.json, parent_page_id, all).await?;
+            run_sync(
+                &config,
+                dry_run || cli.dry_run,
+                cli.json,
+                parent_page_id,
+                all,
+            )
+            .await?;
         }
         Some(Commands::Feedback { dry_run }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_feedback(&config, dry_run || cli.dry_run).await?;
         }
-        Some(Commands::Heal { prepare, apply_file, scope, out, confidence, auto }) => {
+        Some(Commands::Heal {
+            prepare,
+            apply_file,
+            scope,
+            out,
+            confidence,
+            auto,
+        }) => {
             let mut config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             // Override threshold if --confidence or --auto flags are set.
             if auto {
@@ -177,7 +282,11 @@ async fn main() -> Result<()> {
                 std::process::exit(1);
             }
         }
-        Some(Commands::Reject { slug_or_path, reason, force }) => {
+        Some(Commands::Reject {
+            slug_or_path,
+            reason,
+            force,
+        }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_reject(&config, cli.dry_run, slug_or_path, reason, force).await?;
         }

@@ -2,7 +2,11 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(name = "curio", version, about = "Git-native enterprise knowledge store")]
+#[command(
+    name = "curio",
+    version,
+    about = "Git-native enterprise knowledge store"
+)]
 pub struct Cli {
     #[arg(long, global = true, help = "Path to the configuration file")]
     pub config: Option<PathBuf>,
@@ -17,7 +21,11 @@ pub struct Cli {
     #[arg(long, global = true, help = "Named workspace to use")]
     pub workspace: Option<String>,
 
-    #[arg(long, global = true, help = "Print what would be done without making changes")]
+    #[arg(
+        long,
+        global = true,
+        help = "Print what would be done without making changes"
+    )]
     pub dry_run: bool,
 
     #[arg(long, global = true, help = "Emit machine-readable JSON output")]
@@ -352,6 +360,10 @@ pub enum Commands {
     /// Harness commands for launching supported agent providers.
     #[command(subcommand)]
     Agent(AgentCommands),
+
+    /// Slack integration helpers for ingress workers and job runners.
+    #[command(subcommand)]
+    Slack(SlackCommands),
 }
 
 #[derive(Subcommand, Debug)]
@@ -432,4 +444,28 @@ pub enum AgentCommands {
         #[arg(value_enum)]
         provider: AgentProvider,
     },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum SlackCommands {
+    /// Process a Slack payload JSON file into Curio-native intake or job metadata.
+    Process {
+        /// Path to a JSON payload file.
+        #[arg(long)]
+        payload_file: PathBuf,
+    },
+
+    /// Check whether a Slack user can trigger privileged actions.
+    Authorize {
+        /// Slack user ID.
+        #[arg(long)]
+        user_id: String,
+
+        /// Optional Slack channel ID.
+        #[arg(long)]
+        channel_id: Option<String>,
+    },
+
+    /// Emit the Slack job contract used by the GCP worker.
+    Contract,
 }

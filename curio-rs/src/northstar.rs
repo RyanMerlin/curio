@@ -7,7 +7,6 @@ use std::path::{Path, PathBuf};
 
 pub const NORTHSTAR_FILENAME: &str = "NORTHSTAR.md";
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NorthstarTaxonomy {
     pub schema_version: u32,
@@ -79,8 +78,8 @@ pub fn parse_yaml_taxonomy(markdown: &str) -> Result<NorthstarTaxonomy> {
 /// Replace the YAML block content in a NORTHSTAR.md string with serialized taxonomy.
 /// If no block exists, appends a new ## Taxonomy section at the end.
 fn replace_yaml_block(markdown: &str, taxonomy: &NorthstarTaxonomy) -> Result<String> {
-    let yaml_body = serde_yaml::to_string(taxonomy)
-        .context("Failed to serialize taxonomy to YAML")?;
+    let yaml_body =
+        serde_yaml::to_string(taxonomy).context("Failed to serialize taxonomy to YAML")?;
 
     // Find the ```yaml ... ``` span and replace it in-place
     let mut result = String::new();
@@ -108,7 +107,9 @@ fn replace_yaml_block(markdown: &str, taxonomy: &NorthstarTaxonomy) -> Result<St
 
     if !replaced {
         // Append a new Taxonomy section
-        if !result.ends_with('\n') { result.push('\n'); }
+        if !result.ends_with('\n') {
+            result.push('\n');
+        }
         result.push('\n');
         result.push_str(TAXONOMY_SECTION);
         result.push('\n');
@@ -155,8 +156,7 @@ pub fn save_taxonomy(wiki_dir: &Path, taxonomy: &NorthstarTaxonomy) -> Result<()
     };
 
     let updated = replace_yaml_block(&current, taxonomy)?;
-    fs::write(&md_path, updated)
-        .with_context(|| format!("Failed to write {}", md_path.display()))
+    fs::write(&md_path, updated).with_context(|| format!("Failed to write {}", md_path.display()))
 }
 
 // ── Prose helpers (unchanged) ─────────────────────────────────────────────────

@@ -3,9 +3,7 @@ use anyhow::Result;
 use crate::{
     config::Config,
     output::emit_json,
-    wiki_index::{
-        append_log, rebuild_colocated_indexes, reindex_from_filesystem,
-    },
+    wiki_index::{append_log, rebuild_colocated_indexes, reindex_from_filesystem},
 };
 
 pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<()> {
@@ -23,7 +21,11 @@ pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<(
 
     if dry_run {
         if json {
-            let _ = emit_json("reindex", true, &serde_json::json!({ "pages_found": count, "dry_run": true }));
+            let _ = emit_json(
+                "reindex",
+                true,
+                &serde_json::json!({ "pages_found": count, "dry_run": true }),
+            );
         } else {
             println!("Would reindex {} pages (dry run)", count);
         }
@@ -38,12 +40,22 @@ pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<(
         });
 
     rebuild_colocated_indexes(wiki_dir, &index, &trees)?;
-    append_log(wiki_dir, &format!("reindex: rebuilt hierarchical indexes from {} pages", count))?;
+    append_log(
+        wiki_dir,
+        &format!("reindex: rebuilt hierarchical indexes from {} pages", count),
+    )?;
 
     if json {
-        let _ = emit_json("reindex", true, &serde_json::json!({ "pages_indexed": count }));
+        let _ = emit_json(
+            "reindex",
+            true,
+            &serde_json::json!({ "pages_indexed": count }),
+        );
     } else {
-        println!("Reindexed {} pages → co-located index.md files rebuilt", count);
+        println!(
+            "Reindexed {} pages → co-located index.md files rebuilt",
+            count
+        );
     }
     Ok(())
 }

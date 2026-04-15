@@ -11,7 +11,10 @@ pub struct QualityAssessment {
 pub fn assess_quality(title: &str, body: &str) -> QualityAssessment {
     let trimmed = body.trim();
     let word_count = trimmed.split_whitespace().count();
-    let non_empty_lines: Vec<&str> = trimmed.lines().filter(|line| !line.trim().is_empty()).collect();
+    let non_empty_lines: Vec<&str> = trimmed
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .collect();
     let unique_terms = unique_terms(trimmed);
     let has_structure = trimmed.contains("\n#")
         || trimmed.starts_with('#')
@@ -19,8 +22,10 @@ pub fn assess_quality(title: &str, body: &str) -> QualityAssessment {
         || trimmed.contains("\n1. ")
         || trimmed.contains("\n|")
         || trimmed.contains("## ");
-    let has_links = trimmed.contains("http://") || trimmed.contains("https://") || trimmed.contains("](");
-    let sentence_count = trimmed.matches('.').count() + trimmed.matches('?').count() + trimmed.matches('!').count();
+    let has_links =
+        trimmed.contains("http://") || trimmed.contains("https://") || trimmed.contains("](");
+    let sentence_count =
+        trimmed.matches('.').count() + trimmed.matches('?').count() + trimmed.matches('!').count();
 
     let lower_title = title.trim().to_lowercase();
     let lower_body = trimmed.to_lowercase();

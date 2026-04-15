@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use reqwest::{Client, StatusCode, header::HeaderMap, header::HeaderValue, multipart};
 use std::time::Duration as StdDuration;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 pub struct ConfluenceClient {
     client: Client,
@@ -495,7 +495,10 @@ impl ConfluenceClient {
         page_id: &str,
         filename: &str,
     ) -> Result<Option<serde_json::Value>> {
-        let base = format!("{}/rest/api/content/{}/child/attachment", self.base_url, page_id);
+        let base = format!(
+            "{}/rest/api/content/{}/child/attachment",
+            self.base_url, page_id
+        );
         let mut url_builder = reqwest::Url::parse(&base)
             .unwrap_or_else(|_| reqwest::Url::parse("http://invalid").unwrap());
         {
@@ -587,7 +590,10 @@ impl ConfluenceClient {
             return Ok(());
         }
 
-        let url = format!("{}/rest/api/content/{}/child/attachment", self.base_url, page_id);
+        let url = format!(
+            "{}/rest/api/content/{}/child/attachment",
+            self.base_url, page_id
+        );
         let response = self
             .client
             .post(&url)
@@ -854,7 +860,10 @@ impl ConfluenceClient {
 
     /// Fetches a Confluence page by ID including the storage-format body.
     pub async fn get_page_body(&self, page_id: &str) -> Result<Option<serde_json::Value>> {
-        let url = format!("{}/api/v2/pages/{}?body-format=storage", self.base_url, page_id);
+        let url = format!(
+            "{}/api/v2/pages/{}?body-format=storage",
+            self.base_url, page_id
+        );
 
         let response = send_with_retry("get page body", || {
             self.client
@@ -865,7 +874,10 @@ impl ConfluenceClient {
         .with_context(|| format!("Failed to fetch body for Confluence page {}", page_id))?;
 
         let status = response.status();
-        let response_text = response.text().await.context("Failed to read response body")?;
+        let response_text = response
+            .text()
+            .await
+            .context("Failed to read response body")?;
 
         if status.is_success() {
             let json: serde_json::Value = serde_json::from_str(&response_text)
@@ -876,7 +888,9 @@ impl ConfluenceClient {
         } else {
             anyhow::bail!(
                 "Failed to fetch Confluence page {} body ({}): {}",
-                page_id, status, response_text
+                page_id,
+                status,
+                response_text
             );
         }
     }
@@ -892,7 +906,10 @@ impl ConfluenceClient {
         })
         .await
         .with_context(|| {
-            format!("Failed to send Confluence API request for page ID: {}", page_id)
+            format!(
+                "Failed to send Confluence API request for page ID: {}",
+                page_id
+            )
         })?;
 
         let status = response.status();
@@ -1182,15 +1199,27 @@ impl ConfluenceClient {
             .await
             .context("Failed to fetch space info")?;
         let status = response.status();
-        let text = response.text().await.context("Failed to read space response")?;
+        let text = response
+            .text()
+            .await
+            .context("Failed to read space response")?;
         if !status.is_success() {
-            anyhow::bail!("Failed to look up space {}: {} — {}", space_key, status, text);
+            anyhow::bail!(
+                "Failed to look up space {}: {} — {}",
+                space_key,
+                status,
+                text
+            );
         }
-        let json: serde_json::Value = serde_json::from_str(&text).context("Failed to parse space response")?;
+        let json: serde_json::Value =
+            serde_json::from_str(&text).context("Failed to parse space response")?;
         json["results"][0]["id"]
             .as_str()
             .map(|s| s.to_string())
-            .context(format!("Numeric space ID not found for key '{}'", space_key))
+            .context(format!(
+                "Numeric space ID not found for key '{}'",
+                space_key
+            ))
     }
 
     pub async fn page_is_descendant_of(&self, page_id: &str, ancestor_id: &str) -> Result<bool> {
@@ -1457,7 +1486,10 @@ impl ConfluenceClient {
         if !resp.status().is_success() {
             return Ok(vec![]);
         }
-        let body: serde_json::Value = resp.json().await.context("Failed to parse labels response")?;
+        let body: serde_json::Value = resp
+            .json()
+            .await
+            .context("Failed to parse labels response")?;
         let labels = body["results"]
             .as_array()
             .unwrap_or(&vec![])
@@ -1483,7 +1515,10 @@ impl ConfluenceClient {
         if !resp.status().is_success() {
             return Ok(vec![]);
         }
-        let body: serde_json::Value = resp.json().await.context("Failed to parse footer comments")?;
+        let body: serde_json::Value = resp
+            .json()
+            .await
+            .context("Failed to parse footer comments")?;
         Ok(body["results"].as_array().cloned().unwrap_or_default())
     }
 
@@ -1503,7 +1538,10 @@ impl ConfluenceClient {
         if !resp.status().is_success() {
             return Ok(vec![]);
         }
-        let body: serde_json::Value = resp.json().await.context("Failed to parse inline comments")?;
+        let body: serde_json::Value = resp
+            .json()
+            .await
+            .context("Failed to parse inline comments")?;
         Ok(body["results"].as_array().cloned().unwrap_or_default())
     }
 
@@ -1529,7 +1567,11 @@ impl ConfluenceClient {
 
     /// POST {base_url}/api/v2/footer-comments — create a footer comment on a page.
     /// Returns the new comment ID.
-    pub async fn create_footer_comment(&self, page_id: &str, body_storage_xml: &str) -> Result<String> {
+    pub async fn create_footer_comment(
+        &self,
+        page_id: &str,
+        body_storage_xml: &str,
+    ) -> Result<String> {
         let url = format!("{}/api/v2/footer-comments", self.base_url);
         let payload = serde_json::json!({
             "pageId": page_id,
@@ -1547,17 +1589,27 @@ impl ConfluenceClient {
             .await
             .context("Failed to create footer comment")?;
         let status = resp.status();
-        let text = resp.text().await.context("Failed to read create-comment response")?;
+        let text = resp
+            .text()
+            .await
+            .context("Failed to read create-comment response")?;
         if !status.is_success() {
             anyhow::bail!("create_footer_comment failed {}: {}", status, text);
         }
-        let val: serde_json::Value = serde_json::from_str(&text).context("Failed to parse create-comment response")?;
-        val["id"].as_str().map(|s| s.to_string())
+        let val: serde_json::Value =
+            serde_json::from_str(&text).context("Failed to parse create-comment response")?;
+        val["id"]
+            .as_str()
+            .map(|s| s.to_string())
             .ok_or_else(|| anyhow::anyhow!("No id in create-comment response: {}", text))
     }
 
     /// PUT {base_url}/api/v2/footer-comments/{id} — update an existing footer comment body.
-    pub async fn update_footer_comment(&self, comment_id: &str, body_storage_xml: &str) -> Result<()> {
+    pub async fn update_footer_comment(
+        &self,
+        comment_id: &str,
+        body_storage_xml: &str,
+    ) -> Result<()> {
         let url = format!("{}/api/v2/footer-comments/{}", self.base_url, comment_id);
         // Need current version first
         let get_resp = self

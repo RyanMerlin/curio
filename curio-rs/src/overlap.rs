@@ -24,7 +24,11 @@ fn jaccard(a: &HashSet<String>, b: &HashSet<String>) -> f32 {
     }
     let intersection = a.intersection(b).count() as f32;
     let union = a.union(b).count() as f32;
-    if union == 0.0 { 0.0 } else { intersection / union }
+    if union == 0.0 {
+        0.0
+    } else {
+        intersection / union
+    }
 }
 
 pub fn find_peer_overlap(
@@ -38,13 +42,18 @@ pub fn find_peer_overlap(
     if category.is_empty() {
         return Ok(peers);
     }
-    let peer_dir = wiki_dir.join("published").join(category.iter().collect::<std::path::PathBuf>());
+    let peer_dir = wiki_dir
+        .join("published")
+        .join(category.iter().collect::<std::path::PathBuf>());
     if !peer_dir.exists() {
         return Ok(peers);
     }
 
     let target_tokens = tokens(&format!("{} {}", title, body));
-    for entry in walkdir::WalkDir::new(&peer_dir).into_iter().filter_map(|entry| entry.ok()) {
+    for entry in walkdir::WalkDir::new(&peer_dir)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
         let path = entry.path();
         if !entry.file_type().is_file()
             || path.extension().and_then(|ext| ext.to_str()) != Some("md")
@@ -67,12 +76,20 @@ pub fn find_peer_overlap(
         let score = (title_score * 0.45) + (body_score * 0.55);
         if score >= 0.45 {
             peers.push(OverlapMatch {
-                path: path.strip_prefix(wiki_dir).unwrap_or(path).to_string_lossy().replace('\\', "/"),
+                path: path
+                    .strip_prefix(wiki_dir)
+                    .unwrap_or(path)
+                    .to_string_lossy()
+                    .replace('\\', "/"),
                 score,
             });
         }
     }
 
-    peers.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    peers.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     Ok(peers)
 }

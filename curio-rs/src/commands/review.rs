@@ -1,17 +1,8 @@
 use anyhow::Result;
 
-use crate::{
-    config::Config,
-    output::emit_json,
-    wiki_index::load_registry,
-};
+use crate::{config::Config, output::emit_json, wiki_index::load_registry};
 
-pub async fn run_review(
-    config: &Config,
-    _dry_run: bool,
-    json: bool,
-    lane: &str,
-) -> Result<()> {
+pub async fn run_review(config: &Config, _dry_run: bool, json: bool, lane: &str) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
     let registry = load_registry(wiki_dir)?;
 

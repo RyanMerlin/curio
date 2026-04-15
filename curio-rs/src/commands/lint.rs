@@ -53,7 +53,9 @@ pub async fn run_lint(config: &Config, _dry_run: bool, json: bool, fix: bool) ->
                         // Remove the broken ref
                         let mut page = page.clone();
                         page.frontmatter.cross_refs.retain(|r| r != xref);
-                        if let Err(e) = crate::wiki_fs::update_frontmatter(&page_path, &page.frontmatter) {
+                        if let Err(e) =
+                            crate::wiki_fs::update_frontmatter(&page_path, &page.frontmatter)
+                        {
                             eprintln!("Warning: could not fix {}: {}", entry.path, e);
                         } else {
                             fixed += 1;
@@ -126,11 +128,18 @@ pub async fn run_lint(config: &Config, _dry_run: bool, json: bool, fix: bool) ->
                 "{} issue(s) found across {} pages:{}",
                 issues.len(),
                 registry.pages.len(),
-                if fix { format!(" {} fixed", fixed) } else { String::new() }
+                if fix {
+                    format!(" {} fixed", fixed)
+                } else {
+                    String::new()
+                }
             );
             for issue in &issues {
                 let kind = issue["type"].as_str().unwrap_or("unknown");
-                let path = issue["path"].as_str().or_else(|| issue["source"].as_str()).unwrap_or("?");
+                let path = issue["path"]
+                    .as_str()
+                    .or_else(|| issue["source"].as_str())
+                    .unwrap_or("?");
                 let detail = issue["detail"].as_str().unwrap_or("");
                 println!("  [{:^20}] {} — {}", kind, path, detail);
             }

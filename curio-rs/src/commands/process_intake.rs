@@ -15,19 +15,19 @@ use chrono::Utc;
 use std::path::{Path, PathBuf};
 
 use crate::{
+    PageStatus,
     config::Config,
     northstar::{load_taxonomy, taxonomy_path_exists},
     output::emit_json,
     overlap::find_peer_overlap,
     proposal::{
-        required_lane, save_proposal_record, ProposalDossier, ProposalKind, ProposalLane,
-        ProposalRecord, ProposalScores, ProposalTaxonomyMutation,
+        ProposalDossier, ProposalKind, ProposalLane, ProposalRecord, ProposalScores,
+        ProposalTaxonomyMutation, required_lane, save_proposal_record,
     },
     quality::assess_quality,
     reconcile::{ReconcileDecision, RoutingAnalysis},
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
-    PageStatus,
 };
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -101,7 +101,11 @@ pub async fn run_process(
     if intake_pages.is_empty() {
         let msg = "No intake pages to process";
         if json {
-            let _ = emit_json("process", true, &serde_json::json!({ "processed": 0, "message": msg }));
+            let _ = emit_json(
+                "process",
+                true,
+                &serde_json::json!({ "processed": 0, "message": msg }),
+            );
         } else {
             println!("{}", msg);
         }
@@ -119,8 +123,9 @@ pub async fn run_process(
     if let Some(rf) = route_file {
         let raw = std::fs::read_to_string(&rf)
             .with_context(|| format!("Failed to read route file {}", rf.display()))?;
-        let decisions: Vec<(String, ReconcileDecision)> = serde_json::from_str(&raw)
-            .context("Failed to parse route file — expected [{\"slug\": ..., \"decision\": {...}}, ...]")?;
+        let decisions: Vec<(String, ReconcileDecision)> = serde_json::from_str(&raw).context(
+            "Failed to parse route file — expected [{\"slug\": ..., \"decision\": {...}}, ...]",
+        )?;
 
         return apply_decisions(config, &intake_pages, decisions, dry_run, json);
     }
@@ -141,7 +146,8 @@ fn output_routing_manifest(
     let wiki_dir = &config.wiki.wiki_dir;
 
     let taxonomy = load_taxonomy(wiki_dir)?;
-    let northstar_md = std::fs::read_to_string(wiki_dir.join("_config/northstar.md")).unwrap_or_default();
+    let northstar_md =
+        std::fs::read_to_string(wiki_dir.join("_config/northstar.md")).unwrap_or_default();
 
     // Load root index and recursively gather hierarchy context for efficient structure-first routing.
     let index_md = crate::wiki_index::read_index_md(wiki_dir).unwrap_or_default();
@@ -238,9 +244,22 @@ fn apply_decisions(
             }));
         } else {
             // Build a RoutingAnalysis sidecar from the decision
-            let analysis = build_analysis_from_decision(&decision, &page.frontmatter.title, &page.body, page.frontmatter.source.origin_url.as_deref(), &page.frontmatter.content_hash);
+            let analysis = build_analysis_from_decision(
+                &decision,
+                &page.frontmatter.title,
+                &page.body,
+                page.frontmatter.source.origin_url.as_deref(),
+                &page.frontmatter.content_hash,
+            );
 
-            match apply_routing(config, &src_path, slug, decision.clone(), Some(analysis), false) {
+            match apply_routing(
+                config,
+                &src_path,
+                slug,
+                decision.clone(),
+                Some(analysis),
+                false,
+            ) {
                 Ok(()) => {
                     let conf_pct = (decision.confidence * 100.0) as u32;
                     processed.push(serde_json::json!({
@@ -270,12 +289,23 @@ fn apply_decisions(
     } else {
         for item in &processed {
             let title = item["title"].as_str().unwrap_or("?");
-            let to = item["routed_to"].as_str().or_else(|| item["would_route_to"].as_str()).unwrap_or("?");
+            let to = item["routed_to"]
+                .as_str()
+                .or_else(|| item["would_route_to"].as_str())
+                .unwrap_or("?");
             let cat = item["category"]
                 .as_array()
-                .map(|a| a.iter().map(|v| v.as_str().unwrap_or("")).collect::<Vec<_>>().join("/"))
+                .map(|a| {
+                    a.iter()
+                        .map(|v| v.as_str().unwrap_or(""))
+                        .collect::<Vec<_>>()
+                        .join("/")
+                })
                 .unwrap_or_default();
-            let conf = item["confidence"].as_u64().map(|c| format!(" [{c}%]")).unwrap_or_default();
+            let conf = item["confidence"]
+                .as_u64()
+                .map(|c| format!(" [{c}%]"))
+                .unwrap_or_default();
             println!("  {} → {}/{}{}", title, to, cat, conf);
         }
         for e in &errors {
@@ -323,7 +353,10 @@ fn collect_hierarchy_context(wiki_dir: &Path) -> Result<Vec<HierarchyContextEntr
     if !published_dir.exists() {
         return Ok(entries);
     }
-    for entry in walkdir::WalkDir::new(&published_dir).into_iter().filter_map(|entry| entry.ok()) {
+    for entry in walkdir::WalkDir::new(&published_dir)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
         let path = entry.path();
         if !entry.file_type().is_file()
             || path.file_name().and_then(|name| name.to_str()) != Some("index.md")
@@ -332,7 +365,11 @@ fn collect_hierarchy_context(wiki_dir: &Path) -> Result<Vec<HierarchyContextEntr
         }
         let raw = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read {}", path.display()))?;
-        let rel = path.strip_prefix(wiki_dir).unwrap_or(path).to_string_lossy().replace('\\', "/");
+        let rel = path
+            .strip_prefix(wiki_dir)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/");
         let title = raw
             .lines()
             .find(|line| line.starts_with('#'))
@@ -345,7 +382,11 @@ fn collect_hierarchy_context(wiki_dir: &Path) -> Result<Vec<HierarchyContextEntr
             .take(6)
             .collect::<Vec<_>>()
             .join(" ");
-        entries.push(HierarchyContextEntry { path: rel, title, summary });
+        entries.push(HierarchyContextEntry {
+            path: rel,
+            title,
+            summary,
+        });
     }
     entries.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(entries)
@@ -368,9 +409,22 @@ fn apply_routing(
     let mut analysis = analysis;
     let mut page = parse_wiki_page(src_path)?;
     let quality = assess_quality(&page.frontmatter.title, &page.body);
-    let overlap_candidates = find_peer_overlap(wiki_dir, &decision.category, &page.frontmatter.title, &page.body, Some(slug))?;
-    let overlap_risk = overlap_candidates.first().map(|candidate| candidate.score).unwrap_or(0.0);
-    let mut target_status = if decision.status == "staged" { "staged" } else { "review" };
+    let overlap_candidates = find_peer_overlap(
+        wiki_dir,
+        &decision.category,
+        &page.frontmatter.title,
+        &page.body,
+        Some(slug),
+    )?;
+    let overlap_risk = overlap_candidates
+        .first()
+        .map(|candidate| candidate.score)
+        .unwrap_or(0.0);
+    let mut target_status = if decision.status == "staged" {
+        "staged"
+    } else {
+        "review"
+    };
     let taxonomy_has_path = taxonomy_path_exists(&taxonomy, &decision.category);
     if !taxonomy_has_path && decision.proposed_new_subtree.is_none() {
         anyhow::bail!(
@@ -382,7 +436,11 @@ fn apply_routing(
     let required_lane = required_lane(
         decision.confidence,
         quality.information_quality,
-        if taxonomy_has_path { decision.confidence } else { 0.5 },
+        if taxonomy_has_path {
+            decision.confidence
+        } else {
+            0.5
+        },
         overlap_risk,
         !taxonomy_has_path,
         decision.review_reason.is_some(),
@@ -406,7 +464,8 @@ fn apply_routing(
                 decision.merge_target.as_deref().unwrap_or("unknown peer")
             )
         } else if !taxonomy_has_path {
-            "Proposed taxonomy path does not exist yet — requires review with a taxonomy mutation".to_string()
+            "Proposed taxonomy path does not exist yet — requires review with a taxonomy mutation"
+                .to_string()
         } else {
             format!(
                 "Low information quality ({:.0}%) or usability ({:.0}%) — requires review before publication",
@@ -419,18 +478,32 @@ fn apply_routing(
         }
         if let Some(ref mut sidecar) = analysis {
             sidecar.routing.review_reason = Some(
-                sidecar.routing.review_reason.clone().unwrap_or(fallback_reason)
+                sidecar
+                    .routing
+                    .review_reason
+                    .clone()
+                    .unwrap_or(fallback_reason),
             );
             sidecar.routing.information_quality = Some(quality.information_quality);
             sidecar.routing.usability = Some(quality.usability);
             sidecar.routing.flags.extend(quality.flags.clone());
-            sidecar.routing.flags.extend(overlap_candidates.iter().take(3).map(|candidate| format!("overlap:{}", candidate.path)));
+            sidecar.routing.flags.extend(
+                overlap_candidates
+                    .iter()
+                    .take(3)
+                    .map(|candidate| format!("overlap:{}", candidate.path)),
+            );
         }
     } else if let Some(ref mut sidecar) = analysis {
         sidecar.routing.information_quality = Some(quality.information_quality);
         sidecar.routing.usability = Some(quality.usability);
         sidecar.routing.flags.extend(quality.flags.clone());
-        sidecar.routing.flags.extend(overlap_candidates.iter().take(3).map(|candidate| format!("overlap:{}", candidate.path)));
+        sidecar.routing.flags.extend(
+            overlap_candidates
+                .iter()
+                .take(3)
+                .map(|candidate| format!("overlap:{}", candidate.path)),
+        );
     }
 
     // Shallow-route guard: if a leaf page was routed to a single-component category
@@ -440,12 +513,22 @@ fn apply_routing(
         let body_lower = page.body.to_lowercase();
         let title_lower = page.frontmatter.title.to_lowercase();
         let technical_signals = [
-            "troubleshoot", "install", "configur", "version", "upgrade", "migrat",
-            "error", "debug", "procedure", "step-by-step", "how to", "howto",
+            "troubleshoot",
+            "install",
+            "configur",
+            "version",
+            "upgrade",
+            "migrat",
+            "error",
+            "debug",
+            "procedure",
+            "step-by-step",
+            "how to",
+            "howto",
         ];
-        let is_technical = technical_signals.iter().any(|sig| {
-            title_lower.contains(sig) || body_lower.contains(sig)
-        });
+        let is_technical = technical_signals
+            .iter()
+            .any(|sig| title_lower.contains(sig) || body_lower.contains(sig));
         if is_technical {
             target_status = "review";
             decision.status = "review".to_string();
@@ -458,7 +541,10 @@ fn apply_routing(
                 decision.review_reason = Some(shallow_reason.clone());
             }
             if let Some(ref mut sidecar) = analysis {
-                sidecar.routing.flags.push("shallow_route_warning".to_string());
+                sidecar
+                    .routing
+                    .flags
+                    .push("shallow_route_warning".to_string());
                 if sidecar.routing.review_reason.is_none() {
                     sidecar.routing.review_reason = Some(shallow_reason);
                 }
@@ -473,7 +559,11 @@ fn apply_routing(
     std::fs::create_dir_all(&dest_dir)?;
 
     let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
-    page.frontmatter.status = if target_status == "staged" { PageStatus::Staged } else { PageStatus::Review };
+    page.frontmatter.status = if target_status == "staged" {
+        PageStatus::Staged
+    } else {
+        PageStatus::Review
+    };
     page.frontmatter.category = decision.category.clone();
     page.frontmatter.keywords = decision.keywords.clone();
     page.frontmatter.confidence = Some(decision.confidence);
@@ -491,7 +581,10 @@ fn apply_routing(
         quality.information_quality,
         quality.usability,
         overlap_risk,
-        overlap_candidates.iter().map(|candidate| candidate.path.clone()).collect(),
+        overlap_candidates
+            .iter()
+            .map(|candidate| candidate.path.clone())
+            .collect(),
         &page.frontmatter.source,
     );
 
@@ -510,15 +603,23 @@ fn apply_routing(
     let analysis_src = src_path.with_extension("analysis.json");
     if analysis_src.exists() {
         let analysis_dest = dest_path.with_extension("analysis.json");
-        let rel_asrc = analysis_src.strip_prefix(repo_root).unwrap_or(&analysis_src);
-        let rel_adest = analysis_dest.strip_prefix(repo_root).unwrap_or(&analysis_dest);
+        let rel_asrc = analysis_src
+            .strip_prefix(repo_root)
+            .unwrap_or(&analysis_src);
+        let rel_adest = analysis_dest
+            .strip_prefix(repo_root)
+            .unwrap_or(&analysis_dest);
         crate::git_ops::git_mv(repo_root, rel_asrc, rel_adest)?;
     }
     let proposal_src = crate::proposal::proposal_sidecar_path(src_path);
     if proposal_src.exists() {
         let proposal_dest = crate::proposal::proposal_sidecar_path(&dest_path);
-        let rel_psrc = proposal_src.strip_prefix(repo_root).unwrap_or(&proposal_src);
-        let rel_pdest = proposal_dest.strip_prefix(repo_root).unwrap_or(&proposal_dest);
+        let rel_psrc = proposal_src
+            .strip_prefix(repo_root)
+            .unwrap_or(&proposal_src);
+        let rel_pdest = proposal_dest
+            .strip_prefix(repo_root)
+            .unwrap_or(&proposal_dest);
         crate::git_ops::git_mv(repo_root, rel_psrc, rel_pdest)?;
     }
 
@@ -595,14 +696,18 @@ fn build_proposal_record(
     } else {
         ProposalKind::NewPage
     };
-    let taxonomy_mutation = decision.proposed_new_subtree.as_ref().map(|slug_value| ProposalTaxonomyMutation {
-        proposed_parent_path: decision.category.clone(),
-        proposed_node_title: slug_value.replace('-', " "),
-        proposed_node_slug: slug_value.clone(),
-        node_description: decision.proposal_rationale.clone().unwrap_or_default(),
-        rationale: decision.proposal_rationale.clone().unwrap_or_default(),
-        rejected_nearby_nodes: vec![],
-    });
+    let taxonomy_mutation =
+        decision
+            .proposed_new_subtree
+            .as_ref()
+            .map(|slug_value| ProposalTaxonomyMutation {
+                proposed_parent_path: decision.category.clone(),
+                proposed_node_title: slug_value.replace('-', " "),
+                proposed_node_slug: slug_value.clone(),
+                node_description: decision.proposal_rationale.clone().unwrap_or_default(),
+                rationale: decision.proposal_rationale.clone().unwrap_or_default(),
+                rejected_nearby_nodes: vec![],
+            });
     ProposalRecord {
         schema_version: 1,
         proposal_id: format!("proposal-{}", slug),
@@ -629,7 +734,11 @@ fn build_proposal_record(
         scores: ProposalScores {
             route_confidence: decision.confidence,
             quality_confidence: information_quality,
-            hierarchy_fit_confidence: if taxonomy_mutation.is_some() { 0.5 } else { decision.confidence },
+            hierarchy_fit_confidence: if taxonomy_mutation.is_some() {
+                0.5
+            } else {
+                decision.confidence
+            },
             overlap_risk,
             evidence_completeness: 0.7,
             usability,
@@ -659,17 +768,23 @@ fn build_proposal_record(
 /// Write a routing analysis sidecar alongside `content_path`.
 pub fn write_analysis_sidecar(content_path: &Path, analysis: &RoutingAnalysis) -> Result<()> {
     let sidecar_path = content_path.with_extension("analysis.json");
-    let json = serde_json::to_string_pretty(analysis)
-        .context("Failed to serialize routing analysis")?;
-    std::fs::write(&sidecar_path, json)
-        .with_context(|| format!("Failed to write analysis sidecar: {}", sidecar_path.display()))?;
+    let json =
+        serde_json::to_string_pretty(analysis).context("Failed to serialize routing analysis")?;
+    std::fs::write(&sidecar_path, json).with_context(|| {
+        format!(
+            "Failed to write analysis sidecar: {}",
+            sidecar_path.display()
+        )
+    })?;
 
     // Stage the sidecar for git
     let repo_root = content_path
         .ancestors()
         .find(|p| p.join(".git").exists())
         .unwrap_or(content_path.parent().unwrap_or(content_path));
-    let rel = sidecar_path.strip_prefix(repo_root).unwrap_or(&sidecar_path);
+    let rel = sidecar_path
+        .strip_prefix(repo_root)
+        .unwrap_or(&sidecar_path);
     let _ = std::process::Command::new("git")
         .args(["add", &rel.to_string_lossy()])
         .current_dir(repo_root)
@@ -694,7 +809,10 @@ fn commit_if_needed(config: &Config, count: usize) -> Result<()> {
     let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
     crate::git_ops::git_add(repo_root, wiki_dir)?;
     if crate::git_ops::git_has_staged(repo_root) {
-        crate::git_ops::git_commit(repo_root, &format!("curio: process {} intake item(s)", count))?;
+        crate::git_ops::git_commit(
+            repo_root,
+            &format!("curio: process {} intake item(s)", count),
+        )?;
     }
     Ok(())
 }

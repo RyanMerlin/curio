@@ -27,7 +27,7 @@ use crate::{
 };
 
 const LABEL_APPROVE: &str = "curio:approve";
-const LABEL_REJECT: &str  = "curio:reject";
+const LABEL_REJECT: &str = "curio:reject";
 const LABEL_REWRITE: &str = "curio:rewrite";
 
 #[derive(Debug, Clone, PartialEq)]
@@ -57,8 +57,8 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
     }
 
     config.connection.require_confluence()?;
-    let token = std::env::var("CURIO_CONFLUENCE_TOKEN")
-        .context("CURIO_CONFLUENCE_TOKEN not set")?;
+    let token =
+        std::env::var("CURIO_CONFLUENCE_TOKEN").context("CURIO_CONFLUENCE_TOKEN not set")?;
     let client = ConfluenceClient::new(
         config.connection.confluence_url.clone(),
         config.connection.confluence_email.clone(),
@@ -70,9 +70,13 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
     let mut candidates: Vec<(PathBuf, serde_json::Value)> = Vec::new();
     for entry in WalkDir::new(&review_dir).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path().to_path_buf();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") { continue; }
+        if path.extension().and_then(|e| e.to_str()) != Some("json") {
+            continue;
+        }
         let fname = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if !fname.ends_with(".sync-refs.json") { continue; }
+        if !fname.ends_with(".sync-refs.json") {
+            continue;
+        }
         let raw = std::fs::read_to_string(&path)
             .with_context(|| format!("Failed to read {}", path.display()))?;
         let refs: serde_json::Value = serde_json::from_str(&raw)
@@ -89,7 +93,10 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
         return Ok(());
     }
 
-    println!("Checking {} review page(s) for Confluence signals…", candidates.len());
+    println!(
+        "Checking {} review page(s) for Confluence signals…",
+        candidates.len()
+    );
 
     let mut signals: Vec<PageSignals> = Vec::new();
 
@@ -101,7 +108,10 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
         let pinned_comment_id = refs["pinned_comment_id"].as_str().map(|s| s.to_string());
 
         // ── Fetch labels ────────────────────────────────────────────────────
-        let labels: Vec<String> = client.get_page_labels_v2(&review_page_id).await.unwrap_or_default();
+        let labels: Vec<String> = client
+            .get_page_labels_v2(&review_page_id)
+            .await
+            .unwrap_or_default();
 
         // ── Label-driven action (takes precedence) ──────────────────────────
         let label_action: Option<Action> = if labels.iter().any(|l| l == LABEL_APPROVE) {
@@ -117,21 +127,32 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
         // ── Reaction-driven action (only consulted when no label) ───────────
         let reaction_action: Option<Action> = if label_action.is_none() {
             if let Some(ref comment_id) = pinned_comment_id {
-                let reactions: Vec<serde_json::Value> = client.get_comment_reactions(comment_id).await.unwrap_or_default();
+                let reactions: Vec<serde_json::Value> = client
+                    .get_comment_reactions(comment_id)
+                    .await
+                    .unwrap_or_default();
                 // Each reaction object has an "emoji" field with "value" or "shortName"
                 let emojis: Vec<String> = reactions
                     .iter()
                     .filter_map(|r| {
-                        r["emoji"]["value"].as_str()
+                        r["emoji"]["value"]
+                            .as_str()
                             .or_else(|| r["emoji"]["shortName"].as_str())
                             .map(|s: &str| s.to_string())
                     })
                     .collect();
-                if emojis.iter().any(|e: &String| e.contains('\u{1F44D}') || e.contains("+1") || e.contains("thumbsup")) {
+                if emojis.iter().any(|e: &String| {
+                    e.contains('\u{1F44D}') || e.contains("+1") || e.contains("thumbsup")
+                }) {
                     Some(Action::Approve)
-                } else if emojis.iter().any(|e: &String| e.contains('\u{1F44E}') || e.contains("-1") || e.contains("thumbsdown")) {
+                } else if emojis.iter().any(|e: &String| {
+                    e.contains('\u{1F44E}') || e.contains("-1") || e.contains("thumbsdown")
+                }) {
                     Some(Action::Reject)
-                } else if emojis.iter().any(|e: &String| e.contains('\u{2753}') || e.contains("question")) {
+                } else if emojis
+                    .iter()
+                    .any(|e: &String| e.contains('\u{2753}') || e.contains("question"))
+                {
                     Some(Action::Rewrite)
                 } else {
                     None
@@ -144,21 +165,31 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
         };
 
         // ── Collect free-form comments (non-pinned footer + inline) ─────────
-        let footer_comments: Vec<serde_json::Value> = client.get_page_footer_comments(&review_page_id).await.unwrap_or_default();
-        let inline_comments: Vec<serde_json::Value> = client.get_page_inline_comments(&review_page_id).await.unwrap_or_default();
+        let footer_comments: Vec<serde_json::Value> = client
+            .get_page_footer_comments(&review_page_id)
+            .await
+            .unwrap_or_default();
+        let inline_comments: Vec<serde_json::Value> = client
+            .get_page_inline_comments(&review_page_id)
+            .await
+            .unwrap_or_default();
         let reviewer_comments: Vec<String> = footer_comments
             .iter()
             .chain(inline_comments.iter())
             .filter(|c| {
-                pinned_comment_id.as_deref()
+                pinned_comment_id
+                    .as_deref()
                     .map(|pid| c["id"].as_str() != Some(pid))
                     .unwrap_or(true)
             })
             .filter_map(|c| {
-                let body = c["body"]["storage"]["value"].as_str()
+                let body = c["body"]["storage"]["value"]
+                    .as_str()
                     .or_else(|| c["body"]["value"].as_str())
                     .unwrap_or("");
-                if body.is_empty() { return None; }
+                if body.is_empty() {
+                    return None;
+                }
                 Some(strip_html_tags(body))
             })
             .filter(|s: &String| !s.trim().is_empty())
@@ -189,7 +220,8 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
     let mut no_signal_count = 0usize;
 
     for sig in &signals {
-        let slug = sig.path
+        let slug = sig
+            .path
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown");
@@ -205,10 +237,19 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
             }
             Action::Capture => {
                 capture_count += 1;
-                println!("  CAPTURE  {}: {} comment(s) → feedback.md", slug, sig.reviewer_comments.len());
+                println!(
+                    "  CAPTURE  {}: {} comment(s) → feedback.md",
+                    slug,
+                    sig.reviewer_comments.len()
+                );
                 if !dry_run {
                     append_feedback_md(&sig.path, &sig.reviewer_comments)?;
-                    log_lines.push(format!("[{}] capture {} — {} reviewer comment(s) captured", timestamp, slug, sig.reviewer_comments.len()));
+                    log_lines.push(format!(
+                        "[{}] capture {} — {} reviewer comment(s) captured",
+                        timestamp,
+                        slug,
+                        sig.reviewer_comments.len()
+                    ));
                 }
             }
             Action::Approve => {
@@ -229,7 +270,13 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
                 rewrite_count += 1;
                 println!("  REWRITE  {}", slug);
                 if !dry_run {
-                    apply_rewrite(&sig.path, wiki_dir, &sig.reviewer_comments, &mut log_lines, &timestamp)?;
+                    apply_rewrite(
+                        &sig.path,
+                        wiki_dir,
+                        &sig.reviewer_comments,
+                        &mut log_lines,
+                        &timestamp,
+                    )?;
                 }
             }
         }
@@ -237,11 +284,15 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
 
     println!();
     if dry_run {
-        println!("[dry-run] {} approve / {} reject / {} rewrite / {} capture / {} no-signal",
-            approve_count, reject_count, rewrite_count, capture_count, no_signal_count);
+        println!(
+            "[dry-run] {} approve / {} reject / {} rewrite / {} capture / {} no-signal",
+            approve_count, reject_count, rewrite_count, capture_count, no_signal_count
+        );
     } else {
-        println!("Done: {} approved / {} rejected / {} rewritten / {} captured / {} no-signal",
-            approve_count, reject_count, rewrite_count, capture_count, no_signal_count);
+        println!(
+            "Done: {} approved / {} rejected / {} rewritten / {} captured / {} no-signal",
+            approve_count, reject_count, rewrite_count, capture_count, no_signal_count
+        );
         if !log_lines.is_empty() {
             append_audit_log(wiki_dir, &log_lines)?;
         }
@@ -293,24 +344,30 @@ fn apply_approve(
 
     // Remove sync-refs sidecar (specific to the review page)
     let refs_path = md_path.with_extension("sync-refs.json");
-    if refs_path.exists() { std::fs::remove_file(&refs_path).ok(); }
+    if refs_path.exists() {
+        std::fs::remove_file(&refs_path).ok();
+    }
 
-    log_lines.push(format!("[{}] approve {} → staged/{}", timestamp, page.frontmatter.title, category_path));
+    log_lines.push(format!(
+        "[{}] approve {} → staged/{}",
+        timestamp, page.frontmatter.title, category_path
+    ));
     Ok(())
 }
 
-fn apply_reject(
-    md_path: &Path,
-    log_lines: &mut Vec<String>,
-    timestamp: &str,
-) -> Result<()> {
+fn apply_reject(md_path: &Path, log_lines: &mut Vec<String>, timestamp: &str) -> Result<()> {
     let page = parse_wiki_page(md_path)?;
     std::fs::remove_file(md_path)?;
     for ext in &["analysis.json", "sync-refs.json", "feedback.md"] {
         let sidecar = md_path.with_extension(ext);
-        if sidecar.exists() { std::fs::remove_file(&sidecar).ok(); }
+        if sidecar.exists() {
+            std::fs::remove_file(&sidecar).ok();
+        }
     }
-    log_lines.push(format!("[{}] reject {} — removed", timestamp, page.frontmatter.title));
+    log_lines.push(format!(
+        "[{}] reject {} — removed",
+        timestamp, page.frontmatter.title
+    ));
     Ok(())
 }
 
@@ -335,14 +392,19 @@ fn apply_rewrite(
 
     for ext in &["analysis.json", "sync-refs.json"] {
         let sidecar = md_path.with_extension(ext);
-        if sidecar.exists() { std::fs::remove_file(&sidecar).ok(); }
+        if sidecar.exists() {
+            std::fs::remove_file(&sidecar).ok();
+        }
     }
 
     if !reviewer_comments.is_empty() {
         append_feedback_md(&dest, reviewer_comments)?;
     }
 
-    log_lines.push(format!("[{}] rewrite {} — moved back to intake", timestamp, page.frontmatter.title));
+    log_lines.push(format!(
+        "[{}] rewrite {} — moved back to intake",
+        timestamp, page.frontmatter.title
+    ));
     Ok(())
 }
 
@@ -368,29 +430,52 @@ fn maybe_update_northstar(
     log_lines: &mut Vec<String>,
     timestamp: &str,
 ) {
-    let Ok(raw) = std::fs::read_to_string(analysis_path) else { return; };
-    let Ok(analysis): Result<serde_json::Value, _> = serde_json::from_str(&raw) else { return; };
-    let Some(mutation) = analysis.get("taxonomy_mutation") else { return; };
-    let Some(path_arr) = mutation.get("proposed_new_subtree").and_then(|v| v.as_array()) else { return; };
-    let path_segments: Vec<String> = path_arr.iter()
+    let Ok(raw) = std::fs::read_to_string(analysis_path) else {
+        return;
+    };
+    let Ok(analysis): Result<serde_json::Value, _> = serde_json::from_str(&raw) else {
+        return;
+    };
+    let Some(mutation) = analysis.get("taxonomy_mutation") else {
+        return;
+    };
+    let Some(path_arr) = mutation
+        .get("proposed_new_subtree")
+        .and_then(|v| v.as_array())
+    else {
+        return;
+    };
+    let path_segments: Vec<String> = path_arr
+        .iter()
         .filter_map(|v| v.as_str().map(|s| s.to_string()))
         .collect();
-    if path_segments.is_empty() { return; }
+    if path_segments.is_empty() {
+        return;
+    }
 
     let new_slug = match path_segments.last() {
         Some(s) => s.clone(),
         None => return,
     };
-    let new_title = mutation["node_description"].as_str().unwrap_or(&new_slug).to_string();
+    let new_title = mutation["node_description"]
+        .as_str()
+        .unwrap_or(&new_slug)
+        .to_string();
 
     // Load the live taxonomy from NORTHSTAR.md
-    let Ok(mut taxonomy) = load_taxonomy(wiki_dir) else { return; };
+    let Ok(mut taxonomy) = load_taxonomy(wiki_dir) else {
+        return;
+    };
 
     // Skip if slug already exists anywhere in the tree
     fn slug_exists(nodes: &[crate::northstar::TaxonomyNode], slug: &str) -> bool {
-        nodes.iter().any(|n| n.slug == slug || slug_exists(&n.children, slug))
+        nodes
+            .iter()
+            .any(|n| n.slug == slug || slug_exists(&n.children, slug))
     }
-    if slug_exists(&taxonomy.nodes, &new_slug) { return; }
+    if slug_exists(&taxonomy.nodes, &new_slug) {
+        return;
+    }
 
     // Navigate to the parent node and insert the new child
     let parent_segments = &path_segments[..path_segments.len().saturating_sub(1)];
@@ -398,7 +483,9 @@ fn maybe_update_northstar(
         nodes: &'a mut Vec<crate::northstar::TaxonomyNode>,
         path: &[String],
     ) -> Option<&'a mut Vec<crate::northstar::TaxonomyNode>> {
-        if path.is_empty() { return Some(nodes); }
+        if path.is_empty() {
+            return Some(nodes);
+        }
         let target = &path[0];
         let idx = nodes.iter().position(|n| &n.slug == target)?;
         find_node_mut(&mut nodes[idx].children, &path[1..])

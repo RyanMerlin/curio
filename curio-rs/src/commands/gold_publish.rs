@@ -4,15 +4,15 @@ use chrono::Utc;
 use std::path::PathBuf;
 
 use crate::{
+    PageStatus,
     config::Config,
     northstar::{load_taxonomy, taxonomy_path_exists},
-    overlap::find_peer_overlap,
     output::emit_json,
+    overlap::find_peer_overlap,
     proposal::load_proposal_record,
     quality::assess_quality,
     wiki_fs::{parse_wiki_page, update_frontmatter},
     wiki_index::{append_log, rebuild_index_md},
-    PageStatus,
 };
 
 pub async fn run_publish(
@@ -55,12 +55,13 @@ pub async fn run_publish(
             if c.is_empty() || c == "-" || c == "." {
                 vec![]
             } else {
-                c.split('/').filter(|s| !s.is_empty()).map(|s| s.to_string()).collect()
+                c.split('/')
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string())
+                    .collect()
             }
         })
-        .unwrap_or_else(|| {
-            page.frontmatter.category.clone()
-        });
+        .unwrap_or_else(|| page.frontmatter.category.clone());
     if cat_segments.is_empty() {
         anyhow::bail!(
             "Cannot publish '{}' without a valid category. Route it back through review instead of inventing a published fallback.",
@@ -74,7 +75,13 @@ pub async fn run_publish(
             cat_segments.join("/")
         );
     }
-    let overlap_matches = find_peer_overlap(wiki_dir, &cat_segments, &page.frontmatter.title, &page.body, Some(&slug))?;
+    let overlap_matches = find_peer_overlap(
+        wiki_dir,
+        &cat_segments,
+        &page.frontmatter.title,
+        &page.body,
+        Some(&slug),
+    )?;
     if overlap_matches.first().map(|m| m.score).unwrap_or(0.0) >= 0.7 {
         anyhow::bail!(
             "Cannot publish '{}' because it semantically overlaps existing peer content (top match: {} at {:.0}%). Route it back through review for merge or consolidation.",
@@ -101,10 +108,17 @@ pub async fn run_publish(
         let msg = format!(
             "Would publish {} → published/{}",
             slug,
-            dest_path.strip_prefix(wiki_dir).unwrap_or(&dest_path).display()
+            dest_path
+                .strip_prefix(wiki_dir)
+                .unwrap_or(&dest_path)
+                .display()
         );
         if json {
-            let _ = emit_json("publish", true, &serde_json::json!({ "slug": slug, "would_publish_to": dest_path, "dry_run": true }));
+            let _ = emit_json(
+                "publish",
+                true,
+                &serde_json::json!({ "slug": slug, "would_publish_to": dest_path, "dry_run": true }),
+            );
         } else {
             println!("{}", msg);
         }
@@ -128,15 +142,23 @@ pub async fn run_publish(
     let analysis_src = src_path.with_extension("analysis.json");
     if analysis_src.exists() {
         let analysis_dest = dest_path.with_extension("analysis.json");
-        let rel_asrc = analysis_src.strip_prefix(repo_root).unwrap_or(&analysis_src);
-        let rel_adest = analysis_dest.strip_prefix(repo_root).unwrap_or(&analysis_dest);
+        let rel_asrc = analysis_src
+            .strip_prefix(repo_root)
+            .unwrap_or(&analysis_src);
+        let rel_adest = analysis_dest
+            .strip_prefix(repo_root)
+            .unwrap_or(&analysis_dest);
         let _ = crate::git_ops::git_mv(repo_root, rel_asrc, rel_adest);
     }
     let proposal_src = crate::proposal::proposal_sidecar_path(&src_path);
     if proposal_src.exists() {
         let proposal_dest = crate::proposal::proposal_sidecar_path(&dest_path);
-        let rel_psrc = proposal_src.strip_prefix(repo_root).unwrap_or(&proposal_src);
-        let rel_pdest = proposal_dest.strip_prefix(repo_root).unwrap_or(&proposal_dest);
+        let rel_psrc = proposal_src
+            .strip_prefix(repo_root)
+            .unwrap_or(&proposal_src);
+        let rel_pdest = proposal_dest
+            .strip_prefix(repo_root)
+            .unwrap_or(&proposal_dest);
         let _ = crate::git_ops::git_mv(repo_root, rel_psrc, rel_pdest);
     }
 
@@ -150,7 +172,10 @@ pub async fn run_publish(
     update_cross_refs(wiki_dir, &slug, &new_rel)?;
 
     rebuild_index_md(wiki_dir, &crate::WikiIndex::default())?;
-    append_log(wiki_dir, &format!("publish: {} published to {}", slug, new_rel))?;
+    append_log(
+        wiki_dir,
+        &format!("publish: {} published to {}", slug, new_rel),
+    )?;
 
     if config.wiki.auto_commit {
         crate::git_ops::git_add(repo_root, wiki_dir)?;
@@ -160,7 +185,11 @@ pub async fn run_publish(
     }
 
     if json {
-        let _ = emit_json("publish", true, &serde_json::json!({ "slug": slug, "published_to": new_rel }));
+        let _ = emit_json(
+            "publish",
+            true,
+            &serde_json::json!({ "slug": slug, "published_to": new_rel }),
+        );
     } else {
         println!("Published: {} → {}", slug, new_rel);
     }
@@ -198,7 +227,10 @@ fn find_in_dir(dir: &std::path::Path, slug: &str) -> Result<Option<std::path::Pa
     if !dir.exists() {
         return Ok(None);
     }
-    for entry in walkdir::WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in walkdir::WalkDir::new(dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         let path = entry.path();
         if path.extension().map_or(false, |e| e == "md") {
             if path.file_stem().map_or(false, |s| s == slug) {

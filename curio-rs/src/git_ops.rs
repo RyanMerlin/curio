@@ -79,7 +79,12 @@ pub fn git_has_staged(repo_root: &Path) -> bool {
 
 /// Stage all changes under `path` and commit with `message` if `auto_commit` is true.
 /// Does nothing if there is nothing to commit.
-pub fn stage_and_commit(repo_root: &Path, paths: &[&Path], message: &str, auto_commit: bool) -> Result<()> {
+pub fn stage_and_commit(
+    repo_root: &Path,
+    paths: &[&Path],
+    message: &str,
+    auto_commit: bool,
+) -> Result<()> {
     for &p in paths {
         git_add(repo_root, p)?;
     }

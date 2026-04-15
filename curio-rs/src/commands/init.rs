@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::{
+    WikiIndex,
     commands::sync::{
         ensure_curio_confluence_tree, parse_northstar_blueprint, reset_curio_confluence_tree,
         validate_curio_confluence_tree,
@@ -9,14 +10,22 @@ use crate::{
     confluence::ConfluenceClient,
     output::emit_json,
     wiki_index::{append_log, rebuild_index_md},
-    WikiIndex,
 };
 
 /// Fallback top-level trees used when no NORTHSTAR blueprint is present.
 const DEFAULT_TREES: &[(&str, &str)] = &[
-    ("account-tree", "Customer- and account-specific intelligence"),
-    ("product-tree", "Product-centric guidance and reference content"),
-    ("topic-tree", "Subject matter pages when no stronger route applies"),
+    (
+        "account-tree",
+        "Customer- and account-specific intelligence",
+    ),
+    (
+        "product-tree",
+        "Product-centric guidance and reference content",
+    ),
+    (
+        "topic-tree",
+        "Subject matter pages when no stronger route applies",
+    ),
 ];
 
 pub async fn run_init(
@@ -172,7 +181,10 @@ pub async fn run_init(
                 tree.root_id
             );
             if reset {
-                println!("  reset deleted {} managed descendant page(s)", deleted_descendants);
+                println!(
+                    "  reset deleted {} managed descendant page(s)",
+                    deleted_descendants
+                );
             }
             println!(
                 "  validation passed: {} checked page(s)",

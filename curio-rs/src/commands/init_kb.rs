@@ -70,8 +70,12 @@ pub async fn run_init_kb(
     dry_run: bool,
 ) -> Result<()> {
     let kb_path = path
-        .map(|p| if p.is_absolute() { p } else {
-            std::env::current_dir().unwrap_or_default().join(p)
+        .map(|p| {
+            if p.is_absolute() {
+                p
+            } else {
+                std::env::current_dir().unwrap_or_default().join(p)
+            }
         })
         .unwrap_or_else(|| expand_tilde(DEFAULT_KB_PATH));
 
@@ -111,7 +115,8 @@ pub async fn run_init_kb(
     write_if_missing(&kb_path.join(".gitignore"), GITIGNORE_CONTENT)?;
 
     // Write .env stub (with comment only, never commit secrets)
-    let env_stub = "# KB secrets — never commit this file\n# CURIO_CONFLUENCE_TOKEN=your-token-here\n";
+    let env_stub =
+        "# KB secrets — never commit this file\n# CURIO_CONFLUENCE_TOKEN=your-token-here\n";
     write_if_missing(&kb_path.join(".env"), env_stub)?;
 
     println!("\nKB store created:");
@@ -120,17 +125,32 @@ pub async fn run_init_kb(
     // Register as named workspace if name was given
     if let Some(ref ws_name) = name {
         let ws_file = upsert_workspace(ws_name, &kb_path, description.as_deref())?;
-        println!("\nRegistered as workspace '{ws_name}' in {}", ws_file.display());
+        println!(
+            "\nRegistered as workspace '{ws_name}' in {}",
+            ws_file.display()
+        );
         println!("  Use: curio --workspace {ws_name} <command>");
     } else {
         println!("\nTo register as a named workspace:");
-        println!("  curio workspace add --name <name> --path {}", kb_path.display());
+        println!(
+            "  curio workspace add --name <name> --path {}",
+            kb_path.display()
+        );
     }
 
     println!("\nNext steps:");
-    println!("  1. Edit {} — add your Confluence URL and space key", kb_path.join("curio.yaml").display());
-    println!("  2. Add CURIO_CONFLUENCE_TOKEN to {}", kb_path.join(".env").display());
-    println!("  3. Edit {} — define your taxonomy", kb_path.join("NORTHSTAR.md").display());
+    println!(
+        "  1. Edit {} — add your Confluence URL and space key",
+        kb_path.join("curio.yaml").display()
+    );
+    println!(
+        "  2. Add CURIO_CONFLUENCE_TOKEN to {}",
+        kb_path.join(".env").display()
+    );
+    println!(
+        "  3. Edit {} — define your taxonomy",
+        kb_path.join("NORTHSTAR.md").display()
+    );
     println!("  4. Run: curio --kb-dir {} init", kb_path.display());
 
     Ok(())

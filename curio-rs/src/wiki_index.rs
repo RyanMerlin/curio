@@ -1,4 +1,4 @@
-use crate::{audit_store, Frontmatter, PageStatus, WikiIndex, WikiIndexEntry, WikiPage};
+use crate::{Frontmatter, PageStatus, WikiIndex, WikiIndexEntry, WikiPage, audit_store};
 use anyhow::{Context, Result};
 use chrono::Utc;
 use std::collections::BTreeMap;
@@ -50,8 +50,7 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| {
-            e.file_type().is_file()
-                && e.path().extension().map_or(false, |ext| ext == "md")
+            e.file_type().is_file() && e.path().extension().map_or(false, |ext| ext == "md")
         })
     {
         let abs = entry.path();
@@ -60,7 +59,9 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
             .expect("walkdir entry is under wiki_dir");
 
         // Skip system directories
-        let first = rel.components().next()
+        let first = rel
+            .components()
+            .next()
             .map(|c| c.as_os_str().to_string_lossy().into_owned())
             .unwrap_or_default();
         if first == "_config" {
@@ -133,7 +134,11 @@ pub fn rebuild_colocated_indexes(
     let mut tree_counts: BTreeMap<String, usize> = BTreeMap::new();
     let mut subtree_counts: BTreeMap<(String, String), usize> = BTreeMap::new();
     for page in &published_pages {
-        let tree = page.category.first().cloned().unwrap_or_else(|| "uncategorized".to_string());
+        let tree = page
+            .category
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "uncategorized".to_string());
         let subtree = page.category.get(1).cloned();
         *tree_counts.entry(tree.clone()).or_insert(0) += 1;
         if let Some(st) = subtree {
@@ -156,16 +161,28 @@ pub fn rebuild_colocated_indexes(
         for tree in trees {
             let count = tree_counts.get(&tree.slug).copied().unwrap_or(0);
             let desc = strip_html_inline(&tree.description_html);
-            root_md.push_str(&format!("### [{title}]({slug}/index.md)\n", title=tree.title, slug=tree.slug));
+            root_md.push_str(&format!(
+                "### [{title}]({slug}/index.md)\n",
+                title = tree.title,
+                slug = tree.slug
+            ));
             if !desc.is_empty() {
                 root_md.push_str(&format!("> {}\n", desc));
             }
             root_md.push_str(&format!("> **{}** pages\n\n", count));
 
             for sub in &tree.subtrees {
-                let sub_count = subtree_counts.get(&(tree.slug.clone(), sub.slug.clone())).copied().unwrap_or(0);
+                let sub_count = subtree_counts
+                    .get(&(tree.slug.clone(), sub.slug.clone()))
+                    .copied()
+                    .unwrap_or(0);
                 let sub_desc = strip_html_inline(&sub.description_html);
-                root_md.push_str(&format!("- [{title}]({tree}/{slug}/index.md)", title=sub.title, tree=tree.slug, slug=sub.slug));
+                root_md.push_str(&format!(
+                    "- [{title}]({tree}/{slug}/index.md)",
+                    title = sub.title,
+                    tree = tree.slug,
+                    slug = sub.slug
+                ));
                 if !sub_desc.is_empty() {
                     root_md.push_str(&format!(" — _{}_", sub_desc));
                 }
@@ -198,12 +215,17 @@ pub fn rebuild_colocated_indexes(
         let tree_top_pages: Vec<&&WikiIndexEntry> = published_pages
             .iter()
             .filter(|e| {
-                e.category.first().map(|s| s.as_str()) == Some(&tree.slug)
-                    && e.category.len() == 1
+                e.category.first().map(|s| s.as_str()) == Some(&tree.slug) && e.category.len() == 1
             })
             .collect();
 
-        write_tree_index(&tree_dir, tree, &tree.subtrees, &tree_top_pages, now.as_str())?;
+        write_tree_index(
+            &tree_dir,
+            tree,
+            &tree.subtrees,
+            &tree_top_pages,
+            now.as_str(),
+        )?;
 
         // Leaf indexes for each subtree
         for sub in &tree.subtrees {
@@ -214,7 +236,10 @@ pub fn rebuild_colocated_indexes(
 
             let sub_desc = strip_html_inline(&sub.description_html);
             if sub_desc.trim().is_empty() {
-                branch_issues.push(format!("  branch node '{}/{}' ({}/{}) has no description", tree.slug, sub.slug, tree.title, sub.title));
+                branch_issues.push(format!(
+                    "  branch node '{}/{}' ({}/{}) has no description",
+                    tree.slug, sub.slug, tree.title, sub.title
+                ));
             }
 
             let sub_pages: Vec<&&WikiIndexEntry> = published_pages
@@ -283,7 +308,10 @@ fn write_tree_index(
             let fname = e.path.split('/').last().unwrap_or(&e.path);
             md.push_str(&format!(
                 "| [{}]({}) | {} | {} |\n",
-                e.title, fname, e.summary, short_date(&e.updated_at)
+                e.title,
+                fname,
+                e.summary,
+                short_date(&e.updated_at)
             ));
         }
     }
@@ -303,12 +331,18 @@ fn write_leaf_index(
     if !desc.is_empty() {
         md.push_str(&format!("> {}\n", desc));
     }
-    md.push_str(&format!("> **{}** pages | updated {}\n\n", pages.len(), now));
+    md.push_str(&format!(
+        "> **{}** pages | updated {}\n\n",
+        pages.len(),
+        now
+    ));
 
     if pages.is_empty() {
         md.push_str("_No pages yet._\n");
     } else {
-        md.push_str("| Title | Summary | Keywords | Updated |\n|-------|---------|----------|--------|\n");
+        md.push_str(
+            "| Title | Summary | Keywords | Updated |\n|-------|---------|----------|--------|\n",
+        );
         let mut sorted = pages.to_vec();
         sorted.sort_by(|a, b| a.title.cmp(&b.title));
         for e in sorted {
@@ -316,7 +350,11 @@ fn write_leaf_index(
             let kw = e.keywords.join(", ");
             md.push_str(&format!(
                 "| [{}]({}) | {} | {} | {} |\n",
-                e.title, fname, e.summary, kw, short_date(&e.updated_at)
+                e.title,
+                fname,
+                e.summary,
+                kw,
+                short_date(&e.updated_at)
             ));
         }
     }
@@ -370,20 +408,28 @@ pub fn rebuild_index_md(wiki_dir: &Path, index: &WikiIndex) -> Result<()> {
                     description_html: if node.description_markdown.trim().is_empty() {
                         String::new()
                     } else {
-                        crate::md_to_confluence::markdown_to_storage(&node.description_markdown).unwrap_or_default()
+                        crate::md_to_confluence::markdown_to_storage(&node.description_markdown)
+                            .unwrap_or_default()
                     },
                     icon: node.icon.clone(),
-                    subtrees: node.children.iter().map(|child| crate::commands::sync::TreeNode {
-                        title: child.title.clone(),
-                        slug: child.slug.clone(),
-                        description_html: if child.description_markdown.trim().is_empty() {
-                            String::new()
-                        } else {
-                            crate::md_to_confluence::markdown_to_storage(&child.description_markdown).unwrap_or_default()
-                        },
-                        icon: child.icon.clone(),
-                        subtrees: vec![],
-                    }).collect(),
+                    subtrees: node
+                        .children
+                        .iter()
+                        .map(|child| crate::commands::sync::TreeNode {
+                            title: child.title.clone(),
+                            slug: child.slug.clone(),
+                            description_html: if child.description_markdown.trim().is_empty() {
+                                String::new()
+                            } else {
+                                crate::md_to_confluence::markdown_to_storage(
+                                    &child.description_markdown,
+                                )
+                                .unwrap_or_default()
+                            },
+                            icon: child.icon.clone(),
+                            subtrees: vec![],
+                        })
+                        .collect(),
                 })
                 .collect::<Vec<_>>()
         })

@@ -36,7 +36,10 @@ pub async fn run_query(
                 e.summary.to_lowercase()
             );
             let words: Vec<&str> = q_lower.split_whitespace().collect();
-            let hits = words.iter().filter(|&&w| w.len() >= 3 && haystack.contains(w)).count();
+            let hits = words
+                .iter()
+                .filter(|&&w| w.len() >= 3 && haystack.contains(w))
+                .count();
             let score = hits as f32 / words.len().max(1) as f32;
             (score, e)
         })
@@ -60,7 +63,10 @@ pub async fn run_query(
         }
     }
 
-    append_log(wiki_dir, &format!("query: \"{}\"", &question[..question.len().min(80)]))?;
+    append_log(
+        wiki_dir,
+        &format!("query: \"{}\"", &question[..question.len().min(80)]),
+    )?;
 
     if json {
         let _ = emit_json(

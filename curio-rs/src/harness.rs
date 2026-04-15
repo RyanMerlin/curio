@@ -589,12 +589,20 @@ fn skill_mirror_checks(paths: &HarnessPaths) -> Vec<CheckResult> {
             (Ok(_), Err(err)) => results.push(CheckResult {
                 label: format!("skill-mirror:{}", skill.name),
                 ok: false,
-                detail: format!("Missing compatibility mirror {} ({})", mirrored.display(), err),
+                detail: format!(
+                    "Missing compatibility mirror {} ({})",
+                    mirrored.display(),
+                    err
+                ),
             }),
             (Err(err), _) => results.push(CheckResult {
                 label: format!("skill-mirror:{}", skill.name),
                 ok: false,
-                detail: format!("Failed to read authored skill {} ({})", authored_path.display(), err),
+                detail: format!(
+                    "Failed to read authored skill {} ({})",
+                    authored_path.display(),
+                    err
+                ),
             }),
         }
     }

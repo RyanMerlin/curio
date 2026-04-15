@@ -17,6 +17,9 @@ The following is a summary of the available commands. For more detailed informat
 - `agent list-skills`: Lists Curio-authored harness skills.
 - `agent list-plugins`: Lists Curio plugins from the marketplace catalog.
 - `agent print-env <codex|claude|gemini>`: Prints the environment Curio injects for a provider.
+- `slack process --payload-file <json>`: Normalizes a Slack payload for Curio intake/job handling.
+- `slack authorize --user-id <id> [--channel-id <id>]`: Checks Slack allowlist policy for privileged actions.
+- `slack contract`: Prints the Slack job contract used by the GCP worker.
 - `bootstrap`: Creates and verifies the core Confluence structure.
 - `intake-create`: Ingests content from a URL, file, or folder.
 - `process-intake`: Processes content from the "Intake" stage.

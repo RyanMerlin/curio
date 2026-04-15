@@ -22,7 +22,9 @@ pub async fn call_with_max_tokens(
     max_tokens: u32,
 ) -> Result<String> {
     if api_key.is_empty() {
-        bail!("OpenAI API key is empty — set OPENAI_API_KEY or configure llm.api_key in .curio.yaml");
+        bail!(
+            "OpenAI API key is empty — set OPENAI_API_KEY or configure llm.api_key in .curio.yaml"
+        );
     }
 
     let body = serde_json::json!({
@@ -45,7 +47,10 @@ pub async fn call_with_max_tokens(
         .context("Failed to reach OpenAI API")?;
 
     let status = response.status();
-    let text = response.text().await.context("Failed to read OpenAI response")?;
+    let text = response
+        .text()
+        .await
+        .context("Failed to read OpenAI response")?;
 
     if !status.is_success() {
         bail!("OpenAI API error {}: {}", status, text);
@@ -66,8 +71,13 @@ pub async fn call_with_max_tokens(
 /// Extract a JSON object from an LLM response that may include prose before/after the JSON.
 /// Looks for the first `{` ... last `}` span.
 pub fn extract_json(text: &str) -> Result<Value> {
-    let start = text.find('{').ok_or_else(|| anyhow::anyhow!("No JSON object found in response"))?;
-    let end = text.rfind('}').ok_or_else(|| anyhow::anyhow!("No closing brace found in response"))?;
+    let start = text
+        .find('{')
+        .ok_or_else(|| anyhow::anyhow!("No JSON object found in response"))?;
+    let end = text
+        .rfind('}')
+        .ok_or_else(|| anyhow::anyhow!("No closing brace found in response"))?;
     let json_str = &text[start..=end];
-    serde_json::from_str(json_str).with_context(|| format!("Failed to parse extracted JSON: {}", json_str))
+    serde_json::from_str(json_str)
+        .with_context(|| format!("Failed to parse extracted JSON: {}", json_str))
 }
