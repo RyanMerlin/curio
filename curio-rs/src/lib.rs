@@ -4,6 +4,7 @@ pub mod config;
 pub mod workspace;
 pub mod confluence;
 pub mod error;
+pub mod freshness;
 pub mod git_ops;
 pub mod harness;
 pub mod llm;
