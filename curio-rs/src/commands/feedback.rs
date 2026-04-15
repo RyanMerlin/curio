@@ -197,6 +197,11 @@ pub async fn run_feedback(config: &Config, dry_run: bool) -> Result<()> {
         match &sig.action {
             Action::NoSignal => {
                 no_signal_count += 1;
+                // Suppress noise for auto-approved pages — no signal is expected.
+                let is_auto_approved = sig.path.to_string_lossy().contains("auto-approved");
+                if !is_auto_approved {
+                    // Future: could log these to a "pending human review" list.
+                }
             }
             Action::Capture => {
                 capture_count += 1;
