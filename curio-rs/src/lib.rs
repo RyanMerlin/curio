@@ -76,6 +76,10 @@ pub struct Frontmatter {
     pub content_hash: String,
     pub confluence_page_id: Option<String>,
     pub model_used: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auto_healed_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auto_healed_confidence: Option<f64>,
 }
 
 #[derive(Debug, Clone)]

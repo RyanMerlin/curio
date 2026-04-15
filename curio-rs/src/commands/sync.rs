@@ -290,6 +290,7 @@ pub async fn run_sync(
         }
     }
 
+    let auto_heal_label = config.heal.auto_heal_label();
     sync_lane_directory(
         &client,
         space_key,
@@ -301,6 +302,7 @@ pub async fn run_sync(
         &mut skipped,
         &mut upserted,
         &mut errors,
+        auto_heal_label,
     )
     .await?;
     sync_lane_directory(
@@ -314,6 +316,7 @@ pub async fn run_sync(
         &mut skipped,
         &mut upserted,
         &mut errors,
+        auto_heal_label,
     )
     .await?;
     let proposals_dir = wiki_dir.join("_config").join("sharpening-proposals");
@@ -1125,6 +1128,7 @@ async fn sync_lane_directory(
     skipped: &mut Vec<String>,
     upserted: &mut Vec<String>,
     errors: &mut Vec<String>,
+    auto_heal_label: &str,
 ) -> Result<()> {
     if !root_dir.exists() {
         return Ok(());
@@ -1184,6 +1188,7 @@ async fn sync_lane_directory(
                 full_refresh,
                 synced_ids,
                 skipped,
+                auto_heal_label,
             )
             .await
             {
@@ -1400,6 +1405,7 @@ async fn sync_lane_page(
     full_refresh: bool,
     synced_ids: &mut HashSet<String>,
     skipped: &mut Vec<String>,
+    auto_heal_label: &str,
 ) -> Result<String> {
     let page = parse_wiki_page(path)
         .with_context(|| format!("Failed to parse {}", path.display()))?;
@@ -1495,6 +1501,12 @@ async fn sync_lane_page(
 
                 let pinned_id_opt = if pinned_comment_id.is_empty() { None } else { Some(pinned_comment_id.as_str()) };
                 write_sync_refs(path, page_id, pinned_id_opt);
+                // Apply auto-heal label if this page was auto-healed.
+                if page.frontmatter.auto_healed_at.is_some() && !auto_heal_label.is_empty() {
+                    if let Err(e) = client.add_labels(page_id, vec![auto_heal_label.to_string()]).await {
+                        eprintln!("  [warn] Failed to apply auto-heal label to page {}: {}", page_id, e);
+                    }
+                }
             }
         }
     }
@@ -1740,6 +1752,20 @@ fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Res
     }
     body.push_str("</tbody></table>");
     body.push_str(&markdown_to_html(&page.body));
+    // If this page was auto-healed, append a visible info callout.
+    if let Some(ref healed_at) = page.frontmatter.auto_healed_at {
+        let confidence = page.frontmatter.auto_healed_confidence.unwrap_or(0.0);
+        // Show only YYYY-MM-DD
+        let date_str = &healed_at[..healed_at.len().min(10)];
+        let callout = format!(
+            "<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p>\
+            ⚡ Auto-healed by Curio on {} | confidence: {:.0}%\
+            </p></ac:rich-text-body></ac:structured-macro>",
+            date_str,
+            confidence * 100.0,
+        );
+        body.push_str(&callout);
+    }
     Ok(body)
 }
 

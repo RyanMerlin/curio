@@ -67,6 +67,8 @@ pub async fn run_intake(
             content_hash: hash,
             confluence_page_id: None,
             model_used: None,
+            auto_healed_at: None,
+            auto_healed_confidence: None,
         };
 
         let page = WikiPage { path: dest.clone(), frontmatter: fm.clone(), body: item.text.clone() };
