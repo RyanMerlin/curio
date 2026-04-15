@@ -148,7 +148,7 @@ pub struct SyncConfig {
 }
 
 /// Self-healing configuration, read from `wiki/_config/settings.yaml`.
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct HealConfig {
     pub confidence_threshold: Option<f64>,
     pub show_auto_heal_callout: Option<bool>,
@@ -184,21 +184,6 @@ impl HealConfig {
     }
     pub fn min_body_words(&self) -> u32 {
         self.min_body_words.unwrap_or(50)
-    }
-}
-
-impl Default for HealConfig {
-    fn default() -> Self {
-        Self {
-            confidence_threshold: None,
-            show_auto_heal_callout: None,
-            auto_heal_label: None,
-            max_pages_per_run: None,
-            stale_threshold_days: None,
-            overlap_threshold: None,
-            external_search_enabled: None,
-            min_body_words: None,
-        }
     }
 }
 
@@ -340,9 +325,14 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
     let wiki_settings_path = config.wiki.wiki_dir.join("_config/settings.yaml");
     if wiki_settings_path.exists() {
         if let Ok(raw) = fs::read_to_string(&wiki_settings_path) {
-            if let Ok(ws) = serde_yaml::from_str::<WikiSettingsFile>(&raw) {
-                if let Some(heal) = ws.heal {
-                    config.heal = heal;
+            match serde_yaml::from_str::<WikiSettingsFile>(&raw) {
+                Ok(ws) => {
+                    if let Some(heal) = ws.heal {
+                        config.heal = heal;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("curio: warning: failed to parse {}: {e}", wiki_settings_path.display());
                 }
             }
         }
