@@ -572,6 +572,7 @@ fn build_onboard_config(state: &OnboardState) -> Config {
             ..Default::default()
         },
         llm: Default::default(),
+        heal: Default::default(),
     }
 }
 

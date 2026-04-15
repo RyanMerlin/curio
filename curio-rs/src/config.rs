@@ -17,6 +17,8 @@ pub struct Config {
     pub wiki: WikiConfig,
     #[serde(default)]
     pub llm: LlmConfig,
+    #[serde(default)]
+    pub heal: HealConfig,
 }
 
 /// LLM inference settings — required for `curio process` (routing) and `curio query`.
@@ -145,6 +147,69 @@ pub struct SyncConfig {
     pub confluence_parent_page_id: Option<String>,
 }
 
+/// Self-healing configuration, read from `wiki/_config/settings.yaml`.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct HealConfig {
+    pub confidence_threshold: Option<f64>,
+    pub show_auto_heal_callout: Option<bool>,
+    pub auto_heal_label: Option<String>,
+    pub max_pages_per_run: Option<u32>,
+    pub stale_threshold_days: Option<u32>,
+    pub overlap_threshold: Option<f64>,
+    pub external_search_enabled: Option<bool>,
+    pub min_body_words: Option<u32>,
+}
+
+impl HealConfig {
+    pub fn confidence_threshold(&self) -> f64 {
+        self.confidence_threshold.unwrap_or(0.85)
+    }
+    pub fn show_auto_heal_callout(&self) -> bool {
+        self.show_auto_heal_callout.unwrap_or(true)
+    }
+    pub fn auto_heal_label(&self) -> &str {
+        self.auto_heal_label.as_deref().unwrap_or("curio:auto-healed")
+    }
+    pub fn max_pages_per_run(&self) -> u32 {
+        self.max_pages_per_run.unwrap_or(20)
+    }
+    pub fn stale_threshold_days(&self) -> u32 {
+        self.stale_threshold_days.unwrap_or(240)
+    }
+    pub fn overlap_threshold(&self) -> f64 {
+        self.overlap_threshold.unwrap_or(0.60)
+    }
+    pub fn external_search_enabled(&self) -> bool {
+        self.external_search_enabled.unwrap_or(true)
+    }
+    pub fn min_body_words(&self) -> u32 {
+        self.min_body_words.unwrap_or(50)
+    }
+}
+
+impl Default for HealConfig {
+    fn default() -> Self {
+        Self {
+            confidence_threshold: None,
+            show_auto_heal_callout: None,
+            auto_heal_label: None,
+            max_pages_per_run: None,
+            stale_threshold_days: None,
+            overlap_threshold: None,
+            external_search_enabled: None,
+            min_body_words: None,
+        }
+    }
+}
+
+/// Minimal struct for deserializing `wiki/_config/settings.yaml`.
+/// Only used internally during config loading.
+#[derive(Debug, Deserialize, Default)]
+pub(crate) struct WikiSettingsFile {
+    #[serde(default)]
+    pub heal: Option<HealConfig>,
+}
+
 /// Load config, optionally targeting a specific KB directory.
 ///
 /// `kb_dir` is the root of a KB store (the directory containing `wiki/` and `NORTHSTAR.md`).
@@ -268,6 +333,19 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
     // wiki_dir defaults to <config_root>/wiki if not absolute
     if config.wiki.wiki_dir.is_relative() {
         config.wiki.wiki_dir = config_root.join(&config.wiki.wiki_dir);
+    }
+
+    // Load wiki/_config/settings.yaml for heal settings (and any future wiki-level config).
+    // This file is synced to Confluence, making it the user-visible settings surface.
+    let wiki_settings_path = config.wiki.wiki_dir.join("_config/settings.yaml");
+    if wiki_settings_path.exists() {
+        if let Ok(raw) = fs::read_to_string(&wiki_settings_path) {
+            if let Ok(ws) = serde_yaml::from_str::<WikiSettingsFile>(&raw) {
+                if let Some(heal) = ws.heal {
+                    config.heal = heal;
+                }
+            }
+        }
     }
 
     Ok(config)
@@ -403,6 +481,58 @@ mod tests {
             confluence_email: "user@test.com".to_string(),
         };
         assert!(conn.require_confluence().is_ok());
+    }
+
+    #[test]
+    fn test_heal_config_defaults() {
+        let h = HealConfig::default();
+        assert_eq!(h.confidence_threshold(), 0.85);
+        assert!(h.show_auto_heal_callout());
+        assert_eq!(h.auto_heal_label(), "curio:auto-healed");
+        assert_eq!(h.max_pages_per_run(), 20);
+        assert_eq!(h.stale_threshold_days(), 240);
+        assert!((h.overlap_threshold() - 0.60).abs() < f64::EPSILON);
+        assert!(h.external_search_enabled());
+        assert_eq!(h.min_body_words(), 50);
+    }
+
+    #[test]
+    fn test_heal_config_override() {
+        let h = HealConfig {
+            confidence_threshold: Some(0.7),
+            show_auto_heal_callout: Some(false),
+            auto_heal_label: Some("custom:label".to_string()),
+            max_pages_per_run: Some(5),
+            stale_threshold_days: Some(120),
+            overlap_threshold: Some(0.80),
+            external_search_enabled: Some(false),
+            min_body_words: Some(100),
+        };
+        assert_eq!(h.confidence_threshold(), 0.7);
+        assert!(!h.show_auto_heal_callout());
+        assert_eq!(h.auto_heal_label(), "custom:label");
+        assert_eq!(h.max_pages_per_run(), 5);
+        assert_eq!(h.stale_threshold_days(), 120);
+        assert!((h.overlap_threshold() - 0.80).abs() < f64::EPSILON);
+        assert!(!h.external_search_enabled());
+        assert_eq!(h.min_body_words(), 100);
+    }
+
+    #[test]
+    fn test_settings_yaml_is_loaded() {
+        // Verify the actual wiki/_config/settings.yaml can be parsed.
+        let settings_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("wiki/_config/settings.yaml");
+        if settings_path.exists() {
+            let raw = std::fs::read_to_string(&settings_path).unwrap();
+            let ws: WikiSettingsFile = serde_yaml::from_str(&raw).expect("settings.yaml should parse cleanly");
+            if let Some(heal) = ws.heal {
+                // Confirm defaults are in-range
+                assert!(heal.confidence_threshold() >= 0.0 && heal.confidence_threshold() <= 1.0);
+            }
+        }
     }
 
     #[test]
