@@ -74,13 +74,15 @@ pub struct DoctorSummary {
 
 pub async fn run_doctor(
     config: &Config,
-    _dry_run: bool,
+    _dry_run: bool, // doctor is always read-only; parameter accepted for interface uniformity
     json: bool,
     scope: Option<String>,
 ) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
     let published_dir = wiki_dir.join("published");
     let overlap_threshold = config.heal.overlap_threshold() as f32;
+    // Pages are "stale" when their freshness score falls below the half-life score (0.5).
+    // By definition of exponential decay, a page aged stale_threshold_days has score ~0.5.
     let stale_threshold = 0.50f64;
     let min_body_words = config.heal.min_body_words() as usize;
 
