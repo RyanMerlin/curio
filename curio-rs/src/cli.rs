@@ -275,6 +275,42 @@ pub enum Commands {
         dry_run: bool,
     },
 
+    /// Confidence-gated AI heal loop for the knowledge base.
+    ///
+    /// Phase 1 (--prepare): scan a scope, emit a JSON heal manifest.
+    /// Phase 2 (--apply-file): apply a Claude-produced routes file.
+    ///
+    /// Full two-phase example:
+    ///   curio heal --prepare --scope product-tree/alteryx-server --out /tmp/heal.json
+    ///   # → Claude reads /tmp/heal.json, uses tools, writes /tmp/heal-routes.json
+    ///   curio heal --apply-file /tmp/heal-routes.json
+    Heal {
+        /// Phase 1: emit heal manifest instead of applying.
+        #[arg(long)]
+        prepare: bool,
+
+        /// Phase 2: path to the Claude-produced routes JSON file.
+        #[arg(long, value_name = "PATH")]
+        apply_file: Option<String>,
+
+        /// NORTHSTAR scope path (e.g. product-tree/alteryx-server).
+        /// Defaults to full published KB.
+        #[arg(long)]
+        scope: Option<String>,
+
+        /// Write manifest to file instead of stdout (used with --prepare).
+        #[arg(long, value_name = "PATH")]
+        out: Option<String>,
+
+        /// Override confidence threshold from settings.yaml for this run.
+        #[arg(long, value_name = "0.0-1.0")]
+        confidence: Option<f64>,
+
+        /// Auto-approve all actions regardless of confidence (sets threshold to 0.0).
+        #[arg(long)]
+        auto: bool,
+    },
+
     /// Locally reject a wiki page without requiring a Confluence review signal.
     ///
     /// Accepts a bare slug, a wiki-relative path, or an absolute path.

@@ -1,6 +1,7 @@
 pub mod agent;
 pub mod doctor;
 pub mod feedback;
+pub mod heal;
 pub mod agent_analyze;
 pub mod bootstrap;
 pub mod gold_publish;

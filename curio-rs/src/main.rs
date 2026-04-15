@@ -24,6 +24,7 @@ use curio::{
         status::run_status,
         sync::run_sync,
         feedback::run_feedback,
+        heal::{run_heal_apply, run_heal_prepare},
         reject::run_reject,
         tree::run_tree,
         workspace_cmd::{run_workspace_add, run_workspace_list, run_workspace_remove},
@@ -158,6 +159,23 @@ async fn main() -> Result<()> {
         Some(Commands::Feedback { dry_run }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_feedback(&config, dry_run || cli.dry_run).await?;
+        }
+        Some(Commands::Heal { prepare, apply_file, scope, out, confidence, auto }) => {
+            let mut config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+            // Override threshold if --confidence or --auto flags are set.
+            if auto {
+                config.heal.confidence_threshold = Some(0.0);
+            } else if let Some(c) = confidence {
+                config.heal.confidence_threshold = Some(c);
+            }
+            if prepare {
+                run_heal_prepare(&config, scope, out).await?;
+            } else if let Some(ref path) = apply_file {
+                run_heal_apply(&config, cli.dry_run, path, scope).await?;
+            } else {
+                eprintln!("curio heal: specify --prepare or --apply-file <path>");
+                std::process::exit(1);
+            }
         }
         Some(Commands::Reject { slug_or_path, reason, force }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
