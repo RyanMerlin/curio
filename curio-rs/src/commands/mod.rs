@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod doctor;
 pub mod feedback;
 pub mod agent_analyze;
 pub mod bootstrap;

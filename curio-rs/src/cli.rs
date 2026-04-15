@@ -38,10 +38,17 @@ pub enum Commands {
         install: bool,
     },
 
-    /// Verify provider and harness prerequisites.
+    /// Report structural health of the published knowledge base.
+    ///
+    /// Checks for low-quality pages, high-overlap pairs, stale content,
+    /// orphaned cross-references, thin branch nodes, and missing keywords.
+    ///
+    /// Use `curio agent doctor` to verify provider/harness prerequisites.
     Doctor {
-        #[arg(value_enum)]
-        provider: Option<AgentProvider>,
+        /// Restrict scan to a NORTHSTAR path (e.g. product-tree/alteryx-server).
+        /// Defaults to the full published KB.
+        #[arg(long)]
+        scope: Option<String>,
     },
 
     /// Create the wiki/ directory scaffold and seed index files.

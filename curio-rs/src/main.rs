@@ -7,6 +7,7 @@ use curio::{
             run_agent_doctor, run_agent_launch, run_agent_list_plugins, run_agent_list_providers,
             run_agent_list_skills, run_agent_prepare, run_agent_print_env,
         },
+        doctor::run_doctor,
         gold_publish::run_publish,
         gold_resolve::run_resolve,
         init::run_init,
@@ -44,8 +45,9 @@ async fn main() -> Result<()> {
         Some(Commands::Onboard { install }) => {
             run_onboard(cli.dry_run, install).await?;
         }
-        Some(Commands::Doctor { provider }) => {
-            run_agent_doctor(provider, cli.json)?;
+        Some(Commands::Doctor { scope }) => {
+            let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+            run_doctor(&config, cli.dry_run, cli.json, scope).await?;
         }
         Some(Commands::Agent(agent_commands)) => match agent_commands {
             AgentCommands::Prepare { provider } => {
