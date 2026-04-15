@@ -14,6 +14,13 @@ Git is the canonical data store. Confluence is the visualization layer — a rea
 The LLM maintains a structured markdown wiki in `wiki/`, with self-indexing, semantic reconciliation, and incremental updates. Inspired by Karpathy's LLM-wiki pattern: knowledge compounds over time rather than being re-derived on every query.
 :::
 
+> **Operational Configuration**
+>
+> Heal confidence threshold, auto-heal label, and callout settings live in
+> `wiki/_config/settings.yaml` under the `heal:` key. These are also visible
+> in Confluence on the **Settings** page. Adjust them there; `curio sync` will
+> pick up the change on next run.
+
 ## What Curio Curates
 
 - Customer and account knowledge
