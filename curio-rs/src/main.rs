@@ -23,6 +23,7 @@ use curio::{
         status::run_status,
         sync::run_sync,
         feedback::run_feedback,
+        reject::run_reject,
         tree::run_tree,
         workspace_cmd::{run_workspace_add, run_workspace_list, run_workspace_remove},
     },
@@ -155,6 +156,10 @@ async fn main() -> Result<()> {
         Some(Commands::Feedback { dry_run }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_feedback(&config, dry_run || cli.dry_run).await?;
+        }
+        Some(Commands::Reject { slug_or_path, reason, force }) => {
+            let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+            run_reject(&config, cli.dry_run, slug_or_path, reason, force).await?;
         }
         Some(Commands::Lint { fix }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;

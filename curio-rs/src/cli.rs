@@ -268,6 +268,27 @@ pub enum Commands {
         dry_run: bool,
     },
 
+    /// Locally reject a wiki page without requiring a Confluence review signal.
+    ///
+    /// Accepts a bare slug, a wiki-relative path, or an absolute path.
+    /// Deletes the page and all sidecars (.analysis.json, .sync-refs.json,
+    /// .feedback.md, .md.proposal.json) and writes a rejection entry to
+    /// wiki/_config/log.md.
+    ///
+    /// Use --force to reject a published page.
+    Reject {
+        /// Slug, wiki-relative path, or absolute path to the page.
+        slug_or_path: String,
+
+        /// Human-readable reason for the rejection (recorded in log.md).
+        #[arg(long)]
+        reason: Option<String>,
+
+        /// Allow rejecting a published page (default: blocked for safety).
+        #[arg(long)]
+        force: bool,
+    },
+
     /// Scan the wiki for contradictions, stale claims, and orphaned cross-references.
     Lint {
         /// Auto-fix orphaned cross-references.
