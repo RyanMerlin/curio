@@ -37,8 +37,8 @@ Curio content writes are scoped by Confluence space:
 
 For agent integrations, use `--json` on the helper commands and search:
 
-- `curio doctor --json`
-- `curio agent doctor --json`
+- `curio doctor --json` (KB structural health report)
+- `curio agent doctor --json` (provider/harness health check)
 - `curio agent list-providers --json`
 - `curio agent list-skills --json`
 - `curio agent print-env codex --json`

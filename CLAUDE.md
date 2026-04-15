@@ -23,6 +23,10 @@ curio reindex                # rebuild co-located index.md files + _index/ artif
 curio sync                   # push wiki/published/ → Confluence (requires creds)
 curio status                 # show intake/staged/review/published counts + staleness hint
 curio lint                   # find contradictions, stale claims, orphan refs
+curio doctor [--scope <path>]  # KB health: low-quality, stale, high-overlap, thin branches, orphaned xrefs
+curio heal --prepare [--scope <path>] [--out /tmp/heal.json]  # Phase 1: emit heal manifest
+curio heal --apply-file /tmp/heal-routes.json [--confidence 0.9] [--auto]  # Phase 2: confidence-gated apply
+curio reject <slug> [--reason <str>]  # locally reject a page (no Confluence needed)
 curio query "question"       # LLM-powered wiki query
 ```
 

@@ -33,6 +33,15 @@
 - `--json` usage patterns
 - output shapes for agent automation
 
+## `wiki/`
+
+- git-native enterprise knowledge store
+- `wiki/intake/` — raw ingested content awaiting routing
+- `wiki/staged/` — high-confidence pages awaiting publish
+- `wiki/review/` — pages needing human review; `review/auto-approved/` for AI-approved records
+- `wiki/published/` — canonical content synced to Confluence
+- `wiki/_config/` — `settings.yaml` (heal thresholds, labels), `log.md` (audit log), `northstar.md`
+
 ## `docs/`
 
 - Curio architecture and onboarding guidance
