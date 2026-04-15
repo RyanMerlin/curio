@@ -32,6 +32,7 @@ When launched from Curio, use:
 - `.agents/plugins/marketplace.json` as the plugin catalog
 - `plugins/` for Curio-local plugin bundles
 - `docs/` for Curio architecture and onboarding
+- `wiki/` only as the tracked sample workspace; use external workspaces for real KB operations
 
 ## Curation Workflow Rules
 

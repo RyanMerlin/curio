@@ -52,3 +52,5 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `curio agent launch` remains streaming and human-oriented.
 - `curio onboard` remains interactive and may prompt to install the user-level shim.
 - If a command fails in JSON mode, Curio still emits JSON first and then exits non-zero.
+- `agent doctor` is the harness integrity check; it now covers authored-vs-compat skill mirror parity and enabled plugin path validity in addition to provider launch readiness.
+- `agent print-env` exposes the shared harness contract (`CURIO_HARNESS_DIR`, docs/skills/plugins/catalog paths, provider metadata, and effective wiki path) plus provider-specific extras where applicable.

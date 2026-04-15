@@ -11,6 +11,13 @@ Pass `--install` to force shim installation without prompting.
 - provider launcher on `PATH`, or provider command override via environment variable
 - run commands from the repo root
 
+## Workspace Model
+
+- `curio-agent` is the harness repo
+- the tracked `wiki/` directory is only a sample workspace for demos, docs, and harness validation
+- day-to-day KB work should target an external workspace chosen with `--workspace <name>` or `--kb-dir <path>`
+- `curio.workspaces.toml` stores local workspace registrations and is not committed
+
 ## Content Boundary Contract
 
 Curio writes only within the configured Confluence space:
@@ -61,6 +68,28 @@ Curio merges launch settings in this order:
 2. provider-specific `CURIO_*_ARGS`
 3. provider-specific `CURIO_*_CMD`
 
+Every provider receives the same harness baseline:
+
+- `CURIO_HARNESS_DIR`
+- `CURIO_REPO_ROOT`
+- `CURIO_CRATE_ROOT`
+- `CURIO_DOCS_DIR`
+- `CURIO_SKILLS_DIR`
+- `CURIO_AGENTS_SKILLS_DIR`
+- `CURIO_PLUGINS_DIR`
+- `CURIO_MARKETPLACE_PATH`
+- `CURIO_ENTRYPOINT`
+- `CURIO_PROVIDER`
+- `CURIO_PROVIDER_PROFILE`
+- `CURIO_BOOTSTRAP_SUMMARY`
+- `CURIO_WIKI_DIR`
+
+Provider extras are additive rather than part of the shared contract:
+
+- Codex: `CURIO_CODEX_PLUGIN_MANIFEST`
+- Claude: `CURIO_CLAUDE_SETTINGS_PATH`
+- Gemini: `CURIO_GEMINI_RUNTIME`
+
 ## Verification
 
 ```powershell
@@ -69,6 +98,7 @@ curio onboard --install
 curio doctor
 curio agent doctor
 curio agent list-providers
+curio workspace list
 curio agent prepare codex
 curio agent prepare claude
 curio agent prepare gemini

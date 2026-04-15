@@ -2,6 +2,8 @@
 
 This document is the machine-facing workflow reference for agents using the `curio` CLI. For human-facing command details and flag listings, see `cli_for_humans.md`.
 
+The Curio harness repo may contain a tracked sample `wiki/`, but production KB automation should normally run against an external workspace selected with `--workspace` or `--kb-dir`.
+
 ## JSON Envelope
 
 All commands support `--json`. The output shape is:

@@ -10,5 +10,5 @@ wiki:
   auto_commit: true
   sync:
     enabled: true
-    # CURIO homepage page ID — all synced pages are children of this page
+    # Sample harness wiki sync target. Production KBs should run via --workspace or --kb-dir.
     confluence_parent_page_id: "4240479045"

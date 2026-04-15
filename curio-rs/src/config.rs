@@ -412,16 +412,26 @@ mod tests {
             .expect("env test lock poisoned")
     }
 
+    fn clear_test_env() {
+        for key in [
+            "CURIO_CONFLUENCE_URL",
+            "CURIO_CONFLUENCE_EMAIL",
+            "CURIO_SPACE_KEY",
+            "CURIO_TEMP_DIR",
+            "CURIO_WIKI_DIR",
+            "CURIO_HARNESS_DIR",
+            "CURIO_REPO_ROOT",
+        ] {
+            unsafe {
+                env::remove_var(key);
+            }
+        }
+    }
+
     #[test]
     fn test_load_config_from_env() {
         let _guard = env_test_lock();
-        unsafe {
-            env::remove_var("CURIO_CONFLUENCE_URL");
-            env::remove_var("CURIO_CONFLUENCE_EMAIL");
-            env::remove_var("CURIO_SPACE_KEY");
-            env::remove_var("CURIO_TEMP_DIR");
-            env::remove_var("CURIO_WIKI_DIR");
-        }
+        clear_test_env();
 
         unsafe {
             env::set_var("CURIO_CONFLUENCE_URL", "http://test.confluence.com");
@@ -436,22 +446,13 @@ mod tests {
         assert_eq!(config.content_model.space_key, "TEST");
         assert_eq!(config.runtime.temp_dir, Some(env::temp_dir().join("curio")));
 
-        unsafe {
-            env::remove_var("CURIO_CONFLUENCE_URL");
-            env::remove_var("CURIO_CONFLUENCE_EMAIL");
-            env::remove_var("CURIO_SPACE_KEY");
-            env::remove_var("CURIO_TEMP_DIR");
-        }
+        clear_test_env();
     }
 
     #[test]
     fn test_load_config_works_without_confluence() {
         let _guard = env_test_lock();
-        unsafe {
-            env::remove_var("CURIO_CONFLUENCE_URL");
-            env::remove_var("CURIO_CONFLUENCE_EMAIL");
-            env::remove_var("CURIO_SPACE_KEY");
-        }
+        clear_test_env();
 
         // Should not bail even with no Confluence config
         let result = load_config(None, None);

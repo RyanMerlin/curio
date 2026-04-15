@@ -8,6 +8,13 @@ The split is deliberate:
 - Curio owns provider launch, prompt routing, skills, plugins, and onboarding
 - Curio can later externalize reusable plugin bundles into a separate shared catalog without changing the local harness contract
 
+## Repo Model
+
+- this repository is the Curio harness
+- the tracked `wiki/` tree is a small sample workspace for docs, demos, and harness validation
+- production KBs should live in external repos or directories and be selected with `--workspace <name>` or `--kb-dir <path>`
+- `curio.workspaces.toml` is local operator state and is intentionally gitignored
+
 ## Supported Providers
 
 - Codex
@@ -17,11 +24,19 @@ The split is deliberate:
 All three providers are launched from the same Curio workspace contract:
 
 - repo root: the Curio repository root
+- harness dir: `CURIO_HARNESS_DIR`
 - authored skills: `skills/`
 - compatibility skills: `.agents/skills/`
 - plugin catalog: `.agents/plugins/marketplace.json`
 - provider entrypoints: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
 - provider profiles: `providers/*.json`
+- sample wiki: `wiki/` unless an external workspace overrides `CURIO_WIKI_DIR`
+
+Provider-specific extras remain explicit:
+
+- Codex also receives `CURIO_CODEX_PLUGIN_MANIFEST`
+- Claude may use `CURIO_CLAUDE_SETTINGS_PATH` when the repo-local settings file exists
+- Gemini may use `CURIO_GEMINI_RUNTIME` to describe the expected launcher shape
 
 Curio content writes are scoped by Confluence space:
 
@@ -69,6 +84,7 @@ curio onboard --install
 curio doctor
 curio agent doctor
 curio agent list-providers
+curio workspace list
 curio agent launch codex
 ```
 

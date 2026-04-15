@@ -2,6 +2,8 @@
 
 This document is the current human-facing reference for the `curio` CLI. For the agent-facing workflow, see `cli_for_agents.md`.
 
+The Curio harness repo may contain a tracked sample `wiki/`, but production KB work should normally target an external workspace selected with `--workspace` or `--kb-dir`.
+
 ## Global Flags
 
 These flags are accepted by all commands:

@@ -205,7 +205,23 @@ pub fn load_marketplace(paths: &HarnessPaths) -> Result<MarketplaceCatalog> {
     catalog
         .plugins
         .sort_by(|left, right| left.name.cmp(&right.name));
+    validate_marketplace(paths, &catalog)?;
     Ok(catalog)
+}
+
+fn validate_marketplace(paths: &HarnessPaths, catalog: &MarketplaceCatalog) -> Result<()> {
+    for plugin in catalog.plugins.iter().filter(|plugin| plugin.enabled) {
+        let plugin_path = paths.repo_root.join(&plugin.path);
+        if !plugin_path.is_dir() {
+            bail!(
+                "Enabled plugin '{}' points to a missing directory: {}",
+                plugin.name,
+                plugin_path.display()
+            );
+        }
+    }
+
+    Ok(())
 }
 
 pub fn load_provider_profile(
@@ -263,6 +279,10 @@ pub fn build_launch_plan(
     let entrypoint_path = paths.entrypoint_for(provider).to_path_buf();
 
     let mut env = BTreeMap::new();
+    env.insert(
+        "CURIO_HARNESS_DIR".to_string(),
+        paths.repo_root.display().to_string(),
+    );
     env.insert("CURIO_PROVIDER".to_string(), provider.as_str().to_string());
     env.insert(
         "CURIO_REPO_ROOT".to_string(),
@@ -488,6 +508,8 @@ pub fn run_checks(
             detail: err.to_string(),
         }),
     }
+    results.extend(skill_mirror_checks(paths));
+    results.extend(plugin_catalog_checks(paths));
 
     if let Some(provider) = provider {
         results.extend(provider_checks(paths, provider));
@@ -533,6 +555,98 @@ fn provider_checks(paths: &HarnessPaths, provider: AgentProvider) -> Vec<CheckRe
             ok: false,
             detail: err.to_string(),
         }),
+    }
+
+    results
+}
+
+fn skill_mirror_checks(paths: &HarnessPaths) -> Vec<CheckResult> {
+    let mut results = Vec::new();
+    let authored_skills = match discover_skill_dirs(&paths.skills_dir) {
+        Ok(skills) => skills,
+        Err(err) => {
+            results.push(CheckResult {
+                label: "skills:authored".to_string(),
+                ok: false,
+                detail: err.to_string(),
+            });
+            return results;
+        }
+    };
+
+    for skill in authored_skills {
+        let mirrored = paths.agents_skills_dir.join(&skill.name).join("SKILL.md");
+        let authored_path = skill.path.join("SKILL.md");
+        match (
+            fs::read_to_string(&authored_path),
+            fs::read_to_string(&mirrored),
+        ) {
+            (Ok(authored), Ok(mirror)) => results.push(CheckResult {
+                label: format!("skill-mirror:{}", skill.name),
+                ok: normalize_text(&authored) == normalize_text(&mirror),
+                detail: mirrored.display().to_string(),
+            }),
+            (Ok(_), Err(err)) => results.push(CheckResult {
+                label: format!("skill-mirror:{}", skill.name),
+                ok: false,
+                detail: format!("Missing compatibility mirror {} ({})", mirrored.display(), err),
+            }),
+            (Err(err), _) => results.push(CheckResult {
+                label: format!("skill-mirror:{}", skill.name),
+                ok: false,
+                detail: format!("Failed to read authored skill {} ({})", authored_path.display(), err),
+            }),
+        }
+    }
+
+    results
+}
+
+fn normalize_text(text: &str) -> String {
+    text.replace("\r\n", "\n").trim().to_string()
+}
+
+fn plugin_catalog_checks(paths: &HarnessPaths) -> Vec<CheckResult> {
+    let mut results = Vec::new();
+    let catalog = match load_marketplace(paths) {
+        Ok(catalog) => catalog,
+        Err(err) => {
+            results.push(CheckResult {
+                label: "plugins:catalog".to_string(),
+                ok: false,
+                detail: err.to_string(),
+            });
+            return results;
+        }
+    };
+
+    for plugin in catalog.plugins.into_iter().filter(|plugin| plugin.enabled) {
+        let plugin_path = paths.repo_root.join(&plugin.path);
+        let skills_path = plugin_path.join("skills");
+        results.push(CheckResult {
+            label: format!("plugin:{}:path", plugin.name),
+            ok: plugin_path.is_dir(),
+            detail: plugin_path.display().to_string(),
+        });
+
+        let detail = if skills_path.is_dir() {
+            match discover_skill_dirs(&skills_path) {
+                Ok(skills) => format!("{} skill(s) in {}", skills.len(), skills_path.display()),
+                Err(err) => err.to_string(),
+            }
+        } else {
+            format!("No plugin-local skills under {}", skills_path.display())
+        };
+        let ok = if skills_path.is_dir() {
+            discover_skill_dirs(&skills_path).is_ok()
+        } else {
+            true
+        };
+        results.push(CheckResult {
+            label: format!("plugin:{}:skills", plugin.name),
+            ok,
+            detail,
+        });
     }
 
     results
@@ -591,5 +705,21 @@ mod tests {
         let (profile, path) = load_provider_profile(&paths, AgentProvider::Gemini).unwrap();
         assert!(path.ends_with("gemini.json"));
         assert!(!profile.bootstrap_summary.is_empty());
+    }
+
+    #[test]
+    fn authored_skills_match_compatibility_mirrors() {
+        let paths = HarnessPaths::discover_from(Path::new("..")).unwrap();
+        let checks = skill_mirror_checks(&paths);
+        assert!(!checks.is_empty());
+        assert!(checks.iter().all(|check| check.ok), "{checks:#?}");
+    }
+
+    #[test]
+    fn enabled_plugins_have_valid_paths() {
+        let paths = HarnessPaths::discover_from(Path::new("..")).unwrap();
+        let checks = plugin_catalog_checks(&paths);
+        assert!(!checks.is_empty());
+        assert!(checks.iter().all(|check| check.ok), "{checks:#?}");
     }
 }
