@@ -1223,7 +1223,7 @@ impl ConfluenceClient {
 
     pub fn page_web_url(&self, page_id: &str) -> String {
         format!(
-            "{}/wiki/pages/viewpage.action?pageId={}",
+            "{}/pages/viewpage.action?pageId={}",
             self.base_url.trim_end_matches('/'),
             page_id
         )
@@ -1444,9 +1444,9 @@ impl ConfluenceClient {
 
     // ─── Feedback read/write endpoints ────────────────────────────────────────
 
-    /// GET /wiki/api/v2/pages/{id}/labels — returns label names
+    /// GET {base_url}/api/v2/pages/{id}/labels — returns label names
     pub async fn get_page_labels_v2(&self, page_id: &str) -> Result<Vec<String>> {
-        let url = format!("{}/wiki/api/v2/pages/{}/labels", self.base_url, page_id);
+        let url = format!("{}/api/v2/pages/{}/labels", self.base_url, page_id);
         let resp = self
             .client
             .get(&url)
@@ -1467,10 +1467,10 @@ impl ConfluenceClient {
         Ok(labels)
     }
 
-    /// GET /wiki/api/v2/pages/{id}/footer-comments — returns comment objects
+    /// GET {base_url}/api/v2/pages/{id}/footer-comments — returns comment objects
     pub async fn get_page_footer_comments(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
         let url = format!(
-            "{}/wiki/api/v2/pages/{}/footer-comments?body-format=storage",
+            "{}/api/v2/pages/{}/footer-comments?body-format=storage",
             self.base_url, page_id
         );
         let resp = self
@@ -1487,10 +1487,10 @@ impl ConfluenceClient {
         Ok(body["results"].as_array().cloned().unwrap_or_default())
     }
 
-    /// GET /wiki/api/v2/pages/{id}/inline-comments — returns comment objects
+    /// GET {base_url}/api/v2/pages/{id}/inline-comments — returns comment objects
     pub async fn get_page_inline_comments(&self, page_id: &str) -> Result<Vec<serde_json::Value>> {
         let url = format!(
-            "{}/wiki/api/v2/pages/{}/inline-comments?body-format=storage",
+            "{}/api/v2/pages/{}/inline-comments?body-format=storage",
             self.base_url, page_id
         );
         let resp = self
@@ -1507,10 +1507,10 @@ impl ConfluenceClient {
         Ok(body["results"].as_array().cloned().unwrap_or_default())
     }
 
-    /// GET /wiki/api/v2/footer-comments/{id}/reactions — returns reaction objects
+    /// GET {base_url}/api/v2/footer-comments/{id}/reactions — returns reaction objects
     pub async fn get_comment_reactions(&self, comment_id: &str) -> Result<Vec<serde_json::Value>> {
         let url = format!(
-            "{}/wiki/api/v2/footer-comments/{}/reactions",
+            "{}/api/v2/footer-comments/{}/reactions",
             self.base_url, comment_id
         );
         let resp = self
@@ -1527,10 +1527,10 @@ impl ConfluenceClient {
         Ok(body["results"].as_array().cloned().unwrap_or_default())
     }
 
-    /// POST /wiki/api/v2/footer-comments — create a footer comment on a page.
+    /// POST {base_url}/api/v2/footer-comments — create a footer comment on a page.
     /// Returns the new comment ID.
     pub async fn create_footer_comment(&self, page_id: &str, body_storage_xml: &str) -> Result<String> {
-        let url = format!("{}/wiki/api/v2/footer-comments", self.base_url);
+        let url = format!("{}/api/v2/footer-comments", self.base_url);
         let payload = serde_json::json!({
             "pageId": page_id,
             "body": {
@@ -1556,9 +1556,9 @@ impl ConfluenceClient {
             .ok_or_else(|| anyhow::anyhow!("No id in create-comment response: {}", text))
     }
 
-    /// PUT /wiki/api/v2/footer-comments/{id} — update an existing footer comment body.
+    /// PUT {base_url}/api/v2/footer-comments/{id} — update an existing footer comment body.
     pub async fn update_footer_comment(&self, comment_id: &str, body_storage_xml: &str) -> Result<()> {
-        let url = format!("{}/wiki/api/v2/footer-comments/{}", self.base_url, comment_id);
+        let url = format!("{}/api/v2/footer-comments/{}", self.base_url, comment_id);
         // Need current version first
         let get_resp = self
             .client

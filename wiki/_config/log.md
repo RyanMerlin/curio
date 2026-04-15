@@ -57,3 +57,7 @@ Append-only record of ingests, routing runs, publications, and queries.
 - 2026-04-14 15:28 UTC — sync: 173 upserted, 147 skipped, 0 stale deleted, 0 legacy deleted, 2 errors
 - 2026-04-14 15:48 UTC — sync: 173 upserted, 148 skipped, 0 stale deleted, 0 legacy deleted, 2 errors
 - 2026-04-14 17:45 UTC — sync: 181 upserted, 148 skipped, 0 stale deleted, 0 legacy deleted, 2 errors
+- 2026-04-15 15:37 UTC — sync: 182 upserted, 148 skipped, 0 stale deleted, 0 legacy deleted, 1 errors
+- 2026-04-15 15:42 UTC — sync: 182 upserted, 150 skipped, 0 stale deleted, 0 legacy deleted, 1 errors
+- 2026-04-15 15:49 UTC — sync: 182 upserted, 150 skipped, 0 stale deleted, 0 legacy deleted, 1 errors
+- 2026-04-15 15:55 UTC — reject: orasi-labs — deprecated product (OrasiLabs shut down 2025-10-06, confidence 0.3, Fabric editor incompatible); removed from review

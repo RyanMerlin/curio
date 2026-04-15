@@ -1403,7 +1403,14 @@ async fn sync_lane_page(
 ) -> Result<String> {
     let page = parse_wiki_page(path)
         .with_context(|| format!("Failed to parse {}", path.display()))?;
-    let page_title = format!("{} - {}", to_title(lane), page.frontmatter.title.trim());
+    let raw_title = page.frontmatter.title
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ");
+    let safe_title = raw_title.trim_start_matches('/').trim().to_string();
+    let page_title = format!("{} - {}", to_title(lane), safe_title);
     if page_title.is_empty() {
         anyhow::bail!("Page title is empty for {}", path.display());
     }
@@ -1441,7 +1448,7 @@ async fn sync_lane_page(
             && existing_refs["pinned_comment_id"].is_string();
         if !full_refresh && already_set {
             // Incremental: sidecar is complete, skip API calls.
-        } else if let Ok(Some(existing)) = client.get_page_by_title(space_key, parent_id, &page_title).await {
+        } else if let Ok(Some(existing)) = client.get_page_by_title(space_key, parent_id, &result_title).await {
             if let Some(page_id) = existing["id"].as_str() {
                 // Upsert the pinned comment ──────────────────────────────────────────
                 let pinned_body = "<p><em>Curio review signals</em>: react \
@@ -1465,14 +1472,25 @@ async fn sync_lane_page(
                     // Try to update existing; if it fails (deleted), create a new one
                     match client.update_footer_comment(existing_id, pinned_body).await {
                         Ok(_) => existing_id.to_string(),
-                        Err(_) => {
-                            client.create_footer_comment(page_id, pinned_body).await
-                                .unwrap_or_else(|_| String::new())
+                        Err(e) => {
+                            eprintln!("  [warn] update pinned comment {} failed ({}), creating new one", existing_id, e);
+                            match client.create_footer_comment(page_id, pinned_body).await {
+                                Ok(id) => id,
+                                Err(e2) => {
+                                    eprintln!("  [warn] create_footer_comment for page {} failed: {}", page_id, e2);
+                                    String::new()
+                                }
+                            }
                         }
                     }
                 } else {
-                    client.create_footer_comment(page_id, pinned_body).await
-                        .unwrap_or_else(|_| String::new())
+                    match client.create_footer_comment(page_id, pinned_body).await {
+                        Ok(id) => id,
+                        Err(e) => {
+                            eprintln!("  [warn] create_footer_comment for page {} failed: {}", page_id, e);
+                            String::new()
+                        }
+                    }
                 };
 
                 let pinned_id_opt = if pinned_comment_id.is_empty() { None } else { Some(pinned_comment_id.as_str()) };
