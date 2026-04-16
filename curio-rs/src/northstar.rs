@@ -43,9 +43,19 @@ pub fn northstar_path(repo_root: &Path) -> PathBuf {
     repo_root.join(NORTHSTAR_FILENAME)
 }
 
-/// Derive the repo root from wiki_dir (wiki_dir is always <repo_root>/wiki/).
-pub fn repo_root_from_wiki(wiki_dir: &Path) -> PathBuf {
-    wiki_dir.parent().unwrap_or(wiki_dir).to_path_buf()
+/// Return the authoritative NORTHSTAR path for a workspace.
+///
+/// Prefer `wiki_dir/NORTHSTAR.md` so the workspace can be self-contained, but keep
+/// the older repo-root fallback for compatibility with existing layouts.
+pub fn workspace_northstar_path(wiki_dir: &Path) -> PathBuf {
+    let nested = wiki_dir.join(NORTHSTAR_FILENAME);
+    if nested.exists() {
+        return nested;
+    }
+    wiki_dir
+        .parent()
+        .map(northstar_path)
+        .unwrap_or(nested)
 }
 
 // ── YAML-block parser and writer ─────────────────────────────────────────────
@@ -126,8 +136,7 @@ fn replace_yaml_block(markdown: &str, taxonomy: &NorthstarTaxonomy) -> Result<St
 /// Load the taxonomy from the YAML block in NORTHSTAR.md.
 /// `wiki_dir` is `<repo_root>/wiki/` — the repo root is derived automatically.
 pub fn load_taxonomy(wiki_dir: &Path) -> Result<NorthstarTaxonomy> {
-    let repo_root = repo_root_from_wiki(wiki_dir);
-    let md_path = northstar_path(&repo_root);
+    let md_path = workspace_northstar_path(wiki_dir);
 
     if !md_path.exists() {
         bail!(
@@ -145,8 +154,7 @@ pub fn load_taxonomy(wiki_dir: &Path) -> Result<NorthstarTaxonomy> {
 
 /// Write a mutated taxonomy back into the YAML block in NORTHSTAR.md.
 pub fn save_taxonomy(wiki_dir: &Path, taxonomy: &NorthstarTaxonomy) -> Result<()> {
-    let repo_root = repo_root_from_wiki(wiki_dir);
-    let md_path = northstar_path(&repo_root);
+    let md_path = workspace_northstar_path(wiki_dir);
 
     let current = if md_path.exists() {
         fs::read_to_string(&md_path)
@@ -162,7 +170,7 @@ pub fn save_taxonomy(wiki_dir: &Path, taxonomy: &NorthstarTaxonomy) -> Result<()
 // ── Prose helpers (unchanged) ─────────────────────────────────────────────────
 
 pub fn default_northstar_markdown() -> String {
-    include_str!("../../NORTHSTAR.md").to_string()
+    include_str!("../../docs/wiki-demo/NORTHSTAR.md").to_string()
 }
 
 pub fn ensure_northstar_markdown(repo_root: &Path, dry_run: bool) -> Result<()> {
@@ -181,7 +189,12 @@ pub fn ensure_northstar_markdown(repo_root: &Path, dry_run: bool) -> Result<()> 
 }
 
 pub fn read_northstar_markdown(repo_root: &Path) -> Result<String> {
-    let path = northstar_path(repo_root);
+    let nested = repo_root.join(NORTHSTAR_FILENAME);
+    let path = if nested.is_file() {
+        nested
+    } else {
+        northstar_path(repo_root)
+    };
     if !path.is_file() {
         bail!(
             "Missing NORTHSTAR.md at {}. Run `curio onboard` to create the charter file.",

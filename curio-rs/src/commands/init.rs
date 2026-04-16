@@ -72,11 +72,14 @@ pub async fn run_init(
     // Seed _config/northstar.md first — published tree dirs are derived from it
     let northstar_path = wiki_dir.join("_config/northstar.md");
     if !northstar_path.exists() || reset {
+        let workspace_northstar = wiki_dir.join("NORTHSTAR.md");
         let repo_northstar = wiki_dir
             .parent()
             .map(|p| p.join("NORTHSTAR.md"))
             .filter(|p| p.exists());
-        if let Some(src) = repo_northstar {
+        if workspace_northstar.exists() {
+            std::fs::copy(&workspace_northstar, &northstar_path)?;
+        } else if let Some(src) = repo_northstar {
             std::fs::copy(&src, &northstar_path)?;
         } else {
             std::fs::write(
@@ -133,7 +136,7 @@ pub async fn run_init(
     if !config_settings.exists() || reset {
         std::fs::write(
             &config_settings,
-            "# Curio Wiki Configuration\n\n# Tree structure is defined in NORTHSTAR.md (repo root) as a YAML block.\nauto_commit: true\n",
+            "# Curio Wiki Configuration\n\n# Tree structure is defined in NORTHSTAR.md in the workspace root as a YAML block.\nauto_commit: true\n",
         )?;
     }
     // Taxonomy is now embedded as YAML in NORTHSTAR.md — no separate file to write.

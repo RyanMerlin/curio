@@ -3,7 +3,9 @@
 .env
 .venv/
 __pycache__/
-/curio.workspaces.toml
+curio.workspaces.toml
+curio.workspaces.local.toml
+/.curio.workspaces.toml
 wiki/_config/last-sync.txt
 
 */tmp/

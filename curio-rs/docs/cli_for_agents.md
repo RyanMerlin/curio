@@ -2,7 +2,7 @@
 
 This document is the machine-facing workflow reference for agents using the `curio` CLI. For human-facing command details and flag listings, see `cli_for_humans.md`.
 
-The Curio harness repo may contain a tracked sample `wiki/`, but production KB automation should normally run against an external workspace selected with `--workspace` or `--kb-dir`.
+The Curio harness repo ships with a synthetic demo `wiki/` for onboarding and smoke tests. Production KB automation should normally run against an external workspace selected with a private local workspace alias or `--kb-dir`.
 
 ## JSON Envelope
 
@@ -26,6 +26,7 @@ On failure, `ok` is `false` and `data` contains an `error` string. Always pass `
 
 ```bash
 curio status --json
+curio --workspace <private-name> status --json
 ```
 
 Returns counts for intake / staged / review / published and a staleness hint. Use this to decide whether intake, routing, or publishing is the priority action.

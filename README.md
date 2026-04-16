@@ -11,9 +11,11 @@ The split is deliberate:
 ## Repo Model
 
 - this repository is the Curio harness
-- the tracked `wiki/` tree is a small sample workspace for docs, demos, and harness validation
+- the tracked `docs/wiki-demo/` tree is a small synthetic sample workspace for docs, demos, and harness validation
 - production KBs should live in external repos or directories and be selected with `--workspace <name>` or `--kb-dir <path>`
-- `curio.workspaces.toml` is local operator state and is intentionally gitignored
+- `curio.workspaces.toml` is local operator state and is intentionally gitignored; `curio.workspaces.example.toml` shows the expected shape
+- the repo-local `.curio.yaml` points Curio at the demo workspace by default; operators must set an explicit external KB path for real work
+- add your own private workspace aliases locally for live KBs
 
 ## Supported Providers
 
@@ -30,7 +32,8 @@ All three providers are launched from the same Curio workspace contract:
 - plugin catalog: `.agents/plugins/marketplace.json`
 - provider entrypoints: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
 - provider profiles: `providers/*.json`
-- sample wiki: `wiki/` unless an external workspace overrides `CURIO_WIKI_DIR`
+- demo wiki: `docs/wiki-demo/` unless an external workspace overrides `CURIO_WIKI_DIR`
+- live workspace example: `--workspace <private-name>`
 
 Provider-specific extras remain explicit:
 

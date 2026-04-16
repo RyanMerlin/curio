@@ -9,7 +9,7 @@ Curio is the Gemini harness for `curio-rs`.
 - consume Curio-authored skills from `skills/`
 - use `.agents/plugins/marketplace.json` as the plugin catalog
 - use this file as the Gemini-specific entrypoint and keep provider-neutral workflow content elsewhere
-- treat the tracked `wiki/` tree as the sample harness workspace; use external workspaces for production KBs
+- treat the tracked `docs/wiki-demo/` tree as the synthetic demo harness workspace; use external workspaces for production KBs via an explicit path
 
 ## Gemini Notes
 

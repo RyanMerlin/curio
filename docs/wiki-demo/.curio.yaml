@@ -6,9 +6,8 @@ content_model:
   space_key: "${CURIO_SPACE_KEY}"
 
 wiki:
-  wiki_dir: "docs/wiki-demo"
+  wiki_dir: "."
   auto_commit: true
   sync:
     enabled: true
-    # Demo harness wiki sync target. Production KBs should be set explicitly via --workspace or --kb-dir.
     confluence_parent_page_id: null

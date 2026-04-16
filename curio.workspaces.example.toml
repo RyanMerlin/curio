@@ -1,0 +1,4 @@
+[[workspaces]]
+name = "wiki-demo"
+path = 'C:\code\agents\curio\curio-agent\docs\wiki-demo'
+description = "Synthetic demo workspace for Curio harness validation"

@@ -6,7 +6,7 @@ Curio is the Claude harness for `curio-rs`. Git is the canonical knowledge store
 
 - operate from the repo root
 - treat `curio-rs` as the execution substrate
-- treat the tracked `wiki/` tree as the sample harness workspace; production KBs should run through `--workspace` or `--kb-dir`
+- treat the tracked `docs/wiki-demo/` tree as the synthetic demo harness workspace; production KBs should run through an explicit external KB path
 - use `skills/` and plugin-local skills as the authored workflow source
 - use `.agents/plugins/marketplace.json` as the active Curio plugin catalog
 - honor the shared `CURIO_*` harness environment from `curio agent print-env claude`

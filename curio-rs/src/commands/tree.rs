@@ -87,19 +87,16 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
         Vec::new(),
     )?;
 
-    // Also sync wiki/_config/northstar.md ← NORTHSTAR.md if repo root copy is newer
-    let repo_northstar = wiki_dir
-        .parent()
-        .map(|p| p.join("NORTHSTAR.md"))
-        .filter(|p| p.exists());
-    if let Some(src) = repo_northstar {
-        let src_mtime = src.metadata().and_then(|m| m.modified()).ok();
+    // Also sync wiki/_config/northstar.md from workspace-root NORTHSTAR.md if present.
+    let workspace_northstar = wiki_dir.join("NORTHSTAR.md");
+    if workspace_northstar.exists() {
+        let src_mtime = workspace_northstar.metadata().and_then(|m| m.modified()).ok();
         let dst_mtime = northstar_path.metadata().and_then(|m| m.modified()).ok();
         if src_mtime > dst_mtime {
             if !dry_run {
-                std::fs::copy(&src, &northstar_path)?;
+                std::fs::copy(&workspace_northstar, &northstar_path)?;
             }
-            created.push("_config/northstar.md (refreshed from NORTHSTAR.md)".to_string());
+            created.push("_config/northstar.md (refreshed from workspace NORTHSTAR.md)".to_string());
         }
     }
 

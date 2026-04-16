@@ -1,0 +1,21 @@
+---
+heal:
+  confidence_threshold: 0.85
+  show_auto_heal_callout: true
+  auto_heal_label: "curio:auto-healed"
+  max_pages_per_run: 20
+  stale_threshold_days: 240
+  overlap_threshold: 0.6
+  external_search_enabled: true
+  min_body_words: 50
+
+slack:
+  enabled: false
+  workspace_id: null
+  app_id: null
+  admin_user_ids: []
+  intake_channels: []
+  notification_channels: []
+  allowed_trigger_channels: []
+  job_provider_default: "gemini"
+  require_confirmation_for_actions: true

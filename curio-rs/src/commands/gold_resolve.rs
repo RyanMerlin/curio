@@ -105,7 +105,11 @@ async fn do_resolve(
     update_frontmatter(src_path, &page.frontmatter)?;
 
     // git mv
-    let repo_root = wiki_dir.parent().unwrap_or(wiki_dir);
+    let repo_root = if wiki_dir.join(".git").exists() {
+        wiki_dir
+    } else {
+        wiki_dir.parent().unwrap_or(wiki_dir)
+    };
     let rel_src = src_path.strip_prefix(repo_root).unwrap_or(src_path);
     let rel_dest = dest_path.strip_prefix(repo_root).unwrap_or(&dest_path);
     crate::git_ops::git_mv(repo_root, rel_src, rel_dest)?;

@@ -2,7 +2,7 @@
 
 This document is the current human-facing reference for the `curio` CLI. For the agent-facing workflow, see `cli_for_agents.md`.
 
-The Curio harness repo may contain a tracked sample `wiki/`, but production KB work should normally target an external workspace selected with `--workspace` or `--kb-dir`.
+The Curio harness repo ships with a synthetic demo `wiki/` for onboarding and smoke tests. Production KB work should normally target an external workspace selected with a private local workspace alias or `--kb-dir`.
 
 ## Global Flags
 
@@ -10,7 +10,7 @@ These flags are accepted by all commands:
 
 - `--config <path>` — path to the curio config file (default: `curio.toml`)
 - `--kb-dir <path>` — override the KB root directory (normally resolved from config)
-- `--workspace <name>` — select a named workspace from `curio.workspaces.toml`
+- `--workspace <name>` — select a named workspace from your local `curio.workspaces.toml`
 - `--dry-run` — print what would be done without making changes
 - `--json` — emit output as a JSON envelope `{ "command": "...", "ok": true, "data": {...} }`
 - `--log-level <level>` — set log verbosity (`error`, `warn`, `info`, `debug`, `trace`)
@@ -60,6 +60,7 @@ Manage named KB workspaces in `curio.workspaces.toml`. `list` shows all register
 curio workspace list
 curio workspace add --name prod --path /data/prod-kb
 curio workspace remove --name prod
+curio --workspace <private-name> status
 ```
 
 ---
