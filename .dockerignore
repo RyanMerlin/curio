@@ -1,0 +1,7 @@
+target
+curio-rs/target
+.git
+.idea
+.vscode
+**/*.swp
+**/*.swo

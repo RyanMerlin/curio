@@ -1,0 +1,65 @@
+### Rust build artifacts
+/curio-rs/target
+target/
+**/target/
+
+### Terraform state
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+### OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+### Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+### Secrets / env — NEVER commit any variant
+.env
+.env.local
+.env.*.local
+*.env.local
+*.env.bak
+.env.bak
+.env.backup
+secrets/
+credentials.json
+*.pem
+*.key
+service-account*.json
+
+### Operator state — local-only by design
+curio.workspaces.toml
+curio.workspaces.local.toml
+/.curio.workspaces.toml
+deploy/local/state/workspaces.local.json
+deploy/local/.env
+
+### Per-operator agent settings (carry local OS paths, personal env)
+.claude/settings.local.json
+.claude/settings.local.*.json
+.gemini/settings.local.json
+.gemini/settings.json
+.agents/settings.local.json
+
+### Runtime / cache / scratch
+wiki/_config/last-sync.txt
+*/tmp/
+tmp/
+dist/
+out/
+.cache/
+
+### Per-KB sidecars left during partial routing runs
+**/*.merged-sources.json

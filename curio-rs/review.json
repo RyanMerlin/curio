@@ -1,0 +1,52 @@
+{
+  "command": "review",
+  "ok": true,
+  "data": {
+    "pages": [
+      {
+        "category": [
+          "product-tree",
+          "example-server",
+          "administration"
+        ],
+        "confidence": 0.67,
+        "id": "synthetic-review-001",
+        "keywords": [
+          "example",
+          "review",
+          "fixture"
+        ],
+        "path": "review/product-tree/example-server/administration/example-review-page.md",
+        "status": "review",
+        "summary": "Synthetic review page for fixture coverage only.",
+        "title": "Example Review Page",
+        "updated_at": "2026-04-16T00:00:00Z",
+        "source_url": "${CONFLUENCE_BASE_URL}/wiki/spaces/${SPACE_KEY}/pages/${PAGE_ID}/Example+Review+Page",
+        "body": "Synthetic review fixture. No customer data, no internal Jira or Confluence content, and no copied support text.",
+        "flags": []
+      },
+      {
+        "category": [
+          "product-tree",
+          "example-server",
+          "administration"
+        ],
+        "confidence": 0.61,
+        "id": "synthetic-review-002",
+        "keywords": [
+          "example",
+          "hub",
+          "fixture"
+        ],
+        "path": "review/product-tree/example-server/administration/example-hub-page.md",
+        "status": "review",
+        "summary": "Synthetic hub page placeholder.",
+        "title": "Example Hub Page",
+        "updated_at": "2026-04-16T00:00:00Z",
+        "source_url": "${CONFLUENCE_BASE_URL}/wiki/spaces/${SPACE_KEY}/pages/${PAGE_ID}/Example+Hub+Page",
+        "body": "Placeholder data only. Keep public fixtures free of internal URLs and copied case notes.",
+        "flags": []
+      }
+    ]
+  }
+}

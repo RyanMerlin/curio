@@ -1,0 +1,32 @@
+# ── Core ───────────────────────────────────────────────────────────────────
+project_id            = "your-project-id"
+region                = "us-central1"
+image                 = "us-docker.pkg.dev/your-project/curio/curio-control-plane:latest"
+service_account_email = "curio-control-plane@your-project-id.iam.gserviceaccount.com"
+state_bucket_name     = "your-project-curio-state"
+gitlab_token_secret_name = "CURIO_GITLAB_TOKEN"
+
+# ── IAP + load balancer ────────────────────────────────────────────────────
+# domain: the FQDN you'll point at the load_balancer_ip output (A record)
+domain = "curio.example.com"
+
+# OAuth client created manually in GCP Console (see iap.tf for instructions)
+iap_oauth2_client_id     = "123456789-abc.apps.googleusercontent.com"
+iap_oauth2_client_secret = "GOCSPX-..."
+
+# corporate_ip_ranges: VPN egress IPs and office gateway CIDRs.
+# Leave as [] to skip Cloud Armor and rely on IAP auth alone.
+# Example: ["203.0.113.0/24", "198.51.100.42/32"]
+corporate_ip_ranges = []
+
+# ── Workforce Identity Federation (Entra ID SSO) ───────────────────────────
+# Find organization_id: gcloud organizations list
+organization_id = "123456789012"
+
+# From your Entra ID app registration (Azure portal → Entra ID → App registrations)
+entra_tenant_id     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+entra_client_id     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+entra_client_secret = "your-client-secret-value"
+
+# Only users with @this-domain email addresses will be allowed through
+corporate_domain = "example.com"

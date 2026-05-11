@@ -1,0 +1,15 @@
+{
+  "records": [
+    {
+      "workspace_id": "test",
+      "display_name": "Test Workspace",
+      "repo_url": "https://gitlab.example.com/your-org/your-wiki-repo.git",
+      "default_branch": "main",
+      "kb_root": "wiki",
+      "allowed_job_types": [],
+      "write_policy": "read_only",
+      "provider_defaults": { "backend": "gemini" },
+      "status": "active"
+    }
+  ]
+}

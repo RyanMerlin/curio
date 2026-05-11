@@ -1,0 +1,4 @@
+[[workspaces]]
+name = "wiki-demo"
+path = '${REPO_ROOT}/docs/wiki-demo'
+description = "Synthetic demo workspace for Curio harness validation"

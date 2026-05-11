@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy this file to .claude/settings.local.json (gitignored) and customize for your machine. The real settings file is per-operator and is never committed.",
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(cargo build:*)",
+      "Bash(cargo test:*)",
+      "Bash(curio:*)"
+    ]
+  }
+}

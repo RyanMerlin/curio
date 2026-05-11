@@ -1,0 +1,8 @@
+{
+  "args": [],
+  "env": {
+    "CURIO_GEMINI_MODE": "workspace",
+    "CURIO_GEMINI_RUNTIME": "adk-go"
+  },
+  "bootstrap_summary": "Use GEMINI.md (which delegates to HARNESS.md + providers/gemini/overrides.md) as the Gemini entrypoint, load Curio skills and enabled plugins, and bootstrap through the Curio Gemini profile compatible with an ADK-oriented launcher."
+}

@@ -1,0 +1,9 @@
+Curio Confluence Feedback Loop
+
+This note records the public-safe shape of the feedback loop work:
+
+- review pages should expose clear approve, reject, and rewrite signals
+- reviewer comments should feed back into the next routing pass
+- implementation details should remain source-agnostic and avoid embedding customer-specific or internal support content
+
+Any internal case notes, copied support text, or organization-specific URLs are intentionally excluded from this public repository.

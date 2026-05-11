@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  fmt:
+    name: cargo fmt --check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+        working-directory: curio-rs
+
+  clippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    # Advisory for v1.0.0 — the existing codebase has a backlog of style
+    # lints to clear. We surface clippy output but do not block builds
+    # on it. Tighten to `-D warnings` once the backlog is cleared.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: curio-rs
+      - run: cargo clippy --all-targets
+        working-directory: curio-rs
+
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: curio-rs
+      - name: Configure git identity for tests
+        run: |
+          git config --global user.email "ci@curio.local"
+          git config --global user.name "Curio CI"
+      - run: cargo test --all-targets
+        working-directory: curio-rs
+
+  build:
+    name: cargo build --release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: curio-rs
+      - run: cargo build --release --bin curio --bin curio-service
+        working-directory: curio-rs

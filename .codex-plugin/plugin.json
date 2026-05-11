@@ -1,0 +1,11 @@
+{
+  "name": "curio-harness",
+  "displayName": "Curio Harness",
+  "version": "0.1.0",
+  "description": "Codex plugin manifest for the Curio multi-provider harness.",
+  "skills": "./skills/",
+  "interface": {
+    "type": "plugin",
+    "entrypoints": []
+  }
+}

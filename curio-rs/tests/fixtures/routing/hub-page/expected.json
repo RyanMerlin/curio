@@ -1,0 +1,5 @@
+{
+  "expected_lane_options": ["review"],
+  "expected_category_contains": "product-tree",
+  "description": "Hub/index page with synthesized child list — should go to review as a branch-node proposal, not be staged as a leaf"
+}

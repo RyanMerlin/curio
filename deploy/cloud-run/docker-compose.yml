@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  curio-service:
+    build:
+      context: ../..
+      dockerfile: deploy/cloud-run/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./state:/state
+      - /tmp/curio:/tmp/curio
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

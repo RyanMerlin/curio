@@ -1,0 +1,16 @@
+Curio
+Copyright 2026 The Curio Contributors
+
+This product includes software developed by The Curio Contributors.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use these files except in compliance with the License. You may obtain
+a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+The product registry, taxonomy nodes, and any operator-supplied
+configuration files committed under `wiki/_admin/` of downstream
+deployments are NOT part of the Curio Work itself; they belong to the
+operator that authored them and are licensed under whatever terms the
+operator chooses.

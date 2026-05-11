@@ -1,0 +1,13 @@
+connection:
+  confluence_url: "${CURIO_CONFLUENCE_URL}"
+  confluence_email: "${CURIO_CONFLUENCE_EMAIL}"
+
+content_model:
+  space_key: "${CURIO_SPACE_KEY}"
+
+wiki:
+  wiki_dir: "."
+  auto_commit: true
+  sync:
+    enabled: true
+    confluence_parent_page_id: null

@@ -1,0 +1,68 @@
+# Local Docker Compose for curio-service + the 3 demo KBs.
+# Cloud-run-bound config lives in ../cloud-run/. This file is local-only.
+#
+# Usage:
+#   cp .env.example .env       # paste the Confluence token (single token for now)
+#   docker compose up -d --build
+#   curl http://localhost:8080/healthz
+#   curl http://localhost:8080/v1/workspaces
+#   ./smoke-test.sh
+#
+# CLI workflow (same container, different invocation):
+#   docker compose exec curio-service curio --workspace partner-business status
+
+services:
+  curio-service:
+    build:
+      context: ../..                       # repo root (curio-agent/)
+      dockerfile: deploy/cloud-run/Dockerfile
+    image: curio-service:local
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      # Service-level config
+      CURIO_SERVICE_AUTH_MODE: none        # local dev only — Cloud Run uses iap/oidc
+      CURIO_SERVICE_PROVIDER_BACKEND: passthrough  # avoid LLM calls during smoke
+      CURIO_SERVICE_BIND_ADDR: 0.0.0.0:8080
+      CURIO_SERVICE_READ_ONLY: "false"
+      CURIO_SERVICE_REGISTRY: /state/workspaces.json
+      RUST_LOG: info,curio=debug
+
+      # Bind-mounted KBs are owned by the host user (UID 1000), but the
+      # container runs as UID 1001 — git would otherwise refuse with
+      # "dubious ownership". Whitelist all paths inside the container.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: "*"
+
+      # Confluence connection (shared across the 3 KBs for now)
+      CURIO_CONFLUENCE_URL: ${CURIO_CONFLUENCE_URL:-https://example.atlassian.net/wiki}
+      CURIO_CONFLUENCE_EMAIL: ${CURIO_CONFLUENCE_EMAIL:?set CURIO_CONFLUENCE_EMAIL in deploy/local/.env}
+
+      # Per-KB token env vars — each KB's .curio.yaml names which one to read.
+      # Single token aliased today; swap to distinct values later by editing .env.
+      CURIO_CONFLUENCE_TOKEN_CURIO_WIKI: ${CURIO_CONFLUENCE_TOKEN}
+      CURIO_CONFLUENCE_TOKEN_PARTNER:    ${CURIO_CONFLUENCE_TOKEN}
+      CURIO_CONFLUENCE_TOKEN_FDE:        ${CURIO_CONFLUENCE_TOKEN}
+
+    volumes:
+      # In-container workspace registry (independent of host curio.workspaces.toml).
+      - ./state:/state
+      # Bind-mount each KB into /kb/<name>. Host paths assume WSL — adjust on macOS.
+      - /mnt/c/code/agents/curio/curio-kb:/kb/curio-wiki
+      - /mnt/c/code/agents/curio/partner-business:/kb/partner-business
+      - /mnt/c/code/agents/curio/fde-uc-repo:/kb/fde-uc-repo
+      # Persistent worktree cache so container restarts don't redownload.
+      - curio-cache:/tmp/curio
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/curio-service", "--help"]   # binary smoke
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  curio-cache:

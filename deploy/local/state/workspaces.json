@@ -1,0 +1,40 @@
+{
+  "records": [
+    {
+      "workspace_id": "curio-wiki",
+      "display_name": "Curio Wiki (demo + dogfooding)",
+      "repo_url": "file:///kb/curio-wiki",
+      "default_branch": "main",
+      "kb_root": "wiki",
+      "allowed_job_types": ["intake", "process", "publish", "sync", "review"],
+      "write_policy": "direct_push",
+      "provider_defaults": { "backend": "passthrough" },
+      "status": "active",
+      "description": "Curio's own KB — dogfooding the harness."
+    },
+    {
+      "workspace_id": "partner-business",
+      "display_name": "Partner Business",
+      "repo_url": "file:///kb/partner-business",
+      "default_branch": "main",
+      "kb_root": "wiki",
+      "allowed_job_types": ["intake", "process", "publish", "sync", "review"],
+      "write_policy": "direct_push",
+      "provider_defaults": { "backend": "passthrough" },
+      "status": "active",
+      "description": "Example partner-business KB → Confluence space partnerbiz."
+    },
+    {
+      "workspace_id": "fde-uc-repo",
+      "display_name": "FDE Use Case Repository",
+      "repo_url": "file:///kb/fde-uc-repo",
+      "default_branch": "main",
+      "kb_root": "wiki",
+      "allowed_job_types": ["intake", "process", "publish", "sync", "review"],
+      "write_policy": "direct_push",
+      "provider_defaults": { "backend": "passthrough" },
+      "status": "active",
+      "description": "FDE use cases → Confluence space fdeucrepo."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary: curio
+            artifact_name: curio-linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: curio.exe
+            artifact_name: curio-windows-x86_64.exe
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary: curio
+            artifact_name: curio-macos-aarch64
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: curio-rs
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Add target
+      run: rustup target add ${{ matrix.target }}
+
+    - name: Build (debug + tests)
+      run: cargo build --verbose
+
+    - name: Run tests
+      run: cargo test --verbose
+
+    - name: Build release
+      run: cargo build --release --target ${{ matrix.target }} --verbose
+
+    - name: Upload release binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: curio-rs/target/${{ matrix.target }}/release/${{ matrix.binary }}
+        if-no-files-found: error

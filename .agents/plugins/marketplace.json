@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    {
+      "name": "curio-core-harness",
+      "path": "plugins/core-harness",
+      "description": "Core Curio harness docs, launch rules, and workspace bootstrap guidance.",
+      "enabled": true
+    },
+    {
+      "name": "curio-confluence-workflows",
+      "path": "plugins/confluence-workflows",
+      "description": "Curio workflow guidance for the existing curio-rs Confluence command set.",
+      "enabled": true
+    }
+  ]
+}

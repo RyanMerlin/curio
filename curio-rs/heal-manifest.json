@@ -1,0 +1,32 @@
+{
+  "scope": "product-tree/example-server",
+  "confidence_threshold": 0.85,
+  "pages": [
+    {
+      "slug": "example-admin-page",
+      "path": "${REPO_ROOT}/wiki/published/product-tree/example-server/administration/example-admin-page.md",
+      "title": "Example Admin Page",
+      "body": "Synthetic fixture only. No copied support content, customer names, or internal Atlassian URLs.",
+      "category": [
+        "product-tree",
+        "example-server",
+        "administration"
+      ],
+      "keywords": [
+        "example",
+        "fixture",
+        "admin"
+      ],
+      "source_url": "${CONFLUENCE_BASE_URL}/wiki/spaces/${SPACE_KEY}/pages/${PAGE_ID}/Example+Admin+Page",
+      "updated_at": "2026-04-16T00:00:00Z",
+      "freshness_score": 1.0,
+      "quality": {
+        "information_quality": 0.9,
+        "usability": 0.9,
+        "publishable": true,
+        "flags": []
+      },
+      "overlap_candidates": []
+    }
+  ]
+}
