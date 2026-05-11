@@ -34,7 +34,7 @@ zip = "0.6"
 thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
-tower-http = { version = "0.5", features = ["trace", "limit"] }
+tower-http = { version = "0.6", features = ["trace", "limit"] }
 jsonwebtoken = "9"
 
 [dev-dependencies]
