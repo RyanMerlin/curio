@@ -35,7 +35,7 @@ jobs:
         working-directory: curio-rs
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Add target
       run: rustup target add ${{ matrix.target }}
