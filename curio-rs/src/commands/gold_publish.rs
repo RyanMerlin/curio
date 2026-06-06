@@ -89,6 +89,7 @@ pub async fn run_publish(
         );
     }
     let overlap_matches = find_peer_overlap(
+        config,
         wiki_dir,
         &cat_segments,
         &page.frontmatter.title,

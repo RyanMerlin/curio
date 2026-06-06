@@ -3,6 +3,7 @@ pub mod cli;
 pub mod commands;
 pub mod config;
 pub mod confluence;
+pub mod embeddings;
 pub mod error;
 pub mod freshness;
 pub mod git_ops;

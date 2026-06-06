@@ -581,6 +581,7 @@ fn build_onboard_config(state: &OnboardState) -> Config {
         products: Vec::new(),
         category_icons: std::collections::HashMap::new(),
         admin_related_repos: Vec::new(),
+        overlap: Default::default(),
     }
 }
 

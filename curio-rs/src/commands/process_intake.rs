@@ -718,6 +718,7 @@ fn apply_routing(
     };
     let quality = assess_quality(&page.frontmatter.title, &scoring_body);
     let overlap_candidates = find_peer_overlap(
+        config,
         wiki_dir,
         &decision.category,
         &page.frontmatter.title,

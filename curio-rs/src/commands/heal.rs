@@ -81,6 +81,7 @@ pub async fn run_heal_prepare(
         let quality = assess_quality(&page.frontmatter.title, &page.body);
 
         let overlap_candidates: Vec<OverlapCandidate> = find_peer_overlap(
+            config,
             wiki_dir,
             &page.frontmatter.category,
             &page.frontmatter.title,

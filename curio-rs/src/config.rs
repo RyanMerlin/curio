@@ -36,6 +36,11 @@ pub struct Config {
     /// Sourced from `wiki/_admin/config.yaml::admin_related_repos`.
     #[serde(default)]
     pub admin_related_repos: Vec<AdminRelatedRepo>,
+    /// Overlap scoring backend used by the deterministic Rust substrate.
+    /// Default remains `jaccard` for backwards compatibility; `local-cached`
+    /// enables the cached vector scorer in `overlap.rs`.
+    #[serde(default)]
+    pub overlap: OverlapConfig,
 }
 
 /// LLM inference settings — required for `curio process` (routing) and `curio query`.
@@ -297,6 +302,10 @@ pub struct WorkspaceConfigFile {
     /// own README page in Confluence.
     #[serde(default)]
     pub admin_related_repos: Vec<AdminRelatedRepo>,
+    /// Overlap backend configuration. Defaults to Jaccard unless the
+    /// operator explicitly opts into a cached vector backend.
+    #[serde(default)]
+    pub overlap: OverlapConfig,
 }
 
 /// A single product (or domain category) entry in the registry. Drives
@@ -342,6 +351,20 @@ pub struct AdminRelatedRepo {
     pub url: String,
     #[serde(default)]
     pub description: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct OverlapConfig {
+    #[serde(default)]
+    pub provider: Option<String>,
+    #[serde(default)]
+    pub embedding_cache_dir: Option<PathBuf>,
+}
+
+impl OverlapConfig {
+    pub fn provider(&self) -> &str {
+        self.provider.as_deref().unwrap_or("jaccard")
+    }
 }
 
 fn default_taxonomy_schema_version() -> u32 {
@@ -518,6 +541,12 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
                     }
                     if !ws.admin_related_repos.is_empty() {
                         config.admin_related_repos = ws.admin_related_repos;
+                    }
+                    if ws.overlap.provider.is_some() {
+                        config.overlap.provider = ws.overlap.provider;
+                    }
+                    if ws.overlap.embedding_cache_dir.is_some() {
+                        config.overlap.embedding_cache_dir = ws.overlap.embedding_cache_dir;
                     }
                 }
                 Err(e) => {

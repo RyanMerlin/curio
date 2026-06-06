@@ -3405,8 +3405,14 @@ mod review_tree_tests {
 
         let html = render_immediate_child_links(tmp.path(), "TEST").unwrap();
         assert!(html.contains("Branch Index"));
-        assert!(html.contains("Split"), "branch children must show proposal kind");
-        assert!(html.contains("81%"), "branch children must show route confidence");
+        assert!(
+            html.contains("Split"),
+            "branch children must show proposal kind"
+        );
+        assert!(
+            html.contains("81%"),
+            "branch children must show route confidence"
+        );
     }
 
     #[test]

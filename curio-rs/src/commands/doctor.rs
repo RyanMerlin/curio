@@ -226,6 +226,7 @@ pub async fn run_doctor(
         //    exclude_slug to avoid self-match, returns Result<Vec<OverlapMatch>>
         //    OverlapMatch.path is a String (wiki_dir-relative), OverlapMatch.score is f32
         if let Ok(peers) = find_peer_overlap(
+            config,
             wiki_dir,
             &page.frontmatter.category,
             &page.frontmatter.title,
