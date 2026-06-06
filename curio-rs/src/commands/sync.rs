@@ -1417,7 +1417,12 @@ fn render_immediate_child_links(dir_path: &Path, space_key: &str) -> Result<Stri
             } else {
                 String::new()
             };
-            children.push((title, summary, "branch".to_string(), String::new()));
+            let badge = if index.exists() {
+                child_status_badge(&index)
+            } else {
+                String::new()
+            };
+            children.push((title, summary, "branch".to_string(), badge));
         } else if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
             if let Ok(page) = parse_wiki_page(&path) {
                 let badge = child_status_badge(&path);
@@ -3368,6 +3373,40 @@ mod review_tree_tests {
             badge.contains("published/x.md"),
             "badge must show merge target; got {badge}"
         );
+    }
+
+    #[test]
+    fn branch_child_outline_surfaces_index_proposal_badges() {
+        let tmp = tempfile::tempdir().unwrap();
+        let branch = tmp.path().join("branch");
+        let index = branch.join("index.md");
+        std::fs::create_dir_all(&branch).unwrap();
+        std::fs::write(
+            &index,
+            "---\nid: branch-index\ntitle: Branch Index\nstatus: review\nsource:\n  kind: web_page\n  id: src\n  origin_url: https://x\ncategory:\n  - tree\nkeywords: []\ncreated_at: \"2026-01-01T00:00:00Z\"\nupdated_at: \"2026-01-01T00:00:00Z\"\ncross_refs: []\ncontent_hash: \"h\"\n---\n\nBranch summary body.\n",
+        )
+        .unwrap();
+        let proposal = proposal_with(
+            ProposalKind::Split,
+            ProposalScores {
+                route_confidence: 0.81,
+                quality_confidence: 0.7,
+                hierarchy_fit_confidence: 0.86,
+                overlap_risk: 0.2,
+                evidence_completeness: 0.74,
+                usability: 0.8,
+                freshness_confidence: 0.9,
+            },
+            None,
+            None,
+            vec!["alternate branch path".into()],
+        );
+        write_proposal(&index, &proposal);
+
+        let html = render_immediate_child_links(tmp.path(), "TEST").unwrap();
+        assert!(html.contains("Branch Index"));
+        assert!(html.contains("Split"), "branch children must show proposal kind");
+        assert!(html.contains("81%"), "branch children must show route confidence");
     }
 
     #[test]
