@@ -43,8 +43,13 @@ jobs:
     - name: Build (debug + tests)
       run: cargo build --verbose
 
+    - name: Install nextest
+      uses: taiki-e/install-action@v2
+      with:
+        tool: nextest
+
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo nextest run --all-targets --verbose
 
     - name: Build release
       run: cargo build --release --target ${{ matrix.target }} --verbose

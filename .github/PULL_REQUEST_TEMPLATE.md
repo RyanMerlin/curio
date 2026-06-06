@@ -1,7 +1,7 @@
 <!--
 Thanks for the PR! Quick checklist:
 - One concern per PR (we'll ask you to split if a PR mixes concerns).
-- `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` + `cargo test` all green.
+- `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` + `cargo nextest run --all-targets` all green.
 - A test that would have failed before this change (or a deliberate "no test needed" rationale).
 - See CONTRIBUTING.md for the editorial-philosophy promise this codebase keeps.
 -->
@@ -16,7 +16,7 @@ Thanks for the PR! Quick checklist:
 
 ## Tests
 
-<!-- What did you add? `cargo test --test <name>` should run it. -->
+<!-- What did you add? `cargo nextest run --all-targets --test <name>` should run it. -->
 
 ## Breaking changes
 

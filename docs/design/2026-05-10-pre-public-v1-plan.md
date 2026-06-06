@@ -99,7 +99,7 @@ Add the standard open-source package:
 4. **`SECURITY.md`** — how to report security issues (private channel), what's in scope, how we triage.
 5. **`.github/ISSUE_TEMPLATE/bug_report.md`** + `feature_request.md`.
 6. **`.github/PULL_REQUEST_TEMPLATE.md`** — short, "what / why / tests / breaking".
-7. **`.github/workflows/ci.yml`** — runs `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test` on push + PR. Already has `.github/workflows/rust.yml` (release build matrix) — keep that, add a separate CI workflow.
+7. **`.github/workflows/ci.yml`** — runs `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo nextest run --all-targets` on push + PR. Already has `.github/workflows/rust.yml` (release build matrix) — keep that, add a separate CI workflow.
 8. **`.github/dependabot.yml`** — weekly Cargo updates.
 9. **`README.md` badge** — replace the static `tests-80/80-passing` badge with a real `actions/workflows/ci.yml/badge.svg` once the CI workflow is live.
 
@@ -154,7 +154,7 @@ Two options:
 ## Phase P9 — Final verification gate (≤30 min)
 
 1. `cargo build --release --bin curio --bin curio-service` — clean.
-2. `cargo test` — 80/80 (or whatever the count is post-genericization).
+2. `cargo nextest run --all-targets` — 80/80 (or whatever the count is post-genericization).
 3. `cargo clippy --all-targets -- -D warnings` — clean.
 4. `cargo fmt -- --check` — clean.
 5. **Final contamination grep:**
@@ -185,7 +185,7 @@ Public-ready means **all** of these:
 
 - [ ] Zero matches in grep for: alteryx, merlin, albertsons, papa-johns, real emails, internal hostnames
 - [ ] LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue templates, PR template, CI workflow all present
-- [ ] `cargo test` 80/80 (or N/N) passing
+- [ ] `cargo nextest run --all-targets` 80/80 (or N/N) passing
 - [ ] `cargo clippy --all-targets -- -D warnings` clean
 - [ ] `cargo fmt --check` clean
 - [ ] gitleaks scan clean

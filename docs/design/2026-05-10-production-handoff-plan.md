@@ -161,7 +161,7 @@ E3. **Hand a colleague a 30-minute test.** Pick one (the user picks); walk throu
 ## Verification
 
 - All Tier-1 items have unit or integration test coverage.
-- `cargo test` clean (currently 64 tests; expect ~80 after).
+- `cargo nextest run --all-targets` clean (currently 64 tests; expect ~80 after).
 - `cargo clippy --all-targets -- -D warnings` clean.
 - `deploy/local/smoke-test.sh` extended to exercise the multi-tenant scenario.
 - The runbook is dogfooded against partner-business or fde-uc-repo end-to-end before colleagues see it.

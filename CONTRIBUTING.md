@@ -48,7 +48,7 @@ cargo fmt --all
 cargo clippy --all-targets -- -D warnings
 
 # Test
-cargo test
+cargo nextest run --all-targets
 ```
 
 Tests live in `curio-rs/tests/` (integration) and as `#[cfg(test)]` modules inside source files (unit). Integration tests use `tempfile::tempdir` so they don't touch your local KBs.

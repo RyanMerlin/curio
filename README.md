@@ -109,6 +109,8 @@ cd curio-rs && cargo build --release --bin curio
 ./target/release/curio --workspace <name> sync
 ```
 
+Run tests with `cargo nextest run --all-targets` from `curio-rs/`.
+
 ### Option 3 — Onboard a new colleague
 
 ```sh

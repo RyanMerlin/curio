@@ -59,7 +59,7 @@ Goal: make the public Cloud Run endpoint safe to expose. ~3–5 days of focused 
 
 **Verification:**
 - Smoke test sandbox: unauthenticated `curl` → 401; valid IAP-signed request → 202; valid Pub/Sub OIDC push → 202; tampered JWT (wrong audience) → 401.
-- `cargo test` passes + new `service::auth` unit tests with mocked JWKS.
+- `cargo nextest run --all-targets` passes + new `service::auth` unit tests with mocked JWKS.
 - `gcloud run deploy` to staging; `gcloud logging read` shows structured JSON with correlation IDs.
 
 ---

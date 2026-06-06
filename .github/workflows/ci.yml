@@ -41,11 +41,14 @@ jobs:
         working-directory: curio-rs
 
   test:
-    name: cargo test
+    name: cargo nextest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: curio-rs
@@ -53,7 +56,7 @@ jobs:
         run: |
           git config --global user.email "ci@curio.local"
           git config --global user.name "Curio CI"
-      - run: cargo test --all-targets
+      - run: cargo nextest run --all-targets
         working-directory: curio-rs
 
   build:
