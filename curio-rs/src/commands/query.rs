@@ -72,7 +72,7 @@ pub async fn run_query(
         let _ = emit_json(
             "query",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "question": question,
                 "index_md": index_md,
                 "top_pages": page_contexts,

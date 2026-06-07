@@ -228,7 +228,7 @@ pub fn extract_keywords(text: &str, n: usize) -> Vec<String> {
         }
     }
     let mut pairs: Vec<(usize, String)> = freq.into_iter().map(|(k, v)| (v, k)).collect();
-    pairs.sort_by(|a, b| b.0.cmp(&a.0));
+    pairs.sort_by_key(|b| std::cmp::Reverse(b.0));
     pairs.into_iter().take(n).map(|(_, w)| w).collect()
 }
 
@@ -242,6 +242,7 @@ pub fn extract_keywords(text: &str, n: usize) -> Vec<String> {
 /// - `title`, `body` — page content (body truncated to ~3K tokens in prompt)
 /// - `source_url`, `content_hash` — for the analysis sidecar
 /// - `trees` — parsed NORTHSTAR blueprint (used to build routing context)
+#[allow(clippy::too_many_arguments)]
 pub async fn route_with_llm(
     api_key: &str,
     model: &str,
@@ -381,6 +382,7 @@ fn build_user_prompt(title: &str, body: &str, pre_signal: Option<&str>) -> Strin
 }
 
 /// Parse the LLM JSON response into a ReconcileDecision + RoutingAnalysis.
+#[allow(clippy::too_many_arguments)]
 fn parse_llm_response(
     json: serde_json::Value,
     model: &str,

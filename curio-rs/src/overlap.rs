@@ -63,10 +63,10 @@ fn jaccard_overlap(
         {
             continue;
         }
-        if let Some(slug) = exclude_slug {
-            if path.file_stem().and_then(|name| name.to_str()) == Some(slug) {
-                continue;
-            }
+        if let Some(slug) = exclude_slug
+            && path.file_stem().and_then(|name| name.to_str()) == Some(slug)
+        {
+            continue;
         }
         let page = match parse_wiki_page(path) {
             Ok(page) => page,
@@ -135,10 +135,10 @@ fn vector_overlap(
         {
             continue;
         }
-        if let Some(slug) = exclude_slug {
-            if path.file_stem().and_then(|name| name.to_str()) == Some(slug) {
-                continue;
-            }
+        if let Some(slug) = exclude_slug
+            && path.file_stem().and_then(|name| name.to_str()) == Some(slug)
+        {
+            continue;
         }
         let page = match parse_wiki_page(path) {
             Ok(page) => page,

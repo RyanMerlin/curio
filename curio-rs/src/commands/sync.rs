@@ -90,18 +90,17 @@ fn page_icon_builtin(slug: &str) -> Option<&'static str> {
 ///      `emoji` set, use it.
 ///   3. `page_icon_builtin(slug)` — harness-managed defaults.
 fn page_icon_for(slug: &str, config: &Config) -> Option<String> {
-    if let Some(icon) = config.category_icons.get(slug) {
-        if !icon.is_empty() {
-            return Some(icon.clone());
-        }
+    if let Some(icon) = config.category_icons.get(slug)
+        && !icon.is_empty()
+    {
+        return Some(icon.clone());
     }
     for product in &config.products {
-        if product.slug == slug {
-            if let Some(icon) = &product.emoji {
-                if !icon.is_empty() {
-                    return Some(icon.clone());
-                }
-            }
+        if product.slug == slug
+            && let Some(icon) = &product.emoji
+            && !icon.is_empty()
+        {
+            return Some(icon.clone());
         }
     }
     page_icon_builtin(slug).map(|s| s.to_string())
@@ -250,16 +249,14 @@ pub async fn run_sync(
                     .and_then(|p| p["title"].as_str())
                     .unwrap_or("");
                 let title_matches = current_title == page_title;
-                if title_matches {
-                    if let Ok(Some(prop)) =
+                if title_matches
+                    && let Ok(Some(prop)) =
                         client.get_content_property(&page_id, SYNC_PROP_KEY).await
-                    {
-                        if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
-                            skipped.push(format!("[admin] {}", page_title));
-                            synced_page_ids.insert(page_id);
-                            continue;
-                        }
-                    }
+                    && prop["value"]["content_hash"].as_str() == Some(hash.as_str())
+                {
+                    skipped.push(format!("[admin] {}", page_title));
+                    synced_page_ids.insert(page_id);
+                    continue;
                 }
             }
 
@@ -407,7 +404,7 @@ pub async fn run_sync(
                         Err(e) => errors.push(format!("[dir] {}: {}", page_title, e)),
                     }
                 }
-            } else if rel_path.extension().map_or(false, |ext| ext == "md") {
+            } else if rel_path.extension().is_some_and(|ext| ext == "md") {
                 if dry_run {
                     let page_title = published_page_title(&abs_path)?;
                     upserted.push(format!("[page] {}", page_title));
@@ -538,7 +535,7 @@ pub async fn run_sync(
         let _ = emit_json(
             "sync",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "upserted": upserted,
                 "skipped": skipped,
                 "errors": errors,
@@ -870,14 +867,14 @@ async fn ensure_curio_root_page(
     preferred_root_id: Option<&str>,
 ) -> Result<String> {
     let expected_space_id = client.get_numeric_space_id(space_key).await?;
-    if let Some(root_id) = preferred_root_id {
-        if let Some(page) = client.get_page_by_id_v2(root_id).await? {
-            let title_matches = page["title"].as_str() == Some(CURIO_ROOT_TITLE);
-            let space_matches = page["spaceId"].as_str() == Some(expected_space_id.as_str());
-            let status_current = page["status"].as_str() == Some("current");
-            if title_matches && space_matches && status_current {
-                return Ok(root_id.to_string());
-            }
+    if let Some(root_id) = preferred_root_id
+        && let Some(page) = client.get_page_by_id_v2(root_id).await?
+    {
+        let title_matches = page["title"].as_str() == Some(CURIO_ROOT_TITLE);
+        let space_matches = page["spaceId"].as_str() == Some(expected_space_id.as_str());
+        let status_current = page["status"].as_str() == Some("current");
+        if title_matches && space_matches && status_current {
+            return Ok(root_id.to_string());
         }
     }
 
@@ -1064,7 +1061,7 @@ async fn upload_root_hero(config: &Config, client: &ConfluenceClient, root_id: &
         .wiki_dir
         .parent()
         .map(PathBuf::from)
-        .unwrap_or_else(|| crate::config::repo_root());
+        .unwrap_or_else(crate::config::repo_root);
     let hero_path = repo_root
         .join("docs")
         .join("assets")
@@ -1333,10 +1330,10 @@ fn render_branch_page_body(
         render_branch_summary_only(space_key, title, fallback_description_html, &[])
     };
 
-    if let Ok(child_section) = render_immediate_child_links(dir_path, space_key) {
-        if !child_section.trim().is_empty() {
-            body.push_str(&child_section);
-        }
+    if let Ok(child_section) = render_immediate_child_links(dir_path, space_key)
+        && !child_section.trim().is_empty()
+    {
+        body.push_str(&child_section);
     }
     Ok(body)
 }
@@ -1423,16 +1420,16 @@ fn render_immediate_child_links(dir_path: &Path, space_key: &str) -> Result<Stri
                 String::new()
             };
             children.push((title, summary, "branch".to_string(), badge));
-        } else if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
-            if let Ok(page) = parse_wiki_page(&path) {
-                let badge = child_status_badge(&path);
-                children.push((
-                    page.frontmatter.title,
-                    crate::wiki_fs::first_line_summary(&page.body, 160),
-                    "leaf".to_string(),
-                    badge,
-                ));
-            }
+        } else if path.extension().and_then(|ext| ext.to_str()) == Some("md")
+            && let Ok(page) = parse_wiki_page(&path)
+        {
+            let badge = child_status_badge(&path);
+            children.push((
+                page.frontmatter.title,
+                crate::wiki_fs::first_line_summary(&page.body, 160),
+                "leaf".to_string(),
+                badge,
+            ));
         }
     }
 
@@ -1461,6 +1458,7 @@ fn render_immediate_child_links(dir_path: &Path, space_key: &str) -> Result<Stri
     Ok(body)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn upsert_static_page(
     client: &ConfluenceClient,
     config: &Config,
@@ -1474,25 +1472,25 @@ async fn upsert_static_page(
     let hash = content_hash(body);
     if let Some(page) = find_existing_page_for_sync(client, space_key, parent_id, title).await? {
         let page_id = page["id"].as_str().unwrap_or_default().to_string();
-        if let Some(target_parent_id) = parent_id {
-            if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
-                let current_parent_id = current_page["parentId"].as_str();
-                if current_parent_id != Some(target_parent_id) {
-                    let _ = client
-                        .migrate_page_to_parent(&page_id, target_parent_id)
-                        .await;
-                }
+        if let Some(target_parent_id) = parent_id
+            && let Some(current_page) = client.get_page_by_id_v2(&page_id).await?
+        {
+            let current_parent_id = current_page["parentId"].as_str();
+            if current_parent_id != Some(target_parent_id) {
+                let _ = client
+                    .migrate_page_to_parent(&page_id, target_parent_id)
+                    .await;
             }
         }
-        if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
-            if prop["value"]["content_hash"].as_str() == Some(hash.as_str()) {
-                if let Some(icon_val) = icon_override {
-                    set_page_icon_value(client, &page_id, icon_val).await;
-                } else {
-                    set_page_icon(client, config, &page_id, slug).await;
-                }
-                return Ok(page_id);
+        if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await
+            && prop["value"]["content_hash"].as_str() == Some(hash.as_str())
+        {
+            if let Some(icon_val) = icon_override {
+                set_page_icon_value(client, &page_id, icon_val).await;
+            } else {
+                set_page_icon(client, config, &page_id, slug).await;
             }
+            return Ok(page_id);
         }
 
         client
@@ -1657,6 +1655,7 @@ fn collect_valid_routes(
     parent_segments.pop();
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn sync_lane_directory(
     client: &ConfluenceClient,
     config: &Config,
@@ -1720,7 +1719,7 @@ async fn sync_lane_directory(
                 }
                 Err(e) => errors.push(format!("[{} dir] {}: {}", lane, page_title, e)),
             }
-        } else if rel_path.extension().map_or(false, |ext| ext == "md") {
+        } else if rel_path.extension().is_some_and(|ext| ext == "md") {
             match sync_lane_page(
                 client,
                 config,
@@ -1744,6 +1743,7 @@ async fn sync_lane_directory(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn sync_review_proposals(
     client: &ConfluenceClient,
     config: &Config,
@@ -1790,6 +1790,7 @@ async fn sync_review_proposals(
 /// pages proposing the same new subtree into one place.  This lets a reviewer
 /// approve or reject a whole batch of related pages in a single decision rather
 /// than visiting 20 individual proposals that each ask for the same new node.
+#[allow(clippy::too_many_arguments)]
 async fn sync_taxonomy_reconciliation_index(
     client: &ConfluenceClient,
     config: &Config,
@@ -1815,7 +1816,7 @@ async fn sync_taxonomy_reconciliation_index(
             e.path().extension().and_then(|x| x.to_str()) == Some("json")
                 && e.path()
                     .to_str()
-                    .map_or(false, |s| s.ends_with(".analysis.json"))
+                    .is_some_and(|s| s.ends_with(".analysis.json"))
         })
     {
         let path = entry.path();
@@ -1975,6 +1976,7 @@ async fn sync_page(
     .await
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn sync_lane_page(
     client: &ConfluenceClient,
     config: &Config,
@@ -2040,10 +2042,10 @@ async fn sync_lane_page(
         } else if let Ok(Some(existing)) = client
             .get_page_by_title(space_key, parent_id, &result_title)
             .await
+            && let Some(page_id) = existing["id"].as_str()
         {
-            if let Some(page_id) = existing["id"].as_str() {
-                // Upsert the pinned comment ──────────────────────────────────────────
-                let pinned_body = "<p><strong>Curio review signals.</strong> \
+            // Upsert the pinned comment ──────────────────────────────────────────
+            let pinned_body = "<p><strong>Curio review signals.</strong> \
                     React to <em>this comment</em> with \
                     \u{1F44D} <strong>approve</strong> (promotes the proposal toward published), \
                     \u{1F44E} <strong>reject</strong> (deletes the page and records the reason), \
@@ -2052,19 +2054,18 @@ async fn sync_lane_page(
                     Free-form replies are captured as reviewer feedback for the agent. \
                     Run <code>curio feedback</code> to apply pending signals.</p>";
 
-                // Check whether we already have a persisted pinned comment ID
-                let refs_path = path.with_extension("sync-refs.json");
-                let existing_refs: serde_json::Value = if refs_path.exists() {
-                    std::fs::read_to_string(&refs_path)
-                        .ok()
-                        .and_then(|s| serde_json::from_str(&s).ok())
-                        .unwrap_or(serde_json::json!({}))
-                } else {
-                    serde_json::json!({})
-                };
-                let pinned_comment_id = if let Some(existing_id) =
-                    existing_refs["pinned_comment_id"].as_str()
-                {
+            // Check whether we already have a persisted pinned comment ID
+            let refs_path = path.with_extension("sync-refs.json");
+            let existing_refs: serde_json::Value = if refs_path.exists() {
+                std::fs::read_to_string(&refs_path)
+                    .ok()
+                    .and_then(|s| serde_json::from_str(&s).ok())
+                    .unwrap_or(serde_json::json!({}))
+            } else {
+                serde_json::json!({})
+            };
+            let pinned_comment_id =
+                if let Some(existing_id) = existing_refs["pinned_comment_id"].as_str() {
                     // Try to update existing; if it fails (deleted), create a new one
                     match client.update_footer_comment(existing_id, pinned_body).await {
                         Ok(_) => existing_id.to_string(),
@@ -2098,24 +2099,23 @@ async fn sync_lane_page(
                     }
                 };
 
-                let pinned_id_opt = if pinned_comment_id.is_empty() {
-                    None
-                } else {
-                    Some(pinned_comment_id.as_str())
-                };
-                write_sync_refs(path, page_id, pinned_id_opt);
-                // Apply auto-heal label if this page was auto-healed.
-                if page.frontmatter.auto_healed_at.is_some() && !auto_heal_label.is_empty() {
-                    if let Err(e) = client
-                        .add_labels(page_id, vec![auto_heal_label.to_string()])
-                        .await
-                    {
-                        eprintln!(
-                            "  [warn] Failed to apply auto-heal label to page {}: {}",
-                            page_id, e
-                        );
-                    }
-                }
+            let pinned_id_opt = if pinned_comment_id.is_empty() {
+                None
+            } else {
+                Some(pinned_comment_id.as_str())
+            };
+            write_sync_refs(path, page_id, pinned_id_opt);
+            // Apply auto-heal label if this page was auto-healed.
+            if page.frontmatter.auto_healed_at.is_some()
+                && !auto_heal_label.is_empty()
+                && let Err(e) = client
+                    .add_labels(page_id, vec![auto_heal_label.to_string()])
+                    .await
+            {
+                eprintln!(
+                    "  [warn] Failed to apply auto-heal label to page {}: {}",
+                    page_id, e
+                );
             }
         }
     }
@@ -2180,6 +2180,7 @@ async fn sync_proposal_page(
     .await
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn sync_page_html(
     client: &ConfluenceClient,
     config: &Config,
@@ -2199,12 +2200,12 @@ async fn sync_page_html(
         .await?
     {
         let page_id = existing_page["id"].as_str().unwrap_or_default().to_string();
-        if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await {
-            if prop["value"]["content_hash"].as_str() == Some(hash) {
-                skipped.push(page_title.to_string());
-                synced_ids.insert(page_id);
-                return Ok(page_title.to_string());
-            }
+        if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await
+            && prop["value"]["content_hash"].as_str() == Some(hash)
+        {
+            skipped.push(page_title.to_string());
+            synced_ids.insert(page_id);
+            return Ok(page_title.to_string());
         }
         let slug = path.file_stem().unwrap_or_default().to_str().unwrap_or("");
         let page_id = client
@@ -2225,14 +2226,14 @@ async fn sync_page_html(
                 .as_str()
                 .unwrap_or_default()
                 .to_string();
-            if let Some(target_parent_id) = parent_id {
-                if let Some(current_page) = client.get_page_by_id_v2(&conflicting_id).await? {
-                    let current_parent_id = current_page["parentId"].as_str();
-                    if current_parent_id != Some(target_parent_id) {
-                        let _ = client
-                            .migrate_page_to_parent(&conflicting_id, target_parent_id)
-                            .await;
-                    }
+            if let Some(target_parent_id) = parent_id
+                && let Some(current_page) = client.get_page_by_id_v2(&conflicting_id).await?
+            {
+                let current_parent_id = current_page["parentId"].as_str();
+                if current_parent_id != Some(target_parent_id) {
+                    let _ = client
+                        .migrate_page_to_parent(&conflicting_id, target_parent_id)
+                        .await;
                 }
             }
             client
@@ -2257,14 +2258,14 @@ async fn sync_page_html(
             .as_str()
             .unwrap_or_default()
             .to_string();
-        if let Some(target_parent_id) = parent_id {
-            if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
-                let current_parent_id = current_page["parentId"].as_str();
-                if current_parent_id != Some(target_parent_id) {
-                    let _ = client
-                        .migrate_page_to_parent(&page_id, target_parent_id)
-                        .await;
-                }
+        if let Some(target_parent_id) = parent_id
+            && let Some(current_page) = client.get_page_by_id_v2(&page_id).await?
+        {
+            let current_parent_id = current_page["parentId"].as_str();
+            if current_parent_id != Some(target_parent_id) {
+                let _ = client
+                    .migrate_page_to_parent(&page_id, target_parent_id)
+                    .await;
             }
         }
         client
@@ -2293,35 +2294,31 @@ async fn sync_page_html(
             if allow_duplicate_fallback
                 && (err_text.contains("same TITLE in this space")
                     || err_text.contains("title already exists"))
-            {
-                if let Some(conflicting_page) = client
+                && let Some(conflicting_page) = client
                     .get_page_by_title(space_key, None, page_title)
                     .await?
+            {
+                let conflicting_id = conflicting_page["id"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_string();
+                if let Some(target_parent_id) = parent_id
+                    && let Some(current_page) = client.get_page_by_id_v2(&conflicting_id).await?
                 {
-                    let conflicting_id = conflicting_page["id"]
-                        .as_str()
-                        .unwrap_or_default()
-                        .to_string();
-                    if let Some(target_parent_id) = parent_id {
-                        if let Some(current_page) =
-                            client.get_page_by_id_v2(&conflicting_id).await?
-                        {
-                            let current_parent_id = current_page["parentId"].as_str();
-                            if current_parent_id != Some(target_parent_id) {
-                                let _ = client
-                                    .migrate_page_to_parent(&conflicting_id, target_parent_id)
-                                    .await;
-                            }
-                        }
+                    let current_parent_id = current_page["parentId"].as_str();
+                    if current_parent_id != Some(target_parent_id) {
+                        let _ = client
+                            .migrate_page_to_parent(&conflicting_id, target_parent_id)
+                            .await;
                     }
-                    client
-                        .update_page_body_by_id(&conflicting_id, "storage", html_body)
-                        .await?;
-                    set_sync_prop(client, &conflicting_id, hash).await?;
-                    set_page_icon(client, config, &conflicting_id, slug).await;
-                    synced_ids.insert(conflicting_id);
-                    return Ok(page_title.to_string());
                 }
+                client
+                    .update_page_body_by_id(&conflicting_id, "storage", html_body)
+                    .await?;
+                set_sync_prop(client, &conflicting_id, hash).await?;
+                set_page_icon(client, config, &conflicting_id, slug).await;
+                synced_ids.insert(conflicting_id);
+                return Ok(page_title.to_string());
             }
             return Err(err);
         }
@@ -2500,18 +2497,18 @@ fn render_lane_page_body(path: &Path, page: &crate::WikiPage, lane: &str) -> Res
         }
 
         // Body-rewrite badge — what the agent did to produce the body below.
-        if let Some(ref kind) = proposal.dossier.body_rewrite_kind {
-            if kind != "none" || proposal.dossier.decision_section_present {
-                body.push_str(&format!(
-                    "<p><em>Body rewrite: <code>{}</code>{}</em></p>",
-                    html_escape(kind),
-                    if proposal.dossier.decision_section_present {
-                        " (with structured decision section)"
-                    } else {
-                        ""
-                    }
-                ));
-            }
+        if let Some(ref kind) = proposal.dossier.body_rewrite_kind
+            && (kind != "none" || proposal.dossier.decision_section_present)
+        {
+            body.push_str(&format!(
+                "<p><em>Body rewrite: <code>{}</code>{}</em></p>",
+                html_escape(kind),
+                if proposal.dossier.decision_section_present {
+                    " (with structured decision section)"
+                } else {
+                    ""
+                }
+            ));
         }
     } else if let Some(ref analysis) = analysis {
         // No proposal sidecar but analysis exists — surface what we have.
@@ -2568,10 +2565,10 @@ fn render_lane_branch_body(
         html_escape(&to_title(lane)),
         html_escape(&rel_path.display().to_string())
     );
-    if let Ok(child_outline) = render_immediate_child_links(&abs_dir, space_key) {
-        if !child_outline.trim().is_empty() {
-            body.push_str(&child_outline);
-        }
+    if let Ok(child_outline) = render_immediate_child_links(&abs_dir, space_key)
+        && !child_outline.trim().is_empty()
+    {
+        body.push_str(&child_outline);
     }
     Ok(body)
 }
@@ -2656,6 +2653,7 @@ fn subtree_has_markdown(root: &Path) -> bool {
         })
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn upsert_page(
     client: &ConfluenceClient,
     config: &Config,
@@ -2669,14 +2667,14 @@ async fn upsert_page(
     let hash = content_hash(slug);
     if let Some(page) = find_existing_page_for_sync(client, space_key, parent_id, title).await? {
         let page_id = page["id"].as_str().unwrap_or_default().to_string();
-        if let Some(target_parent_id) = parent_id {
-            if let Some(current_page) = client.get_page_by_id_v2(&page_id).await? {
-                let current_parent_id = current_page["parentId"].as_str();
-                if current_parent_id != Some(target_parent_id) {
-                    let _ = client
-                        .migrate_page_to_parent(&page_id, target_parent_id)
-                        .await;
-                }
+        if let Some(target_parent_id) = parent_id
+            && let Some(current_page) = client.get_page_by_id_v2(&page_id).await?
+        {
+            let current_parent_id = current_page["parentId"].as_str();
+            if current_parent_id != Some(target_parent_id) {
+                let _ = client
+                    .migrate_page_to_parent(&page_id, target_parent_id)
+                    .await;
             }
         }
         client
@@ -3036,7 +3034,7 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
             continue;
         }
 
-        if line.starts_with("### ") {
+        if let Some(stripped) = line.strip_prefix("### ") {
             // Flush previous subtree into current tree
             if let Some(mut sub) = current_sub.take() {
                 sub.description_html = flush_desc(&mut desc_lines);
@@ -3057,14 +3055,14 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
             if let Some(t) = current_tree.take() {
                 trees.push(t);
             }
-            let title = line[4..].trim().to_string();
+            let title = stripped.trim().to_string();
             let slug = title.to_lowercase().replace(' ', "-");
             current_tree = Some(TreeNode {
                 title,
                 slug,
                 ..Default::default()
             });
-        } else if line.starts_with("#### ") {
+        } else if let Some(stripped) = line.strip_prefix("#### ") {
             // Flush previous subtree (or tree description if this is the first subtree)
             if let Some(mut sub) = current_sub.take() {
                 sub.description_html = flush_desc(&mut desc_lines);
@@ -3074,13 +3072,13 @@ pub fn parse_northstar_blueprint(northstar_md: &str) -> Vec<TreeNode> {
             } else {
                 // First subtree — flush accumulated lines as the parent tree's description
                 let html = flush_desc(&mut desc_lines);
-                if let Some(ref mut t) = current_tree {
-                    if t.description_html.is_empty() {
-                        t.description_html = html;
-                    }
+                if let Some(ref mut t) = current_tree
+                    && t.description_html.is_empty()
+                {
+                    t.description_html = html;
                 }
             }
-            let title = line[5..].trim().to_string();
+            let title = stripped.trim().to_string();
             // "Technical / CSE" → "technical-cse", collapsing runs of non-alpha chars
             let slug: String = title
                 .to_lowercase()
@@ -3198,7 +3196,7 @@ async fn run_sync_dry_run(
         let _ = emit_json(
             "sync",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "dry_run": true,
                 "would_push": total,
                 "by_lane": {

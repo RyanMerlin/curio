@@ -100,7 +100,7 @@ pub async fn run_tree(config: &Config, dry_run: bool, json: bool) -> Result<()> 
         let _ = emit_json(
             "tree",
             true,
-            &serde_json::json!({ "created": created, "removed": removed, "skipped": skipped }),
+            serde_json::json!({ "created": created, "removed": removed, "skipped": skipped }),
         );
     } else {
         if created.is_empty() && removed.is_empty() && skipped.is_empty() {

@@ -112,22 +112,22 @@ pub async fn run_publish(
             );
         }
     }
-    if let Some(proposal) = load_proposal_record(&src_path)? {
-        if !proposal.is_publish_ready() {
-            if force {
-                bypassed.push(format!(
+    if let Some(proposal) = load_proposal_record(&src_path)?
+        && !proposal.is_publish_ready()
+    {
+        if force {
+            bypassed.push(format!(
                     "proposal_not_ready (route={:.2} quality={:.2} hierarchy_fit={:.2} overlap_risk={:.2})",
                     proposal.scores.route_confidence,
                     proposal.scores.quality_confidence,
                     proposal.scores.hierarchy_fit_confidence,
                     proposal.scores.overlap_risk
                 ));
-            } else {
-                anyhow::bail!(
-                    "Cannot publish '{}' because its proposal record is not yet publish-ready. Keep it in staged or review until the proposal clears quality, hierarchy, and overlap gates. Use --force to override after manual approval.",
-                    slug
-                );
-            }
+        } else {
+            anyhow::bail!(
+                "Cannot publish '{}' because its proposal record is not yet publish-ready. Keep it in staged or review until the proposal clears quality, hierarchy, and overlap gates. Use --force to override after manual approval.",
+                slug
+            );
         }
     }
 
@@ -149,7 +149,7 @@ pub async fn run_publish(
             let _ = emit_json(
                 "publish",
                 true,
-                &serde_json::json!({ "slug": slug, "would_publish_to": dest_path, "dry_run": true }),
+                serde_json::json!({ "slug": slug, "would_publish_to": dest_path, "dry_run": true }),
             );
         } else {
             println!("{}", msg);
@@ -241,7 +241,7 @@ pub async fn run_publish(
         let _ = emit_json(
             "publish",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "slug": slug,
                 "published_to": new_rel,
                 "force_bypassed": bypassed,
@@ -262,7 +262,7 @@ fn update_cross_refs(wiki_dir: &std::path::Path, slug: &str, new_path: &str) -> 
     for entry in walkdir::WalkDir::new(&published_dir)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().map_or(false, |ext| ext == "md"))
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
     {
         let path = entry.path();
         if let Ok(mut page) = crate::wiki_fs::parse_wiki_page(path) {
@@ -289,10 +289,10 @@ fn find_in_dir(dir: &std::path::Path, slug: &str) -> Result<Option<std::path::Pa
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.extension().map_or(false, |e| e == "md") {
-            if path.file_stem().map_or(false, |s| s == slug) {
-                return Ok(Some(path.to_path_buf()));
-            }
+        if path.extension().is_some_and(|e| e == "md")
+            && path.file_stem().is_some_and(|s| s == slug)
+        {
+            return Ok(Some(path.to_path_buf()));
         }
     }
     Ok(None)

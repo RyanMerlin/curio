@@ -4,10 +4,10 @@
 
 # Curio
 
-**An information transformation system for enterprise knowledge.** Git‑native, multi‑provider, multi‑tenant. Curates raw sources into a hierarchy of curated knowledge — and mirrors the result into Confluence for the humans who consume it.
+**An information transformation system for enterprise knowledge.** Git-native, multi-provider, multi-tenant. Curio turns raw sources into a curated hierarchy and mirrors the result into Confluence for the humans who consume it.
 
 [![version](https://img.shields.io/badge/version-1.0.0-success)](CHANGELOG.md)
-[![tests](https://img.shields.io/badge/tests-80%2F80%20passing-success)](#tests-and-quality)
+[![CI](https://github.com/RyanMerlin/curio/actions/workflows/ci.yml/badge.svg)](https://github.com/RyanMerlin/curio/actions/workflows/ci.yml)
 [![providers](https://img.shields.io/badge/providers-Claude%20%7C%20Codex%20%7C%20Gemini-blue)](#providers)
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
@@ -17,9 +17,9 @@
 
 ## Why Curio
 
-Most knowledge tools index documents. **Curio editorializes them.**
+Most knowledge tools index documents. **Curio editorializes them, then mirrors the result into Confluence.**
 
-Every intake source is judged against the existing tree, scored on seven dimensions, optionally rewritten, optionally consolidated with peers, and routed to `staged/`, `review/`, or `published/` with a defensible rationale recorded as a proposal dossier. The Rust binary handles deterministic execution; the LLM agent handles editorial judgment. Git is the system of record. Confluence is the read‑only mirror your audience actually opens.
+Every intake source is judged against the existing tree, scored on seven dimensions, optionally rewritten, optionally consolidated with peers, and routed to `staged/`, `review/`, or `published/` with a proposal dossier that explains the decision. The Rust binary handles deterministic execution; the agent handles editorial judgment. Git is the system of record. Confluence is the read-only mirror your audience actually opens.
 
 **Curio is not a page router. It is an information architect.**
 
@@ -34,7 +34,18 @@ Every intake source is judged against the existing tree, scored on seven dimensi
 - **Continuous overlap detection.** Pages with high semantic overlap are flagged for merge or consolidation instead of becoming silent duplicates.
 - **Self‑sharpening.** `curio sharpen --prepare` emits a manifest of restructure / merge / split candidates for the agent to act on.
 - **Taxonomy mutations.** When no existing node fits, the agent proposes a new node against `NORTHSTAR.md`. Reviewers see a dedicated "Taxonomy mutation proposed" panel in Confluence before approving.
-- **Production‑grade safety.** Atomic registry writes, intake resume‑after‑crash, publish‑time re‑gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelope on every `--json` command, full `--dry-run` that **never** touches Confluence.
+- **Production-grade safety.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelope on every `--json` command, full `--dry-run` that **never** touches Confluence.
+
+## Why this holds up
+
+A few things are deliberately concrete:
+
+- **Deterministic core.** `curio-rs` makes no LLM calls and keeps the safety-sensitive pieces in Rust.
+- **Explicit workspace boundaries.** Every command is scoped to a named workspace or KB path; the harness does not assume one global corpus.
+- **Real quality gates.** Routing, publishing, and sync all re-check the corpus state instead of trusting stale inputs.
+- **Automated verification.** The Rust suite runs under `cargo nextest`; CI exercises fmt, clippy, tests, and release builds.
+- **Synthetic public fixtures.** The demo workspace and tracked examples are synthetic so the public repo stays safe to inspect and fork.
+- **Deployment path is documented.** The GCP / Vertex AI path is described in-repo, not hidden in operator tribal knowledge.
 
 ## The lifecycle
 
@@ -60,21 +71,21 @@ Every transition is git‑committed; every editorial decision lives in a `.propo
 
 | Use case | What Curio organizes | Why it fits |
 |---|---|---|
-| **Customer / account intelligence** | sanitized engagement notes, recurring patterns, post‑engagement learnings | Hierarchy keeps related accounts together; overlap detection prevents account‑specific lessons from being lost in duplicate pages. |
-| **Product knowledge bases** | install, configure, upgrade, troubleshoot per product / version | Deeper paths (e.g. `product-tree/example-server/upgrade/versions/24.2`) keep technical content discoverable as products evolve. |
-| **Partner / channel knowledge** | partner programs, tiering, joint motions, partner‑led playbooks | Confluence mirror lets partner‑facing teams consume curated output without git literacy. |
-| **FDE / SE use‑case catalogs** | engagement patterns, solution recipes, anti‑patterns | Anti‑pattern branch + sharpening loop turns failure analyses into reusable policy. |
-| **Subject‑matter references** | structured technical references with explicit taxonomy | NORTHSTAR.md is the editorial charter; the agent enforces it. |
+| **Customer / account intelligence** | sanitized engagement notes, recurring patterns, post-engagement learnings | Keeps related accounts together and prevents duplicate lessons from scattering. |
+| **Product knowledge bases** | install, configure, upgrade, troubleshoot per product / version | Deeper paths keep technical content discoverable as products evolve. |
+| **Partner / channel knowledge** | partner programs, tiering, joint motions, partner-led playbooks | Confluence mirrors let partner-facing teams consume curated output without git literacy. |
+| **FDE / SE use-case catalogs** | engagement patterns, solution recipes, anti-patterns | The sharpening loop turns failure analyses into reusable policy. |
+| **Subject-matter references** | structured technical references with explicit taxonomy | NORTHSTAR.md is the editorial charter, and the agent enforces it. |
 
-Each KB is a separate git repo with its own taxonomy, its own Confluence space, and its own credentials. A single Curio harness instance manages **N KBs** without cross‑tenant leak.
+Each KB is a separate git repo with its own taxonomy, Confluence space, and credentials. A single Curio harness instance manages **N KBs** without cross-tenant leak.
 
 ## Get started
 
-You can drive Curio three ways. Pick whichever fits the moment.
+You can drive Curio three ways. Pick the one that matches how you work today.
 
 ### Option 1 — Service via Docker (recommended for shared use)
 
-The hosted path your colleagues will use day‑to‑day.
+The hosted path your colleagues will use day to day.
 
 ```sh
 # from this repo
@@ -90,7 +101,7 @@ Then post a job:
 ```sh
 curl -X POST http://localhost:8080/v1/jobs \
   -H 'Content-Type: application/json' \
-  -d '{"job_type":"intake","workspace_id":"partner-business","operation":"intake",
+  -d '{"job_type":"intake","workspace_id":"demo-workspace","operation":"intake",
        "actor":{"kind":"human","id":"you"},"trigger":{"kind":"manual"},
        "write_mode":"direct_push",
        "inputs":{"args":["--url","https://yourorg.atlassian.net/wiki/spaces/X/pages/123"]}}'
@@ -116,7 +127,7 @@ Run tests with `cargo nextest run --all-targets` from `curio-rs/`.
 ```sh
 deploy/local/setup-colleague.sh <name> <space-key> <parent-page-id>
 # Scaffolds the KB, registers the workspace in both curio.workspaces.toml
-# and deploy/local/state/workspaces.json, runs git init, prints next steps.
+# and deploy/local/state/workspaces.json (demo/local registry), runs git init, and prints next steps.
 ```
 
 See [**docs/runbook.md**](docs/runbook.md) for the full day‑zero operator guide.
@@ -188,7 +199,7 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 
 ## Tests and quality
 
-- **80 tests pass** — lib unit tests, demo workspace, multi‑KB isolation, multi‑tenant safety, publish re‑gate, page‑body rewrite, multi‑source synthesis, routing evaluation, doctest.
+- **84 tests pass** — lib unit tests, demo workspace, multi‑KB isolation, multi‑tenant safety, publish re‑gate, page‑body rewrite, multi‑source synthesis, routing evaluation, doctest.
 - Every command supports `--json` with a stable envelope `{command, ok, data}` or, on errors, `{command, ok: false, error: {code, message, hint}}`.
 - `curio doctor` validates eight per‑KB infrastructure invariants (config / NORTHSTAR / git / Confluence URL / email / token / space key / auth probe).
 - `--dry-run` on every write command is a true read‑only preview — `sync --dry-run` never constructs a Confluence client.
@@ -202,6 +213,8 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 | [`HARNESS.md`](HARNESS.md) | Agents | Canonical, provider‑neutral operating contract |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Engineers | Layer boundaries (curio‑rs ↔ harness) and design rules |
 | [`docs/runbook.md`](docs/runbook.md) | Operators / colleagues | Day‑zero guide: intake → process → publish → sync, recovery, rollback |
+| [`docs/index.md`](docs/index.md) | Everyone | Navigation map for active docs, design notes, and archives |
+| [`docs/archive/launch/`](docs/archive/launch) | Everyone | Historical launch artifacts preserved for reference only |
 | [`docs/design/process.md`](docs/design/process.md) | Anyone shaping the editorial pipeline | Long‑form spec for the proposal model |
 | [`docs/design/operating-contract.md`](docs/design/operating-contract.md) | Curation agents + reviewers | The inference‑first loop |
 | [`docs/agent-cli-contract.md`](docs/agent-cli-contract.md) | Tool integrators | Machine‑readable JSON shapes for every command |
@@ -250,7 +263,7 @@ See [`docs/design/2026-05-10-tier2-plan.md`](docs/design/2026-05-10-tier2-plan.m
 deploy/local/setup-colleague.sh alice myspace 9876543210
 ```
 
-Scaffolds `~/curio-kb/alice/` with a wiki tree, NORTHSTAR.md template, `.curio.yaml` pointed at the right Confluence space, `.env.example` for the token, a colleague‑facing README, and `git init`. Registers the workspace in both `curio.workspaces.toml` and the docker‑compose service registry. Prints the colleague's first five steps.
+Scaffolds `~/kb/alice/` with a wiki tree, NORTHSTAR.md template, `.curio.yaml` pointed at the right Confluence space, `.env.example` for the token, a colleague‑facing README, and `git init`. Registers the workspace in both `curio.workspaces.toml` and the docker-compose demo/local service registry. Prints the colleague's first five steps.
 
 ## Operating principles
 

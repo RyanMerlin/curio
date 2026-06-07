@@ -33,6 +33,14 @@ The Terraform module creates and mounts a Cloud Storage bucket at `STATE_MOUNT_P
 
 The repo cache and git worktrees stay on local ephemeral storage at `CURIO_SERVICE_CACHE=/tmp/curio/cache`.
 
+## Public repo boundary
+
+- `terraform.tfvars.example` is the public template only.
+- Create an ignored `deploy/cloud-run/terraform/terraform.tfvars` locally for real deployment values.
+- Keep project IDs, domains, OAuth client secrets, service account emails, and secret names out of tracked files.
+- `deploy/cloud-run/state/workspaces.json` is a placeholder fixture for the demo harness, not a live deployment registry.
+- For WSL2, use `deploy/cloud-run/wsl2-gcloud-bootstrap.sh` to build a writable Linux gcloud config and verify Google API connectivity. Put one-off defaults in the ignored `deploy/cloud-run/wsl2-gcloud.local.env`.
+
 ## Build
 
 Use the Dockerfile in this directory to build an image that contains both Curio binaries.

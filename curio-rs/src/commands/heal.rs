@@ -59,8 +59,8 @@ pub async fn run_heal_prepare(
         .filter_map(|e| e.ok())
         .filter(|e| {
             e.file_type().is_file()
-                && e.path().extension().map_or(false, |x| x == "md")
-                && e.path().file_name().map_or(false, |n| n != "index.md")
+                && e.path().extension().is_some_and(|x| x == "md")
+                && e.path().file_name().is_some_and(|n| n != "index.md")
         })
         .map(|e| e.path().to_path_buf())
         .collect();
@@ -278,10 +278,10 @@ fn find_published_page(wiki_dir: &Path, slug: &str) -> Result<PathBuf> {
             continue;
         }
         for entry in WalkDir::new(&lane_dir).into_iter().filter_map(|e| e.ok()) {
-            if entry.path().extension().map_or(false, |e| e == "md") {
-                if entry.path().file_stem().map_or(false, |s| s == slug) {
-                    return Ok(entry.path().to_path_buf());
-                }
+            if entry.path().extension().is_some_and(|e| e == "md")
+                && entry.path().file_stem().is_some_and(|s| s == slug)
+            {
+                return Ok(entry.path().to_path_buf());
             }
         }
     }
@@ -460,12 +460,12 @@ fn inject_auto_heal_frontmatter(content: &str, timestamp: &str, confidence: f64)
     );
     // Insert before the closing --- of the frontmatter block.
     // The frontmatter ends at the first "\n---" after the opening "---\n".
-    if content.starts_with("---") {
-        if let Some(pos) = content[3..].find("\n---") {
-            let close_pos = 3 + pos; // position of the \n before ---
-            let (front, rest) = content.split_at(close_pos);
-            return format!("{}\n{}{}", front, note, rest);
-        }
+    if content.starts_with("---")
+        && let Some(pos) = content[3..].find("\n---")
+    {
+        let close_pos = 3 + pos; // position of the \n before ---
+        let (front, rest) = content.split_at(close_pos);
+        return format!("{}\n{}{}", front, note, rest);
     }
     // No frontmatter — prepend minimal block
     format!("---\n{}\n---\n\n{}", note, content)

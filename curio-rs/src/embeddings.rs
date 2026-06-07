@@ -36,12 +36,12 @@ impl LocalCachedEmbeddings {
         let cache_path = self
             .cache_dir
             .join(format!("{}.json", hash_text(cache_key)));
-        if let Ok(raw) = fs::read_to_string(&cache_path) {
-            if let Ok(cached) = serde_json::from_str::<CachedEmbedding>(&raw) {
-                if cached.source_hash == source_hash && cached.vector.len() == self.dimensions {
-                    return Ok(cached.vector);
-                }
-            }
+        if let Ok(raw) = fs::read_to_string(&cache_path)
+            && let Ok(cached) = serde_json::from_str::<CachedEmbedding>(&raw)
+            && cached.source_hash == source_hash
+            && cached.vector.len() == self.dimensions
+        {
+            return Ok(cached.vector);
         }
 
         let vector = self.vectorize(text);

@@ -11,6 +11,7 @@ use crate::{
     wiki_index::{append_log, load_registry, rebuild_index_md},
 };
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_intake(
     config: &Config,
     dry_run: bool,
@@ -135,7 +136,7 @@ pub async fn run_intake(
         let _ = emit_json(
             "intake",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "ingested": ingested,
                 "skipped": skipped,
                 "dry_run": dry_run,
@@ -460,9 +461,9 @@ fn collect_from_folder(folder: &Path) -> Result<Vec<IntakeItem>> {
         .filter_map(|e| e.ok())
         .filter(|e| {
             e.file_type().is_file()
-                && e.path().extension().map_or(false, |ext| {
-                    matches!(ext.to_str(), Some("md") | Some("txt"))
-                })
+                && e.path()
+                    .extension()
+                    .is_some_and(|ext| matches!(ext.to_str(), Some("md") | Some("txt")))
         })
     {
         items.extend(collect_from_file(entry.path(), &None)?);
@@ -497,7 +498,7 @@ fn extract_text_from_html(html: &str, confluence_base: &str) -> String {
 }
 
 thread_local! {
-    static CONFLUENCE_BASE: std::cell::RefCell<String> = std::cell::RefCell::new(String::new());
+    static CONFLUENCE_BASE: std::cell::RefCell<String> = const { std::cell::RefCell::new(String::new()) };
 }
 
 fn element_to_md(el: scraper::ElementRef<'_>, depth: usize) -> String {

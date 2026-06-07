@@ -128,8 +128,8 @@ fn token_resolution_does_not_cross_contaminate() {
     }
 }
 
-#[tokio::test]
-async fn concurrent_doctor_runs_do_not_share_config_state() {
+#[test]
+fn concurrent_doctor_runs_do_not_share_config_state() {
     // Spawn doctor's infra-check phase against two KBs concurrently and
     // verify each sees its own config — no cross-tenant leak through
     // global state, env vars, or shared mutexes.
@@ -149,16 +149,11 @@ async fn concurrent_doctor_runs_do_not_share_config_state() {
     let cfg_a = load_config(None, Some(&kb_a)).expect("A");
     let cfg_b = load_config(None, Some(&kb_b)).expect("B");
 
-    let (a, b) = tokio::join!(
-        async {
-            // Re-resolve token under concurrent load — must still match A's config.
-            cfg_a.connection.resolve_token()
-        },
-        async { cfg_b.connection.resolve_token() }
-    );
+    let a = cfg_a.connection.resolve_token().unwrap();
+    let b = cfg_b.connection.resolve_token().unwrap();
 
-    assert_eq!(a.unwrap(), "alpha-secret");
-    assert_eq!(b.unwrap(), "beta-secret");
+    assert_eq!(a, "alpha-secret");
+    assert_eq!(b, "beta-secret");
     assert_eq!(cfg_a.content_model.space_key, "ALPHA");
     assert_eq!(cfg_b.content_model.space_key, "BETA");
 

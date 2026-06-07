@@ -41,3 +41,5 @@ For machine-readable provider and harness inspection, use `--json` with:
 - `curio agent list-skills`
 - `curio agent list-plugins`
 - `curio agent print-env <provider>`
+
+The canonical JSON envelopes, including the structured error shape, are documented in [`docs/agent-cli-contract.md`](agent-cli-contract.md).

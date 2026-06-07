@@ -393,16 +393,16 @@ fn resolve_env_value(
     key: &str,
     env_file_values: &BTreeMap<String, String>,
 ) -> (String, ValueSource) {
-    if let Ok(value) = env::var(key) {
-        if !value.trim().is_empty() {
-            return (value, ValueSource::ProcessEnv);
-        }
+    if let Ok(value) = env::var(key)
+        && !value.trim().is_empty()
+    {
+        return (value, ValueSource::ProcessEnv);
     }
 
-    if let Some(value) = env_file_values.get(key) {
-        if !value.trim().is_empty() {
-            return (value.clone(), ValueSource::EnvFile);
-        }
+    if let Some(value) = env_file_values.get(key)
+        && !value.trim().is_empty()
+    {
+        return (value.clone(), ValueSource::EnvFile);
     }
 
     match key {

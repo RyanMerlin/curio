@@ -49,9 +49,7 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
         .follow_links(false)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.file_type().is_file() && e.path().extension().map_or(false, |ext| ext == "md")
-        })
+        .filter(|e| e.file_type().is_file() && e.path().extension().is_some_and(|ext| ext == "md"))
     {
         let abs = entry.path();
         let rel = abs
@@ -69,19 +67,18 @@ pub fn reindex_from_filesystem(wiki_dir: &Path) -> Result<WikiIndex> {
         }
 
         // Skip co-located index.md files — they are generated artifacts, not content pages
-        if rel.file_name().map_or(false, |f| f == "index.md") {
+        if rel.file_name().is_some_and(|f| f == "index.md") {
             continue;
         }
 
         // Skip well-known KB-root charter files (NORTHSTAR.md, README.md).
         // These are human-authored markdown without YAML frontmatter and are
         // never content pages — the registry should not try to parse them.
-        if rel.parent().map_or(true, |p| p.as_os_str().is_empty()) {
-            if let Some(name) = rel.file_name().and_then(|n| n.to_str()) {
-                if name == "NORTHSTAR.md" || name == "README.md" {
-                    continue;
-                }
-            }
+        if rel.parent().is_none_or(|p| p.as_os_str().is_empty())
+            && let Some(name) = rel.file_name().and_then(|n| n.to_str())
+            && (name == "NORTHSTAR.md" || name == "README.md")
+        {
+            continue;
         }
 
         match crate::wiki_fs::parse_wiki_page(abs) {
@@ -316,7 +313,7 @@ fn write_tree_index(
         md.push_str("## Pages\n\n");
         md.push_str("| Title | Summary | Updated |\n|-------|---------|--------|\n");
         for e in top_pages {
-            let fname = e.path.split('/').last().unwrap_or(&e.path);
+            let fname = e.path.split('/').next_back().unwrap_or(&e.path);
             md.push_str(&format!(
                 "| [{}]({}) | {} | {} |\n",
                 e.title,
@@ -357,7 +354,7 @@ fn write_leaf_index(
         let mut sorted = pages.to_vec();
         sorted.sort_by(|a, b| a.title.cmp(&b.title));
         for e in sorted {
-            let fname = e.path.split('/').last().unwrap_or(&e.path);
+            let fname = e.path.split('/').next_back().unwrap_or(&e.path);
             let kw = e.keywords.join(", ");
             md.push_str(&format!(
                 "| [{}]({}) | {} | {} | {} |\n",

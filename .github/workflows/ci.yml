@@ -25,10 +25,6 @@ jobs:
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
-    # Advisory for v1.0.0 — the existing codebase has a backlog of style
-    # lints to clear. We surface clippy output but do not block builds
-    # on it. Tighten to `-D warnings` once the backlog is cleared.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -37,7 +33,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: curio-rs
-      - run: cargo clippy --all-targets
+      - run: cargo clippy --all-targets -- -D warnings
         working-directory: curio-rs
 
   test:

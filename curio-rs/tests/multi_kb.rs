@@ -41,22 +41,17 @@ fn three_kbs_have_independent_confluence_config() {
     let root = tmp.path();
 
     let kbs = [
+        ("demo-kb-1", "DEMO1", "CURIO_CONFLUENCE_TOKEN_DEMO_1", "111"),
         (
-            "curio-wiki",
-            "DEMO",
-            "CURIO_CONFLUENCE_TOKEN_CURIO_WIKI",
-            "111",
-        ),
-        (
-            "partner-business",
-            "partnerbiz",
-            "CURIO_CONFLUENCE_TOKEN_PARTNER",
+            "demo-kb-2",
+            "DEMO2",
+            "CURIO_CONFLUENCE_TOKEN_DEMO_2",
             "4385866292",
         ),
         (
-            "fde-uc-repo",
-            "fdeucrepo",
-            "CURIO_CONFLUENCE_TOKEN_FDE",
+            "demo-kb-3",
+            "DEMO3",
+            "CURIO_CONFLUENCE_TOKEN_DEMO_3",
             "4385964596",
         ),
     ];
@@ -71,9 +66,9 @@ fn three_kbs_have_independent_confluence_config() {
     // Pretend each KB has its own token by setting all three env vars
     // to distinct values; the resolver MUST pick the right one per KB.
     unsafe {
-        std::env::set_var("CURIO_CONFLUENCE_TOKEN_CURIO_WIKI", "demo-secret");
-        std::env::set_var("CURIO_CONFLUENCE_TOKEN_PARTNER", "partner-secret");
-        std::env::set_var("CURIO_CONFLUENCE_TOKEN_FDE", "fde-secret");
+        std::env::set_var("CURIO_CONFLUENCE_TOKEN_DEMO_1", "demo-secret");
+        std::env::set_var("CURIO_CONFLUENCE_TOKEN_DEMO_2", "partner-secret");
+        std::env::set_var("CURIO_CONFLUENCE_TOKEN_DEMO_3", "fde-secret");
         // Clear any leaked global var so the per-KB names win.
         std::env::remove_var("CURIO_CONFLUENCE_TOKEN");
     }
@@ -96,9 +91,9 @@ fn three_kbs_have_independent_confluence_config() {
             .resolve_token()
             .expect("resolve token for KB");
         let expected = match *name {
-            "curio-wiki" => "demo-secret",
-            "partner-business" => "partner-secret",
-            "fde-uc-repo" => "fde-secret",
+            "demo-kb-1" => "demo-secret",
+            "demo-kb-2" => "partner-secret",
+            "demo-kb-3" => "fde-secret",
             _ => unreachable!(),
         };
         assert_eq!(resolved, expected, "KB '{name}' got the wrong token");
@@ -112,9 +107,9 @@ fn three_kbs_have_independent_confluence_config() {
 
     // Tear down env to keep tests hygienic.
     unsafe {
-        std::env::remove_var("CURIO_CONFLUENCE_TOKEN_CURIO_WIKI");
-        std::env::remove_var("CURIO_CONFLUENCE_TOKEN_PARTNER");
-        std::env::remove_var("CURIO_CONFLUENCE_TOKEN_FDE");
+        std::env::remove_var("CURIO_CONFLUENCE_TOKEN_DEMO_1");
+        std::env::remove_var("CURIO_CONFLUENCE_TOKEN_DEMO_2");
+        std::env::remove_var("CURIO_CONFLUENCE_TOKEN_DEMO_3");
     }
 }
 

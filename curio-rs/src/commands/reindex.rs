@@ -24,7 +24,7 @@ pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<(
             let _ = emit_json(
                 "reindex",
                 true,
-                &serde_json::json!({ "pages_found": count, "dry_run": true }),
+                serde_json::json!({ "pages_found": count, "dry_run": true }),
             );
         } else {
             println!("Would reindex {} pages (dry run)", count);
@@ -49,7 +49,7 @@ pub async fn run_reindex(config: &Config, dry_run: bool, json: bool) -> Result<(
         let _ = emit_json(
             "reindex",
             true,
-            &serde_json::json!({ "pages_indexed": count }),
+            serde_json::json!({ "pages_indexed": count }),
         );
     } else {
         println!(

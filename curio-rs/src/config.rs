@@ -468,44 +468,43 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
     // silently override every KB's own space, defeating per-KB Confluence
     // isolation. Env vars still apply when the YAML left the field empty
     // (the "no explicit per-KB value, fall back to shell env" case).
-    if config.connection.confluence_url.is_empty() {
-        if let Ok(url) = env::var("CURIO_CONFLUENCE_URL") {
-            config.connection.confluence_url = url;
-        }
+    if config.connection.confluence_url.is_empty()
+        && let Ok(url) = env::var("CURIO_CONFLUENCE_URL")
+    {
+        config.connection.confluence_url = url;
     }
-    if config.connection.confluence_email.is_empty() {
-        if let Ok(email) = env::var("CURIO_CONFLUENCE_EMAIL") {
-            config.connection.confluence_email = email;
-        }
+    if config.connection.confluence_email.is_empty()
+        && let Ok(email) = env::var("CURIO_CONFLUENCE_EMAIL")
+    {
+        config.connection.confluence_email = email;
     }
     // CURIO_CONFLUENCE_TOKEN is read directly by ConfluenceClient, not stored here.
-    if config.content_model.space_key.is_empty() {
-        if let Ok(space_key) = env::var("CURIO_SPACE_KEY") {
-            config.content_model.space_key = space_key;
-        }
+    if config.content_model.space_key.is_empty()
+        && let Ok(space_key) = env::var("CURIO_SPACE_KEY")
+    {
+        config.content_model.space_key = space_key;
     }
     // temp_dir / log_level / wiki_dir are OPERATOR-scoped (not KB-scoped),
     // so global env vars are allowed to override per-KB YAML.
-    if let Ok(temp_dir) = env::var("CURIO_TEMP_DIR") {
-        if !temp_dir.trim().is_empty() {
-            config.runtime.temp_dir = Some(PathBuf::from(temp_dir));
-        }
+    if let Ok(temp_dir) = env::var("CURIO_TEMP_DIR")
+        && !temp_dir.trim().is_empty()
+    {
+        config.runtime.temp_dir = Some(PathBuf::from(temp_dir));
     }
     if let Ok(log_level) = env::var("CURIO_LOG_LEVEL") {
         config.runtime.log_level = Some(log_level);
     }
-    if let Ok(wiki_dir) = env::var("CURIO_WIKI_DIR") {
-        if !wiki_dir.trim().is_empty() {
-            config.wiki.wiki_dir = PathBuf::from(wiki_dir);
-        }
+    if let Ok(wiki_dir) = env::var("CURIO_WIKI_DIR")
+        && !wiki_dir.trim().is_empty()
+    {
+        config.wiki.wiki_dir = PathBuf::from(wiki_dir);
     }
     // KB-scoped — only fill from env when YAML didn't supply one.
-    if config.wiki.sync.confluence_parent_page_id.is_none() {
-        if let Ok(parent_page_id) = env::var("CURIO_CONFLUENCE_PARENT_PAGE_ID") {
-            if !parent_page_id.trim().is_empty() {
-                config.wiki.sync.confluence_parent_page_id = Some(parent_page_id);
-            }
-        }
+    if config.wiki.sync.confluence_parent_page_id.is_none()
+        && let Ok(parent_page_id) = env::var("CURIO_CONFLUENCE_PARENT_PAGE_ID")
+        && !parent_page_id.trim().is_empty()
+    {
+        config.wiki.sync.confluence_parent_page_id = Some(parent_page_id);
     }
     // OPENAI_API_KEY is read by LlmConfig::effective_api_key() at call time — no caching needed.
 
@@ -520,41 +519,41 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
 
     // Load wiki/_admin/config.yaml for workspace runtime settings and taxonomy.
     let workspace_config_path = crate::northstar::workspace_config_path(&config.wiki.wiki_dir);
-    if workspace_config_path.exists() {
-        if let Ok(raw) = fs::read_to_string(&workspace_config_path) {
-            match serde_yaml::from_str::<WorkspaceConfigFile>(&raw) {
-                Ok(ws) => {
-                    if let Some(heal) = ws.heal {
-                        config.heal = heal;
-                    }
-                    if let Some(slack) = ws.slack {
-                        config.slack = slack;
-                    }
-                    // Domain registry — only overwrite when the workspace
-                    // file actually supplied entries. Operator-supplied
-                    // products/icons/repos are the SSOT for domain shape.
-                    if !ws.products.is_empty() {
-                        config.products = ws.products;
-                    }
-                    if !ws.category_icons.is_empty() {
-                        config.category_icons = ws.category_icons;
-                    }
-                    if !ws.admin_related_repos.is_empty() {
-                        config.admin_related_repos = ws.admin_related_repos;
-                    }
-                    if ws.overlap.provider.is_some() {
-                        config.overlap.provider = ws.overlap.provider;
-                    }
-                    if ws.overlap.embedding_cache_dir.is_some() {
-                        config.overlap.embedding_cache_dir = ws.overlap.embedding_cache_dir;
-                    }
+    if workspace_config_path.exists()
+        && let Ok(raw) = fs::read_to_string(&workspace_config_path)
+    {
+        match serde_yaml::from_str::<WorkspaceConfigFile>(&raw) {
+            Ok(ws) => {
+                if let Some(heal) = ws.heal {
+                    config.heal = heal;
                 }
-                Err(e) => {
-                    eprintln!(
-                        "curio: warning: failed to parse {}: {e}",
-                        workspace_config_path.display()
-                    );
+                if let Some(slack) = ws.slack {
+                    config.slack = slack;
                 }
+                // Domain registry — only overwrite when the workspace
+                // file actually supplied entries. Operator-supplied
+                // products/icons/repos are the SSOT for domain shape.
+                if !ws.products.is_empty() {
+                    config.products = ws.products;
+                }
+                if !ws.category_icons.is_empty() {
+                    config.category_icons = ws.category_icons;
+                }
+                if !ws.admin_related_repos.is_empty() {
+                    config.admin_related_repos = ws.admin_related_repos;
+                }
+                if ws.overlap.provider.is_some() {
+                    config.overlap.provider = ws.overlap.provider;
+                }
+                if ws.overlap.embedding_cache_dir.is_some() {
+                    config.overlap.embedding_cache_dir = ws.overlap.embedding_cache_dir;
+                }
+            }
+            Err(e) => {
+                eprintln!(
+                    "curio: warning: failed to parse {}: {e}",
+                    workspace_config_path.display()
+                );
             }
         }
     }
@@ -602,12 +601,12 @@ pub fn upsert_repo_env_var(key: &str, value: &str) -> Result<()> {
 
     let mut replaced = false;
     for line in &mut lines {
-        if let Some((existing_key, _)) = line.split_once('=') {
-            if existing_key.trim() == key {
-                *line = format!("{}={}", key, value);
-                replaced = true;
-                break;
-            }
+        if let Some((existing_key, _)) = line.split_once('=')
+            && existing_key.trim() == key
+        {
+            *line = format!("{}={}", key, value);
+            replaced = true;
+            break;
         }
     }
 

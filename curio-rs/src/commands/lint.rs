@@ -80,17 +80,16 @@ pub async fn run_lint(config: &Config, _dry_run: bool, json: bool, fix: bool) ->
 
     // ── Check 3: Low-confidence published pages ───────────────────────────
     for entry in &registry.pages {
-        if entry.status == "published" {
-            if let Some(conf) = entry.confidence {
-                if conf < 0.5 {
-                    issues.push(serde_json::json!({
-                        "type": "low_confidence",
-                        "path": entry.path,
-                        "confidence": conf,
-                        "detail": "Published page has low routing confidence — may be miscategorised"
-                    }));
-                }
-            }
+        if entry.status == "published"
+            && let Some(conf) = entry.confidence
+            && conf < 0.5
+        {
+            issues.push(serde_json::json!({
+                "type": "low_confidence",
+                "path": entry.path,
+                "confidence": conf,
+                "detail": "Published page has low routing confidence — may be miscategorised"
+            }));
         }
     }
 
@@ -114,7 +113,7 @@ pub async fn run_lint(config: &Config, _dry_run: bool, json: bool, fix: bool) ->
         let _ = emit_json(
             "lint",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "issues": issues,
                 "fixed": fixed,
                 "total_pages": registry.pages.len(),

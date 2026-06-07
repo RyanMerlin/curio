@@ -126,8 +126,8 @@ pub async fn run_doctor(
         .filter_map(|e| e.ok())
         .filter(|e| {
             e.file_type().is_file()
-                && e.path().extension().map_or(false, |x| x == "md")
-                && e.path().file_name().map_or(false, |n| n != "index.md")
+                && e.path().extension().is_some_and(|x| x == "md")
+                && e.path().file_name().is_some_and(|n| n != "index.md")
         })
         .map(|e| e.path().to_path_buf())
         .collect();
@@ -368,10 +368,10 @@ pub async fn run_doctor(
         for c in &report.infrastructure {
             let icon = if c.ok { "✓" } else { "✖" };
             println!("  {} {} — {}", icon, c.label, c.detail);
-            if !c.ok {
-                if let Some(hint) = &c.fix_hint {
-                    println!("      hint: {}", hint);
-                }
+            if !c.ok
+                && let Some(hint) = &c.fix_hint
+            {
+                println!("      hint: {}", hint);
             }
         }
         println!();
@@ -665,46 +665,48 @@ async fn run_infra_checks(config: &Config) -> Vec<InfraCheck> {
     });
 
     // 5. Confluence auth probe — actually call the API.
-    if url_set && email_set && token_resolved.is_ok() {
-        let token = token_resolved.unwrap();
-        match crate::confluence::ConfluenceClient::new(
-            config.connection.confluence_url.clone(),
-            config.connection.confluence_email.clone(),
-            token,
-            None,
-        ) {
-            Ok(client) => match client.get_current_user().await {
-                Ok(user) => {
-                    let display = user["displayName"].as_str().unwrap_or("unknown");
-                    let email = user["email"].as_str().unwrap_or("");
-                    checks.push(InfraCheck {
-                        label: "kb.confluence.auth".into(),
-                        ok: true,
-                        detail: format!("authenticated as {} ({})", display, email),
-                        fix_hint: None,
-                    });
-                }
-                Err(err) => {
-                    let msg = err.to_string();
-                    let likely_email_mismatch = msg.contains("403") || msg.contains("FORBIDDEN");
-                    checks.push(InfraCheck {
-                        label: "kb.confluence.auth".into(),
-                        ok: false,
-                        detail: format!("auth probe failed: {}", msg),
-                        fix_hint: Some(if likely_email_mismatch {
-                            "403 usually means the email/token mismatch or the account lacks Confluence access.".into()
-                        } else {
-                            "Verify CURIO_CONFLUENCE_URL, the email matches the token, and the token is current.".into()
-                        }),
-                    });
-                }
-            },
-            Err(err) => checks.push(InfraCheck {
-                label: "kb.confluence.auth".into(),
-                ok: false,
-                detail: format!("could not build Confluence client: {}", err),
-                fix_hint: None,
-            }),
+    if url_set && email_set {
+        if let Ok(token) = token_resolved {
+            match crate::confluence::ConfluenceClient::new(
+                config.connection.confluence_url.clone(),
+                config.connection.confluence_email.clone(),
+                token,
+                None,
+            ) {
+                Ok(client) => match client.get_current_user().await {
+                    Ok(user) => {
+                        let display = user["displayName"].as_str().unwrap_or("unknown");
+                        let email = user["email"].as_str().unwrap_or("");
+                        checks.push(InfraCheck {
+                            label: "kb.confluence.auth".into(),
+                            ok: true,
+                            detail: format!("authenticated as {} ({})", display, email),
+                            fix_hint: None,
+                        });
+                    }
+                    Err(err) => {
+                        let msg = err.to_string();
+                        let likely_email_mismatch =
+                            msg.contains("403") || msg.contains("FORBIDDEN");
+                        checks.push(InfraCheck {
+                            label: "kb.confluence.auth".into(),
+                            ok: false,
+                            detail: format!("auth probe failed: {}", msg),
+                            fix_hint: Some(if likely_email_mismatch {
+                                "403 usually means the email/token mismatch or the account lacks Confluence access.".into()
+                            } else {
+                                "Verify CURIO_CONFLUENCE_URL, the email matches the token, and the token is current.".into()
+                            }),
+                        });
+                    }
+                },
+                Err(err) => checks.push(InfraCheck {
+                    label: "kb.confluence.auth".into(),
+                    ok: false,
+                    detail: format!("could not build Confluence client: {}", err),
+                    fix_hint: None,
+                }),
+            }
         }
     } else {
         checks.push(InfraCheck {

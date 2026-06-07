@@ -94,6 +94,12 @@ pub struct JwksCache {
     http: reqwest::Client,
 }
 
+impl Default for JwksCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl JwksCache {
     pub fn new() -> Self {
         Self {
@@ -106,10 +112,10 @@ impl JwksCache {
         let now = std::time::Instant::now();
         {
             let guard = self.inner.lock().await;
-            if let Some(entry) = guard.get(url) {
-                if now.duration_since(entry.fetched_at).as_secs() < JWKS_TTL_SECS {
-                    return Ok(entry.jwks_json.clone());
-                }
+            if let Some(entry) = guard.get(url)
+                && now.duration_since(entry.fetched_at).as_secs() < JWKS_TTL_SECS
+            {
+                return Ok(entry.jwks_json.clone());
             }
         }
         let jwks_json = self

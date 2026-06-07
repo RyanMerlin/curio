@@ -9,6 +9,9 @@ target/
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+deploy/cloud-run/terraform/*.tfvars
+deploy/cloud-run/terraform/*.auto.tfvars
+deploy/cloud-run/terraform/*.auto.tfvars.json
 
 ### OS / editor
 .DS_Store
@@ -44,6 +47,8 @@ curio.workspaces.toml
 curio.workspaces.local.toml
 /.curio.workspaces.toml
 deploy/local/state/workspaces.local.json
+deploy/cloud-run/state/*.local.json
+deploy/cloud-run/wsl2-gcloud.local.env
 deploy/local/.env
 
 ### Per-operator agent settings (carry local OS paths, personal env)

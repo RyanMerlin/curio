@@ -89,7 +89,7 @@ async fn do_resolve(
             let _ = emit_json(
                 "resolve",
                 true,
-                &serde_json::json!({ "slug": slug, "would_move_to": dest_path, "dry_run": true }),
+                serde_json::json!({ "slug": slug, "would_move_to": dest_path, "dry_run": true }),
             );
         } else {
             println!("{}", msg);
@@ -145,7 +145,7 @@ async fn do_resolve(
         let _ = emit_json(
             "resolve",
             true,
-            &serde_json::json!({ "slug": slug, "moved_to": new_rel }),
+            serde_json::json!({ "slug": slug, "moved_to": new_rel }),
         );
     } else {
         println!("Resolved: {} → staged/{}", slug, new_rel);
@@ -162,10 +162,10 @@ fn find_in_dir(dir: &std::path::Path, slug: &str) -> Result<Option<std::path::Pa
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.extension().map_or(false, |e| e == "md") {
-            if path.file_stem().map_or(false, |s| s == slug) {
-                return Ok(Some(path.to_path_buf()));
-            }
+        if path.extension().is_some_and(|e| e == "md")
+            && path.file_stem().is_some_and(|s| s == slug)
+        {
+            return Ok(Some(path.to_path_buf()));
         }
     }
     Ok(None)

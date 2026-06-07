@@ -31,7 +31,7 @@ pub async fn run_sharpen(
                 let _ = emit_json(
                     "sharpen",
                     true,
-                    &serde_json::json!({
+                    serde_json::json!({
                         "mode": "persist_proposals",
                         "dry_run": true,
                         "proposal_count": wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
@@ -66,7 +66,7 @@ pub async fn run_sharpen(
             let _ = emit_json(
                 "sharpen",
                 true,
-                &serde_json::json!({
+                serde_json::json!({
                     "mode": "persist_proposals",
                     "stored_at": dest_path,
                     "proposal_count": wrapped["proposals"].as_array().map(|items| items.len()).unwrap_or(0),
@@ -87,11 +87,7 @@ pub async fn run_sharpen(
 
     let manifest = build_sharpen_manifest(&published_dir, wiki_dir, limit)?;
     if prepare || !dry_run {
-        if json {
-            println!("{}", serde_json::to_string_pretty(&manifest)?);
-        } else {
-            println!("{}", serde_json::to_string_pretty(&manifest)?);
-        }
+        println!("{}", serde_json::to_string_pretty(&manifest)?);
         return Ok(());
     }
 

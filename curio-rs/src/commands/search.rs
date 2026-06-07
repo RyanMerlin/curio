@@ -2,6 +2,7 @@ use anyhow::Result;
 
 use crate::{config::Config, output::emit_json, wiki_index::load_registry};
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_search(
     config: &Config,
     _dry_run: bool,
@@ -32,10 +33,10 @@ pub async fn run_search(
         .iter()
         .filter(|e| {
             // Status filter
-            if let Some(sf) = status_filter {
-                if e.status != sf {
-                    return false;
-                }
+            if let Some(sf) = status_filter
+                && e.status != sf
+            {
+                return false;
             }
             // Category filter
             if let Some(ref cf) = cat_filter {
@@ -70,17 +71,17 @@ pub async fn run_search(
         .collect();
 
     // If text search and not many registry results, also try grep on file bodies
-    if let Some(ref txt) = text {
-        if results.len() < limit as usize {
-            let extra = grep_wiki_bodies(wiki_dir, txt, limit as usize - results.len())?;
-            let existing_paths: std::collections::HashSet<_> =
-                results.iter().map(|e| e.path.as_str()).collect();
-            for path in extra {
-                if !existing_paths.contains(path.as_str()) {
-                    // Find the registry entry for this path
-                    if let Some(e) = registry.pages.iter().find(|e| e.path == path) {
-                        results.push(e);
-                    }
+    if let Some(ref txt) = text
+        && results.len() < limit as usize
+    {
+        let extra = grep_wiki_bodies(wiki_dir, txt, limit as usize - results.len())?;
+        let existing_paths: std::collections::HashSet<_> =
+            results.iter().map(|e| e.path.as_str()).collect();
+        for path in extra {
+            if !existing_paths.contains(path.as_str()) {
+                // Find the registry entry for this path
+                if let Some(e) = registry.pages.iter().find(|e| e.path == path) {
+                    results.push(e);
                 }
             }
         }
@@ -90,7 +91,7 @@ pub async fn run_search(
         let _ = emit_json(
             "search",
             true,
-            &serde_json::json!({ "results": results, "count": results.len() }),
+            serde_json::json!({ "results": results, "count": results.len() }),
         );
     } else {
         if results.is_empty() {

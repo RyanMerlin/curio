@@ -457,45 +457,25 @@ pub fn run_checks(
     paths: &HarnessPaths,
     provider: Option<AgentProvider>,
 ) -> Result<Vec<CheckResult>> {
-    let mut results = Vec::new();
-
-    results.push(path_check("repo_root", &paths.repo_root, true));
-    results.push(path_check("crate_root", &paths.crate_root, true));
-    results.push(path_check("docs_dir", &paths.docs_dir, true));
-    results.push(path_check("skills_dir", &paths.skills_dir, true));
-    results.push(path_check(
-        "agents_skills_dir",
-        &paths.agents_skills_dir,
-        true,
-    ));
-    results.push(path_check("plugins_dir", &paths.plugins_dir, true));
-    results.push(path_check("providers_dir", &paths.providers_dir, true));
-    results.push(path_check("marketplace", &paths.marketplace_path, false));
-    results.push(path_check(
-        "codex_plugin_manifest",
-        &paths.codex_plugin_manifest_path,
-        false,
-    ));
-    results.push(path_check(
-        "codex_entrypoint",
-        &paths.codex_entrypoint,
-        false,
-    ));
-    results.push(path_check(
-        "claude_entrypoint",
-        &paths.claude_entrypoint,
-        false,
-    ));
-    results.push(path_check(
-        "gemini_entrypoint",
-        &paths.gemini_entrypoint,
-        false,
-    ));
-    results.push(path_check(
-        "claude_settings",
-        &paths.claude_settings_path,
-        false,
-    ));
+    let mut results = vec![
+        path_check("repo_root", &paths.repo_root, true),
+        path_check("crate_root", &paths.crate_root, true),
+        path_check("docs_dir", &paths.docs_dir, true),
+        path_check("skills_dir", &paths.skills_dir, true),
+        path_check("agents_skills_dir", &paths.agents_skills_dir, true),
+        path_check("plugins_dir", &paths.plugins_dir, true),
+        path_check("providers_dir", &paths.providers_dir, true),
+        path_check("marketplace", &paths.marketplace_path, false),
+        path_check(
+            "codex_plugin_manifest",
+            &paths.codex_plugin_manifest_path,
+            false,
+        ),
+        path_check("codex_entrypoint", &paths.codex_entrypoint, false),
+        path_check("claude_entrypoint", &paths.claude_entrypoint, false),
+        path_check("gemini_entrypoint", &paths.gemini_entrypoint, false),
+        path_check("claude_settings", &paths.claude_settings_path, false),
+    ];
 
     match load_marketplace(paths) {
         Ok(catalog) => results.push(CheckResult {

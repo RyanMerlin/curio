@@ -4,7 +4,7 @@ This is the day-zero guide for someone who has been handed a Curio KB and needs 
 
 ## What you have
 
-- A **KB directory** on the host (e.g. `~/curio-kb/<your-name>/`) — your own copy of the knowledge base. Git is the source of truth here.
+- A **KB directory** on the host (e.g. `~/kb/<your-name>/`) — your own copy of the knowledge base. Git is the source of truth here.
 - A **Confluence space** (e.g. `myspace`) — the read-only mirror your colleagues will see.
 - A **bot user / API token** that authenticates Curio against Confluence.
 - Two ways to drive Curio:
@@ -49,6 +49,43 @@ Infrastructure: 8/8 checks passed
 ```
 
 If any check is `✖`, follow the printed `hint:` line. The most common failure is `kb.confluence.auth` — usually an email/token mismatch (the email in `.curio.yaml` must match the Atlassian account the token was issued for).
+
+## WSL2 + GCP connectivity
+
+Curio operators on WSL2 should use the Linux Cloud SDK explicitly. The Windows SDK can appear earlier in `PATH`, but the Linux binary is the one that should own the working auth/config state for this repo.
+
+Canonical setup:
+
+```sh
+# Use the Linux binary directly.
+/usr/bin/gcloud --version
+
+# Put the Cloud SDK config on a writable Linux path.
+export CLOUDSDK_CONFIG=/tmp/gcloud-curio
+mkdir -p "$CLOUDSDK_CONFIG"
+
+# If you already have a Linux gcloud profile, copy it into the temp config.
+cp -a ~/.config/gcloud/. "$CLOUDSDK_CONFIG"/
+chmod -R u+rwX "$CLOUDSDK_CONFIG"
+
+# Verify DNS reachability before assuming auth is broken.
+getent hosts oauth2.googleapis.com
+getent hosts run.googleapis.com
+getent hosts pubsub.googleapis.com
+getent hosts secretmanager.googleapis.com
+getent hosts aiplatform.googleapis.com
+
+# Select the intended account and project.
+CLOUDSDK_CONFIG=$CLOUDSDK_CONFIG /usr/bin/gcloud config set account <your-account@example.com>
+CLOUDSDK_CONFIG=$CLOUDSDK_CONFIG /usr/bin/gcloud config set project <your-gcp-project-id>
+CLOUDSDK_CONFIG=$CLOUDSDK_CONFIG /usr/bin/gcloud auth list
+CLOUDSDK_CONFIG=$CLOUDSDK_CONFIG /usr/bin/gcloud config get-value project
+```
+
+If `gcloud` still tries to use the Windows SDK, call `/usr/bin/gcloud` directly. If the Linux profile has stale credentials, re-authenticate in WSL2 and keep that session in `/tmp` or another writable Linux path, not under a read-only mount or the Windows profile tree.
+
+Use `deploy/cloud-run/wsl2-gcloud-bootstrap.sh` for a quick environment check and temp-config bootstrap.
+If you need one-off defaults, copy `deploy/cloud-run/wsl2-gcloud.local.env.example` to `deploy/cloud-run/wsl2-gcloud.local.env` and keep it untracked.
 
 ## Step 1 — Author your charter
 

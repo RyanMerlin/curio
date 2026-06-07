@@ -234,7 +234,7 @@ impl ConfluenceClient {
             );
             let response = self
                 .client
-                .put(&format!("{}/api/v2/pages/{}", self.base_url, page_id))
+                .put(format!("{}/api/v2/pages/{}", self.base_url, page_id))
                 .json(&page_data)
                 .basic_auth(&self.email, Some(&self.auth_token))
                 .send()
@@ -285,7 +285,7 @@ impl ConfluenceClient {
             println!("Creating Confluence page: {}", title);
             let response = self
                 .client
-                .post(&format!("{}/rest/api/content", self.base_url))
+                .post(format!("{}/rest/api/content", self.base_url))
                 .basic_auth(&self.email, Some(&self.auth_token))
                 .json(&page_data)
                 .send()
@@ -383,7 +383,7 @@ impl ConfluenceClient {
             );
             let response = send_with_retry("update page via v1", || {
                 self.client
-                    .put(&format!("{}/rest/api/content/{}", self.base_url, page_id))
+                    .put(format!("{}/rest/api/content/{}", self.base_url, page_id))
                     .basic_auth(&self.email, Some(&self.auth_token))
                     .json(&page_data)
             })
@@ -1282,7 +1282,7 @@ impl ConfluenceClient {
         }
         let response = self
             .client
-            .put(&format!("{}/api/v2/spaces/{}", self.base_url, space_id))
+            .put(format!("{}/api/v2/spaces/{}", self.base_url, space_id))
             .basic_auth(&self.email, Some(&self.auth_token))
             .json(&payload)
             .send()
@@ -1350,7 +1350,7 @@ impl ConfluenceClient {
         // First, get the current page details to extract the version and other necessary fields
         let response = self
             .client
-            .get(&format!(
+            .get(format!(
                 "{}/rest/api/content/{}?expand=version,body.storage,space",
                 self.base_url, page_id
             ))
@@ -1456,7 +1456,7 @@ impl ConfluenceClient {
 
         let response = self
             .client
-            .get(&format!(
+            .get(format!(
                 "{}/rest/api/content/{}?expand=version,body.storage,space",
                 self.base_url, page_id
             ))

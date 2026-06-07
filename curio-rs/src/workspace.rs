@@ -184,10 +184,10 @@ pub fn resolve_kb_dir(kb_dir: Option<&PathBuf>, workspace_name: Option<&str>) ->
 
 /// Expand a leading `~/` to the user's home directory.
 pub fn expand_tilde(path: &str) -> PathBuf {
-    if let Some(rest) = path.strip_prefix("~/") {
-        if let Some(home) = dirs::home_dir() {
-            return home.join(rest);
-        }
+    if let Some(rest) = path.strip_prefix("~/")
+        && let Some(home) = dirs::home_dir()
+    {
+        return home.join(rest);
     }
     PathBuf::from(path)
 }

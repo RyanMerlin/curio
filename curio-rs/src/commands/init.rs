@@ -48,7 +48,7 @@ pub async fn run_init(
             let _ = emit_json(
                 "init",
                 true,
-                &serde_json::json!({ "wiki_dir": wiki_dir, "dry_run": true, "reset": reset }),
+                serde_json::json!({ "wiki_dir": wiki_dir, "dry_run": true, "reset": reset }),
             );
         } else {
             println!("Would initialise wiki at {}", wiki_dir.display());
@@ -178,48 +178,48 @@ pub async fn run_init(
 
     append_log(wiki_dir, "init: wiki scaffold created")?;
 
-    if config.connection.require_confluence().is_ok() {
-        if let Ok(token) = config.connection.resolve_token() {
-            let client = ConfluenceClient::new(
-                config.connection.confluence_url.clone(),
-                config.connection.confluence_email.clone(),
-                token,
-                None,
-            )?;
-            let preferred_root_id = config.wiki.sync.confluence_parent_page_id.clone();
-            let (tree, deleted_descendants) = if reset {
-                reset_curio_confluence_tree(config, &client, preferred_root_id, true).await?
-            } else {
-                (
-                    ensure_curio_confluence_tree(config, &client, preferred_root_id, true).await?,
-                    0usize,
-                )
-            };
-            let validation =
-                validate_curio_confluence_tree(config, &client, Some(tree.root_id.clone())).await?;
+    if config.connection.require_confluence().is_ok()
+        && let Ok(token) = config.connection.resolve_token()
+    {
+        let client = ConfluenceClient::new(
+            config.connection.confluence_url.clone(),
+            config.connection.confluence_email.clone(),
+            token,
+            None,
+        )?;
+        let preferred_root_id = config.wiki.sync.confluence_parent_page_id.clone();
+        let (tree, deleted_descendants) = if reset {
+            reset_curio_confluence_tree(config, &client, preferred_root_id, true).await?
+        } else {
+            (
+                ensure_curio_confluence_tree(config, &client, preferred_root_id, true).await?,
+                0usize,
+            )
+        };
+        let validation =
+            validate_curio_confluence_tree(config, &client, Some(tree.root_id.clone())).await?;
+        println!(
+            "  confluence root: {} ({})",
+            crate::commands::sync::CURIO_ROOT_TITLE,
+            tree.root_id
+        );
+        if reset {
             println!(
-                "  confluence root: {} ({})",
-                crate::commands::sync::CURIO_ROOT_TITLE,
-                tree.root_id
-            );
-            if reset {
-                println!(
-                    "  reset deleted {} managed descendant page(s)",
-                    deleted_descendants
-                );
-            }
-            println!(
-                "  validation passed: {} checked page(s)",
-                validation.checked_pages
+                "  reset deleted {} managed descendant page(s)",
+                deleted_descendants
             );
         }
+        println!(
+            "  validation passed: {} checked page(s)",
+            validation.checked_pages
+        );
     }
 
     if json {
         let _ = emit_json(
             "init",
             true,
-            &serde_json::json!({ "wiki_dir": wiki_dir, "trees": created_trees, "reset": reset }),
+            serde_json::json!({ "wiki_dir": wiki_dir, "trees": created_trees, "reset": reset }),
         );
     } else {
         println!("Wiki initialised at {}", wiki_dir.display());

@@ -2,18 +2,18 @@
 ///
 /// For each wiki/review/ page that has a `.sync-refs.json` sidecar (written by `curio sync`),
 /// this command:
-///   1. Reads labels and pinned-comment reactions from Confluence.
-///   2. Determines the action: approve / reject / rewrite / capture.
-///   3. In live mode, executes the action:
-///      - approve  → mv review/ → staged/; update NORTHSTAR.md taxonomy if taxonomy_mutation
-///      - reject   → rm wiki page + analysis sidecar; log in _admin/log.md
-///      - rewrite  → reset status=intake, mv review/ → intake/; append reviewer
-///                   comments to <slug>.feedback.md
-///      - capture  → append free-form comments to <slug>.feedback.md (no status change)
-///   4. Writes a summary to stdout and appends to _admin/log.md.
+/// 1. Reads labels and pinned-comment reactions from Confluence.
+/// 2. Determines the action: approve / reject / rewrite / capture.
+/// 3. In live mode, executes the action:
+///    - approve  → mv review/ → staged/; update NORTHSTAR.md taxonomy if taxonomy_mutation
+///    - reject   → rm wiki page + analysis sidecar; log in _admin/log.md
+///    - rewrite  → reset status=intake, mv review/ → intake/; append reviewer comments
+///      to `<slug>.feedback.md`
+///    - capture  → append free-form comments to `<slug>.feedback.md` (no status change)
+/// 4. Writes a summary to stdout and appends to _admin/log.md.
 ///
 /// Signal precedence: labels (curio:approve / curio:reject / curio:rewrite) beat reactions
-/// (👍 / 👎 / ❓) on the pinned comment.  Free-form comments (not the pinned comment,
+/// (👍 / 👎 / ❓) on the pinned comment. Free-form comments (not the pinned comment,
 /// no matching label/reaction) never trigger auto-action — they go into feedback.md only.
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};

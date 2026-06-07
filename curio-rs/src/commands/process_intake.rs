@@ -1,12 +1,11 @@
 /// Process command — agent-native routing for intake pages.
 ///
 /// Flow:
-///   1. `curio process --prepare [--limit=N|--all]`
-///        → reads intake pages, outputs a routing manifest JSON to stdout, exits
-///        → the agent (Claude / Gemini) reads the manifest, reasons over NORTHSTAR,
-///          and produces a decisions JSON
-///   2. `curio process --route-file decisions.json`
-///        → applies the agent's routing decisions: git mv, frontmatter update, sidecar write
+/// 1. `curio process --prepare [--limit=N|--all]` reads intake pages, outputs a
+///    routing manifest JSON to stdout, then exits. The agent (Claude / Gemini) reads
+///    the manifest, reasons over NORTHSTAR, and produces a decisions JSON.
+/// 2. `curio process --route-file decisions.json` applies the agent's routing
+///    decisions: git mv, frontmatter update, sidecar write.
 ///
 /// Manual single-page routing (no LLM needed):
 ///   `curio process --slug <s> --category product-tree/example-server --status staged`
@@ -52,6 +51,7 @@ struct PeerPageSnippet {
     keywords: Vec<String>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_process(
     config: &Config,
     dry_run: bool,
@@ -119,7 +119,7 @@ pub async fn run_process(
             let _ = emit_json(
                 "process",
                 true,
-                &serde_json::json!({ "processed": 0, "message": msg }),
+                serde_json::json!({ "processed": 0, "message": msg }),
             );
         } else {
             println!("{}", msg);
@@ -156,7 +156,7 @@ pub async fn run_process(
 fn output_routing_manifest(
     config: &Config,
     intake_pages: &[(String, crate::WikiPage)],
-    json: bool,
+    _json: bool,
 ) -> Result<()> {
     let wiki_dir = &config.wiki.wiki_dir;
 
@@ -274,11 +274,7 @@ fn output_routing_manifest(
         }
     });
 
-    if json {
-        println!("{}", serde_json::to_string_pretty(&manifest)?);
-    } else {
-        println!("{}", serde_json::to_string_pretty(&manifest)?);
-    }
+    println!("{}", serde_json::to_string_pretty(&manifest)?);
 
     Ok(())
 }
@@ -468,7 +464,7 @@ fn apply_decisions(
         let _ = emit_json(
             "process",
             true,
-            &serde_json::json!({ "processed": processed, "errors": errors, "dry_run": dry_run }),
+            serde_json::json!({ "processed": processed, "errors": errors, "dry_run": dry_run }),
         );
     } else {
         for item in &processed {
@@ -525,14 +521,14 @@ fn collect_intake_pages(intake_dir: &Path, limit: u32) -> Result<Vec<(String, cr
     for entry in std::fs::read_dir(intake_dir)? {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().map_or(false, |e| e == "md") {
-            if let Ok(page) = parse_wiki_page(&path) {
-                let slug = path
-                    .file_stem()
-                    .map(|s| s.to_string_lossy().to_string())
-                    .unwrap_or_default();
-                pages.push((slug, page));
-            }
+        if path.extension().is_some_and(|e| e == "md")
+            && let Ok(page) = parse_wiki_page(&path)
+        {
+            let slug = path
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
+            pages.push((slug, page));
         }
         if pages.len() >= limit as usize {
             break;
@@ -760,10 +756,11 @@ fn apply_routing(
 
         // Auto-populate merge_target from the top overlap candidate when the agent
         // didn't provide one explicitly. This gives reviewers an actionable pointer.
-        if overlap_risk >= 0.7 && decision.merge_target.is_none() {
-            if let Some(top_candidate) = overlap_candidates.first() {
-                decision.merge_target = Some(top_candidate.path.clone());
-            }
+        if overlap_risk >= 0.7
+            && decision.merge_target.is_none()
+            && let Some(top_candidate) = overlap_candidates.first()
+        {
+            decision.merge_target = Some(top_candidate.path.clone());
         }
 
         let fallback_reason = if overlap_risk >= 0.7 {
@@ -949,34 +946,33 @@ fn apply_routing(
     // ephemeral provenance for this single apply.
     let merge_provenance_path = src_path.with_extension("md.merged-sources.json");
     if merge_provenance_path.exists() {
-        if let Ok(raw) = std::fs::read_to_string(&merge_provenance_path) {
-            if let Ok(prov) = serde_json::from_str::<serde_json::Value>(&raw) {
-                if let Some(arr) = prov["merged_sources"].as_array() {
-                    for src in arr {
-                        if let Some(id) = src["source_id"].as_str() {
-                            proposal.dossier.source_ids.push(id.to_string());
-                        }
-                        if let Some(url) = src["source_url"].as_str() {
-                            proposal.dossier.source_locations.push(url.to_string());
-                        }
-                    }
-                    if !arr.is_empty() {
-                        proposal.kind = crate::proposal::ProposalKind::Consolidation;
-                        let merged_titles: Vec<String> = arr
-                            .iter()
-                            .filter_map(|s| s["title"].as_str().map(String::from))
-                            .collect();
-                        if !merged_titles.is_empty() {
-                            proposal.dossier.alternatives_considered.insert(
-                                0,
-                                format!(
-                                    "Consolidated {} merged source(s) per agent decision: {}",
-                                    merged_titles.len(),
-                                    merged_titles.join("; ")
-                                ),
-                            );
-                        }
-                    }
+        if let Ok(raw) = std::fs::read_to_string(&merge_provenance_path)
+            && let Ok(prov) = serde_json::from_str::<serde_json::Value>(&raw)
+            && let Some(arr) = prov["merged_sources"].as_array()
+        {
+            for src in arr {
+                if let Some(id) = src["source_id"].as_str() {
+                    proposal.dossier.source_ids.push(id.to_string());
+                }
+                if let Some(url) = src["source_url"].as_str() {
+                    proposal.dossier.source_locations.push(url.to_string());
+                }
+            }
+            if !arr.is_empty() {
+                proposal.kind = crate::proposal::ProposalKind::Consolidation;
+                let merged_titles: Vec<String> = arr
+                    .iter()
+                    .filter_map(|s| s["title"].as_str().map(String::from))
+                    .collect();
+                if !merged_titles.is_empty() {
+                    proposal.dossier.alternatives_considered.insert(
+                        0,
+                        format!(
+                            "Consolidated {} merged source(s) per agent decision: {}",
+                            merged_titles.len(),
+                            merged_titles.join("; ")
+                        ),
+                    );
                 }
             }
         }
@@ -1068,6 +1064,7 @@ fn build_analysis_from_decision(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_proposal_record(
     slug: &str,
     title: &str,

@@ -102,7 +102,7 @@ fn resolve_path(wiki_dir: &Path, slug_or_path: &str) -> Result<PathBuf> {
     // Absolute path — use directly.
     let p = Path::new(slug_or_path);
     if p.is_absolute() {
-        if p.exists() && p.extension().map_or(false, |e| e == "md") {
+        if p.exists() && p.extension().is_some_and(|e| e == "md") {
             return Ok(p.to_path_buf());
         }
         anyhow::bail!("Path not found or not a .md file: {}", p.display());
@@ -149,10 +149,10 @@ fn find_by_slug(dir: &Path, slug: &str) -> Result<Option<PathBuf>> {
     }
     for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-        if path.extension().map_or(false, |e| e == "md") {
-            if path.file_stem().map_or(false, |s| s == slug) {
-                return Ok(Some(path.to_path_buf()));
-            }
+        if path.extension().is_some_and(|e| e == "md")
+            && path.file_stem().is_some_and(|s| s == slug)
+        {
+            return Ok(Some(path.to_path_buf()));
         }
     }
     Ok(None)

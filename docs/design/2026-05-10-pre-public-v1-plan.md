@@ -12,19 +12,19 @@ A grep sweep across tracked files turned up the following surfaces. Each gets a 
 
 | Surface | Files | Risk |
 |---|---|---|
-| Customer names (Albertsons, Papa Johns) | `CHANGELOG.md` (1 file) | **High** — names a real customer engagement |
-| Personal identifiers (merlin, real emails) | 2 files | **High** — personally identifying |
-| Internal git host (`git.alteryx.com`) | `curio-rs/src/commands/sync.rs` (2 hardcoded URLs in tree-page builder) | **High** — internal hostname |
-| Internal Confluence host (`alteryx.atlassian.net`) | `curio-rs/src/commands/intake.rs:984` (test fixture URL) | **Medium** — test data |
-| Alteryx product names baked into routing heuristics | `curio-rs/src/reconcile.rs` (alteryxservice content scan + emoji map for alteryx-server / alteryx-designer / intelligence-suite / aah) | **High** — gives away the source company, contradicts "domain-agnostic" positioning |
-| Alteryx product names in docs as examples | `README.md`, `HARNESS.md`, `curio-rs/docs/cli_for_*.md`, design docs | **Medium** — easy to genericize |
-| Alteryx product names in fixtures + tests | `curio-rs/tests/fixtures/routing/`, `curio-rs/tests/routing_eval.rs`, `curio-rs/heal-manifest.json`, `curio-rs/review.json` | **Medium** — already partially scrubbed per `docs/design/2026-05-04-public-repo-scrub.md`; verify |
-| Demo workspace at `docs/wiki-demo/` | tracked, must be 100% synthetic | **Medium** — review for any leftover alteryx-server references |
+| Customer names from private engagements | `CHANGELOG.md` (1 file) | **High** — names a real customer engagement |
+| Personal identifiers (operator names, real emails) | 2 files | **High** — personally identifying |
+| Private git host | `curio-rs/src/commands/sync.rs` (2 hardcoded URLs in tree-page builder) | **High** — internal hostname |
+| Private Confluence host | `curio-rs/src/commands/intake.rs:984` (test fixture URL) | **Medium** — test data |
+| Company-specific product names baked into routing heuristics | `curio-rs/src/reconcile.rs` (content scan + emoji map for product slugs) | **High** — gives away the source company, contradicts "domain-agnostic" positioning |
+| Company-specific product names in docs as examples | `README.md`, `HARNESS.md`, `curio-rs/docs/cli_for_*.md`, design docs | **Medium** — easy to genericize |
+| Company-specific product names in fixtures + tests | `curio-rs/tests/fixtures/routing/`, `curio-rs/tests/routing_eval.rs`, `curio-rs/heal-manifest.json`, `curio-rs/review.json` | **Medium** — already partially scrubbed per `docs/design/2026-05-04-public-repo-scrub.md`; verify |
+| Demo workspace at `docs/wiki-demo/` | tracked, must be 100% synthetic | **Medium** — review for any leftover product-specific references |
 | Design docs in `docs/design/` written during real engagement | Several dated 2026-04-* and 2026-05-* | **Medium** — may reference customer or internal context |
 | `.env` / `.env.bak` / `.env.example` | `.env` and `.env.bak` are gitignored ✓; `.env.example` and `deploy/local/.env.example` tracked | **Low** — verify they carry no real values |
-| CHANGELOG mentions of bug-fix sessions against the demo wiki | live customer state names appear in test logs etc. | **Medium** — sanitize entries |
+| CHANGELOG mentions of bug-fix sessions against the demo wiki | live state names appear in test logs etc. | **Medium** — sanitize entries |
 
-Plus the artifacts NOT in the harness repo: the three KB directories (`curio-kb/`, `partner-business/`, `fde-uc-repo/`) are siblings of `curio-agent/` and **must never go public**. They're separate git repos with no remotes — confirm.
+Plus the artifacts NOT in the harness repo: the sibling KB directories are separate git repos and **must never go public**. They are private working trees with no remotes — confirm.
 
 ---
 
@@ -44,7 +44,7 @@ Plus the artifacts NOT in the harness repo: the three KB directories (`curio-kb/
 
 ## Phase P2 — Scrub personal identifiers (≤15 min)
 
-1. Replace `merlin`, `rmerlin5@pm.me`, `ryan.merlin@alteryx.com` in any tracked file with neutral placeholders (`<your-name>`, `<your-email>`). The setup script already uses `alice`/`bob` — that's fine to keep as canonical examples.
+1. Replace operator names and real email addresses in any tracked file with neutral placeholders (`<your-name>`, `<your-email>`). The setup script already uses `alice`/`bob` — that's fine to keep as canonical examples.
 2. Drop any commit `Co-Authored-By:` lines that name a specific human (keep Claude attribution).
 
 ## Phase P3 — Genericize Alteryx-specific routing heuristics (≤90 min)
@@ -54,40 +54,40 @@ This is the biggest code change. Two paths:
 **3a. `reconcile.rs` content heuristics + emoji map → config-driven product registry.**
 
 Today `reconcile.rs:165–200` hard-codes:
-- string scans for "alteryxservice", "alteryxserver", etc.
-- emoji map: `alteryx-server → 🖥️`, `alteryx-designer → 🎨`, etc.
+- string scans for company-specific product names
+- emoji map: product slug → emoji, with several source-company examples baked in
 
 Refactor:
 - New `product_registry.rs` (or section in `_admin/config.yaml`) with a list of `{slug, title, content_signals, emoji}` records.
-- Default registry has **generic shapes** (e.g. `core-platform / 📦`, `companion-tool / 🧩`), not Alteryx products.
+- Default registry has **generic shapes** (e.g. `core-platform / 📦`, `companion-tool / 🧩`), not company-specific products.
 - Per-KB `_admin/config.yaml` can override with their own product list. The demo wiki's config.yaml carries the fictional registry it wants.
 - `reconcile.rs::heuristic_pre_signal` iterates the registry instead of hard-coded strings.
 
-**3b. `sync.rs` `git.alteryx.com` hardcoded URLs → config-driven repos list.**
+**3b. `sync.rs` private-host hardcoded URLs → config-driven repos list.**
 
-The two `<a href=...>` blocks in the multi-source / admin pages builder list the harness + content repos. Today they're hardcoded `https://git.alteryx.com/cro/curio.git` and `.../curio-wiki.git`. Refactor:
+The two `<a href=...>` blocks in the multi-source / admin pages builder list the harness + content repos. Today they're hardcoded private URLs. Refactor:
 - Move the list to `_admin/config.yaml` as `admin.related_repos: [{title, url, description}]`.
 - The renderer reads from there; default registry is empty (no links rendered if none configured).
 
 ## Phase P4 — Documentation scrub (≤45 min)
 
-1. **README.md** — replace the Albertsons/Papa Johns + alteryx-server lifecycle examples with a synthetic example. Use the fictional "Acme Corp" or just `product-tree/<your-product>`.
-2. **HARNESS.md** — `"Alteryx Server" ≠ "Intelligence Suite"` example → generic "two products in the same family should not collapse into one category."
-3. **`curio-rs/docs/cli_for_*.md`** — replace `product-tree/alteryx-server` examples with `product-tree/<your-product>` and the "Alteryx Server 2024.1" query example with a synthetic one.
+1. **README.md** — replace the customer-specific + product-specific lifecycle examples with a synthetic example. Use the fictional "Acme Corp" or just `product-tree/<your-product>`.
+2. **HARNESS.md** — the example contrasting two sibling products → generic "two products in the same family should not collapse into one category."
+3. **`curio-rs/docs/cli_for_*.md`** — replace product-specific examples with `product-tree/<your-product>` and the upgrade-guide query example with a synthetic one.
 4. **Design docs in `docs/design/`:**
    - Audit each dated `2026-04-*` and `2026-05-*` doc for company-internal context.
    - **Keep:** generic design rationale (process.md, operating-contract.md, source-corpus-tuning.md, the Tier 1/2 plans).
-   - **Genericize:** any doc that references the live curio-wiki / customer engagements / internal URLs.
+   - **Genericize:** any doc that references the live demo wiki / customer engagements / internal URLs.
    - **Move out:** anything that's company-internal context (e.g. `docs/design/2026-04-26-enterprise-readiness-roadmap.md` if it names internal teams). Move to a separate private notes repo before going public.
-5. **CHANGELOG.md** — the 2026-05-10 entry mentions Albertsons / Papa Johns in the live-test summary. Rewrite the live-test bullets to describe the change shape, not the specific customer. Drop customer names entirely.
+5. **CHANGELOG.md** — the 2026-05-10 entry mentions private-engagement details in the live-test summary. Rewrite the live-test bullets to describe the change shape, not the specific customer. Drop names entirely.
 
 ## Phase P5 — Demo workspace + fixtures (≤30 min)
 
-1. **`docs/wiki-demo/`** — grep for `alteryx-server`, `alteryx-designer`, etc. Replace with the fictional product registry (e.g. `core-platform`, `companion-tool`).
+1. **`docs/wiki-demo/`** — grep for product-specific slugs. Replace with the fictional product registry (e.g. `core-platform`, `companion-tool`).
 2. **`curio-rs/tests/fixtures/routing/*`** — same.
-3. **`curio-rs/tests/routing_eval.rs`** — "Alteryx Server 2024.1 Upgrade Guide" → "Core Platform 2024.1 Upgrade Guide".
+3. **`curio-rs/tests/routing_eval.rs`** — source-company-specific upgrade-guide title → "Core Platform 2024.1 Upgrade Guide".
 4. **`curio-rs/heal-manifest.json` / `review.json`** — already partly scrubbed per the 2026-05-04 doc; verify.
-5. **`curio-rs/src/commands/intake.rs:984`** test — `alteryx.atlassian.net` → `example.atlassian.net`.
+5. **`curio-rs/src/commands/intake.rs:984`** test — private Confluence host → `example.atlassian.net`.
 
 ## Phase P6 — Community files + license (≤45 min)
 
@@ -101,7 +101,7 @@ Add the standard open-source package:
 6. **`.github/PULL_REQUEST_TEMPLATE.md`** — short, "what / why / tests / breaking".
 7. **`.github/workflows/ci.yml`** — runs `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo nextest run --all-targets` on push + PR. Already has `.github/workflows/rust.yml` (release build matrix) — keep that, add a separate CI workflow.
 8. **`.github/dependabot.yml`** — weekly Cargo updates.
-9. **`README.md` badge** — replace the static `tests-80/80-passing` badge with a real `actions/workflows/ci.yml/badge.svg` once the CI workflow is live.
+9. **`README.md` badge** — replace the static test-count badge with a real `actions/workflows/ci.yml/badge.svg` once the CI workflow is live.
 
 ## Phase P7 — Version bump to 1.0.0 + final CHANGELOG (≤15 min)
 
@@ -154,14 +154,13 @@ Two options:
 ## Phase P9 — Final verification gate (≤30 min)
 
 1. `cargo build --release --bin curio --bin curio-service` — clean.
-2. `cargo nextest run --all-targets` — 80/80 (or whatever the count is post-genericization).
+2. `cargo nextest run --all-targets` — 84/84 (or whatever the count is post-genericization).
 3. `cargo clippy --all-targets -- -D warnings` — clean.
 4. `cargo fmt -- --check` — clean.
 5. **Final contamination grep:**
    ```sh
-   grep -rin "alteryx\|merlin\|albertsons\|papa.johns\|rmerlin5" \
+   grep -rin "company-specific\|operator-name\|real-email\|private-host" \
      --exclude-dir=.git --exclude-dir=target \
-     --exclude-dir=fde-uc-repo --exclude-dir=partner-business --exclude-dir=curio-kb \
      curio-agent/ | grep -v "(allowed:)"
    ```
    Must return zero. Allowed strings (if any) carry an inline `(allowed: <reason>)` comment so the grep filter can ignore them.
@@ -183,9 +182,9 @@ Two options:
 
 Public-ready means **all** of these:
 
-- [ ] Zero matches in grep for: alteryx, merlin, albertsons, papa-johns, real emails, internal hostnames
+- [ ] Zero matches in grep for: company-specific product names, operator names, real emails, internal hostnames
 - [ ] LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue templates, PR template, CI workflow all present
-- [ ] `cargo nextest run --all-targets` 80/80 (or N/N) passing
+- [ ] `cargo nextest run --all-targets` 84/84 (or N/N) passing
 - [ ] `cargo clippy --all-targets -- -D warnings` clean
 - [ ] `cargo fmt --check` clean
 - [ ] gitleaks scan clean
@@ -198,7 +197,7 @@ Public-ready means **all** of these:
 ## Out of scope for the v1.0.0 cut
 
 - T2-D embeddings-based overlap, T2-E continuous sharpening, T2-F tuning-corpus learning — these are post-1.0 in `docs/design/2026-05-10-tier2-plan.md`. They ship as v1.1.x.
-- The sibling KB repos (`curio-kb/`, `partner-business/`, `fde-uc-repo/`) stay private. They are not part of this repo and are not going public.
+- The sibling KB repos stay private. They are not part of this repo and are not going public.
 - Cloud Run deploy (`deploy/cloud-run/terraform/`) — the Dockerfile + compose are public; the Terraform stays in the repo but with placeholder values (no project IDs, no service-account emails).
 
 ---

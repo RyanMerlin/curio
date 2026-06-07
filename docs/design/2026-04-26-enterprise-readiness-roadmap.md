@@ -5,7 +5,7 @@
 You're about to deploy the curio-service backbone to GCP and want an enterprise-grade posture: real auth (OIDC), multi-repo / multi-credential support, and direction on the human review UI. The codebase is well-factored at the boundary (deterministic Rust CLI vs. agent harness), but the service binary that fronts Cloud Run has critical gaps that should not ship as-is. This plan calls out the pre-deploy blockers, the multi-repo refactor, and a UI direction recommendation. Aim is to sequence work so the backbone goes live safely first, then unlocks multi-repo + UI.
 
 **Confirmed scope:**
-- **Tenancy: single-org, multi-repo.** One company, many internal repos under one Cloud Run deployment. Workspace-level RBAC is sufficient; no per-tenant KMS / per-tenant SA / SaaS-grade isolation needed yet. Keep the door open by using `workspace_id` as the isolation key but don't over-build.
+- **Tenancy: single-org, multi-repo.** One organization, many repos under one Cloud Run deployment. Workspace-level RBAC is sufficient; no per-tenant KMS / per-tenant SA / SaaS-grade isolation needed yet. Keep the door open by using `workspace_id` as the isolation key but don't over-build.
 - **Auth: Cloud IAP + Workforce Identity Federation.** IAP fronts Cloud Run; federation to the existing IdP (Okta / Azure AD / etc.). Curio-service verifies the IAP-injected JWT (`X-Goog-IAP-JWT-Assertion`) — no in-app OIDC client. Pub/Sub push retains its own Google-signed OIDC verification path.
 
 ## Current State (audit summary)

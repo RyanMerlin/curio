@@ -123,10 +123,10 @@ impl WorkspaceRegistry {
 }
 
 pub fn default_registry_path() -> Result<PathBuf> {
-    if let Ok(path) = env::var("CURIO_SERVICE_REGISTRY") {
-        if !path.trim().is_empty() {
-            return Ok(PathBuf::from(path));
-        }
+    if let Ok(path) = env::var("CURIO_SERVICE_REGISTRY")
+        && !path.trim().is_empty()
+    {
+        return Ok(PathBuf::from(path));
     }
 
     let root = discover_repo_root()?;
@@ -134,10 +134,10 @@ pub fn default_registry_path() -> Result<PathBuf> {
 }
 
 pub fn discover_repo_root() -> Result<PathBuf> {
-    if let Ok(path) = env::var("CURIO_REPO_ROOT") {
-        if !path.trim().is_empty() {
-            return Ok(PathBuf::from(path));
-        }
+    if let Ok(path) = env::var("CURIO_REPO_ROOT")
+        && !path.trim().is_empty()
+    {
+        return Ok(PathBuf::from(path));
     }
 
     let mut current = env::current_dir().context("Failed to resolve current working directory")?;

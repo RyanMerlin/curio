@@ -147,7 +147,7 @@ impl ServiceConfig {
         let provider_backend = std::env::var("CURIO_SERVICE_PROVIDER_BACKEND")
             .ok()
             .filter(|value| !value.trim().is_empty())
-            .unwrap_or_else(|| provider_backend_from_env());
+            .unwrap_or_else(provider_backend_from_env);
         Ok(Self {
             bind_addr,
             registry_path,
@@ -502,6 +502,10 @@ impl JobStore {
         self.records.lock().unwrap().len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn get(&self, job_id: &str) -> Option<CurioJobStatus> {
         self.records.lock().unwrap().get(job_id).cloned()
     }
@@ -687,18 +691,18 @@ impl ServiceRuntime {
 
         let runtime = self.clone();
         tokio::spawn(async move {
-            if let Err(err) = runtime.execute_job(job_id.clone()).await {
-                if let Some(status) = runtime.get_job(&job_id) {
-                    let completed_at = now();
-                    let _ = runtime.job_store.update_state(
-                        &job_id,
-                        JobState::Failed,
-                        Some(err.to_string()),
-                        status.result.clone(),
-                        status.started_at.clone(),
-                        Some(completed_at),
-                    );
-                }
+            if let Err(err) = runtime.execute_job(job_id.clone()).await
+                && let Some(status) = runtime.get_job(&job_id)
+            {
+                let completed_at = now();
+                let _ = runtime.job_store.update_state(
+                    &job_id,
+                    JobState::Failed,
+                    Some(err.to_string()),
+                    status.result.clone(),
+                    status.started_at.clone(),
+                    Some(completed_at),
+                );
             }
         });
 
@@ -879,7 +883,7 @@ impl ServiceRuntime {
             Some(now()),
         )?;
         let mut final_status = updated.clone();
-        final_status.audit.extend(completed_audit.drain(..));
+        final_status.audit.append(&mut completed_audit);
         self.job_store.upsert(final_status)?;
         Ok(())
     }

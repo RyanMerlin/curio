@@ -111,7 +111,7 @@ async fn run_status_one(config: &Config, json: bool, label: Option<&str>) -> Res
             let _ = emit_json(
                 "status",
                 false,
-                &serde_json::json!({ "error": "wiki not initialised" }),
+                serde_json::json!({ "error": "wiki not initialised" }),
             );
         } else {
             eprintln!("Wiki not initialised. Run `curio init` first.");
@@ -136,7 +136,7 @@ async fn run_status_one(config: &Config, json: bool, label: Option<&str>) -> Res
         let _ = emit_json(
             "status",
             true,
-            &serde_json::json!({
+            serde_json::json!({
                 "workspace": label,
                 "intake": intake,
                 "staged": staged,
@@ -187,7 +187,7 @@ fn count_md(wiki_dir: &Path, subdir: &str) -> usize {
         .into_iter()
         .flatten()
         .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().map_or(false, |x| x == "md"))
+        .filter(|e| e.path().extension().is_some_and(|x| x == "md"))
         .count()
 }
 
@@ -199,7 +199,7 @@ fn count_md_recursive(wiki_dir: &Path, subdir: &str) -> usize {
     WalkDir::new(&dir)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file() && e.path().extension().map_or(false, |x| x == "md"))
+        .filter(|e| e.file_type().is_file() && e.path().extension().is_some_and(|x| x == "md"))
         .count()
 }
 
@@ -214,7 +214,7 @@ fn count_md_content(wiki_dir: &Path, subdir: &str) -> usize {
         .filter_map(|e| e.ok())
         .filter(|e| {
             e.file_type().is_file()
-                && e.path().extension().map_or(false, |x| x == "md")
+                && e.path().extension().is_some_and(|x| x == "md")
                 && e.file_name() != "index.md"
         })
         .count()
@@ -244,7 +244,7 @@ fn is_index_stale(wiki_dir: &Path) -> bool {
         .filter_map(|e| e.ok())
         .filter(|e| {
             e.file_type().is_file()
-                && e.path().extension().map_or(false, |x| x == "md")
+                && e.path().extension().is_some_and(|x| x == "md")
                 && e.file_name() != "index.md"
         })
         .any(|e| {

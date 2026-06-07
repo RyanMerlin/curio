@@ -30,7 +30,7 @@ pub fn run_workspace_list(json: bool) -> Result<()> {
         .max()
         .unwrap_or(4)
         .max(4);
-    println!("{:<name_w$}  {}", "NAME", "PATH");
+    println!("{:<name_w$}  PATH", "NAME");
     println!("{}", "-".repeat(name_w + 2 + 60));
     for ws in &workspaces {
         let resolved = ws.resolved_path();

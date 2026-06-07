@@ -14,7 +14,7 @@ Brings Curio from internal tooling to a publicly-usable editorial knowledge-base
 - **Confluence as the review surface.** Polished Review-tree rendering with score bars, status badges, taxonomy-mutation note macro, alternatives-considered lists, pinned reviewer-feedback comment with 👍 / 👎 / ❓ semantics.
 - **Domain-agnostic engine + config-driven SSOT.** No company-specific product names, taxonomies, or emojis baked into the binary. Operators bring their own `wiki/_admin/config.yaml::products` registry to teach Curio about their domain.
 - **Three providers, one contract.** Claude, Codex, Gemini all launch from the same `HARNESS.md` operating contract. Adding a fourth provider is two files.
-- **Production-grade safety.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelope on every `--json` command, comprehensive test suite (80/80 passing).
+- **Production-grade safety.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelope on every `--json` command, comprehensive test suite (84/84 passing).
 
 ### Community files
 
@@ -31,7 +31,7 @@ See [`docs/design/2026-05-10-tier2-plan.md`](docs/design/2026-05-10-tier2-plan.m
 
 ### Pre-public scrub
 
-This release was preceded by a deliberate scrub (`docs/design/2026-05-10-pre-public-v1-plan.md`): hard-coded vendor-specific product names → config-driven `products` registry; hard-coded internal git host URLs → config-driven `admin_related_repos`; personal-operator identifiers removed; stale `CURIO_AUDIT_DIR=${REPO_ROOT}/wiki/_config` env var removed; expanded `.gitignore` for every `.env` variant. The public repo ships zero domain assumptions in the engine; an example registry in `docs/wiki-demo/_admin/config.yaml` shows the pattern.
+This release was preceded by a deliberate scrub (`docs/design/2026-05-10-pre-public-v1-plan.md`): hard-coded vendor-specific product names → config-driven `products` registry; hard-coded private git host URLs → config-driven `admin_related_repos`; personal-operator identifiers removed; stale `CURIO_AUDIT_DIR=${REPO_ROOT}/wiki/_config` env var removed; expanded `.gitignore` for every `.env` variant. The public repo ships zero domain assumptions in the engine; an example registry in `docs/wiki-demo/_admin/config.yaml` shows the pattern.
 
 ---
 
@@ -81,8 +81,8 @@ Brings Curio from "happy path works on one KB" to "a colleague can drive their o
 
 ### Phase E — Live verification
 
-- Image rebuilt; container restarted; smoke test green for all 3 KBs (curio-wiki, partner-business, fde-uc-repo).
-- In-container `curio doctor` against partner-business: 8/8 infrastructure checks pass, including real Confluence auth.
+- Image rebuilt; container restarted; smoke test green for all 3 KBs.
+- In-container `curio doctor` against a real KB: 8/8 infrastructure checks pass, including real Confluence auth.
 - In-container `curio process --prepare`: schema_version 2, peer pages populated, budget honored.
 - Live publish re-gate exercise: `publish` correctly refused on quality; `publish --force` correctly proceeded past quality and was correctly stopped by structural taxonomy validity (force never bypasses structural gates).
 

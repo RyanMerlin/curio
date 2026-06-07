@@ -17,19 +17,13 @@ pub async fn run_review(config: &Config, _dry_run: bool, json: bool, lane: &str)
         .collect();
 
     if json {
-        let _ = emit_json("review", true, &serde_json::json!({ "pages": pages }));
+        let _ = emit_json("review", true, serde_json::json!({ "pages": pages }));
     } else {
         if pages.is_empty() {
             println!("No items in {}", lane);
         } else {
             let width = pages.iter().map(|p| p.path.len()).max().unwrap_or(30);
-            println!(
-                "{:<width$}  {:<10}  {}",
-                "PATH",
-                "STATUS",
-                "TITLE",
-                width = width
-            );
+            println!("{:<width$}  {:<10}  TITLE", "PATH", "STATUS", width = width);
             println!("{}", "-".repeat(width + 40));
             for p in &pages {
                 println!(
