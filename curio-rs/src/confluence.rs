@@ -825,10 +825,18 @@ impl ConfluenceClient {
             query_params.push(("limit".to_string(), limit.to_string()));
         }
 
+        let mut url = reqwest::Url::parse(&url)
+            .with_context(|| format!("Failed to parse Confluence API URL: {}", url))?;
+        {
+            let mut pairs = url.query_pairs_mut();
+            for (key, value) in &query_params {
+                pairs.append_pair(key, value);
+            }
+        }
+
         let response = self
             .client
-            .get(&url)
-            .query(&query_params)
+            .get(url)
             .basic_auth(&self.email, Some(&self.auth_token))
             .send()
             .await

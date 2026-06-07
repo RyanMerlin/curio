@@ -113,12 +113,24 @@ pub fn slug_from_title(title: &str) -> String {
 
 /// Generate a stable 16-character hex ID from an input string (SHA256 prefix).
 pub fn generate_id(input: &str) -> String {
-    format!("{:x}", Sha256::digest(input.as_bytes()))[..16].to_string()
+    let digest = Sha256::digest(input.as_bytes());
+    digest
+        .iter()
+        .take(8)
+        .map(|b| format!("{:02x}", b))
+        .collect::<String>()
 }
 
 /// Compute a full SHA256 content hash in the form `sha256:<hex>`.
 pub fn content_hash(content: &str) -> String {
-    format!("sha256:{:x}", Sha256::digest(content.as_bytes()))
+    let digest = Sha256::digest(content.as_bytes());
+    format!(
+        "sha256:{}",
+        digest
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>()
+    )
 }
 
 /// Return the first line of `body` that contains substantive text, truncated to `max_chars`.
