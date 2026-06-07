@@ -2823,7 +2823,7 @@ fn create_zip_bundle(
     let file = fs::File::create(out_path)
         .with_context(|| format!("Failed to create bundle {}", out_path.display()))?;
     let mut zip = zip::ZipWriter::new(file);
-    let options = zip::write::FileOptions::default()
+    let options = zip::write::SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::Deflated)
         .unix_permissions(0o644);
 
