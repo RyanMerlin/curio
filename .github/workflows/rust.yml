@@ -48,6 +48,11 @@ jobs:
       with:
         tool: nextest
 
+    - name: Configure git identity for tests
+      run: |
+        git config --global user.email "ci@curio.local"
+        git config --global user.name "Curio CI"
+
     - name: Run tests
       run: cargo nextest run --all-targets --verbose
 
