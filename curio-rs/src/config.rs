@@ -837,7 +837,14 @@ mod tests {
             .parent()
             .expect("crate should have a parent repo directory")
             .to_path_buf();
-        let env_keys = read_keys(repo_root.join(".env"));
+        // `.env` is gitignored and developer-local, so it is absent on CI and on
+        // fresh checkouts. Only enforce key parity when a local `.env` exists to
+        // drift against; otherwise there is nothing to compare.
+        let env_path = repo_root.join(".env");
+        if !env_path.exists() {
+            return;
+        }
+        let env_keys = read_keys(env_path);
         let example_keys = read_keys(repo_root.join(".env.example"));
         assert_eq!(env_keys, example_keys);
     }
