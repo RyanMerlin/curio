@@ -35,7 +35,7 @@ jobs:
         working-directory: curio-rs
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Add target
       run: rustup target add ${{ matrix.target }}
@@ -47,6 +47,11 @@ jobs:
       uses: taiki-e/install-action@v2
       with:
         tool: nextest
+
+    - name: Configure git identity for tests
+      run: |
+        git config --global user.email "ci@curio.local"
+        git config --global user.name "Curio CI"
 
     - name: Run tests
       run: cargo nextest run --all-targets --verbose
