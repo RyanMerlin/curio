@@ -1,0 +1,45 @@
+name: Dependabot auto-merge
+
+# Enable auto-merge for low-risk Dependabot PRs (patch + minor) using the built-in
+# GITHUB_TOKEN only -- no PAT. This is GitHub's documented recipe: for Dependabot
+# pull_request runs the token is read-only by default, and the permissions block
+# below restores the write scope that `gh pr merge` needs.
+#
+# PREREQUISITES (repo settings this workflow cannot set -- auto-merge is only a real
+# CI gate once BOTH exist; set them before relying on this):
+#   1. Settings > General > Pull Requests > "Allow auto-merge" = enabled.
+#   2. Branch protection on `main` with "Require status checks to pass before merging"
+#      selecting the CI checks (cargo fmt / clippy / nextest / build). WITHOUT required
+#      checks, `--auto` is not gated on CI and may merge immediately.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    # Only Dependabot's own PRs, and only on this repo (guards forks from running it).
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'RyanMerlin/curio' }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Patch + minor only. Major bumps are intentionally left for manual review.
+      # The --match-head-commit fence prevents a newer push from being auto-merged
+      # against a head that has since advanced.
+      - name: Enable auto-merge (patch/minor only)
+        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+        run: gh pr merge --auto --squash --match-head-commit "$HEAD_SHA" "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
