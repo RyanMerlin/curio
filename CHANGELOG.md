@@ -1,5 +1,17 @@
 # Curio Changelog
 
+## [Unreleased] — public milestone readiness
+
+- Added a credential-free `scripts/show-hn-demo.sh` path that verifies the
+  synthetic intake, routing, review, staged, and publish lifecycle in a
+  temporary workspace.
+- Added agent-led setup guidance for knowledge operators, including explicit
+  approval boundaries before publish or Confluence sync.
+- Reconciled the public status with the shipped page rewriting, review-tree,
+  multi-source consolidation, and cached-overlap capabilities.
+- Documented Cloud Run authentication, credential isolation, concurrent state,
+  audit, and observability work as deferred enterprise-service hardening.
+
 ## [1.0.0] — 2026-05-10 · first public release
 
 Brings Curio from internal tooling to a publicly-usable editorial knowledge-base harness. Apache 2.0 licensed.
@@ -7,27 +19,29 @@ Brings Curio from internal tooling to a publicly-usable editorial knowledge-base
 ### Highlights
 
 - **Two-layer architecture.** Deterministic Rust substrate (`curio-rs`) + multi-provider agent harness. LLM calls live only in the harness; the binary stays predictable.
-- **Multi-tenant from day one.** A single Curio harness manages N knowledge bases — each with its own taxonomy, Confluence space, and credentials. Atomic registry writes, per-KB infrastructure checks, true `--dry-run`.
+- **Multi-KB from day one.** A single Curio harness can manage N knowledge bases — each with its own taxonomy, Confluence space, and credentials. Atomic registry writes, per-KB infrastructure checks, true `--dry-run`. Production service hardening is not implied.
 - **Editorial pipeline.** Two-phase agent-native routing, seven-dimension proposal scoring (route / quality / hierarchy fit / overlap risk / evidence completeness / usability / freshness), proposal dossiers as `.proposal.json` sidecars, taxonomy mutations against `NORTHSTAR.md`.
-- **Multi-source synthesis.** One intake invocation can produce one or N proposals after agent-decided merge/split. Consolidation is recorded as `ProposalKind::Consolidation` with full source provenance.
+- **Multi-source synthesis.** One intake invocation can consolidate related sources into one proposal after agent judgment. Consolidation is recorded as `ProposalKind::Consolidation` with full source provenance; split application remains future work.
 - **Page-body rewriting.** The agent ships curated knowledge objects, not raw captures. Structured decision sections explain rationale, scores, alternatives.
 - **Confluence as the review surface.** Polished Review-tree rendering with score bars, status badges, taxonomy-mutation note macro, alternatives-considered lists, pinned reviewer-feedback comment with 👍 / 👎 / ❓ semantics.
 - **Domain-agnostic engine + config-driven SSOT.** No company-specific product names, taxonomies, or emojis baked into the binary. Operators bring their own `wiki/_admin/config.yaml::products` registry to teach Curio about their domain.
 - **Three providers, one contract.** Claude, Codex, Gemini all launch from the same `HARNESS.md` operating contract. Adding a fourth provider is two files.
-- **Production-grade safety.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelope on every `--json` command, comprehensive test suite (84/84 passing).
+- **Deterministic safety boundaries.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelopes, and a comprehensive test suite (84/84 passing). Cloud Run production hardening remains a separate track.
 
 ### Community files
 
 Apache 2.0 LICENSE, NOTICE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, GitHub issue + PR templates, GitHub Actions CI workflow (fmt + clippy + test + build), Dependabot configuration.
 
-### What's coming next (Tier 2 partial → v1.1+)
+### What's coming next
 
-- Embeddings-based overlap detection (replacing Jaccard token overlap)
+- Split proposal application and richer overlap evaluation
 - Continuous self-sharpening scheduler
 - Tuning-corpus learning (codify recurring rejection reasons into harness policy)
-- Cloud Run deploy improvements
+- Cloud Run authentication, workspace-scoped secrets, durable concurrent state, audit integrity, and observability
 
-See [`docs/design/2026-05-10-tier2-plan.md`](docs/design/2026-05-10-tier2-plan.md) for the full Tier 2 roadmap.
+See [`docs/release-checklist.md`](docs/release-checklist.md) and the
+[`enterprise readiness roadmap`](docs/design/2026-04-26-enterprise-readiness-roadmap.md)
+for the public milestone and production-service tracks.
 
 ### Pre-public scrub
 

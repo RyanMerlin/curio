@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use std::path::Path;
 use std::process::Command;
+use std::process::Stdio;
 
 /// Run `git add <path>` in the given repo root.
 pub fn git_add(repo_root: &Path, path: &Path) -> Result<()> {
@@ -55,9 +56,12 @@ pub fn git_mv(repo_root: &Path, from: &Path, to: &Path) -> Result<()> {
 
 /// Run `git commit -m <message>` in the given repo root.
 pub fn git_commit(repo_root: &Path, message: &str) -> Result<()> {
+    // Keep command JSON envelopes clean; the exit status still reports commit failures.
     let status = Command::new("git")
         .args(["commit", "-m", message])
         .current_dir(repo_root)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .context("Failed to spawn git commit")?;
 
@@ -82,6 +86,8 @@ pub fn git_commit_with_identity(
         .args(["commit", "-m"])
         .arg(message)
         .current_dir(repo_root)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .context("Failed to spawn git commit with identity")?;
 

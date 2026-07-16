@@ -2,6 +2,10 @@
 
 `curio onboard` is the entrypoint for this flow.
 
+For a knowledge operator who wants an agent to perform the setup, use
+[Agent-Led Setup](agent-setup.md). The agent may prepare the KB and routing
+decisions, but must ask before publishing or syncing anything.
+
 By default it prompts to install the user-level Curio shim and treats Enter as yes.
 Pass `--install` to force shim installation without prompting.
 
@@ -102,6 +106,12 @@ curio workspace list
 curio agent prepare codex
 curio agent prepare claude
 curio agent prepare gemini
+```
+
+For a credential-free repository verification from a clean checkout:
+
+```sh
+./scripts/show-hn-demo.sh
 ```
 
 ## Launch

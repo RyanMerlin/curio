@@ -11,6 +11,9 @@ are not part of the active operator workflow.
 - [Where Things Live](where-things-live.md) - repo map and ownership boundaries
 - [Provider Matrix](provider-matrix.md) - how Claude, Codex, and Gemini fit the harness
 - [Agent CLI Contract](agent-cli-contract.md) - machine-readable command output shapes
+- [Agent-Led Setup](agent-setup.md) - copy-paste setup contract for knowledge operators
+- [Release Checklist](release-checklist.md) - first public milestone acceptance checks
+- [Show HN Draft](show-hn-launch.md) - honest launch title, post, maker comment, and checklist
 
 ## Design docs
 
@@ -24,11 +27,12 @@ are not part of the active operator workflow.
 
 - [Public Repo Scrub Plan](design/2026-05-04-public-repo-scrub.md) - the public-release scrub rationale
 - [Pre-Public v1 Plan](design/2026-05-10-pre-public-v1-plan.md) - archived public-release checklist
-- [Enterprise Readiness Review](design/2026-04-26-enterprise-readiness-roadmap.md) - historical deployment review
+- [Enterprise Readiness Review](design/2026-04-26-enterprise-readiness-roadmap.md) - deferred production-service hardening roadmap
 - [Launch Plan Archive](archive/launch/2026-05-10-v1.0.0-launch-plan.md) - public launch narrative
 - [Launch Response Log Archive](archive/launch/2026-05-10-v1.0.0-response-log.md) - launch telemetry template
 
 ## Demo and fixtures
 
 - [Wiki Demo](wiki-demo/README.md) - synthetic workspace used by tests and docs
+- [Show HN Demo Script](../scripts/show-hn-demo.sh) - credential-free end-to-end demo
 - [Indexing Phase](indexing-phase.md) - compact branch-index behavior
