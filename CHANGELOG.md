@@ -1,6 +1,10 @@
 # Curio Changelog
 
-## [Unreleased] — public milestone readiness
+## [Unreleased]
+
+Release notes for changes after `1.0.1` will be added here.
+
+## [1.0.1] — 2026-07-16 · public milestone readiness
 
 - Added a credential-free `scripts/show-hn-demo.sh` path that verifies the
   synthetic intake, routing, review, staged, and publish lifecycle in a
@@ -9,8 +13,14 @@
   approval boundaries before publish or Confluence sync.
 - Reconciled the public status with the shipped page rewriting, review-tree,
   multi-source consolidation, and cached-overlap capabilities.
-- Documented Cloud Run authentication, credential isolation, concurrent state,
-  audit, and observability work as deferred enterprise-service hardening.
+- Clarified that hosted enterprise readiness still requires verified deployment
+  identity, workspace-scoped secret resolution, durable concurrent state, audit
+  integrity, and observability.
+- Added CI packaging for tagged cross-platform release archives and SHA-256
+  checksums, corrected public crate metadata, and made the packaged crate
+  self-contained. Release assets remain subject to the verification checklist.
+- Added a research-backed adoption roadmap centered on cited MCP retrieval,
+  permission-aware source adapters, and measurable retrieval quality.
 
 ## [1.0.0] — 2026-05-10 · first public release
 

@@ -4,7 +4,7 @@
 
 # Curio
 
-**An information transformation system for enterprise knowledge.** Git-native, multi-provider, multi-tenant. Curio turns raw sources into a curated hierarchy and mirrors the result into Confluence for the humans who consume it.
+**A knowledge compiler and curation control plane for enterprise knowledge.** Git-native, multi-provider, and multi-workspace. Curio turns raw sources into a curated hierarchy and mirrors the result into Confluence for the humans who consume it.
 
 [![milestone](https://img.shields.io/badge/milestone-public%20demo-success)](CHANGELOG.md)
 [![CI](https://github.com/RyanMerlin/curio/actions/workflows/ci.yml/badge.svg)](https://github.com/RyanMerlin/curio/actions/workflows/ci.yml)
@@ -17,11 +17,16 @@
 
 ## Why Curio
 
-Most knowledge tools index documents. **Curio editorializes them, then mirrors the result into Confluence.**
+Most knowledge tools index documents. **Curio compiles them into governed knowledge, then mirrors the result into Confluence.**
 
 Every intake source is judged against the existing tree, scored on seven dimensions, optionally rewritten, optionally consolidated with peers, and routed to `staged/`, `review/`, or `published/` with a proposal dossier that explains the decision. The Rust binary handles deterministic execution; the agent handles editorial judgment. Git is the system of record. Confluence is the read-only mirror your audience actually opens.
 
 **Curio is not a page router. It is an information architect.**
+
+Curio is the editorial control plane between source material and downstream
+retrieval. The current product is deliberately proposal-first: agents make the
+curation decisions, while `curio-rs` enforces deterministic filesystem, Git,
+quality, and publication boundaries.
 
 > "If a curation step cannot be explained as inference‑driven judgment, the step is too early."
 > — `docs/design/operating-contract.md`
@@ -65,6 +70,12 @@ even when the retrieval model changes:
   add authenticated identity, workspace-scoped credentials, and permission
   trimming before it can safely ground enterprise users across multiple
   repositories.
+- **Read-only agent retrieval is next, not shipped.** The CLI has local
+  `search` and `query` commands, but v1.0.1 does not include an MCP server or a
+  stable search/fetch contract for external clients.
+- **Adapters, evaluation, and page-level ACLs are roadmap work.** The adoption
+  roadmap sequences source adapters, cited retrieval evaluation, provenance
+  fields, and permission-preserving retrieval before enterprise connector claims.
 
 ## The lifecycle
 
@@ -183,7 +194,7 @@ What reviewers actually see when they open a page Curio synced to their space:
 - **Branch landing pages** with status badges on every child link (proposal kind, route confidence, overlap warning, "+new node" tag)
 - **Pinned reviewer comment** — react 👍 to approve, 👎 to reject, ❓ to request a rewrite; equivalent labels work too; `curio feedback` applies the signals
 
-## Multi‑tenant from day one
+## Multi‑workspace from day one
 
 ```
    curio harness                 ┌─────────────┐
@@ -237,12 +248,14 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 
 ## Tests and quality
 
-- **84 tests pass** — lib unit tests, demo workspace, multi‑KB isolation, multi‑tenant safety, publish re‑gate, page‑body rewrite, multi‑source synthesis, routing evaluation, doctest.
+- **84 tests pass** — lib unit tests, demo workspace, multi-KB isolation,
+  multi-workspace safety, publish re-gate, page-body rewrite, multi-source
+  synthesis, routing evaluation, doctest.
 - Every command supports `--json` with a stable envelope `{command, ok, data}` or, on errors, `{command, ok: false, error: {code, message, hint}}`.
 - `curio doctor` validates eight per‑KB infrastructure invariants (config / NORTHSTAR / git / Confluence URL / email / token / space key / auth probe).
 - `--dry-run` on every write command is a true read‑only preview — `sync --dry-run` never constructs a Confluence client.
 - Atomic registry writes prevent corruption across concurrent service restarts.
-- Multi‑tenant integration tests verify zero cross‑KB filesystem or env‑var leak.
+- Multi-workspace integration tests verify zero cross-KB filesystem or env-var leak.
 
 ## Documentation
 
@@ -252,7 +265,7 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Engineers | Layer boundaries (curio‑rs ↔ harness) and design rules |
 | [`docs/runbook.md`](docs/runbook.md) | Operators / colleagues | Day‑zero guide: intake → process → publish → sync, recovery, rollback |
 | [`docs/agent-setup.md`](docs/agent-setup.md) | Knowledge operators + agents | Copy-paste setup contract, approval boundaries, and readiness report |
-| [`docs/release-checklist.md`](docs/release-checklist.md) | Maintainers | Public milestone verification and launch claims |
+| [`docs/release-checklist.md`](docs/release-checklist.md) | Maintainers | Release verification and launch claims |
 | [`docs/show-hn-launch.md`](docs/show-hn-launch.md) | Launch owner | Show HN draft, maker comment, and launch boundaries |
 | [`docs/index.md`](docs/index.md) | Everyone | Navigation map for active docs, design notes, and archives |
 | [`docs/archive/launch/`](docs/archive/launch) | Everyone | Historical launch artifacts preserved for reference only |
@@ -261,6 +274,7 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 | [`docs/agent-cli-contract.md`](docs/agent-cli-contract.md) | Tool integrators | Machine‑readable JSON shapes for every command |
 | [`docs/design/2026-05-10-production-handoff-plan.md`](docs/design/2026-05-10-production-handoff-plan.md) | Implementers | The Tier 1 handoff plan, completed |
 | [`docs/design/2026-05-10-tier2-plan.md`](docs/design/2026-05-10-tier2-plan.md) | Implementers | Tier 2 editorial completion plan, in flight |
+| [`docs/design/2026-07-16-adoption-roadmap.md`](docs/design/2026-07-16-adoption-roadmap.md) | Maintainers / contributors | Active proposal for MCP retrieval, evaluation, adapters, ACLs, and enterprise hardening |
 | [`CHANGELOG.md`](CHANGELOG.md) | Everyone | Most recent shipped changes |
 
 ## Repo layout
@@ -294,7 +308,7 @@ curio-agent/
 | **Tier 1** — multi‑tenant hardening, doctor, runbook, colleague onboarding | ✅ Shipped |
 | **Editorial milestone** — page‑body rewriting, Review‑tree polish, multi‑source consolidation, cached overlap | ✅ Shipped |
 | **Editorial backlog** — split proposals, continuous sharpening, tuning‑corpus learning | 🟨 Next |
-| **Enterprise service hardening** — authenticated Cloud Run, workspace secrets/RBAC, durable concurrent state, tamper-evident audit, observability | 🗓 Deferred |
+| **Enterprise service hardening** — verified hosted identity/configuration, workspace secrets/RBAC, durable concurrent state, tamper-evident audit, observability | 🗓 Deferred |
 
 See [`docs/release-checklist.md`](docs/release-checklist.md) for the public
 milestone gate and [`docs/design/2026-04-26-enterprise-readiness-roadmap.md`](docs/design/2026-04-26-enterprise-readiness-roadmap.md)
@@ -305,9 +319,9 @@ for the deferred production-service track.
 - The public demo is local and synthetic; it does not provide a hosted sandbox.
 - Real Confluence synchronization requires operator-supplied credentials and a
   configured KB.
-- The Cloud Run control plane should be treated as experimental until inbound
-  authentication, workspace-scoped secret resolution, multi-instance state
-  safety, audit integrity, and observability are implemented and verified.
+- The Cloud Run control plane should be treated as experimental until its
+  deployment identity, workspace-scoped secret resolution, multi-instance state
+  safety, audit integrity, and observability are configured and verified.
 - Curio provides an editorial pipeline and review surface; it is not a general
   enterprise search replacement or an automatic publisher.
 
@@ -332,5 +346,5 @@ Scaffolds `~/kb/alice/` with a wiki tree, NORTHSTAR.md template, `.curio.yaml` p
 ---
 
 <div align="center">
-<sub>Curio · Curated Intelligence Operator · Git‑native, multi‑provider, multi‑tenant</sub>
+<sub>Curio · Curated Intelligence Operator · Git‑native, multi‑provider, multi‑workspace</sub>
 </div>

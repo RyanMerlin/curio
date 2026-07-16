@@ -1,8 +1,9 @@
 # Curio Docs Index
 
 Start here if you are new to the repo or need to find the right document quickly.
-Historical launch and release notes are kept under `docs/archive/` for reference only; they
-are not part of the active operator workflow.
+Historical launch material is kept under `docs/archive/` for reference only; it
+is not part of the active operator workflow. The root `CHANGELOG.md` remains the
+active release-note record.
 
 ## Core entry points
 
@@ -12,8 +13,9 @@ are not part of the active operator workflow.
 - [Provider Matrix](provider-matrix.md) - how Claude, Codex, and Gemini fit the harness
 - [Agent CLI Contract](agent-cli-contract.md) - machine-readable command output shapes
 - [Agent-Led Setup](agent-setup.md) - copy-paste setup contract for knowledge operators
-- [Release Checklist](release-checklist.md) - first public milestone acceptance checks
+- [Release Checklist](release-checklist.md) - release verification and launch claims
 - [Show HN Draft](show-hn-launch.md) - honest launch title, post, maker comment, and checklist
+- [Changelog](../CHANGELOG.md) - shipped release notes and current limitations
 
 ## Design docs
 
@@ -22,6 +24,7 @@ are not part of the active operator workflow.
 - [Source Corpus Tuning](design/source-corpus-tuning.md) - feedback loop and tuning ideas
 - [Production Handoff Plan](design/2026-05-10-production-handoff-plan.md) - completed Tier 1 hardening
 - [Tier 2 Plan](design/2026-05-10-tier2-plan.md) - remaining editorial enhancements
+- [Adoption Roadmap](design/2026-07-16-adoption-roadmap.md) - active proposal for agent retrieval and enterprise trust
 
 ## Historical material
 
