@@ -8,6 +8,10 @@ active release-note record.
 ## Core entry points
 
 - [README](../README.md) - public project overview, architecture, and quickstart
+- [Contributing](../CONTRIBUTING.md) - contribution workflow, tests, and editorial guardrails
+- [Support](../SUPPORT.md) - where to ask questions and what to include
+- [Security](../SECURITY.md) - private vulnerability reporting process and operator hardening notes
+- [Governance](../GOVERNANCE.md) - maintainer model and change-decision rules
 - [Runbook](runbook.md) - operator workflow for intake, process, publish, and sync
 - [Where Things Live](where-things-live.md) - repo map and ownership boundaries
 - [Provider Matrix](provider-matrix.md) - how Claude, Codex, and Gemini fit the harness

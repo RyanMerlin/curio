@@ -56,6 +56,23 @@ pub struct RetrieveResponse {
     pub results: Vec<RetrieveResult>,
 }
 
+/// Canonical published page fetch by stable retrieve id.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct FetchResponse {
+    pub id: String,
+    pub title: String,
+    /// Unix-style path relative to wiki/published/.
+    pub path: String,
+    pub category: String,
+    /// Canonical Markdown body without YAML frontmatter.
+    pub body: String,
+    pub source_uri: Option<String>,
+    pub content_hash: String,
+    pub updated_at: String,
+    pub authority: &'static str,
+    pub last_commit: Option<LastCommit>,
+}
+
 #[derive(Debug, Clone)]
 struct ScoredResult {
     result: RetrieveResult,
@@ -67,22 +84,7 @@ pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<
     let terms = normalized_query_terms(&request.query)?;
     let category_filter = normalize_category(request.category.as_deref());
     let published_dir = wiki_dir.join("published");
-
-    let mut paths = Vec::new();
-    if published_dir.exists() {
-        for entry in WalkDir::new(&published_dir).follow_links(false) {
-            let entry = entry.with_context(|| {
-                format!(
-                    "Failed to walk published pages under {}",
-                    published_dir.display()
-                )
-            })?;
-            if entry.file_type().is_file() && is_canonical_page(entry.path()) {
-                paths.push(entry.into_path());
-            }
-        }
-    }
-    paths.sort_by_key(|path| published_relative_path(&published_dir, path));
+    let paths = canonical_published_paths(&published_dir)?;
 
     let git_root = find_git_root(wiki_dir);
     let mut scored = Vec::new();
@@ -121,10 +123,7 @@ pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<
 
         let score = title_hits * 100 + keyword_hits * 60 + summary_hits * 30 + body_hits * 10;
         let excerpt = query_excerpt(&page.body, summary, &terms);
-        let id = format!(
-            "local:{}",
-            wiki_fs::generate_id(&format!("published/{relative_path}"))
-        );
+        let id = local_retrieval_id(&relative_path);
         let source_uri = page
             .frontmatter
             .source
@@ -179,6 +178,108 @@ pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<
         count: results.len(),
         results,
     })
+}
+
+/// Fetch a canonical published page by the stable local id emitted by retrieve.
+pub fn fetch_published(wiki_dir: &Path, id: &str) -> Result<FetchResponse> {
+    validate_fetch_id(id)?;
+    let published_dir = wiki_dir.join("published");
+    let git_root = find_git_root(wiki_dir);
+
+    for path in canonical_published_paths(&published_dir)? {
+        let relative_path = published_relative_path(&published_dir, &path);
+        let candidate_id = local_retrieval_id(&relative_path);
+        if candidate_id != id {
+            continue;
+        }
+
+        let page = parse_wiki_page(&path)
+            .with_context(|| format!("Failed to parse published page {}", path.display()))?;
+        let content_hash = if page.frontmatter.content_hash.trim().is_empty() {
+            wiki_fs::content_hash(&page.body)
+        } else {
+            page.frontmatter.content_hash.clone()
+        };
+        let source_uri = page
+            .frontmatter
+            .source
+            .origin_url
+            .clone()
+            .filter(|uri| !uri.trim().is_empty());
+        let last_commit = git_root
+            .as_deref()
+            .and_then(|root| git_last_commit(root, &path).ok().flatten());
+
+        return Ok(FetchResponse {
+            id: candidate_id,
+            title: page.frontmatter.title,
+            path: relative_path.clone(),
+            category: page_category(&page.frontmatter.category, &relative_path),
+            body: page.body,
+            source_uri,
+            content_hash,
+            updated_at: page.frontmatter.updated_at,
+            authority: "published",
+            last_commit,
+        });
+    }
+
+    Err(CliValidationError::new(
+        "fetch_not_found",
+        format!("No canonical published page exists for retrieval id {id}."),
+        "Run curio retrieve --query <text> --json to discover valid ids, then retry with --id.",
+    )
+    .into())
+}
+
+fn canonical_published_paths(published_dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut paths = Vec::new();
+    if published_dir.exists() {
+        for entry in WalkDir::new(published_dir).follow_links(false) {
+            let entry = entry.with_context(|| {
+                format!(
+                    "Failed to walk published pages under {}",
+                    published_dir.display()
+                )
+            })?;
+            if entry.file_type().is_file() && is_canonical_page(entry.path()) {
+                paths.push(entry.into_path());
+            }
+        }
+    }
+    paths.sort_by_key(|path| published_relative_path(published_dir, path));
+    Ok(paths)
+}
+
+fn local_retrieval_id(relative_path: &str) -> String {
+    format!(
+        "local:{}",
+        wiki_fs::generate_id(&format!("published/{relative_path}"))
+    )
+}
+
+fn validate_fetch_id(id: &str) -> Result<()> {
+    let Some(raw) = id.strip_prefix("local:") else {
+        return Err(CliValidationError::new(
+            "invalid_fetch_id",
+            "Fetch id must start with local: and match a retrieve result exactly.",
+            "Use the id field returned by curio retrieve --json, for example --id local:0123456789abcdef.",
+        )
+        .into());
+    };
+    if raw.len() != 16
+        || !raw
+            .chars()
+            .all(|ch| ch.is_ascii_hexdigit() && !ch.is_ascii_uppercase())
+    {
+        return Err(CliValidationError::new(
+            "invalid_fetch_id",
+            "Fetch id must match local:<16 lowercase hex characters>; path-like or uppercase ids are rejected.",
+            "Use the id field returned by curio retrieve --json, for example --id local:0123456789abcdef.",
+        )
+        .into());
+    }
+    Ok(())
 }
 
 fn normalized_query_terms(query: &str) -> Result<Vec<String>> {
@@ -422,5 +523,21 @@ mod tests {
     fn category_filter_includes_descendants() {
         assert!(category_matches("product-tree/server", "product-tree"));
         assert!(!category_matches("topic-tree/server", "product-tree"));
+    }
+
+    #[test]
+    fn fetch_id_validation_rejects_non_local_or_path_like_values() {
+        for id in [
+            "alpha.md",
+            "local:../../etc/passwd",
+            "local:ABCDEF0123456789",
+            "local:abc123",
+        ] {
+            let error = validate_fetch_id(id).expect_err("id should fail");
+            assert_eq!(
+                error.downcast_ref::<CliValidationError>().unwrap().code,
+                "invalid_fetch_id"
+            );
+        }
     }
 }

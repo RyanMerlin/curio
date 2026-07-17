@@ -253,6 +253,13 @@ pub enum Commands {
         limit: u32,
     },
 
+    /// Fetch a canonical published Markdown page by the stable id returned from retrieve.
+    Fetch {
+        /// Stable local retrieval id (for example local:0123456789abcdef).
+        #[arg(long)]
+        id: String,
+    },
+
     /// Prepare or store proposal-only knowledge-sharpening reviews.
     Sharpen {
         /// Emit an agent-facing sharpening manifest.

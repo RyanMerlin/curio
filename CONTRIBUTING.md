@@ -81,6 +81,13 @@ See [`SECURITY.md`](SECURITY.md) for security issues — those need a private ch
 For everything else, use the [issue templates](.github/ISSUE_TEMPLATE/):
 - **Bug report** — include reproduction steps, expected vs. actual, and the `--json` output when relevant.
 - **Feature request** — explain the editorial-pipeline gap or operator-UX gap the feature would close.
+- **Connector request** — propose a provider, MCP, sync target, or other integration surface.
+- **Roadmap / governance request** — raise project-level prioritization or repository-process changes.
+
+## Support and governance
+
+- [`SUPPORT.md`](SUPPORT.md) explains where to ask usage questions and what information helps triage.
+- [`GOVERNANCE.md`](GOVERNANCE.md) documents the current maintainer model and how contract-affecting changes are decided.
 
 ## Conduct
 

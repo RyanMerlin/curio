@@ -6,14 +6,21 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "08:00"
+      timezone: "America/Denver"
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "rust"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
       patch-updates:
         update-types:
           - "patch"
+      minor-updates:
+        update-types:
+          - "minor"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -21,7 +28,11 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "08:00"
+      timezone: "America/Denver"
     open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "github-actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

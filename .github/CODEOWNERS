@@ -1,0 +1,18 @@
+* @RyanMerlin
+
+# Core repository policy and release automation
+/.github/ @RyanMerlin
+/CONTRIBUTING.md @RyanMerlin
+/GOVERNANCE.md @RyanMerlin
+/SECURITY.md @RyanMerlin
+/SUPPORT.md @RyanMerlin
+
+# Rust implementation and deployment surfaces
+/curio-rs/ @RyanMerlin
+/deploy/ @RyanMerlin
+
+# Harness, provider, and documentation surfaces
+/docs/ @RyanMerlin
+/providers/ @RyanMerlin
+/skills/ @RyanMerlin
+/plugins/ @RyanMerlin

@@ -4,7 +4,7 @@
 
 If you believe you have found a security vulnerability in Curio, **please do not open a public GitHub issue.** Instead, report it privately so we can fix it before it's disclosed.
 
-**Private channel:** open a GitHub Security Advisory at <https://github.com/<your-org>/curio/security/advisories/new>, or email the maintainers directly via the address listed on the repo's GitHub profile.
+**Private channel:** open a GitHub Security Advisory at <https://github.com/RyanMerlin/curio/security/advisories/new>, or email the maintainers directly via the address listed on the repo's GitHub profile.
 
 Please include:
 
