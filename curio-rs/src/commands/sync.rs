@@ -1459,9 +1459,11 @@ async fn upsert_static_page(
         {
             let current_parent_id = current_page["parentId"].as_str();
             if current_parent_id != Some(target_parent_id) {
-                let _ = client
-                    .migrate_page_to_parent(&page_id, target_parent_id)
-                    .await;
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside target parent {}",
+                    page_id,
+                    target_parent_id
+                );
             }
         }
         if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await
@@ -2213,9 +2215,11 @@ async fn sync_page_html(
             {
                 let current_parent_id = current_page["parentId"].as_str();
                 if current_parent_id != Some(target_parent_id) {
-                    let _ = client
-                        .migrate_page_to_parent(&conflicting_id, target_parent_id)
-                        .await;
+                    anyhow::bail!(
+                        "Refusing to update same-title Confluence page {} outside target parent {}",
+                        conflicting_id,
+                        target_parent_id
+                    );
                 }
             }
             client
@@ -2245,9 +2249,11 @@ async fn sync_page_html(
         {
             let current_parent_id = current_page["parentId"].as_str();
             if current_parent_id != Some(target_parent_id) {
-                let _ = client
-                    .migrate_page_to_parent(&page_id, target_parent_id)
-                    .await;
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside target parent {}",
+                    page_id,
+                    target_parent_id
+                );
             }
         }
         client
@@ -2289,9 +2295,11 @@ async fn sync_page_html(
                 {
                     let current_parent_id = current_page["parentId"].as_str();
                     if current_parent_id != Some(target_parent_id) {
-                        let _ = client
-                            .migrate_page_to_parent(&conflicting_id, target_parent_id)
-                            .await;
+                        anyhow::bail!(
+                            "Refusing to update same-title Confluence page {} outside target parent {}",
+                            conflicting_id,
+                            target_parent_id
+                        );
                     }
                 }
                 client
@@ -2654,9 +2662,11 @@ async fn upsert_page(
         {
             let current_parent_id = current_page["parentId"].as_str();
             if current_parent_id != Some(target_parent_id) {
-                let _ = client
-                    .migrate_page_to_parent(&page_id, target_parent_id)
-                    .await;
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside target parent {}",
+                    page_id,
+                    target_parent_id
+                );
             }
         }
         client

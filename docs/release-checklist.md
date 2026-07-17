@@ -15,6 +15,7 @@ This checklist is for release verification and launch claims. It is intentionall
 - [ ] Confirm `sync --all` cannot delete an unowned page and reports cleanup failures.
 - [ ] Confirm timeout, bounded retry, same-origin continuation, and conflict tests pass.
 - [ ] Before a release changing Confluence behavior, run `CURIO_LIVE_CONFLUENCE=1 ./scripts/confluence-live-smoke.sh` against the dedicated sandbox and retain a redacted result.
+- [ ] Before a release changing cleanup or write-safety behavior, run `CURIO_LIVE_CONFLUENCE=1 CURIO_KB_DIR=<sandbox-kb> ./scripts/confluence-live-acceptance.sh` and retain its redacted scenario result.
 - [ ] Do not add Confluence credentials as a required public-PR or ordinary CI secret.
 
 ## Release Binaries

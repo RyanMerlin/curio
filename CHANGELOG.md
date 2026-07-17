@@ -6,6 +6,9 @@
   transient retries, rate-limit handling, sanitized diagnostics, strict `/wiki`
   URL validation, same-origin continuation validation, and bounded pagination
   for descendants, children, folders, and CQL results.
+- Added a longer-lived opt-in sandbox acceptance harness covering idempotence,
+  ownership-safe deletion, update propagation, manual-page preservation, and
+  outside-root title collisions.
 - Made `curio sync --all` ownership-safe: only pages carrying the Curio-owned
   `curio-sync` property can be deleted; unowned or malformed pages are
   preserved, and cleanup failures are surfaced in structured output.

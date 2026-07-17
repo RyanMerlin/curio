@@ -204,6 +204,19 @@ CURIO_KB_DIR=/absolute/path/to/sandbox-kb \
 ./scripts/confluence-live-smoke.sh
 ```
 
+For the full destructive acceptance sequence (idempotence, manual-page
+preservation, owned-page deletion, update propagation, and outside-root title
+collision safety), run:
+
+```sh
+CURIO_LIVE_CONFLUENCE=1 CURIO_KB_DIR=/absolute/path/to/sandbox-kb \
+./scripts/confluence-live-acceptance.sh
+```
+
+This harness uses a temporary copy of the local fixture and removes only the
+test-created Confluence pages on exit. Because it performs several full syncs,
+run it as an operator job with a sufficiently long process lifetime.
+
 The script fails closed unless the dedicated `CURIO` space, HTTPS site, and
 explicit managed root are configured. API tokens are read from environment
 variables and are never echoed or written to a report. Confluence permissions
