@@ -15,6 +15,7 @@ pub mod process_intake;
 pub mod query;
 pub mod reindex;
 pub mod reject;
+pub mod retrieve;
 pub mod review;
 pub mod search;
 pub mod sharpen;

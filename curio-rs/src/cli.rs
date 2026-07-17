@@ -238,6 +238,21 @@ pub enum Commands {
         limit: u32,
     },
 
+    /// Retrieve ranked excerpts from canonical published Markdown pages.
+    Retrieve {
+        /// Terms to match lexically against published pages.
+        #[arg(long)]
+        query: String,
+
+        /// Category path or subtree to include (e.g. "product-tree").
+        #[arg(long)]
+        category: Option<String>,
+
+        /// Maximum results.
+        #[arg(long, default_value = "5")]
+        limit: u32,
+    },
+
     /// Prepare or store proposal-only knowledge-sharpening reviews.
     Sharpen {
         /// Emit an agent-facing sharpening manifest.
