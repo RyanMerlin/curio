@@ -15,6 +15,7 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `curio agent print-env <provider> --json`
 - `curio search --json`
 - `curio retrieve --query <text> --json`
+- `curio fetch --id <local-id> --json`
 - `curio bootstrap --json`
 - `curio intake-create --json`
 - `curio process-intake --json`
@@ -79,6 +80,26 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - Stability boundary: result IDs remain stable when page content changes, but change
   when the page’s relative published path changes. Paths, frontmatter fields, scoring
   weights, result fields, and error codes above are the adoption-slice contract.
+- `fetch` is a read-only published-page lookup for the exact IDs emitted by
+  `retrieve`. Its request flags are:
+  - `--id <local-id>` (required)
+  - `--json` is the global machine-readable output flag.
+- `fetch --json` returns the stable envelope
+  `{ "command": "fetch", "ok": true, "data": ... }`. The `data` shape is:
+  `{ "id": string, "title": string, "path": string, "category": string,
+  "body": string, "source_uri": string|null, "content_hash": string,
+  "updated_at": string, "authority": "published", "last_commit": object|null }`.
+- `fetch` resolves only canonical files under `wiki/published/**/*.md`; it never
+  accepts a path as input, never walks intake/staged/review, and never returns
+  generated indexes or Markdown sidecars. IDs must match
+  `local:<16 lowercase hex characters>`. Path-like, uppercase, or otherwise malformed
+  IDs fail with `{ "command": "fetch", "ok": false, "error": { "code":
+  "invalid_fetch_id", "message": string, "hint": string } }`.
+- Unknown but well-formed ids fail with `{ "command": "fetch", "ok": false,
+  "error": { "code": "fetch_not_found", "message": string, "hint": string } }`.
+- `fetch` does not write pages, registry files, sidecars, audit logs, or query logs.
+  `--dry-run` is accepted as a global flag and has no effect. No network or LLM call
+  is made.
 - `bootstrap` data includes the configured space key, the README landing page ID, the Config branch page ID, and the ensured base pages.
 - `onboard` ensures `NORTHSTAR.md` exists, then offers a repair bootstrap for missing required structure pages.
 - `intake-create` data includes source item counts, handled items, duplicate skips, and unavailable skips.

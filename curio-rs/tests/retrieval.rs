@@ -1,4 +1,4 @@
-use curio::retrieval::{RetrieveRequest, retrieve_published};
+use curio::retrieval::{RetrieveRequest, fetch_published, retrieve_published};
 use serde_json::Value;
 use std::{
     path::{Path, PathBuf},
@@ -264,6 +264,57 @@ fn provenance_includes_source_hash_time_authority_and_git_commit() {
 }
 
 #[test]
+fn fetch_returns_canonical_body_for_retrieve_id() {
+    let (_temp, wiki) = fixture();
+    let retrieved = retrieve_published(&wiki, &request(None, 5)).unwrap();
+    let alpha_id = retrieved.results[0].id.clone();
+
+    let fetched = fetch_published(&wiki, &alpha_id).unwrap();
+    assert_eq!(fetched.id, alpha_id);
+    assert_eq!(fetched.path, "alpha.md");
+    assert_eq!(fetched.title, "Deployment Runbook");
+    assert_eq!(fetched.category, "product-tree");
+    assert_eq!(
+        fetched.body,
+        "Use the deployment runbook to roll out the service.\n"
+    );
+    assert_eq!(
+        fetched.source_uri.as_deref(),
+        Some("https://example.test/deployment")
+    );
+    assert_eq!(fetched.content_hash, "alpha-hash");
+    assert_eq!(fetched.authority, "published");
+    assert!(fetched.last_commit.is_some());
+}
+
+#[test]
+fn fetch_rejects_invalid_or_path_like_ids() {
+    let (_temp, wiki) = fixture();
+    for id in [
+        "alpha.md",
+        "local:../../etc/passwd",
+        "local:ABCDEF0123456789",
+    ] {
+        let error = fetch_published(&wiki, id).expect_err("invalid id must fail");
+        let validation = error
+            .downcast_ref::<curio::error::CliValidationError>()
+            .unwrap();
+        assert_eq!(validation.code, "invalid_fetch_id");
+    }
+}
+
+#[test]
+fn fetch_missing_id_returns_actionable_not_found() {
+    let (_temp, wiki) = fixture();
+    let error = fetch_published(&wiki, "local:0000000000000000").expect_err("missing id");
+    let validation = error
+        .downcast_ref::<curio::error::CliValidationError>()
+        .unwrap();
+    assert_eq!(validation.code, "fetch_not_found");
+    assert!(validation.hint.contains("retrieve"));
+}
+
+#[test]
 fn non_git_workspace_returns_null_commit() {
     let temp = tempfile::tempdir().unwrap();
     let wiki = scaffold(temp.path(), false);
@@ -324,4 +375,52 @@ fn cli_emits_actionable_json_validation_error() {
     assert_eq!(json["ok"], false);
     assert_eq!(json["error"]["code"], "invalid_query");
     assert!(json["error"]["hint"].as_str().unwrap().contains("--query"));
+}
+
+#[test]
+fn cli_fetch_json_returns_body_and_provenance() {
+    let (_temp, wiki) = fixture();
+    let retrieved = retrieve_published(&wiki, &request(None, 1)).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_curio"))
+        .args([
+            "--kb-dir",
+            wiki.parent().unwrap().to_str().unwrap(),
+            "--json",
+            "fetch",
+            "--id",
+            &retrieved.results[0].id,
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let json: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["command"], "fetch");
+    assert_eq!(json["ok"], true);
+    assert_eq!(json["data"]["path"], "alpha.md");
+    assert_eq!(
+        json["data"]["body"],
+        "Use the deployment runbook to roll out the service.\n"
+    );
+    assert_eq!(json["data"]["authority"], "published");
+}
+
+#[test]
+fn cli_fetch_json_rejects_path_traversal_like_ids() {
+    let (_temp, wiki) = fixture();
+    let output = Command::new(env!("CARGO_BIN_EXE_curio"))
+        .args([
+            "--kb-dir",
+            wiki.parent().unwrap().to_str().unwrap(),
+            "--json",
+            "fetch",
+            "--id",
+            "local:../../etc/passwd",
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let json: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["command"], "fetch");
+    assert_eq!(json["ok"], false);
+    assert_eq!(json["error"]["code"], "invalid_fetch_id");
 }

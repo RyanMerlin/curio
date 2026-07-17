@@ -37,7 +37,7 @@ jobs:
       # The --match-head-commit fence prevents a newer push from being auto-merged
       # against a head that has since advanced.
       - name: Enable auto-merge (patch/minor only)
-        if: ${{ steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor' }}
+        if: ${{ (steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor') && github.event.pull_request.base.ref == 'main' }}
         run: gh pr merge --auto --squash --match-head-commit "$HEAD_SHA" "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}

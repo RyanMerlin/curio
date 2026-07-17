@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability disclosure
+    url: https://github.com/RyanMerlin/curio/security/advisories/new
+    about: Report suspected vulnerabilities privately through GitHub Security Advisories.
+  - name: Support and usage questions
+    url: https://github.com/RyanMerlin/curio/blob/main/SUPPORT.md
+    about: Use the support guide before opening a new issue.

@@ -21,7 +21,7 @@ use curio::{
         query::run_query,
         reindex::run_reindex,
         reject::run_reject,
-        retrieve::run_retrieve,
+        retrieve::{run_fetch, run_retrieve},
         review::run_review,
         search::run_search,
         sharpen::run_sharpen,
@@ -87,6 +87,7 @@ fn command_name(cmd: &Option<Commands>) -> &'static str {
         Some(Commands::Publish { .. }) => "publish",
         Some(Commands::Search { .. }) => "search",
         Some(Commands::Retrieve { .. }) => "retrieve",
+        Some(Commands::Fetch { .. }) => "fetch",
         Some(Commands::Sharpen { .. }) => "sharpen",
         Some(Commands::Reindex) => "reindex",
         Some(Commands::Tree) => "tree",
@@ -380,6 +381,10 @@ async fn dispatch(cli: Cli) -> Result<()> {
         }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_retrieve(&config, cli.dry_run, cli.json, query, category, limit).await?;
+        }
+        Some(Commands::Fetch { id }) => {
+            let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+            run_fetch(&config, cli.dry_run, cli.json, id).await?;
         }
         None => {
             Cli::command().print_help()?;
