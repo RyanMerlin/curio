@@ -16,6 +16,7 @@ active release-note record.
 - [Release Checklist](release-checklist.md) - release verification and launch claims
 - [Show HN Draft](show-hn-launch.md) - honest launch title, post, maker comment, and checklist
 - [Changelog](../CHANGELOG.md) - shipped release notes and current limitations
+- [Public Baseline Status](status-2026-07-16.md) - dated release, GitHub, and roadmap handoff snapshot
 
 ## Design docs
 
