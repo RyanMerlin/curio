@@ -70,9 +70,9 @@ even when the retrieval model changes:
   add authenticated identity, workspace-scoped credentials, and permission
   trimming before it can safely ground enterprise users across multiple
   repositories.
-- **Read-only agent retrieval is next, not shipped.** The CLI has local
-  `search` and `query` commands, but v1.0.1 does not include an MCP server or a
-  stable search/fetch contract for external clients.
+- **Published-only retrieval is now deterministic.** The CLI exposes a stable
+  `retrieve --query ... --json` contract with cited excerpts and provenance.
+  An MCP server and the complementary `fetch` contract remain roadmap work.
 - **Adapters, evaluation, and page-level ACLs are roadmap work.** The adoption
   roadmap sequences source adapters, cited retrieval evaluation, provenance
   fields, and permission-preserving retrieval before enterprise connector claims.

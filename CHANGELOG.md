@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-Release notes for changes after `1.0.1` will be added here.
+- Added deterministic, read-only `curio retrieve` ranking over canonical
+  `wiki/published/` pages, with cited excerpts, stable local IDs, source and Git
+  provenance, machine-readable validation errors, and strict lane isolation.
 
 ## [1.0.1] — 2026-07-16 · public milestone readiness
 

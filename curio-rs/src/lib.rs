@@ -16,6 +16,7 @@ pub mod overlap;
 pub mod proposal;
 pub mod quality;
 pub mod reconcile;
+pub mod retrieval;
 pub mod service;
 pub mod wiki_fs;
 pub mod wiki_index;

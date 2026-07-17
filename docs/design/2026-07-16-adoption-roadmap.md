@@ -13,6 +13,11 @@ demo. It does not ship an MCP retrieval server, a retrieval evaluation harness,
 source adapters, page-level ACL filtering, or a production-ready hosted service.
 Those are roadmap items, not current capabilities.
 
+**Status update:** `curio retrieve --query ... --json` now provides the first
+deterministic, published-only lexical retrieval contract with cited excerpts and
+Git/source provenance. The MCP wrapper, `fetch`, evaluation corpus, adapters, and
+ACL filtering remain unshipped.
+
 This roadmap follows the first public release. It prioritizes work that can create
 an open-source adoption loop while preserving a credible path to enterprise
 pilots.
@@ -67,8 +72,8 @@ decision record, and continuously improving the governed hierarchy.
   cross-platform binary installation story.
 - The CLI accepts URLs, local files and folders, and Confluence content. There is
   no source-adapter contract for community-contributed connectors.
-- Published knowledge has no standard search/fetch API for agents. Consumers
-  must read Git or Confluence directly.
+- Published knowledge has a deterministic local retrieval command, but no MCP
+  server or complementary `fetch` contract for agent clients.
 - Provenance exists, but page-level source ACLs are not modeled or enforced.
 - Quality gates measure editorial fitness at publication time, but there is no
   repeatable retrieval evaluation set or usage-quality dashboard.
@@ -192,8 +197,8 @@ intuition.
 
 Deliverables:
 
-1. Add `curio retrieve --query ... --json` as the deterministic contract used by
-   MCP and tests.
+1. Extend the shipped `curio retrieve --query ... --json` contract with the
+   evaluation and trust metadata required by MCP clients.
 2. Check in a synthetic evaluation corpus containing queries, expected document
    IDs, irrelevant near-matches, stale pages, and conflicting authorities.
 3. Report recall@k, mean reciprocal rank, citation coverage, stale-result rate,
@@ -335,11 +340,11 @@ auditable in Git."
 
 The next bounded engineering slice after distribution is:
 
-1. Specify `curio retrieve --json` and MCP result schemas.
-2. Implement deterministic search over the synthetic `published/` corpus.
-3. Add `fetch` with stable IDs, source URIs, content hashes, and Git commit IDs.
-4. Wrap the shared retrieval library in a stdio MCP server.
-5. Add a demo command and retrieval evaluation fixtures to CI.
+1. Add `fetch` for the stable IDs emitted by the shipped `retrieve` command.
+2. Build retrieval evaluation fixtures and metrics around the deterministic
+   lexical baseline.
+3. Wrap the shared retrieval library in a stdio MCP server.
+4. Add an MCP demo command and the evaluation corpus to CI.
 
 This slice is valuable without enterprise credentials, does not weaken Curio's
 layer boundaries, and creates the shortest path from the public release to daily

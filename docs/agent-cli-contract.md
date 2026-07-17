@@ -14,6 +14,7 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `curio agent list-plugins --json`
 - `curio agent print-env <provider> --json`
 - `curio search --json`
+- `curio retrieve --query <text> --json`
 - `curio bootstrap --json`
 - `curio intake-create --json`
 - `curio process-intake --json`
@@ -36,6 +37,48 @@ Use `--json` when the caller needs machine-readable output from helper and disco
 - `list-plugins` data includes a `plugins` array.
 - `print-env` data includes `provider` and an `env` map.
 - `search` data includes the CQL query, a result count, and the raw Confluence result array.
+- `retrieve` is a read-only lexical retrieval command over canonical Markdown pages in
+  `wiki/published/`. Its request flags are:
+  - `--query <text>` (required)
+  - `--category <path>` (optional; includes the category and its descendants)
+  - `--limit <n>` (optional; defaults to `5`)
+  - `--json` is the global machine-readable output flag.
+- `retrieve --json` returns the stable envelope
+  `{ "command": "retrieve", "ok": true, "data": ... }`. The `data` shape is:
+  `{ "query": string, "category": string|null, "limit": number, "count": number,
+  "results": [...] }`.
+- Every retrieve result has this exact shape:
+  - `id`: `local:<16 lowercase hex characters>`, derived from
+    `sha256("published/" + path)`; this is local to the KB and is deliberately not a
+    workspace-global identity.
+  - `title`: published page frontmatter title.
+  - `path`: slash-separated path relative to `wiki/published/`.
+  - `category`: frontmatter category joined by `/`; if absent, the published parent
+    directory is used.
+  - `excerpt`: deterministic query-relevant Markdown excerpt, at most 280 characters.
+  - `score`: numeric lexical score. Query terms contribute 100 for title, 60 for
+    keywords, 30 for source summary, and 10 for body. Ranking first prioritizes the
+    strongest matching field (title, keyword, summary, body), then score descending,
+    then `path` ascending, so ties are stable.
+  - `source_uri`: source `origin_url`, or `null` when absent.
+  - `content_hash`: stored page frontmatter `content_hash`; a `sha256:<hex>` body
+    hash is used only when the stored value is blank.
+  - `updated_at`: published page frontmatter timestamp.
+  - `authority`: always `"published"`.
+  - `last_commit`: `{ "hash": string, "author": string, "committed_at": string,
+    "subject": string }`, or `null` when the KB is not a Git worktree or lookup
+    cannot be completed.
+- Retrieval walks only `wiki/published/**/*.md`, excludes every `index.md` and known
+  Markdown sidecars, and never reads intake, staged, review, registry, or generated
+  index content. Empty and stopword-only queries fail with
+  `{ "command": "retrieve", "ok": false, "error": { "code": "invalid_query",
+  "message": string, "hint": string } }`; they never return all documents.
+- Retrieval does not write pages, registry files, sidecars, audit logs, or query logs.
+  `--dry-run` is accepted as a global flag and has no effect. No network or LLM call
+  is made.
+- Stability boundary: result IDs remain stable when page content changes, but change
+  when the page’s relative published path changes. Paths, frontmatter fields, scoring
+  weights, result fields, and error codes above are the adoption-slice contract.
 - `bootstrap` data includes the configured space key, the README landing page ID, the Config branch page ID, and the ensured base pages.
 - `onboard` ensures `NORTHSTAR.md` exists, then offers a repair bootstrap for missing required structure pages.
 - `intake-create` data includes source item counts, handled items, duplicate skips, and unavailable skips.
