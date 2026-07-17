@@ -2,12 +2,16 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -18,15 +22,15 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary: curio
-            artifact_name: curio-linux-x86_64
+            archive_name: curio-x86_64-unknown-linux-gnu.tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary: curio.exe
-            artifact_name: curio-windows-x86_64.exe
+            archive_name: curio-x86_64-pc-windows-msvc.zip
           - os: macos-latest
             target: aarch64-apple-darwin
             binary: curio
-            artifact_name: curio-macos-aarch64
+            archive_name: curio-aarch64-apple-darwin.tar.gz
 
     runs-on: ${{ matrix.os }}
 
@@ -35,33 +39,100 @@ jobs:
         working-directory: curio-rs
 
     steps:
-    - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-    - name: Add target
-      run: rustup target add ${{ matrix.target }}
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
 
-    - name: Build (debug + tests)
-      run: cargo build --verbose
+      - name: Build (debug + tests)
+        run: cargo build --verbose
 
-    - name: Install nextest
-      uses: taiki-e/install-action@v2
-      with:
-        tool: nextest
+      - name: Install nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
 
-    - name: Configure git identity for tests
-      run: |
-        git config --global user.email "ci@curio.local"
-        git config --global user.name "Curio CI"
+      - name: Configure git identity for tests
+        run: |
+          git config --global user.email "ci@curio.local"
+          git config --global user.name "Curio CI"
 
-    - name: Run tests
-      run: cargo nextest run --all-targets --verbose
+      - name: Run tests
+        run: cargo nextest run --all-targets --verbose
 
-    - name: Build release
-      run: cargo build --release --target ${{ matrix.target }} --verbose
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }} --verbose
 
-    - name: Upload release binary
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.artifact_name }}
-        path: curio-rs/target/${{ matrix.target }}/release/${{ matrix.binary }}
-        if-no-files-found: error
+      - name: Package release binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          cp "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/${{ matrix.binary }}"
+          tar -czf "${{ matrix.archive_name }}" -C dist "${{ matrix.binary }}"
+
+      - name: Package release binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path dist) { Remove-Item dist -Recurse -Force }
+          New-Item -ItemType Directory -Path dist | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/${{ matrix.binary }}"
+          Compress-Archive -Path "dist/${{ matrix.binary }}" -DestinationPath "${{ matrix.archive_name }}" -Force
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive_name }}
+          path: curio-rs/${{ matrix.archive_name }}
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: curio-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release create "$TAG" \
+            --repo "$REPOSITORY" \
+            --verify-tag \
+            --generate-notes \
+            --title "$TAG"; then
+            exit 0
+          fi
+
+          gh release edit "$TAG" \
+            --repo "$REPOSITORY" \
+            --verify-tag \
+            --title "$TAG"
+
+      - name: Generate checksums and upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cd dist
+          sha256sum curio-* > SHA256SUMS
+          gh release upload "$TAG" curio-* SHA256SUMS \
+            --repo "$REPOSITORY" \
+            --clobber

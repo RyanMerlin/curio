@@ -2,6 +2,10 @@
 
 This is the day-zero guide for someone who has been handed a Curio KB and needs to start curating. It does **not** assume you've read `ARCHITECTURE.md` or `process.md`.
 
+If you are evaluating Curio before connecting a real KB, start with
+`./scripts/show-hn-demo.sh`. It uses synthetic content in a temporary copy and
+does not contact Confluence.
+
 ## What you have
 
 - A **KB directory** on the host (e.g. `~/kb/<your-name>/`) — your own copy of the knowledge base. Git is the source of truth here.
@@ -10,6 +14,11 @@ This is the day-zero guide for someone who has been handed a Curio KB and needs 
 - Two ways to drive Curio:
   - **Service** (recommended for shared use): `curio-service` running in Docker, you talk to it over HTTP.
   - **CLI** (recommended for local debug): `curio` binary running directly against your KB directory.
+
+The Cloud Run files under `deploy/cloud-run/` are an experimental deployment
+path. Do not expose the service to an enterprise network until the inbound
+authentication, workspace credential, concurrent state, audit, and
+observability gates in the enterprise readiness roadmap are complete.
 
 ## Step 0 — Verify your install
 
