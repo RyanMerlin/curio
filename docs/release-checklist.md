@@ -9,6 +9,14 @@ This checklist is for release verification and launch claims. It is intentionall
 - [ ] `cargo nextest run --all-targets --manifest-path curio-rs/Cargo.toml`
 - [ ] Review the working tree before tagging. Do not cut a release with unexplained local changes.
 
+## Confluence Integration
+
+- [ ] Run the credential-free Confluence contract tests in ordinary CI.
+- [ ] Confirm `sync --all` cannot delete an unowned page and reports cleanup failures.
+- [ ] Confirm timeout, bounded retry, same-origin continuation, and conflict tests pass.
+- [ ] Before a release changing Confluence behavior, run `CURIO_LIVE_CONFLUENCE=1 ./scripts/confluence-live-smoke.sh` against the dedicated sandbox and retain a redacted result.
+- [ ] Do not add Confluence credentials as a required public-PR or ordinary CI secret.
+
 ## Release Binaries
 
 - [ ] Build the release CLI: `cargo build --release --manifest-path curio-rs/Cargo.toml --bin curio`

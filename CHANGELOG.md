@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+- Hardened the Confluence Cloud mirror with effective HTTP timeouts, bounded
+  transient retries, rate-limit handling, sanitized diagnostics, strict `/wiki`
+  URL validation, same-origin continuation validation, and bounded pagination
+  for descendants, children, folders, and CQL results.
+- Made `curio sync --all` ownership-safe: only pages carrying the Curio-owned
+  `curio-sync` property can be deleted; unowned or malformed pages are
+  preserved, and cleanup failures are surfaced in structured output.
+- Added credential-free Confluence contract tests, an API compatibility matrix,
+  and the opt-in `scripts/confluence-live-smoke.sh` sandbox harness.
 - Added deterministic, read-only `curio retrieve` ranking over canonical
   `wiki/published/` pages, with cited excerpts, stable local IDs, source and Git
   provenance, machine-readable validation errors, and strict lane isolation.

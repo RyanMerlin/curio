@@ -183,6 +183,34 @@ One-way Git → Confluence. Confluence is your audience's read-only front door; 
 
 Incremental by default (only changed pages). Use `--all` for a full refresh including pruning of stale pages.
 
+### Confluence safety and sandbox smoke testing
+
+Full refresh deletes only pages below the managed Published, Staged, or Review
+roots that carry the `curio-sync` property with `synced_by: curio`. Manually
+created or malformed/unowned pages are preserved. If descendant enumeration or
+ownership lookup fails, cleanup is skipped and the JSON report records the
+failure; it is never treated as an empty candidate set.
+
+Normal CI never needs Confluence credentials. The opt-in operator smoke test is:
+
+```sh
+CURIO_LIVE_CONFLUENCE=1 \
+CURIO_CONFLUENCE_URL=https://example.atlassian.net/wiki \
+CURIO_CONFLUENCE_EMAIL=bot@example.com \
+CURIO_CONFLUENCE_TOKEN="$CURIO_CONFLUENCE_TOKEN" \
+CURIO_CONFLUENCE_PARENT_PAGE_ID=<sandbox-CURIO-root-id> \
+CURIO_SPACE_KEY=CURIO \
+CURIO_KB_DIR=/absolute/path/to/sandbox-kb \
+./scripts/confluence-live-smoke.sh
+```
+
+The script fails closed unless the dedicated `CURIO` space, HTTPS site, and
+explicit managed root are configured. API tokens are read from environment
+variables and are never echoed or written to a report. Confluence permissions
+come from the syncing identity; Curio does not currently preserve source ACLs
+as retrieval metadata, so Confluence is not a permission-preserving retrieval
+source.
+
 ## Useful side commands
 
 | Command | What it does |
