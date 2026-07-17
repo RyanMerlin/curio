@@ -21,6 +21,7 @@ use curio::{
         query::run_query,
         reindex::run_reindex,
         reject::run_reject,
+        retrieve::run_retrieve,
         review::run_review,
         search::run_search,
         sharpen::run_sharpen,
@@ -43,6 +44,15 @@ async fn main() -> std::process::ExitCode {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(err) => {
             if json_mode {
+                if let Some(validation) = err.downcast_ref::<curio::error::CliValidationError>() {
+                    curio::output::emit_json_error(
+                        cmd_name,
+                        validation.code,
+                        &validation.message,
+                        Some(validation.hint),
+                    );
+                    return std::process::ExitCode::FAILURE;
+                }
                 // Machine-readable error envelope. Preserve the full anyhow
                 // chain via `{:#}` so context isn't lost.
                 curio::output::emit_json_error(
@@ -76,6 +86,7 @@ fn command_name(cmd: &Option<Commands>) -> &'static str {
         Some(Commands::Resolve { .. }) => "resolve",
         Some(Commands::Publish { .. }) => "publish",
         Some(Commands::Search { .. }) => "search",
+        Some(Commands::Retrieve { .. }) => "retrieve",
         Some(Commands::Sharpen { .. }) => "sharpen",
         Some(Commands::Reindex) => "reindex",
         Some(Commands::Tree) => "tree",
@@ -361,6 +372,14 @@ async fn dispatch(cli: Cli) -> Result<()> {
         Some(Commands::Query { question, save }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
             run_query(&config, cli.dry_run, cli.json, question, save).await?;
+        }
+        Some(Commands::Retrieve {
+            query,
+            category,
+            limit,
+        }) => {
+            let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
+            run_retrieve(&config, cli.dry_run, cli.json, query, category, limit).await?;
         }
         None => {
             Cli::command().print_help()?;

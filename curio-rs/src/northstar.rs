@@ -114,7 +114,7 @@ pub fn save_taxonomy(wiki_dir: &Path, taxonomy: &NorthstarTaxonomy) -> Result<()
 // ── Prose helpers (unchanged) ─────────────────────────────────────────────────
 
 pub fn default_northstar_markdown() -> String {
-    include_str!("../../docs/wiki-demo/NORTHSTAR.md").to_string()
+    include_str!("../templates/NORTHSTAR.md").to_string()
 }
 
 pub fn ensure_northstar_markdown(repo_root: &Path, dry_run: bool) -> Result<()> {

@@ -181,7 +181,7 @@ pub async fn run_doctor(
                 path: path_str.clone(),
                 detail: format!(
                     "freshness {:.2} (last updated: {})",
-                    freshness, &page.frontmatter.updated_at
+                    freshness, page.frontmatter.updated_at
                 ),
                 overlap_peer: None,
                 overlap_score: None,
