@@ -228,6 +228,7 @@ async fn collect_from_url(url: &str, title_hint: &Option<String>) -> Result<Vec<
             id: format!("url:{}", url),
             origin_url: Some(url.to_string()),
             summary: None,
+            acl: None,
         },
     }])
 }
@@ -423,6 +424,7 @@ async fn collect_from_confluence(
                 id: format!("confluence-page:{}", pid),
                 origin_url: Some(if is_root { url.to_string() } else { page_url }),
                 summary: None,
+                acl: None,
             },
         });
     }
@@ -449,6 +451,7 @@ fn collect_from_file(path: &Path, title_hint: &Option<String>) -> Result<Vec<Int
             id: format!("file:{}", path.display()),
             origin_url: None,
             summary: None,
+            acl: None,
         },
     }])
 }

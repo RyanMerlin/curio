@@ -62,8 +62,13 @@ jobs:
       - run: cargo nextest run --all-targets
         working-directory: curio-rs
       - name: Run retrieval evaluation baseline
-        run: cargo run --quiet --bin curio-retrieval-eval -- --corpus tests/fixtures/retrieval-eval/corpus.json --json
+        run: cargo run --quiet --bin curio-retrieval-eval -- --corpus tests/fixtures/retrieval-eval/corpus.json --json | tee retrieval-baseline.json
         working-directory: curio-rs
+      - name: Upload retrieval baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-baseline
+          path: curio-rs/retrieval-baseline.json
 
   build:
     name: cargo build --release
@@ -74,5 +79,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: curio-rs
-      - run: cargo build --release --bin curio --bin curio-service
+      - run: cargo build --release --bin curio --bin curio-service --bin curio-mcp
         working-directory: curio-rs

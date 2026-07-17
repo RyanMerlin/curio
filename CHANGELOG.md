@@ -11,6 +11,10 @@
   preserved, and cleanup failures are surfaced in structured output.
 - Added credential-free Confluence contract tests, an API compatibility matrix,
   and the opt-in `scripts/confluence-live-smoke.sh` sandbox harness.
+- Added deterministic published-page retrieval evaluation with checked-in
+  baseline metrics, fail-closed ACL snapshots, and cited provenance.
+- Added a local MCP stdio facade and a provider-neutral read-only source-adapter
+  boundary for future Confluence and other source integrations.
 - Added deterministic, read-only `curio retrieve` ranking over canonical
   `wiki/published/` pages, with cited excerpts, stable local IDs, source and Git
   provenance, machine-readable validation errors, and strict lane isolation.

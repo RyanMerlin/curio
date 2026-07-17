@@ -1,9 +1,10 @@
 use anyhow::Result;
 
 use crate::{
+    acl::AccessContext,
     config::Config,
     output::emit_json,
-    retrieval::{RetrieveRequest, fetch_published, retrieve_published},
+    retrieval::{RetrieveRequest, fetch_published},
 };
 
 /// Thin CLI adapter for deterministic published-page retrieval.
@@ -14,14 +15,17 @@ pub async fn run_retrieve(
     query: String,
     category: Option<String>,
     limit: u32,
+    principals: Vec<String>,
 ) -> Result<()> {
-    let response = retrieve_published(
+    let access = (!principals.is_empty()).then(|| AccessContext::new(principals));
+    let response = crate::retrieval::retrieve_published_with_access(
         &config.wiki.wiki_dir,
         &RetrieveRequest {
             query,
             category,
             limit: limit as usize,
         },
+        access.as_ref(),
     )?;
 
     if json {
@@ -48,8 +52,19 @@ pub async fn run_retrieve(
 }
 
 /// Thin CLI adapter for deterministic published-page fetch by stable retrieve id.
-pub async fn run_fetch(config: &Config, _dry_run: bool, json: bool, id: String) -> Result<()> {
-    let response = fetch_published(&config.wiki.wiki_dir, &id)?;
+pub async fn run_fetch(
+    config: &Config,
+    _dry_run: bool,
+    json: bool,
+    id: String,
+    principals: Vec<String>,
+) -> Result<()> {
+    let access = (!principals.is_empty()).then(|| AccessContext::new(principals));
+    let response = if let Some(access) = access.as_ref() {
+        crate::retrieval::fetch_published_with_access(&config.wiki.wiki_dir, &id, Some(access))?
+    } else {
+        fetch_published(&config.wiki.wiki_dir, &id)?
+    };
 
     if json {
         emit_json("fetch", true, response)?;

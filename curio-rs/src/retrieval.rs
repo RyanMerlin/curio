@@ -1,6 +1,11 @@
 //! Deterministic retrieval over canonical published Markdown pages.
 
-use crate::{error::CliValidationError, wiki_fs, wiki_fs::parse_wiki_page};
+use crate::{
+    acl::{self, AccessContext},
+    error::CliValidationError,
+    wiki_fs,
+    wiki_fs::parse_wiki_page,
+};
 use anyhow::{Context, Result};
 use serde::Serialize;
 use std::{
@@ -31,6 +36,7 @@ pub struct RetrieveResult {
     pub excerpt: String,
     pub score: u32,
     pub source_uri: Option<String>,
+    pub curio_uri: String,
     pub content_hash: String,
     pub updated_at: String,
     pub authority: &'static str,
@@ -67,6 +73,7 @@ pub struct FetchResponse {
     /// Canonical Markdown body without YAML frontmatter.
     pub body: String,
     pub source_uri: Option<String>,
+    pub curio_uri: String,
     pub content_hash: String,
     pub updated_at: String,
     pub authority: &'static str,
@@ -81,6 +88,16 @@ struct ScoredResult {
 
 /// Retrieve only canonical Markdown pages under wiki/published/.
 pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<RetrieveResponse> {
+    retrieve_published_with_access(wiki_dir, request, None)
+}
+
+/// Permission-aware retrieval. `None` retains legacy unrestricted behavior for
+/// pages without an ACL snapshot; pages with a snapshot fail closed.
+pub fn retrieve_published_with_access(
+    wiki_dir: &Path,
+    request: &RetrieveRequest,
+    access: Option<&AccessContext>,
+) -> Result<RetrieveResponse> {
     let terms = normalized_query_terms(&request.query)?;
     let category_filter = normalize_category(request.category.as_deref());
     let published_dir = wiki_dir.join("published");
@@ -93,6 +110,10 @@ pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<
             .with_context(|| format!("Failed to parse published page {}", path.display()))?;
         let relative_path = published_relative_path(&published_dir, &path);
         let category = page_category(&page.frontmatter.category, &relative_path);
+        let acl_snapshot = acl::load_snapshot(wiki_dir, &page.frontmatter.source.id)?;
+        if !acl::can_read(acl_snapshot.as_ref(), access) {
+            continue;
+        }
         if let Some(filter) = category_filter.as_deref()
             && !category_matches(&category, filter)
         {
@@ -143,11 +164,12 @@ pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<
             result: RetrieveResult {
                 id,
                 title: page.frontmatter.title,
-                path: relative_path,
+                path: relative_path.clone(),
                 category,
                 excerpt,
                 score,
                 source_uri,
+                curio_uri: curio_uri(wiki_dir, &relative_path),
                 content_hash,
                 updated_at: page.frontmatter.updated_at,
                 authority: "published",
@@ -182,6 +204,14 @@ pub fn retrieve_published(wiki_dir: &Path, request: &RetrieveRequest) -> Result<
 
 /// Fetch a canonical published page by the stable local id emitted by retrieve.
 pub fn fetch_published(wiki_dir: &Path, id: &str) -> Result<FetchResponse> {
+    fetch_published_with_access(wiki_dir, id, None)
+}
+
+pub fn fetch_published_with_access(
+    wiki_dir: &Path,
+    id: &str,
+    access: Option<&AccessContext>,
+) -> Result<FetchResponse> {
     validate_fetch_id(id)?;
     let published_dir = wiki_dir.join("published");
     let git_root = find_git_root(wiki_dir);
@@ -195,6 +225,15 @@ pub fn fetch_published(wiki_dir: &Path, id: &str) -> Result<FetchResponse> {
 
         let page = parse_wiki_page(&path)
             .with_context(|| format!("Failed to parse published page {}", path.display()))?;
+        let acl_snapshot = acl::load_snapshot(wiki_dir, &page.frontmatter.source.id)?;
+        if !acl::can_read(acl_snapshot.as_ref(), access) {
+            return Err(CliValidationError::new(
+                "fetch_not_found",
+                "No accessible canonical published page exists for this retrieval id.",
+                "Use an id returned by search for the current access context.",
+            )
+            .into());
+        }
         let content_hash = if page.frontmatter.content_hash.trim().is_empty() {
             wiki_fs::content_hash(&page.body)
         } else {
@@ -217,6 +256,7 @@ pub fn fetch_published(wiki_dir: &Path, id: &str) -> Result<FetchResponse> {
             category: page_category(&page.frontmatter.category, &relative_path),
             body: page.body,
             source_uri,
+            curio_uri: curio_uri(wiki_dir, &relative_path),
             content_hash,
             updated_at: page.frontmatter.updated_at,
             authority: "published",
@@ -230,6 +270,15 @@ pub fn fetch_published(wiki_dir: &Path, id: &str) -> Result<FetchResponse> {
         "Run curio retrieve --query <text> --json to discover valid ids, then retry with --id.",
     )
     .into())
+}
+
+fn curio_uri(wiki_dir: &Path, relative_path: &str) -> String {
+    let workspace = wiki_dir
+        .parent()
+        .and_then(|p| p.file_name())
+        .and_then(|n| n.to_str())
+        .unwrap_or("workspace");
+    format!("curio://{}/published/{}", workspace, relative_path)
 }
 
 fn canonical_published_paths(published_dir: &Path) -> Result<Vec<PathBuf>> {

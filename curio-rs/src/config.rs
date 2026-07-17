@@ -858,4 +858,22 @@ mod tests {
         let example_keys = read_keys(repo_root.join(".env.example"));
         assert_eq!(env_keys, example_keys);
     }
+
+    #[test]
+    fn test_env_placeholders_expand_without_exposing_unknown_values() {
+        let _guard = env_test_lock();
+        unsafe {
+            env::set_var("CURIO_TEST_CONFIG_VALUE", "expanded");
+        }
+        let expanded = expand_env_placeholders(
+            "url: ${CURIO_TEST_CONFIG_VALUE}\nsecret: ${CURIO_MISSING_CONFIG_VALUE}",
+        );
+        assert_eq!(
+            expanded,
+            "url: expanded\nsecret: ${CURIO_MISSING_CONFIG_VALUE}"
+        );
+        unsafe {
+            env::remove_var("CURIO_TEST_CONFIG_VALUE");
+        }
+    }
 }

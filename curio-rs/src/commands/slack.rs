@@ -84,6 +84,7 @@ pub async fn run_slack_process(config: &Config, payload_file: PathBuf, json: boo
         id: format!("slack:{}:{}", payload.channel_id, payload.message_ts),
         origin_url: payload.permalink.clone(),
         summary: payload.text.clone(),
+        acl: None,
     };
 
     let contract = SlackProcessOutput {

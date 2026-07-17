@@ -41,6 +41,8 @@ pub struct EvaluationMetrics {
     pub citation_coverage: f64,
     pub stale_result_rate: f64,
     pub acl_leak_count: usize,
+    pub duplicate_result_count: usize,
+    pub stable_ordering: bool,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -55,6 +57,7 @@ pub struct QueryEvaluation {
     pub citation_coverage: f64,
     pub stale_result_count: usize,
     pub acl_leak_count: usize,
+    pub duplicate_result_count: usize,
 }
 
 pub fn load_corpus(path: &Path) -> Result<EvaluationCorpus> {
@@ -83,11 +86,30 @@ pub fn evaluate(corpus: &EvaluationCorpus, wiki_dir: &Path) -> Result<Evaluation
                 limit,
             },
         )?;
+        let repeated = retrieve_published(
+            wiki_dir,
+            &RetrieveRequest {
+                query: query.query.clone(),
+                category: None,
+                limit,
+            },
+        )?;
+        let repeated_ids: Vec<String> = repeated
+            .results
+            .iter()
+            .map(|result| result.id.clone())
+            .collect();
         let retrieved_ids: Vec<String> = response
             .results
             .iter()
             .map(|result| result.id.clone())
             .collect();
+        if retrieved_ids != repeated_ids {
+            bail!(
+                "Retrieval ordering is unstable for evaluation query {}.",
+                query.id
+            );
+        }
         let expected_hits = query
             .expected_ids
             .iter()
@@ -129,6 +151,11 @@ pub fn evaluate(corpus: &EvaluationCorpus, wiki_dir: &Path) -> Result<Evaluation
             .iter()
             .filter(|result| query.unauthorized_ids.contains(&result.id))
             .count();
+        let duplicate_result_count = retrieved_ids.len()
+            - retrieved_ids
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len();
 
         query_reports.push(QueryEvaluation {
             id: query.id.clone(),
@@ -141,6 +168,7 @@ pub fn evaluate(corpus: &EvaluationCorpus, wiki_dir: &Path) -> Result<Evaluation
             citation_coverage,
             stale_result_count,
             acl_leak_count,
+            duplicate_result_count,
         });
     }
 
@@ -174,7 +202,18 @@ pub fn evaluate(corpus: &EvaluationCorpus, wiki_dir: &Path) -> Result<Evaluation
             .iter()
             .map(|report| report.acl_leak_count)
             .sum(),
+        duplicate_result_count: query_reports.iter().map(|r| r.duplicate_result_count).sum(),
+        stable_ordering: true,
     };
+    if metrics.citation_coverage != 1.0 {
+        bail!(
+            "Retrieval invariant failed: citation coverage must equal 1.0 (got {}).",
+            metrics.citation_coverage
+        );
+    }
+    if metrics.duplicate_result_count != 0 || !metrics.stable_ordering {
+        bail!("Retrieval invariant failed: result IDs must be unique and ordering stable.");
+    }
 
     Ok(EvaluationReport {
         version: corpus.version,
@@ -205,4 +244,54 @@ fn validate_corpus(corpus: &EvaluationCorpus) -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn valid_query() -> EvaluationQuery {
+        EvaluationQuery {
+            id: "q1".into(),
+            query: "deploy guide".into(),
+            expected_ids: vec!["local:0123456789abcdef".into()],
+            unauthorized_ids: Vec::new(),
+            limit: Some(5),
+        }
+    }
+
+    fn valid_corpus() -> EvaluationCorpus {
+        EvaluationCorpus {
+            version: 1,
+            as_of: "2026-07-17".into(),
+            stale_before: "2025-01-01".into(),
+            queries: vec![valid_query()],
+        }
+    }
+
+    #[test]
+    fn corpus_validation_rejects_invalid_metadata_and_queries() {
+        let mut corpus = valid_corpus();
+        corpus.version = 2;
+        assert!(validate_corpus(&corpus).is_err());
+
+        let mut corpus = valid_corpus();
+        corpus.queries[0].expected_ids.clear();
+        assert!(validate_corpus(&corpus).is_err());
+
+        let mut corpus = valid_corpus();
+        corpus.queries[0].limit = Some(0);
+        assert!(validate_corpus(&corpus).is_err());
+
+        let mut corpus = valid_corpus();
+        corpus.queries[0].query.clear();
+        assert!(validate_corpus(&corpus).is_err());
+    }
+
+    #[test]
+    fn empty_evaluation_is_rejected_before_division() {
+        let mut corpus = valid_corpus();
+        corpus.queries.clear();
+        assert!(evaluate(&corpus, std::path::Path::new("missing")).is_err());
+    }
 }

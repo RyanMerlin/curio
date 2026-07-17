@@ -439,6 +439,7 @@ fn materialize_overlap_reviews(config: &Config, findings: &[Finding]) -> Result<
                     id: format!("doctor:high_overlap:{}:{}", finding.slug, peer),
                     origin_url: None,
                     summary: Some(finding.detail.clone()),
+                    acl: None,
                 },
                 category: vec!["doctor".to_string(), "high-overlap".to_string()],
                 keywords: vec!["doctor".to_string(), "overlap".to_string()],

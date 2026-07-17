@@ -33,6 +33,13 @@ outdated page is detectable rather than silently treating every published page
 as fresh. ACL leak cases are represented in the corpus now and remain zero until
 the retrieval contract gains permission principals and filtering.
 
+The complete machine-readable report is checked in at
+`curio-rs/tests/fixtures/retrieval-eval/baseline.json`; CI also uploads the
+run as a `retrieval-baseline` artifact. The evaluator fails when citation
+coverage is below `1.0`, result IDs are duplicated, or repeated runs change
+ordering. The `curio_uri` field is additive provenance; existing `local:` IDs
+and JSON consumers remain unchanged.
+
 Any retrieval backend change should run this evaluator and include before/after
 metrics in its pull request description. A backend must not become the default
 based on demo impressions alone.

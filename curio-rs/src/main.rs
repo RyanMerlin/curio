@@ -378,13 +378,23 @@ async fn dispatch(cli: Cli) -> Result<()> {
             query,
             category,
             limit,
+            principal,
         }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
-            run_retrieve(&config, cli.dry_run, cli.json, query, category, limit).await?;
+            run_retrieve(
+                &config,
+                cli.dry_run,
+                cli.json,
+                query,
+                category,
+                limit,
+                principal,
+            )
+            .await?;
         }
-        Some(Commands::Fetch { id }) => {
+        Some(Commands::Fetch { id, principal }) => {
             let config = load_config(config_path_str, kb_dir_resolved.as_deref())?;
-            run_fetch(&config, cli.dry_run, cli.json, id).await?;
+            run_fetch(&config, cli.dry_run, cli.json, id, principal).await?;
         }
         None => {
             Cli::command().print_help()?;
