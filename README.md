@@ -81,7 +81,7 @@ even when the retrieval model changes:
 
 ```
   ┌──────────┐     ┌───────────┐     ┌──────────┐     ┌──────────┐     ┌─────────────┐
-  │  intake  │ ──▶ │  process  │ ──▶ │  staged  │ ──▶ │  publish │ ──▶ │ sync to     │
+  │  intake  │ ->  │  process  │ ->  │  staged  │ ->  │  publish │  -> │ sync to     │
   │ wiki/    │     │  (agent)  │     │  /review │     │          │     │ Confluence  │
   │  intake/ │     └───────────┘     └──────────┘     └──────────┘     └─────────────┘
   └──────────┘           │                  ▲
@@ -90,7 +90,7 @@ even when the retrieval model changes:
        │                 │ scores           │ reviewers in Confluence)
        │                 ▼                  │
        │           ┌──────────┐             │
-       └────────▶  │   heal   │ ────────────┘
+       └────────>  │   heal   │ ────────────┘
                    │ sharpen  │
                    └──────────┘
 ```
