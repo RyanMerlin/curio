@@ -56,6 +56,30 @@ async fn cross_origin_continuation_is_rejected() {
 }
 
 #[tokio::test]
+async fn sibling_base_path_continuation_is_rejected() {
+    async fn descendants(request: axum::extract::Request) -> Json<serde_json::Value> {
+        let host = request
+            .headers()
+            .get(axum::http::header::HOST)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        Json(json!({
+            "results": [],
+            "_links": {"next": format!("http://{host}/wiki-evil/api/v2/pages/root/descendants?cursor=x")}
+        }))
+    }
+    let base = start_router(Router::new().fallback(descendants)).await;
+    let client = ConfluenceClient::new(base, "test@example.com".into(), "secret".into(), None)
+        .expect("client");
+    let error = client
+        .get_page_descendants_v2("root")
+        .await
+        .expect_err("sibling base path must fail");
+    assert!(error.to_string().contains("cross-origin"));
+}
+
+#[tokio::test]
 async fn outside_root_title_collision_is_rejected_before_create() {
     async fn collision(request: axum::extract::Request) -> impl IntoResponse {
         let path = request.uri().path();

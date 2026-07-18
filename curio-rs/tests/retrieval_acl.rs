@@ -1,6 +1,9 @@
 use curio::{
     acl::{AccessContext, AclSnapshot, Principal, PrincipalKind},
-    retrieval::{RetrieveRequest, fetch_published_with_access, retrieve_published_with_access},
+    retrieval::{
+        RetrieveRequest, accessible_published_pages, fetch_published_with_access,
+        retrieve_published_with_access,
+    },
 };
 use std::fs;
 use tempfile::tempdir;
@@ -95,4 +98,41 @@ fn deny_overrides_group_allow_and_public_pages_remain_compatible() {
     .unwrap();
     assert_eq!(response.results.len(), 1);
     assert_eq!(response.results[0].path, "public.md");
+}
+
+#[test]
+fn metadata_inventory_uses_the_same_acl_filter_as_retrieval() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    page(root, "secret.md", "source-secret");
+    page(root, "public.md", "source-public");
+    fs::create_dir_all(root.join("_admin/acl")).unwrap();
+    let snapshot = AclSnapshot {
+        source_id: "source-secret".into(),
+        source_revision: "r1".into(),
+        captured_at: "now".into(),
+        allow: vec![Principal {
+            kind: PrincipalKind::User,
+            id: "alice".into(),
+            label: None,
+        }],
+        deny: vec![],
+    };
+    fs::write(
+        root.join("_admin/acl/secret.json"),
+        serde_json::to_vec(&snapshot).unwrap(),
+    )
+    .unwrap();
+
+    let visible =
+        accessible_published_pages(root, Some(&AccessContext::new(["bob".into()]))).unwrap();
+    assert_eq!(visible.len(), 1);
+    assert_eq!(visible[0].path, "public.md");
+    assert_eq!(visible[0].category, "security");
+    assert!(
+        accessible_published_pages(root, None)
+            .unwrap()
+            .iter()
+            .all(|page| page.path == "public.md")
+    );
 }

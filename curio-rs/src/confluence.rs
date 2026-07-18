@@ -137,9 +137,7 @@ impl ConfluenceClient {
         if parsed.scheme() != origin.scheme()
             || parsed.host_str() != origin.host_str()
             || parsed.port_or_known_default() != origin.port_or_known_default()
-            || !parsed
-                .path()
-                .starts_with(origin.path().trim_end_matches('/'))
+            || !continuation_path_is_within_base(parsed.path(), origin.path().trim_end_matches('/'))
         {
             anyhow::bail!("Refusing cross-origin Confluence continuation URL");
         }
@@ -1870,4 +1868,8 @@ impl ConfluenceClient {
             );
         }
     }
+}
+
+fn continuation_path_is_within_base(path: &str, base: &str) -> bool {
+    path == base || path.starts_with(&format!("{base}/"))
 }

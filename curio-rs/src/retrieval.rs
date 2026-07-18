@@ -80,6 +80,38 @@ pub struct FetchResponse {
     pub last_commit: Option<LastCommit>,
 }
 
+/// Metadata for a canonical published page that is visible to an access
+/// context. This is intentionally smaller than a retrieval result so callers
+/// that expose workspace metadata can share the same ACL filtering.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AccessiblePublishedPage {
+    pub path: String,
+    pub category: String,
+}
+
+/// List canonical published pages visible to the supplied access context.
+/// Pages with an ACL snapshot fail closed when no matching identity is given.
+pub fn accessible_published_pages(
+    wiki_dir: &Path,
+    access: Option<&AccessContext>,
+) -> Result<Vec<AccessiblePublishedPage>> {
+    let published_dir = wiki_dir.join("published");
+    let mut pages = Vec::new();
+    for path in canonical_published_paths(&published_dir)? {
+        let page = parse_wiki_page(&path)
+            .with_context(|| format!("Failed to parse published page {}", path.display()))?;
+        let relative_path = published_relative_path(&published_dir, &path);
+        let acl_snapshot = acl::load_snapshot(wiki_dir, &page.frontmatter.source.id)?;
+        if acl::can_read(acl_snapshot.as_ref(), access) {
+            pages.push(AccessiblePublishedPage {
+                category: page_category(&page.frontmatter.category, &relative_path),
+                path: relative_path,
+            });
+        }
+    }
+    Ok(pages)
+}
+
 #[derive(Debug, Clone)]
 struct ScoredResult {
     result: RetrieveResult,
@@ -273,12 +305,21 @@ pub fn fetch_published_with_access(
 }
 
 fn curio_uri(wiki_dir: &Path, relative_path: &str) -> String {
-    let workspace = wiki_dir
-        .parent()
+    let workspace = workspace_name(wiki_dir);
+    format!("curio://{workspace}/published/{relative_path}")
+}
+
+fn workspace_name(wiki_dir: &Path) -> String {
+    let workspace_dir = if wiki_dir.file_name().and_then(|name| name.to_str()) == Some("wiki") {
+        wiki_dir.parent()
+    } else {
+        Some(wiki_dir)
+    };
+    workspace_dir
         .and_then(|p| p.file_name())
         .and_then(|n| n.to_str())
-        .unwrap_or("workspace");
-    format!("curio://{}/published/{}", workspace, relative_path)
+        .unwrap_or("workspace")
+        .to_string()
 }
 
 fn canonical_published_paths(published_dir: &Path) -> Result<Vec<PathBuf>> {
@@ -565,6 +606,18 @@ mod tests {
                 Path::new("/kb/published/a/b.md")
             ),
             "a/b.md"
+        );
+    }
+
+    #[test]
+    fn provenance_workspace_name_supports_nested_and_kb_root_layouts() {
+        assert_eq!(
+            curio_uri(Path::new("/stores/example/wiki"), "ops/runbook.md"),
+            "curio://example/published/ops/runbook.md"
+        );
+        assert_eq!(
+            curio_uri(Path::new("/stores/example"), "ops/runbook.md"),
+            "curio://example/published/ops/runbook.md"
         );
     }
 

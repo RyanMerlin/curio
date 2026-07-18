@@ -7,7 +7,7 @@ if [[ "${CURIO_LIVE_CONFLUENCE:-}" != "1" ]]; then
 fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [[ -f "$repo_root/.env" ]]; then
+if [[ "${CURIO_LIVE_LOAD_DOTENV:-}" == "1" && -f "$repo_root/.env" ]]; then
   set -a
   . "$repo_root/.env"
   set +a
@@ -28,11 +28,14 @@ curio_bin="$target_dir/release/curio"
 [[ -x "$curio_bin" ]] || { echo "Release curio binary was not created at $curio_bin."; exit 1; }
 tmp="$(mktemp -d)"
 fixture="$tmp/kb"
+curl_config="$tmp/curl.conf"
+umask 077
+printf 'user = %s:%s\n' "$CURIO_CONFLUENCE_EMAIL" "$CURIO_CONFLUENCE_TOKEN" > "$curl_config"
 cp -a "$repo_root/docs/wiki-demo/." "$fixture/"
 ids=()
 cleanup() {
   for id in "${ids[@]}"; do
-    curl -fsS -u "$CURIO_CONFLUENCE_EMAIL:$CURIO_CONFLUENCE_TOKEN" -X DELETE \
+    curl -fsS --config "$curl_config" -X DELETE \
       "$base_url/rest/api/content/$id" >/dev/null 2>&1 || true
   done
   rm -rf "$tmp"
@@ -44,10 +47,10 @@ search() {
   local title="$1" ancestor="${2:-}" url
   url="$base_url/rest/api/content?spaceKey=CURIO&title=$(urlencode "$title")&expand=version,ancestors"
   [[ -z "$ancestor" ]] || url+="&ancestor=$ancestor"
-  curl -fsS -u "$CURIO_CONFLUENCE_EMAIL:$CURIO_CONFLUENCE_TOKEN" "$url"
+  curl -fsS --config "$curl_config" "$url"
 }
 page_id() { search "$1" "${2:-}" | jq -r '.results[0].id // empty'; }
-version() { curl -fsS -u "$CURIO_CONFLUENCE_EMAIL:$CURIO_CONFLUENCE_TOKEN" "$base_url/rest/api/content/$1?expand=version" | jq -r '.version.number // 0'; }
+version() { curl -fsS --config "$curl_config" "$base_url/rest/api/content/$1?expand=version" | jq -r '.version.number // 0'; }
 sync_all() {
   local output
   if ! output=$("$curio_bin" --kb-dir "$fixture" --json sync --all --docs-only 2>&1); then
@@ -59,7 +62,7 @@ create_page() {
   local title="$1" parent="$2" response id
   response="$(jq -n --arg title "$title" --arg parent "$parent" \
     '{type:"page",status:"current",title:$title,body:{storage:{representation:"storage",value:"<p>Acceptance fixture.</p>"}},space:{key:"CURIO"},ancestors:(if $parent == "" then [] else [{id:$parent}] end)}' \
-    | curl -fsS -u "$CURIO_CONFLUENCE_EMAIL:$CURIO_CONFLUENCE_TOKEN" \
+    | curl -fsS --config "$curl_config" \
       -H 'Content-Type: application/json' -X POST "$base_url/rest/api/content" --data-binary @-)"
   id="$(jq -r '.id // empty' <<<"$response")"
   [[ -n "$id" ]] || { echo "Could not create acceptance page." >&2; exit 1; }
@@ -68,7 +71,7 @@ create_page() {
 }
 assert_http() {
   local expected="$1" url="$2" actual
-  actual="$(curl -sS -o /dev/null -w '%{http_code}' -u "$CURIO_CONFLUENCE_EMAIL:$CURIO_CONFLUENCE_TOKEN" "$url")"
+  actual="$(curl -sS -o /dev/null -w '%{http_code}' --config "$curl_config" "$url")"
   [[ "$actual" == "$expected" ]] || { echo "Expected $expected, got $actual: $url"; exit 1; }
 }
 

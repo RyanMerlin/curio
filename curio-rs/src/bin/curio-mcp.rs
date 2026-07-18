@@ -2,8 +2,10 @@
 use anyhow::Result;
 use curio::{
     acl::AccessContext,
-    retrieval::{RetrieveRequest, fetch_published_with_access, retrieve_published_with_access},
-    wiki_fs::parse_wiki_page,
+    retrieval::{
+        RetrieveRequest, accessible_published_pages, fetch_published_with_access,
+        retrieve_published_with_access,
+    },
     workspace::resolve_kb_dir,
 };
 use rmcp::{
@@ -76,24 +78,17 @@ impl CurioMcp {
 
     #[tool(description = "List categories visible in the selected workspace's published taxonomy.")]
     async fn list_categories(&self, Parameters(_): Parameters<EmptyParams>) -> String {
-        let mut categories = std::collections::BTreeSet::new();
-        if let Ok(entries) = walkdir::WalkDir::new(self.wiki_dir.join("published"))
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-        {
-            for entry in entries {
-                if entry.file_type().is_file()
-                    && entry.path().extension().and_then(|x| x.to_str()) == Some("md")
-                    && entry.file_name() != "index.md"
-                    && let Ok(page) = parse_wiki_page(entry.path())
-                {
-                    categories.insert(page.frontmatter.category.join("/"));
-                }
+        match accessible_published_pages(&self.wiki_dir, self.access.as_ref()) {
+            Ok(pages) => {
+                let categories = pages
+                    .into_iter()
+                    .map(|page| page.category)
+                    .filter(|category| !category.is_empty())
+                    .collect::<std::collections::BTreeSet<_>>();
+                json(serde_json::json!({"categories": categories.into_iter().collect::<Vec<_>>() }))
             }
+            Err(e) => error("metadata_failed", format!("{e:#}")),
         }
-        json(
-            serde_json::json!({"categories": categories.into_iter().filter(|x| !x.is_empty()).collect::<Vec<_>>() }),
-        )
     }
 
     #[tool(
@@ -101,20 +96,21 @@ impl CurioMcp {
     )]
     async fn knowledge_status(&self, Parameters(_): Parameters<EmptyParams>) -> String {
         let published = self.wiki_dir.join("published");
-        let count = walkdir::WalkDir::new(&published)
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| {
-                e.file_type().is_file()
-                    && e.path().extension().and_then(|x| x.to_str()) == Some("md")
-                    && e.file_name() != "index.md"
-            })
-            .count();
+        let count = match accessible_published_pages(&self.wiki_dir, self.access.as_ref()) {
+            Ok(pages) => pages.len(),
+            Err(e) => return error("metadata_failed", format!("{e:#}")),
+        };
         let workspace = self
             .wiki_dir
-            .parent()
-            .and_then(|p| p.file_name())
+            .file_name()
             .and_then(|x| x.to_str())
+            .filter(|name| *name != "wiki")
+            .or_else(|| {
+                self.wiki_dir
+                    .parent()
+                    .and_then(|p| p.file_name())
+                    .and_then(|x| x.to_str())
+            })
             .unwrap_or("workspace");
         json(
             serde_json::json!({"workspace":workspace,"published_page_count":count,"latest_published_commit":latest_commit(&self.wiki_dir),"index":{"exists":published.join("index.md").exists(),"status":"local"}}),
@@ -123,9 +119,18 @@ impl CurioMcp {
 }
 
 fn latest_commit(wiki_dir: &std::path::Path) -> Option<String> {
-    let root = wiki_dir.parent()?;
+    let mut root = wiki_dir;
+    let root = loop {
+        if root.join(".git").exists() {
+            break root;
+        }
+        root = root.parent()?;
+    };
+    let published = wiki_dir.join("published");
+    let relative = published.strip_prefix(root).ok()?.to_string_lossy();
     let output = std::process::Command::new("git")
-        .args(["log", "-1", "--format=%H", "--", "wiki/published"])
+        .args(["log", "-1", "--format=%H", "--"])
+        .arg(relative.as_ref())
         .current_dir(root)
         .output()
         .ok()?;
