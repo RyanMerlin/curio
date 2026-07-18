@@ -12,13 +12,14 @@ does not contact Confluence.
 - A **Confluence space** (e.g. `myspace`) — the read-only mirror your colleagues will see.
 - A **bot user / API token** that authenticates Curio against Confluence.
 - Two ways to drive Curio:
-  - **Service** (recommended for shared use): `curio-service` running in Docker, you talk to it over HTTP.
-  - **CLI** (recommended for local debug): `curio` binary running directly against your KB directory.
+  - **CLI** (recommended default): `curio` binary running directly against your KB directory.
+  - **Service** (optional local/shared evaluation path): `curio-service` running in Docker, you talk to it over HTTP.
 
 The Cloud Run files under `deploy/cloud-run/` are an experimental deployment
-path. Do not expose the service to an enterprise network until the inbound
-authentication, workspace credential, concurrent state, audit, and
-observability gates in the enterprise readiness roadmap are complete.
+path. Treat the service path as local or sandbox-only for now; do not expose it
+to an enterprise network until the inbound authentication, workspace
+credential, concurrent state, audit, and observability gates in the enterprise
+readiness roadmap are complete.
 
 ## Step 0 — Verify your install
 
@@ -182,6 +183,48 @@ curio --workspace <your-name> sync
 One-way Git → Confluence. Confluence is your audience's read-only front door; never edit there expecting it to come back.
 
 Incremental by default (only changed pages). Use `--all` for a full refresh including pruning of stale pages.
+
+### Confluence safety and sandbox smoke testing
+
+Full refresh deletes only pages below the managed Published, Staged, or Review
+roots that carry the `curio-sync` property with `synced_by: curio`. Manually
+created or malformed/unowned pages are preserved. If descendant enumeration or
+ownership lookup fails, cleanup is skipped and the JSON report records the
+failure; it is never treated as an empty candidate set.
+
+Normal CI never needs Confluence credentials. The opt-in operator smoke test is:
+
+```sh
+CURIO_LIVE_CONFLUENCE=1 \
+CURIO_CONFLUENCE_URL=https://example.atlassian.net/wiki \
+CURIO_CONFLUENCE_EMAIL=bot@example.com \
+CURIO_CONFLUENCE_TOKEN="$CURIO_CONFLUENCE_TOKEN" \
+CURIO_CONFLUENCE_PARENT_PAGE_ID=<sandbox-CURIO-root-id> \
+CURIO_SPACE_KEY=CURIO \
+CURIO_KB_DIR=/absolute/path/to/sandbox-kb \
+./scripts/confluence-live-smoke.sh
+```
+
+For the full destructive acceptance sequence (idempotence, manual-page
+preservation, owned-page deletion, update propagation, and outside-root title
+collision safety), run:
+
+```sh
+CURIO_LIVE_CONFLUENCE=1 CURIO_KB_DIR=/absolute/path/to/sandbox-kb \
+./scripts/confluence-live-acceptance.sh
+```
+
+This harness first builds the local release `curio` binary, then uses a
+temporary copy of the tracked fixture and removes only the test-created
+Confluence pages on exit. Because it performs several full syncs, run it as an
+operator job with a sufficiently long process lifetime.
+
+The script fails closed unless the dedicated `CURIO` space, HTTPS site, and
+explicit managed root are configured. API tokens are read from environment
+variables and are never echoed or written to a report. Confluence permissions
+come from the syncing identity; Curio does not currently preserve source ACLs
+as retrieval metadata, so Confluence is not a permission-preserving retrieval
+source.
 
 ## Useful side commands
 

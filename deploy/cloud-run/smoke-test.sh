@@ -14,29 +14,28 @@ yellow() { printf '\033[0;33m~ %s\033[0m\n' "$*"; }
 bold()   { printf '\033[1m%s\033[0m\n' "$*"; }
 fail()   { red "$*"; exit 1; }
 
-auth_header() {
-  if [[ -n "$BEARER_TOKEN" ]]; then
-    echo "-H" "Authorization: Bearer $BEARER_TOKEN"
-  fi
-}
+curl_auth_args=()
+if [[ -n "$BEARER_TOKEN" ]]; then
+  curl_auth_args=(-H "Authorization: Bearer $BEARER_TOKEN")
+fi
 
 # ── 1. healthz ────────────────────────────────────────────────────────────────
 bold "==> 1/4  GET /healthz"
-resp=$(curl -sf "$(auth_header)" "$BASE_URL/healthz") || fail "GET /healthz failed"
+resp=$(curl -sf "${curl_auth_args[@]}" "$BASE_URL/healthz") || fail "GET /healthz failed"
 ok=$(echo "$resp" | jq -r '.ok')
 [[ "$ok" == "true" ]] || fail "/healthz returned ok=false: $resp"
 green "/healthz ok"
 
 # ── 2. readyz ─────────────────────────────────────────────────────────────────
 bold "==> 2/4  GET /readyz"
-resp=$(curl -sf "$(auth_header)" "$BASE_URL/readyz") || fail "GET /readyz failed"
+resp=$(curl -sf "${curl_auth_args[@]}" "$BASE_URL/readyz") || fail "GET /readyz failed"
 ok=$(echo "$resp" | jq -r '.ok')
 [[ "$ok" == "true" ]] || fail "/readyz returned ok=false: $resp"
 green "/readyz ok"
 
 # ── 3. workspace list ─────────────────────────────────────────────────────────
-bold "==> 3/4  GET /workspaces"
-resp=$(curl -sf "$(auth_header)" "$BASE_URL/workspaces") || fail "GET /workspaces failed"
+bold "==> 3/4  GET /v1/workspaces"
+resp=$(curl -sf "${curl_auth_args[@]}" "$BASE_URL/v1/workspaces") || fail "GET /v1/workspaces failed"
 count=$(echo "$resp" | jq '.workspaces | length')
 if [[ "$count" -eq 0 ]]; then
   yellow "No workspaces configured — skipping job submission test."
@@ -50,10 +49,10 @@ if [[ -z "$WORKSPACE_ID" ]]; then
   WORKSPACE_ID=$(echo "$resp" | jq -r '.workspaces[0].workspace_id')
   yellow "CURIO_SMOKE_WORKSPACE not set — using first workspace: $WORKSPACE_ID"
 fi
-green "/workspaces returned $count workspace(s), using $WORKSPACE_ID"
+green "/v1/workspaces returned $count workspace(s), using $WORKSPACE_ID"
 
 # ── 4. submit + poll ──────────────────────────────────────────────────────────
-bold "==> 4/4  POST /jobs (read-only analyze)"
+bold "==> 4/4  POST /v1/jobs (read-only analyze)"
 job_body=$(jq -n \
   --arg ws "$WORKSPACE_ID" \
   '{
@@ -67,20 +66,20 @@ job_body=$(jq -n \
     inputs: {"note": "automated smoke test — read-only, no git writes"}
   }')
 
-submit_resp=$(curl -sf "$(auth_header)" \
-  -X POST "$BASE_URL/jobs" \
+submit_resp=$(curl -sf "${curl_auth_args[@]}" \
+  -X POST "$BASE_URL/v1/jobs" \
   -H "Content-Type: application/json" \
-  -d "$job_body") || fail "POST /jobs failed"
+  -d "$job_body") || fail "POST /v1/jobs failed"
 
 job_id=$(echo "$submit_resp" | jq -r '.job_id // empty')
 [[ -n "$job_id" ]] || fail "POST /jobs did not return a job_id: $submit_resp"
 green "Job submitted: $job_id"
 
 # Poll for completion
-bold "    Polling GET /jobs/$job_id ..."
+bold "    Polling GET /v1/jobs/$job_id ..."
 elapsed=0
 while true; do
-  status_resp=$(curl -sf "$(auth_header)" "$BASE_URL/jobs/$job_id") || fail "GET /jobs/$job_id failed"
+  status_resp=$(curl -sf "${curl_auth_args[@]}" "$BASE_URL/v1/jobs/$job_id") || fail "GET /v1/jobs/$job_id failed"
   status=$(echo "$status_resp" | jq -r '.status')
   case "$status" in
     completed)

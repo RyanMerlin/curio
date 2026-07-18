@@ -390,6 +390,17 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
             .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
     };
 
+    // Load dotenv before parsing YAML so config templates such as
+    // `${CURIO_CONFLUENCE_URL}` resolve without placing credentials in YAML.
+    // `dotenvy` does not override already-exported shell variables.
+    load_env_tier(&config_root);
+    if let Ok(harness_dir) = env::var("CURIO_HARNESS_DIR") {
+        let harness_path = PathBuf::from(&harness_dir);
+        if harness_path != config_root {
+            load_env_tier(&harness_path);
+        }
+    }
+
     // 1. Load from config files (first match wins)
     let mut candidates = Vec::new();
     candidates.push(config_root.join(".curio.yaml"));
@@ -406,7 +417,8 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
         if candidate.exists() {
             let raw = fs::read_to_string(&candidate)
                 .with_context(|| format!("Failed to read config file: {}", candidate.display()))?;
-            let loaded: Config = serde_yaml::from_str(&raw)
+            let expanded = expand_env_placeholders(&raw);
+            let loaded: Config = serde_yaml::from_str(&expanded)
                 .with_context(|| format!("Failed to parse config file: {}", candidate.display()))?;
 
             // Merge (non-default values override defaults)
@@ -449,18 +461,7 @@ pub fn load_config(config_path: Option<&str>, kb_dir: Option<&std::path::Path>) 
         }
     }
 
-    // 2. Load .env files — KB first, then harness fallback.
-    //    dotenvy does NOT override already-set env vars, so KB values win over harness values.
-    //    Shell env vars are already present and take precedence over both .env files.
-    load_env_tier(&config_root);
-    if let Ok(harness_dir) = env::var("CURIO_HARNESS_DIR") {
-        let harness_path = PathBuf::from(&harness_dir);
-        if harness_path != config_root {
-            load_env_tier(&harness_path);
-        }
-    }
-
-    // 3. Override with environment variables
+    // 2. Override with environment variables
     //
     // Precedence: for KB-scoped fields (Confluence url / email / space key /
     // parent page id), the per-KB `.curio.yaml` WINS over global env vars.
@@ -567,6 +568,15 @@ fn load_env_tier(dir: &Path) {
     if env_path.is_file() {
         dotenvy::from_path(&env_path).ok();
     }
+}
+
+fn expand_env_placeholders(raw: &str) -> String {
+    let re = regex::Regex::new(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+        .expect("static environment placeholder regex is valid");
+    re.replace_all(raw, |captures: &regex::Captures<'_>| {
+        env::var(&captures[1]).unwrap_or_else(|_| captures[0].to_string())
+    })
+    .into_owned()
 }
 
 fn default_temp_dir() -> PathBuf {
@@ -847,5 +857,23 @@ mod tests {
         let env_keys = read_keys(env_path);
         let example_keys = read_keys(repo_root.join(".env.example"));
         assert_eq!(env_keys, example_keys);
+    }
+
+    #[test]
+    fn test_env_placeholders_expand_without_exposing_unknown_values() {
+        let _guard = env_test_lock();
+        unsafe {
+            env::set_var("CURIO_TEST_CONFIG_VALUE", "expanded");
+        }
+        let expanded = expand_env_placeholders(
+            "url: ${CURIO_TEST_CONFIG_VALUE}\nsecret: ${CURIO_MISSING_CONFIG_VALUE}",
+        );
+        assert_eq!(
+            expanded,
+            "url: expanded\nsecret: ${CURIO_MISSING_CONFIG_VALUE}"
+        );
+        unsafe {
+            env::remove_var("CURIO_TEST_CONFIG_VALUE");
+        }
     }
 }

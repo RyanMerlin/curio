@@ -9,6 +9,15 @@ This checklist is for release verification and launch claims. It is intentionall
 - [ ] `cargo nextest run --all-targets --manifest-path curio-rs/Cargo.toml`
 - [ ] Review the working tree before tagging. Do not cut a release with unexplained local changes.
 
+## Confluence Integration
+
+- [ ] Run the credential-free Confluence contract tests in ordinary CI.
+- [ ] Confirm `sync --all` cannot delete an unowned page and reports cleanup failures.
+- [ ] Confirm timeout, bounded retry, same-origin continuation, and conflict tests pass.
+- [ ] Before a release changing Confluence behavior, run `CURIO_LIVE_CONFLUENCE=1 ./scripts/confluence-live-smoke.sh` against the dedicated sandbox and retain only a redacted transcript or summary artifact (no raw secrets, tokens, or unredacted workspace data).
+- [ ] Before a release changing cleanup or write-safety behavior, run `CURIO_LIVE_CONFLUENCE=1 CURIO_KB_DIR=<sandbox-kb> ./scripts/confluence-live-acceptance.sh` and retain only a redacted scenario transcript or summary artifact (no raw secrets, tokens, or unredacted workspace data). The harness now builds the release `curio` binary itself before syncing.
+- [ ] Do not add Confluence credentials as a required public-PR or ordinary CI secret.
+
 ## Release Binaries
 
 - [ ] Build the release CLI: `cargo build --release --manifest-path curio-rs/Cargo.toml --bin curio`
@@ -18,7 +27,7 @@ This checklist is for release verification and launch claims. It is intentionall
 
 ## Docker
 
-- [ ] Build the Docker image used for the launch claim.
+- [ ] Build the Docker image used for the launch claim, if the release notes claim a Docker/service artifact.
 - [ ] Record the exact Dockerfile or build context if more than one path exists.
 - [ ] Start the image once and confirm the expected entrypoint responds without interactive repair steps.
 

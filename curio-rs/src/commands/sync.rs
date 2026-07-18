@@ -61,6 +61,16 @@ pub struct CurioTreeValidation {
     pub checked_pages: usize,
 }
 
+#[derive(Debug, Default, serde::Serialize)]
+struct CleanupReport {
+    candidates_found: Vec<String>,
+    owned_candidates: Vec<String>,
+    preserved_unowned: Vec<String>,
+    deleted_pages: Vec<String>,
+    cleanup_skipped: bool,
+    error: Option<String>,
+}
+
 /// Built-in icons for the **harness-managed** page slugs (intake / staged
 /// / review / published / admin / etc.). Domain-specific product icons
 /// live in the operator-supplied `Config::products` registry + the
@@ -161,6 +171,7 @@ pub async fn run_sync(
     let mut skipped: Vec<String> = Vec::new();
     let mut errors: Vec<String> = Vec::new();
     let mut synced_page_ids: HashSet<String> = HashSet::new();
+    let mut cleanup_report: Option<serde_json::Value> = None;
     // Sync top-level admin pages first under CURIO/Admin.
     let config_dir = wiki_dir.join(crate::northstar::ADMIN_DIRNAME);
     if config_dir.exists() && !dry_run {
@@ -168,71 +179,37 @@ pub async fn run_sync(
         let config_yaml_path = workspace_config_path(wiki_dir);
         let config_yaml = std::fs::read_to_string(&config_yaml_path)
             .with_context(|| format!("Failed to read {}", config_yaml_path.display()))?;
-        let config_pages =
-            vec![
-                (
-                    "northstar",
-                    "Northstar".to_string(),
-                    render_northstar_for_confluence(&northstar_md, &config_yaml),
-                    content_hash(&format!("{northstar_md}\n{config_yaml}")),
-                ),
-                (
-                    "workspace-config",
-                    WORKSPACE_CONFIG_PAGE_TITLE.to_string(),
-                    render_yaml_for_confluence(&config_yaml),
-                    content_hash(&config_yaml),
-                ),
-                (
-                    "readme",
-                    "CURIO Readme".to_string(),
-                    markdown_to_html(strip_frontmatter(
-                        &std::fs::read_to_string(config_dir.join("readme.md")).with_context(
-                            || format!("Failed to read {}", config_dir.join("readme.md").display()),
-                        )?,
-                    )),
-                    content_hash(
-                        &std::fs::read_to_string(config_dir.join("readme.md")).with_context(
-                            || format!("Failed to read {}", config_dir.join("readme.md").display()),
-                        )?,
-                    ),
-                ),
-                (
-                    "getting-started",
-                    "Getting Started".to_string(),
-                    markdown_to_html(strip_frontmatter(
-                        &std::fs::read_to_string(config_dir.join("getting-started.md"))
-                            .with_context(|| {
-                                format!(
-                                    "Failed to read {}",
-                                    config_dir.join("getting-started.md").display()
-                                )
-                            })?,
-                    )),
-                    content_hash(
-                        &std::fs::read_to_string(config_dir.join("getting-started.md"))
-                            .with_context(|| {
-                                format!(
-                                    "Failed to read {}",
-                                    config_dir.join("getting-started.md").display()
-                                )
-                            })?,
-                    ),
-                ),
-                (
-                    "log",
-                    "Log".to_string(),
-                    markdown_to_html(strip_frontmatter(
-                        &std::fs::read_to_string(config_dir.join("log.md")).with_context(|| {
-                            format!("Failed to read {}", config_dir.join("log.md").display())
-                        })?,
-                    )),
-                    content_hash(
-                        &std::fs::read_to_string(config_dir.join("log.md")).with_context(|| {
-                            format!("Failed to read {}", config_dir.join("log.md").display())
-                        })?,
-                    ),
-                ),
-            ];
+        let mut config_pages = vec![
+            (
+                "northstar",
+                "Northstar".to_string(),
+                render_northstar_for_confluence(&northstar_md, &config_yaml),
+                content_hash(&format!("{northstar_md}\n{config_yaml}")),
+            ),
+            (
+                "workspace-config",
+                WORKSPACE_CONFIG_PAGE_TITLE.to_string(),
+                render_yaml_for_confluence(&config_yaml),
+                content_hash(&config_yaml),
+            ),
+        ];
+        // These operator-facing reference pages are optional. Their absence
+        // must not prevent the content mirror from syncing.
+        for (filename, stem, title) in [
+            ("readme.md", "readme", "CURIO Readme"),
+            ("getting-started.md", "getting-started", "Getting Started"),
+            ("log.md", "log", "Log"),
+        ] {
+            let path = config_dir.join(filename);
+            if let Some(raw) = path
+                .exists()
+                .then(|| std::fs::read_to_string(&path))
+                .transpose()?
+            {
+                let body = markdown_to_html(strip_frontmatter(&raw));
+                config_pages.push((stem, title.to_string(), body.clone(), content_hash(&body)));
+            }
+        }
 
         for (stem, page_title, html_body, hash) in config_pages {
             let existing = client
@@ -492,42 +469,46 @@ pub async fn run_sync(
         // Prune stale pages — only in full-refresh mode to avoid slow Confluence tree walks
         // on every incremental sync. Run `curio sync --all` to prune deleted pages.
         if !dry_run && full_refresh {
-            let mut stale_deleted = 0usize;
+            let mut cleanup = CleanupReport::default();
             for root_id in [&tree.published_id, &tree.staged_id, &tree.review_id] {
-                let stale =
-                    find_stale_pages(&client, Some(root_id.as_str()), &synced_page_ids).await?;
-                for page_id in &stale {
-                    match client.delete_page(page_id).await {
+                match find_owned_stale_pages(&client, root_id, &synced_page_ids).await {
+                    Ok((mut candidates, mut owned, mut preserved)) => {
+                        cleanup.candidates_found.append(&mut candidates);
+                        cleanup.owned_candidates.append(&mut owned);
+                        cleanup.preserved_unowned.append(&mut preserved);
+                    }
+                    Err(e) => {
+                        cleanup.cleanup_skipped = true;
+                        cleanup.error = Some(e.to_string());
+                        errors.push(format!("cleanup skipped: {}", e));
+                    }
+                }
+            }
+            if !cleanup.cleanup_skipped {
+                for page_id in cleanup.owned_candidates.clone() {
+                    match client.delete_page(&page_id).await {
                         Ok(()) => {
-                            stale_deleted += 1;
-                            upserted.push(format!("[deleted] {}", page_id))
+                            cleanup.deleted_pages.push(page_id.clone());
+                            upserted.push(format!("[deleted] {}", page_id));
                         }
                         Err(e) => errors.push(format!("delete {} failed: {}", page_id, e)),
                     }
                 }
             }
 
-            let legacy_pages =
-                find_legacy_sync_pages(&client, tree.published_id.as_str(), &northstar_trees)
-                    .await?;
-            for page_id in &legacy_pages {
-                match client.delete_page(page_id).await {
-                    Ok(()) => upserted.push(format!("[deleted legacy] {}", page_id)),
-                    Err(e) => errors.push(format!("delete legacy {} failed: {}", page_id, e)),
-                }
-            }
-
             append_log(
                 wiki_dir,
                 &format!(
-                    "sync: {} upserted, {} skipped, {} stale deleted, {} legacy deleted, {} errors",
+                    "sync: {} upserted, {} skipped, {} owned stale deleted, {} unowned preserved, {} errors",
                     upserted.len(),
                     skipped.len(),
-                    stale_deleted,
-                    legacy_pages.len(),
+                    cleanup.deleted_pages.len(),
+                    cleanup.preserved_unowned.len(),
                     errors.len()
                 ),
             )?;
+
+            cleanup_report = Some(serde_json::to_value(&cleanup)?);
         }
     }
 
@@ -540,6 +521,7 @@ pub async fn run_sync(
                 "skipped": skipped,
                 "errors": errors,
                 "dry_run": dry_run,
+                "cleanup": cleanup_report,
             }),
         );
     } else {
@@ -1477,9 +1459,11 @@ async fn upsert_static_page(
         {
             let current_parent_id = current_page["parentId"].as_str();
             if current_parent_id != Some(target_parent_id) {
-                let _ = client
-                    .migrate_page_to_parent(&page_id, target_parent_id)
-                    .await;
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside target parent {}",
+                    page_id,
+                    target_parent_id
+                );
             }
         }
         if let Ok(Some(prop)) = client.get_content_property(&page_id, SYNC_PROP_KEY).await
@@ -2231,9 +2215,11 @@ async fn sync_page_html(
             {
                 let current_parent_id = current_page["parentId"].as_str();
                 if current_parent_id != Some(target_parent_id) {
-                    let _ = client
-                        .migrate_page_to_parent(&conflicting_id, target_parent_id)
-                        .await;
+                    anyhow::bail!(
+                        "Refusing to update same-title Confluence page {} outside target parent {}",
+                        conflicting_id,
+                        target_parent_id
+                    );
                 }
             }
             client
@@ -2263,9 +2249,11 @@ async fn sync_page_html(
         {
             let current_parent_id = current_page["parentId"].as_str();
             if current_parent_id != Some(target_parent_id) {
-                let _ = client
-                    .migrate_page_to_parent(&page_id, target_parent_id)
-                    .await;
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside target parent {}",
+                    page_id,
+                    target_parent_id
+                );
             }
         }
         client
@@ -2307,9 +2295,11 @@ async fn sync_page_html(
                 {
                     let current_parent_id = current_page["parentId"].as_str();
                     if current_parent_id != Some(target_parent_id) {
-                        let _ = client
-                            .migrate_page_to_parent(&conflicting_id, target_parent_id)
-                            .await;
+                        anyhow::bail!(
+                            "Refusing to update same-title Confluence page {} outside target parent {}",
+                            conflicting_id,
+                            target_parent_id
+                        );
                     }
                 }
                 client
@@ -2672,9 +2662,11 @@ async fn upsert_page(
         {
             let current_parent_id = current_page["parentId"].as_str();
             if current_parent_id != Some(target_parent_id) {
-                let _ = client
-                    .migrate_page_to_parent(&page_id, target_parent_id)
-                    .await;
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside target parent {}",
+                    page_id,
+                    target_parent_id
+                );
             }
         }
         client
@@ -2723,62 +2715,38 @@ async fn set_sync_prop(client: &ConfluenceClient, page_id: &str, hash: &str) -> 
         .await
 }
 
-async fn find_stale_pages(
+async fn find_owned_stale_pages(
     client: &ConfluenceClient,
-    parent_id: Option<&str>,
+    parent_id: &str,
     synced_ids: &HashSet<String>,
-) -> Result<Vec<String>> {
-    let Some(parent_id) = parent_id else {
-        // No parent anchor — can't enumerate stale pages at space root safely
-        return Ok(vec![]);
-    };
+) -> Result<(Vec<String>, Vec<String>, Vec<String>)> {
     let all = client
         .get_page_descendants_v2(parent_id)
         .await
-        .unwrap_or_default();
+        .with_context(|| {
+            format!("failed to enumerate descendants below managed root {parent_id}")
+        })?;
 
-    let mut stale = Vec::new();
+    let mut candidates = Vec::new();
+    let mut owned = Vec::new();
+    let mut preserved = Vec::new();
     for page in all {
-        let page_id = page["id"].as_str().unwrap_or_default().to_string();
+        let Some(page_id) = page["id"].as_str() else {
+            continue;
+        };
+        let page_id = page_id.to_string();
         if synced_ids.contains(&page_id) {
             continue;
         }
-        stale.push(page_id);
-    }
-    Ok(stale)
-}
-
-async fn find_legacy_sync_pages(
-    client: &ConfluenceClient,
-    published_root_id: &str,
-    trees: &[TreeNode],
-) -> Result<Vec<String>> {
-    let descendants = client
-        .get_page_descendants_v2(published_root_id)
-        .await
-        .unwrap_or_default();
-    let tree_titles: HashSet<String> = trees.iter().map(|tree| tree.title.clone()).collect();
-    let mut legacy = Vec::new();
-
-    for page in descendants {
-        let page_id = page["id"].as_str().unwrap_or_default().to_string();
-        let title = page["title"].as_str().unwrap_or_default();
-        if !is_legacy_sync_title(title, &tree_titles) {
-            continue;
+        candidates.push(page_id.clone());
+        match client.get_content_property(&page_id, SYNC_PROP_KEY).await? {
+            Some(prop) if prop["value"]["synced_by"].as_str() == Some("curio") => {
+                owned.push(page_id);
+            }
+            _ => preserved.push(page_id),
         }
-        legacy.push(page_id);
     }
-
-    Ok(legacy)
-}
-
-fn is_legacy_sync_title(title: &str, tree_titles: &HashSet<String>) -> bool {
-    if title.ends_with(" Index") {
-        return true;
-    }
-    tree_titles
-        .iter()
-        .any(|tree_title| title.starts_with(&format!("{} - ", tree_title)))
+    Ok((candidates, owned, preserved))
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -3241,6 +3209,7 @@ mod review_tree_tests {
                     id: "src".into(),
                     origin_url: Some("https://x".into()),
                     summary: None,
+                    acl: None,
                 },
                 category: category.iter().map(|s| s.to_string()).collect(),
                 keywords: vec![],
@@ -3499,5 +3468,39 @@ mod review_tree_tests {
         assert!(html.contains("new-subtree"));
         assert!(html.contains("no existing node fits"));
         assert!(html.contains("near-a, near-b"));
+    }
+
+    #[tokio::test]
+    async fn cleanup_enumeration_failure_returns_before_any_delete() {
+        use axum::{Router, http::StatusCode, response::IntoResponse};
+        use tokio::net::TcpListener;
+
+        async fn unavailable() -> impl IntoResponse {
+            (StatusCode::SERVICE_UNAVAILABLE, "sandbox unavailable")
+        }
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            axum::serve(listener, Router::new().fallback(unavailable))
+                .await
+                .unwrap();
+        });
+        let client = ConfluenceClient::new(
+            format!("http://{address}/wiki"),
+            "test@example.com".into(),
+            "secret".into(),
+            Some("root".into()),
+        )
+        .unwrap();
+
+        let error = find_owned_stale_pages(&client, "root", &HashSet::new())
+            .await
+            .expect_err("cleanup must fail closed when descendants cannot be enumerated");
+        assert!(
+            error
+                .to_string()
+                .contains("failed to enumerate descendants")
+        );
     }
 }

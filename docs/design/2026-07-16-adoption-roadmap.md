@@ -72,11 +72,12 @@ decision record, and continuously improving the governed hierarchy.
   cross-platform binary installation story.
 - The CLI accepts URLs, local files and folders, and Confluence content. There is
   no source-adapter contract for community-contributed connectors.
-- Published knowledge has a deterministic local retrieval command, but no MCP
-  server or complementary `fetch` contract for agent clients.
+- Published knowledge has a deterministic local retrieval and fetch contract, but
+  no MCP server for agent clients.
 - Provenance exists, but page-level source ACLs are not modeled or enforced.
-- Quality gates measure editorial fitness at publication time, but there is no
-  repeatable retrieval evaluation set or usage-quality dashboard.
+- Quality gates measure editorial fitness at publication time, and a first
+  repeatable retrieval evaluation set now runs offline in CI; there is no
+  usage-quality dashboard yet.
 - The production service hardening roadmap remains relevant for hosted enterprise
   deployments.
 
@@ -215,6 +216,9 @@ Exit criteria:
 - Citation coverage is 100 percent for published results.
 - ACL-leak count is zero once P4 lands.
 - Retrieval backend changes include before/after evaluation output.
+
+The initial offline baseline is documented in
+[`retrieval-evaluation-baseline.md`](retrieval-evaluation-baseline.md).
 
 ## P3: source-adapter contract
 

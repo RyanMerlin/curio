@@ -1,0 +1,19 @@
+{
+  "command": "retrieval-eval",
+  "ok": true,
+  "data": {
+    "version": 1,
+    "as_of": "2026-07-17T00:00:00Z",
+    "stale_before": "2025-01-01T00:00:00Z",
+    "query_count": 3,
+    "metrics": {
+      "recall_at_k": 1.0,
+      "mean_reciprocal_rank": 0.8333333333333334,
+      "citation_coverage": 1.0,
+      "stale_result_rate": 0.2222222222222222,
+      "acl_leak_count": 0,
+      "duplicate_result_count": 0,
+      "stable_ordering": true
+    }
+  }
+}

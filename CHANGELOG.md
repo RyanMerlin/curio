@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+- Hardened the Confluence Cloud mirror with effective HTTP timeouts, bounded
+  transient retries, rate-limit handling, sanitized diagnostics, strict `/wiki`
+  URL validation, same-origin continuation validation, and bounded pagination
+  for descendants, children, folders, and CQL results.
+- Added a longer-lived opt-in sandbox acceptance harness covering idempotence,
+  ownership-safe deletion, update propagation, manual-page preservation, and
+  outside-root title collisions.
+- Made `curio sync --all` ownership-safe: only pages carrying the Curio-owned
+  `curio-sync` property can be deleted; unowned or malformed pages are
+  preserved, and cleanup failures are surfaced in structured output.
+- Added bounded refetch-and-retry handling for v2 page and content-property
+  version conflicts, shared transient retry handling for safe page deletes,
+  and deterministic contract coverage for conflict recovery and outside-root
+  collision refusal.
+- Added credential-free Confluence contract tests, an API compatibility matrix,
+  and the opt-in `scripts/confluence-live-smoke.sh` sandbox harness.
+- Added deterministic published-page retrieval evaluation with checked-in
+  baseline metrics, fail-closed ACL snapshots, and cited provenance.
+- Added a local MCP stdio facade and a provider-neutral read-only source-adapter
+  boundary for future Confluence and other source integrations.
 - Added deterministic, read-only `curio retrieve` ranking over canonical
   `wiki/published/` pages, with cited excerpts, stable local IDs, source and Git
   provenance, machine-readable validation errors, and strict lane isolation.
@@ -38,7 +58,7 @@ Brings Curio from internal tooling to a publicly-usable editorial knowledge-base
 - **Confluence as the review surface.** Polished Review-tree rendering with score bars, status badges, taxonomy-mutation note macro, alternatives-considered lists, pinned reviewer-feedback comment with 👍 / 👎 / ❓ semantics.
 - **Domain-agnostic engine + config-driven SSOT.** No company-specific product names, taxonomies, or emojis baked into the binary. Operators bring their own `wiki/_admin/config.yaml::products` registry to teach Curio about their domain.
 - **Three providers, one contract.** Claude, Codex, Gemini all launch from the same `HARNESS.md` operating contract. Adding a fourth provider is two files.
-- **Deterministic safety boundaries.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelopes, and a comprehensive test suite (84/84 passing). Cloud Run production hardening remains a separate track.
+- **Deterministic safety boundaries.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelopes, and a comprehensive test suite (84/84 passing as of the 2026-05-10 release cut). Cloud Run production hardening remains a separate track.
 
 ### Community files
 
@@ -114,7 +134,7 @@ Brings Curio from "happy path works on one KB" to "a colleague can drive their o
 
 ### Test count
 
-72 tests pass: 50 lib + 2 demo + 2 multi_kb + 3 multi_tenant_safety + 2 publish_regate + 12 routing eval + 1 doctest.
+At Tier-1 handoff completion on 2026-05-10, 72 tests passed: 50 lib + 2 demo + 2 multi_kb + 3 multi_tenant_safety + 2 publish_regate + 12 routing eval + 1 doctest.
 
 ### Bookmarked for Tier 2
 

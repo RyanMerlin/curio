@@ -251,6 +251,10 @@ pub enum Commands {
         /// Maximum results.
         #[arg(long, default_value = "5")]
         limit: u32,
+
+        /// Local deterministic principal IDs used for ACL-filtered retrieval.
+        #[arg(long)]
+        principal: Vec<String>,
     },
 
     /// Fetch a canonical published Markdown page by the stable id returned from retrieve.
@@ -258,6 +262,10 @@ pub enum Commands {
         /// Stable local retrieval id (for example local:0123456789abcdef).
         #[arg(long)]
         id: String,
+
+        /// Local deterministic principal IDs used for ACL-filtered fetch.
+        #[arg(long)]
+        principal: Vec<String>,
     },
 
     /// Prepare or store proposal-only knowledge-sharpening reviews.

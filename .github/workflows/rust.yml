@@ -25,15 +25,15 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            binary: curio
+            binaries: curio curio-mcp
             archive_name: curio-x86_64-unknown-linux-gnu.tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            binary: curio.exe
+            binaries: curio.exe curio-mcp.exe
             archive_name: curio-x86_64-pc-windows-msvc.zip
           - os: macos-latest
             target: aarch64-apple-darwin
-            binary: curio
+            binaries: curio curio-mcp
             archive_name: curio-aarch64-apple-darwin.tar.gz
 
     runs-on: ${{ matrix.os }}
@@ -65,15 +65,15 @@ jobs:
         run: cargo nextest run --all-targets --verbose
 
       - name: Build release
-        run: cargo build --release --target ${{ matrix.target }} --verbose
+        run: cargo build --release --target ${{ matrix.target }} --bins --verbose
 
       - name: Package release binary (Unix)
         if: runner.os != 'Windows'
         run: |
           rm -rf dist
           mkdir -p dist
-          cp "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/${{ matrix.binary }}"
-          tar -czf "${{ matrix.archive_name }}" -C dist "${{ matrix.binary }}"
+          for binary in ${{ matrix.binaries }}; do cp "target/${{ matrix.target }}/release/$binary" "dist/$binary"; done
+          tar -czf "${{ matrix.archive_name }}" -C dist ${{ matrix.binaries }}
 
       - name: Package release binary (Windows)
         if: runner.os == 'Windows'
@@ -81,8 +81,8 @@ jobs:
         run: |
           if (Test-Path dist) { Remove-Item dist -Recurse -Force }
           New-Item -ItemType Directory -Path dist | Out-Null
-          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/${{ matrix.binary }}"
-          Compress-Archive -Path "dist/${{ matrix.binary }}" -DestinationPath "${{ matrix.archive_name }}" -Force
+          foreach ($binary in "curio.exe", "curio-mcp.exe") { Copy-Item "target/${{ matrix.target }}/release/$binary" "dist/$binary" }
+          Compress-Archive -Path "dist/*" -DestinationPath "${{ matrix.archive_name }}" -Force
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4

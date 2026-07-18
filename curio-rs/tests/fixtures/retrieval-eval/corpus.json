@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "as_of": "2026-07-17T00:00:00Z",
+  "stale_before": "2025-01-01T00:00:00Z",
+  "queries": [
+    {
+      "id": "deployment-rollout",
+      "query": "deployment rollout",
+      "expected_ids": ["local:15b24d9c43c1ec69", "local:96069f25b0a86892"],
+      "unauthorized_ids": ["local:5b23c478dc6e1270"],
+      "limit": 5
+    },
+    {
+      "id": "security-permissions",
+      "query": "security permissions",
+      "expected_ids": ["local:5b23c478dc6e1270"],
+      "unauthorized_ids": ["local:15b24d9c43c1ec69"],
+      "limit": 5
+    },
+    {
+      "id": "deployment-freshness",
+      "query": "deployment",
+      "expected_ids": ["local:15b24d9c43c1ec69"],
+      "unauthorized_ids": [],
+      "limit": 5
+    }
+  ]
+}

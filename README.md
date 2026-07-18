@@ -209,6 +209,8 @@ What reviewers actually see when they open a page Curio synced to their space:
 - The token env var is **per‑KB** — colleagues can each have their own bot account if they want.
 - The workspace registry is atomic (write‑tmp + rename) so concurrent restarts can't corrupt it.
 - `curio doctor` runs eight per‑KB infrastructure checks including a real Confluence auth probe.
+- `curio sync --all` deletes only explicitly Curio-owned pages below managed roots; unowned pages are preserved and cleanup failures are reported.
+- Confluence contract tests run without credentials. The dedicated sandbox smoke test is opt-in via `CURIO_LIVE_CONFLUENCE=1 ./scripts/confluence-live-smoke.sh`; see [`docs/runbook.md`](docs/runbook.md).
 
 ## Two‑layer architecture
 

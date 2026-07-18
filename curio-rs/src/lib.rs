@@ -1,3 +1,4 @@
+pub mod acl;
 pub mod audit_store;
 pub mod cli;
 pub mod commands;
@@ -17,7 +18,9 @@ pub mod proposal;
 pub mod quality;
 pub mod reconcile;
 pub mod retrieval;
+pub mod retrieval_eval;
 pub mod service;
+pub mod source_adapter;
 pub mod wiki_fs;
 pub mod wiki_index;
 pub mod workspace;
@@ -59,6 +62,16 @@ pub struct SourceRef {
     pub id: String,
     pub origin_url: Option<String>,
     pub summary: Option<String>,
+    /// Source authorization provenance, kept separate from page body content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acl: Option<SourceAclProvenance>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SourceAclProvenance {
+    pub source_id: String,
+    pub revision: String,
+    pub captured_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
