@@ -2,6 +2,7 @@
 name = "curio-km"
 version = "1.0.1"
 edition = "2024"
+rust-version = "1.88"
 description = "Git-native editorial knowledge-base harness — turns raw sources into curated, hierarchically-placed knowledge with Confluence sync"
 license = "Apache-2.0"
 repository = "https://github.com/RyanMerlin/curio"
@@ -43,7 +44,7 @@ thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 tower-http = { version = "0.7.0", features = ["trace", "limit"] }
-jsonwebtoken = { version = "10.4.0", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "10.4.0", default-features = false, features = ["aws_lc_rs"] }
 async-trait = "0.1"
 rmcp = { version = "2.2.0", default-features = false, features = ["server", "macros", "transport-io"] }
 

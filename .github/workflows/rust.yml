@@ -76,6 +76,10 @@ jobs:
           for binary in ${{ matrix.binaries }}; do cp "target/${{ matrix.target }}/release/$binary" "dist/$binary"; done
           tar -czf "${{ matrix.archive_name }}" -C dist ${{ matrix.binaries }}
 
+      - name: Smoke test packaged archive (Unix)
+        if: runner.os != 'Windows'
+        run: bash ../scripts/release-archive-smoke.sh "${{ matrix.archive_name }}"
+
       - name: Package release binary (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -84,6 +88,16 @@ jobs:
           New-Item -ItemType Directory -Path dist | Out-Null
           foreach ($binary in "curio.exe", "curio-mcp.exe") { Copy-Item "target/${{ matrix.target }}/release/$binary" "dist/$binary" }
           Compress-Archive -Path "dist/*" -DestinationPath "${{ matrix.archive_name }}" -Force
+
+      - name: Smoke test packaged archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $smoke = Join-Path $env:RUNNER_TEMP "curio-archive-smoke"
+          if (Test-Path $smoke) { Remove-Item $smoke -Recurse -Force }
+          Expand-Archive -Path "${{ matrix.archive_name }}" -DestinationPath $smoke
+          & (Join-Path $smoke "curio.exe") --help
+          & (Join-Path $smoke "curio-mcp.exe") --help
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4

@@ -61,6 +61,11 @@ jobs:
           git config --global user.name "Curio CI"
       - run: cargo nextest run --all-targets
         working-directory: curio-rs
+      # nextest does not execute rustdoc tests; keep this explicit companion
+      # gate without replacing nextest as the main test runner.
+      - name: Run doctests
+        run: cargo test --doc --all-features --locked
+        working-directory: curio-rs
       - name: Run retrieval evaluation baseline
         run: cargo run --quiet --bin curio-retrieval-eval -- --corpus tests/fixtures/retrieval-eval/corpus.json --json | tee retrieval-baseline.json
         working-directory: curio-rs
@@ -80,4 +85,38 @@ jobs:
         with:
           workspaces: curio-rs
       - run: cargo build --release --bin curio --bin curio-service --bin curio-mcp
+        working-directory: curio-rs
+
+  msrv:
+    name: Rust MSRV (1.88)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: curio-rs
+      - run: cargo check --all-targets --locked
+        working-directory: curio-rs
+
+  audit:
+    name: cargo audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - run: cargo audit
+        working-directory: curio-rs
+
+  rustdoc:
+    name: rustdoc warnings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo doc --no-deps --all-features --locked
+        env:
+          RUSTDOCFLAGS: "-D warnings"
         working-directory: curio-rs

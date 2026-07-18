@@ -203,7 +203,7 @@ pub struct GeminiProviderAdapter {
     max_tokens: u32,
     /// Static OAuth bearer token (overrides metadata-server lookup).
     access_token: Option<String>,
-    /// Gemini Developer API key (https://aistudio.google.com/apikey).
+    /// Gemini Developer API key (<https://aistudio.google.com/apikey>).
     /// When set, uses generativelanguage.googleapis.com instead of Vertex AI.
     /// Simpler for local dev — no GCP project or OAuth needed.
     api_key: Option<String>,

@@ -53,7 +53,7 @@ pub struct Config {
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct LlmConfig {
     /// OpenAI API key. Prefer OPENAI_API_KEY env var over setting this directly in config.
-    /// See: https://platform.openai.com/docs/guides/authentication
+    /// See: <https://platform.openai.com/docs/guides/authentication>
     #[serde(default)]
     pub api_key: String,
     /// Model to use for routing/analysis. Default: gpt-4o.

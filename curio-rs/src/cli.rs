@@ -324,7 +324,7 @@ pub enum Commands {
     ///
     /// Labels curio:approve / curio:reject / curio:rewrite (or 👍/👎/❓ reactions on the
     /// pinned comment) drive approve/reject/rewrite actions. Free-form comments are captured
-    /// in <slug>.feedback.md without triggering an automatic state change.
+    /// in `<slug>.feedback.md` without triggering an automatic state change.
     Feedback {
         /// Show planned actions without making any changes.
         #[arg(long)]
