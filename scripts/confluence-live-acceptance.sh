@@ -17,6 +17,10 @@ fi
 : "${CURIO_CONFLUENCE_TOKEN:?Set CURIO_CONFLUENCE_TOKEN}"
 : "${CURIO_CONFLUENCE_PARENT_PAGE_ID:?Set CURIO_CONFLUENCE_PARENT_PAGE_ID}"
 : "${CURIO_KB_DIR:?Set CURIO_KB_DIR to the sandbox KB context}"
+[[ -d "$CURIO_KB_DIR/published" ]] || {
+  echo "CURIO_KB_DIR must point to a KB root containing published/." >&2
+  exit 1
+}
 [[ "${CURIO_SPACE_KEY:-CURIO}" == CURIO ]] || { echo "Refusing a non-CURIO space."; exit 1; }
 [[ "$CURIO_CONFLUENCE_URL" == https://* ]] || { echo "Refusing a non-HTTPS site."; exit 1; }
 
@@ -31,13 +35,27 @@ fixture="$tmp/kb"
 curl_config="$tmp/curl.conf"
 umask 077
 printf 'user = %s:%s\n' "$CURIO_CONFLUENCE_EMAIL" "$CURIO_CONFLUENCE_TOKEN" > "$curl_config"
-cp -a "$repo_root/docs/wiki-demo/." "$fixture/"
-ids=()
+mkdir -p "$fixture"
+cp -a "$CURIO_KB_DIR/." "$fixture/"
+chmod -R u+rwX "$fixture"
+# Confluence downloads do not contain the source Git metadata, but sync and
+# provenance checks expect the fixture to behave like a clean KB worktree.
+unset CURIO_WIKI_DIR
+ids_file="$tmp/acceptance-ids"
+: > "$ids_file"
+if [[ ! -d "$fixture/.git" ]]; then
+  git -C "$fixture" init -q -b main
+  git -C "$fixture" -c user.name='Curio Acceptance' -c user.email='curio-acceptance@example.invalid' \
+    add -A
+  git -C "$fixture" -c user.name='Curio Acceptance' -c user.email='curio-acceptance@example.invalid' \
+    commit -q -m 'acceptance fixture baseline'
+fi
 cleanup() {
-  for id in "${ids[@]}"; do
+  while IFS= read -r id; do
+    [[ -n "$id" ]] || continue
     curl -fsS --config "$curl_config" -X DELETE \
       "$base_url/rest/api/content/$id" >/dev/null 2>&1 || true
-  done
+  done < "$ids_file"
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -66,7 +84,7 @@ create_page() {
       -H 'Content-Type: application/json' -X POST "$base_url/rest/api/content" --data-binary @-)"
   id="$(jq -r '.id // empty' <<<"$response")"
   [[ -n "$id" ]] || { echo "Could not create acceptance page." >&2; exit 1; }
-  ids+=("$id")
+  printf '%s\n' "$id" >> "$ids_file"
   echo "$id"
 }
 assert_http() {
@@ -89,7 +107,7 @@ manual_id="$(create_page "Curio Acceptance Manual $stamp" "$published_id")"
 sync_all
 assert_http 200 "$base_url/rest/api/content/$manual_id"
 
-echo "3/6 delete an owned page after local removal"
+echo "3/6 create an owned test page"
 owned_title="Curio Acceptance Owned $stamp"
 cat > "$fixture/published/product-tree/acceptance-owned.md" <<EOF
 ---
@@ -116,20 +134,20 @@ EOF
 sync_all
 owned_id="$(page_id "$owned_title" "$product_id")"
 [[ -n "$owned_id" ]] || { echo "Owned page was not created."; exit 1; }
+
+echo "4/6 propagate a local update"
+before="$(version "$owned_id")"
+printf '\nAcceptance update %s.\n' "$stamp" >> "$fixture/published/product-tree/acceptance-owned.md"
+sync_all
+after="$(version "$owned_id")"
+[[ "$after" -gt "$before" ]] || { echo "Remote version did not advance."; exit 1; }
+
+echo "5/6 delete an owned page after local removal"
 rm "$fixture/published/product-tree/acceptance-owned.md"
 sync_all
 assert_http 404 "$base_url/rest/api/content/$owned_id"
 
-echo "4/6 propagate a local update"
-target="$fixture/published/product-tree/demo-publish.md"
-target_id="$(page_id 'Demo Publish Checklist' "$product_id")"
-before="$(version "$target_id")"
-printf '\nAcceptance update %s.\n' "$stamp" >> "$target"
-sync_all
-after="$(version "$target_id")"
-[[ "$after" -gt "$before" ]] || { echo "Remote version did not advance."; exit 1; }
-
-echo "5/6 reject an outside-root title collision without mutation"
+echo "6/6 reject an outside-root title collision without mutation"
 outside_title="Curio Acceptance Outside $stamp"
 outside_id="$(create_page "$outside_title" "")"
 outside_before="$(version "$outside_id")"
