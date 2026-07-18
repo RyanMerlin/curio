@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   build:
+    name: build (${{ matrix.target }})
     strategy:
       fail-fast: false
       matrix:
