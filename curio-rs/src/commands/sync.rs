@@ -3469,4 +3469,38 @@ mod review_tree_tests {
         assert!(html.contains("no existing node fits"));
         assert!(html.contains("near-a, near-b"));
     }
+
+    #[tokio::test]
+    async fn cleanup_enumeration_failure_returns_before_any_delete() {
+        use axum::{Router, http::StatusCode, response::IntoResponse};
+        use tokio::net::TcpListener;
+
+        async fn unavailable() -> impl IntoResponse {
+            (StatusCode::SERVICE_UNAVAILABLE, "sandbox unavailable")
+        }
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            axum::serve(listener, Router::new().fallback(unavailable))
+                .await
+                .unwrap();
+        });
+        let client = ConfluenceClient::new(
+            format!("http://{address}/wiki"),
+            "test@example.com".into(),
+            "secret".into(),
+            Some("root".into()),
+        )
+        .unwrap();
+
+        let error = find_owned_stale_pages(&client, "root", &HashSet::new())
+            .await
+            .expect_err("cleanup must fail closed when descendants cannot be enumerated");
+        assert!(
+            error
+                .to_string()
+                .contains("failed to enumerate descendants")
+        );
+    }
 }

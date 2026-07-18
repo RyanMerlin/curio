@@ -12,6 +12,10 @@
 - Made `curio sync --all` ownership-safe: only pages carrying the Curio-owned
   `curio-sync` property can be deleted; unowned or malformed pages are
   preserved, and cleanup failures are surfaced in structured output.
+- Added bounded refetch-and-retry handling for v2 page and content-property
+  version conflicts, shared transient retry handling for safe page deletes,
+  and deterministic contract coverage for conflict recovery and outside-root
+  collision refusal.
 - Added credential-free Confluence contract tests, an API compatibility matrix,
   and the opt-in `scripts/confluence-live-smoke.sh` sandbox harness.
 - Added deterministic published-page retrieval evaluation with checked-in

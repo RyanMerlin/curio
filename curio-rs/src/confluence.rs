@@ -255,7 +255,11 @@ impl ConfluenceClient {
                 None => false,
             };
             if outside_managed_root {
-                None
+                anyhow::bail!(
+                    "Refusing to update same-title Confluence page {} outside the configured CURIO output root {}",
+                    page_id,
+                    self.write_root_folder_id.as_deref().unwrap_or_default()
+                );
             } else {
                 Some(page)
             }
@@ -267,68 +271,78 @@ impl ConfluenceClient {
             let page_id = page["id"]
                 .as_str()
                 .context("Page ID missing from existing page lookup")?;
-            let current_page = self
-                .get_page_by_id_v2(page_id)
-                .await?
-                .context("Existing page could not be loaded via v2 API")?;
-            let version = current_page["version"]["number"]
-                .as_i64()
-                .context("Page version missing")?
-                + 1;
-
-            let mut page_data = serde_json::json!({
-                "id": page_id,
-                "status": "current",
-                "title": title,
-                "body": {
-                    "representation": body_storage_format,
-                    "value": body_content
-                },
-                "version": { "number": version }
-            });
-
-            if let Some(space_id) = current_page["spaceId"].as_str() {
-                page_data["spaceId"] = serde_json::json!(space_id);
-            }
-            if let Some(parent_id) = current_page["parentId"].as_str() {
-                page_data["parentId"] = serde_json::json!(parent_id);
-            }
-
             println!(
                 "Updating Confluence page via v2: {} (ID: {})",
                 title, page_id
             );
-            let response = self
-                .client
-                .put(format!("{}/api/v2/pages/{}", self.base_url, page_id))
-                .json(&page_data)
-                .basic_auth(&self.email, Some(&self.auth_token))
-                .send()
+            let mut last_conflict = None;
+            for attempt in 1..=3 {
+                let current_page = self
+                    .get_page_by_id_v2(page_id)
+                    .await?
+                    .context("Existing page could not be loaded via v2 API")?;
+                let version = current_page["version"]["number"]
+                    .as_i64()
+                    .context("Page version missing")?
+                    + 1;
+
+                let mut page_data = serde_json::json!({
+                    "id": page_id,
+                    "status": "current",
+                    "title": title,
+                    "body": {
+                        "representation": body_storage_format,
+                        "value": body_content
+                    },
+                    "version": { "number": version }
+                });
+                if let Some(space_id) = current_page["spaceId"].as_str() {
+                    page_data["spaceId"] = serde_json::json!(space_id);
+                }
+                if let Some(parent_id) = current_page["parentId"].as_str() {
+                    page_data["parentId"] = serde_json::json!(parent_id);
+                }
+
+                let response = send_with_retry("update page via v2", || {
+                    self.client
+                        .put(format!("{}/api/v2/pages/{}", self.base_url, page_id))
+                        .json(&page_data)
+                        .basic_auth(&self.email, Some(&self.auth_token))
+                })
                 .await
                 .with_context(|| {
                     format!("Failed to send Confluence API request for page: {}", title)
                 })?;
+                let status = response.status();
+                let response_text = response
+                    .text()
+                    .await
+                    .context("Failed to read response body")?;
 
-            let status = response.status();
-            let response_text = response
-                .text()
-                .await
-                .context("Failed to read response body")?;
-
-            if status.is_success() {
-                let json: serde_json::Value = serde_json::from_str(&response_text)
-                    .context("Failed to parse Confluence API response")?;
-                json["id"]
-                    .as_str()
-                    .map(|s| s.to_string())
-                    .context("Page ID not found in response")
-            } else {
+                if status.is_success() {
+                    let json: serde_json::Value = serde_json::from_str(&response_text)
+                        .context("Failed to parse Confluence API response")?;
+                    return json["id"]
+                        .as_str()
+                        .map(|s| s.to_string())
+                        .context("Page ID not found in response");
+                }
+                if status == StatusCode::CONFLICT {
+                    last_conflict = Some(response_text.clone());
+                    if attempt < 3 {
+                        continue;
+                    }
+                }
                 anyhow::bail!(
                     "Confluence API request failed with status {}: {}",
                     status,
                     response_text
                 );
             }
+            anyhow::bail!(
+                "Confluence page update conflicted after 3 attempts: {}",
+                last_conflict.unwrap_or_default()
+            );
         } else {
             // Create new page via v1 API — v2 rejects storage-format macros (ac:structured-macro).
             // v1 accepts full Confluence storage format including info/tip/note/warning panels.
@@ -778,61 +792,55 @@ impl ConfluenceClient {
         value: serde_json::Value,
     ) -> Result<()> {
         self.assert_within_write_root(page_id).await?;
-        // First, try to get the existing property to determine its version.
-        let existing_property = self.get_content_property(page_id, key).await?;
-
-        let version = if let Some(prop) = existing_property {
-            prop["version"]["number"]
-                .as_i64()
-                .context("Content property version missing")?
-                + 1
-        } else {
-            1
-        };
-
         let url = format!(
             "{}/rest/api/content/{}/property/{}",
             self.base_url, page_id, key
         );
-
-        let property_data = serde_json::json!({
-            "key": key,
-            "value": value,
-            "version": {
-                "number": version
-            }
-        });
-
         println!("Setting content property '{}' for page {}", key, page_id);
-
-        let response = self
-            .client
-            .put(&url)
-            .basic_auth(&self.email, Some(&self.auth_token))
-            .json(&property_data)
-            .send()
-            .await
-            .context("Failed to send Confluence API request to set content property")?;
-
-        let status = response.status();
-        let response_text = response
-            .text()
-            .await
-            .context("Failed to read response body")?;
-
-        if status.is_success() {
-            println!(
-                "Content property '{}' set successfully for page {}.",
-                key, page_id
-            );
-            Ok(())
-        } else {
+        for attempt in 1..=3 {
+            let existing_property = self.get_content_property(page_id, key).await?;
+            let version = if let Some(prop) = existing_property {
+                prop["version"]["number"]
+                    .as_i64()
+                    .context("Content property version missing")?
+                    + 1
+            } else {
+                1
+            };
+            let property_data = serde_json::json!({
+                "key": key,
+                "value": value,
+                "version": { "number": version }
+            });
+            let response = send_with_retry("set content property", || {
+                self.client
+                    .put(&url)
+                    .basic_auth(&self.email, Some(&self.auth_token))
+                    .json(&property_data)
+            })
+            .await?;
+            let status = response.status();
+            let response_text = response
+                .text()
+                .await
+                .context("Failed to read response body")?;
+            if status.is_success() {
+                println!(
+                    "Content property '{}' set successfully for page {}.",
+                    key, page_id
+                );
+                return Ok(());
+            }
+            if status == StatusCode::CONFLICT && attempt < 3 {
+                continue;
+            }
             anyhow::bail!(
                 "Confluence API request to set content property failed with status {}: {}",
                 status,
                 response_text
             );
         }
+        unreachable!("content property loop returns on success or error")
     }
 
     /// Retrieves a content property for a Confluence page.
@@ -1832,16 +1840,18 @@ impl ConfluenceClient {
         self.assert_within_write_root(page_id).await?;
         let url = format!("{}/rest/api/content/{}", self.base_url, page_id);
 
-        let response = self
-            .client
-            .delete(&url)
-            .basic_auth(&self.email, Some(&self.auth_token))
-            .send()
-            .await
-            .context(format!(
+        let response = send_with_retry("delete page", || {
+            self.client
+                .delete(&url)
+                .basic_auth(&self.email, Some(&self.auth_token))
+        })
+        .await
+        .with_context(|| {
+            format!(
                 "Failed to send Confluence API request to delete page {}",
                 page_id
-            ))?;
+            )
+        })?;
 
         let status = response.status();
         let response_text = response
