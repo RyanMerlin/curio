@@ -54,7 +54,7 @@ Brings Curio from internal tooling to a publicly-usable editorial knowledge-base
 - **Confluence as the review surface.** Polished Review-tree rendering with score bars, status badges, taxonomy-mutation note macro, alternatives-considered lists, pinned reviewer-feedback comment with 👍 / 👎 / ❓ semantics.
 - **Domain-agnostic engine + config-driven SSOT.** No company-specific product names, taxonomies, or emojis baked into the binary. Operators bring their own `wiki/_admin/config.yaml::products` registry to teach Curio about their domain.
 - **Three providers, one contract.** Claude, Codex, Gemini all launch from the same `HARNESS.md` operating contract. Adding a fourth provider is two files.
-- **Deterministic safety boundaries.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelopes, and a comprehensive test suite (84/84 passing). Cloud Run production hardening remains a separate track.
+- **Deterministic safety boundaries.** Atomic registry writes, intake resume-after-crash, publish-time re-gate (quality + overlap + taxonomy validity rechecked at promotion), `--force` escape hatch with audit logging, JSON error envelopes, and a comprehensive test suite (84/84 passing as of the 2026-05-10 release cut). Cloud Run production hardening remains a separate track.
 
 ### Community files
 
@@ -130,7 +130,7 @@ Brings Curio from "happy path works on one KB" to "a colleague can drive their o
 
 ### Test count
 
-72 tests pass: 50 lib + 2 demo + 2 multi_kb + 3 multi_tenant_safety + 2 publish_regate + 12 routing eval + 1 doctest.
+At Tier-1 handoff completion on 2026-05-10, 72 tests passed: 50 lib + 2 demo + 2 multi_kb + 3 multi_tenant_safety + 2 publish_regate + 12 routing eval + 1 doctest.
 
 ### Bookmarked for Tier 2
 

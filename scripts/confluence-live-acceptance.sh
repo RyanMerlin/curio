@@ -22,6 +22,10 @@ fi
 
 base_url="${CURIO_CONFLUENCE_URL%/}"
 target_dir="$(cargo metadata --quiet --no-deps --format-version 1 --manifest-path "$repo_root/curio-rs/Cargo.toml" | jq -r '.target_directory')"
+echo "Building release curio binary..."
+cargo build --release --manifest-path "$repo_root/curio-rs/Cargo.toml" --bin curio >/dev/null
+curio_bin="$target_dir/release/curio"
+[[ -x "$curio_bin" ]] || { echo "Release curio binary was not created at $curio_bin."; exit 1; }
 tmp="$(mktemp -d)"
 fixture="$tmp/kb"
 cp -a "$repo_root/docs/wiki-demo/." "$fixture/"
@@ -46,7 +50,7 @@ page_id() { search "$1" "${2:-}" | jq -r '.results[0].id // empty'; }
 version() { curl -fsS -u "$CURIO_CONFLUENCE_EMAIL:$CURIO_CONFLUENCE_TOKEN" "$base_url/rest/api/content/$1?expand=version" | jq -r '.version.number // 0'; }
 sync_all() {
   local output
-  if ! output=$("$target_dir/release/curio" --kb-dir "$fixture" --json sync --all --docs-only 2>&1); then
+  if ! output=$("$curio_bin" --kb-dir "$fixture" --json sync --all --docs-only 2>&1); then
     echo "$output" >&2
     return 1
   fi

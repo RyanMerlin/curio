@@ -12,13 +12,14 @@ does not contact Confluence.
 - A **Confluence space** (e.g. `myspace`) — the read-only mirror your colleagues will see.
 - A **bot user / API token** that authenticates Curio against Confluence.
 - Two ways to drive Curio:
-  - **Service** (recommended for shared use): `curio-service` running in Docker, you talk to it over HTTP.
-  - **CLI** (recommended for local debug): `curio` binary running directly against your KB directory.
+  - **CLI** (recommended default): `curio` binary running directly against your KB directory.
+  - **Service** (optional local/shared evaluation path): `curio-service` running in Docker, you talk to it over HTTP.
 
 The Cloud Run files under `deploy/cloud-run/` are an experimental deployment
-path. Do not expose the service to an enterprise network until the inbound
-authentication, workspace credential, concurrent state, audit, and
-observability gates in the enterprise readiness roadmap are complete.
+path. Treat the service path as local or sandbox-only for now; do not expose it
+to an enterprise network until the inbound authentication, workspace
+credential, concurrent state, audit, and observability gates in the enterprise
+readiness roadmap are complete.
 
 ## Step 0 — Verify your install
 
@@ -213,9 +214,10 @@ CURIO_LIVE_CONFLUENCE=1 CURIO_KB_DIR=/absolute/path/to/sandbox-kb \
 ./scripts/confluence-live-acceptance.sh
 ```
 
-This harness uses a temporary copy of the local fixture and removes only the
-test-created Confluence pages on exit. Because it performs several full syncs,
-run it as an operator job with a sufficiently long process lifetime.
+This harness first builds the local release `curio` binary, then uses a
+temporary copy of the tracked fixture and removes only the test-created
+Confluence pages on exit. Because it performs several full syncs, run it as an
+operator job with a sufficiently long process lifetime.
 
 The script fails closed unless the dedicated `CURIO` space, HTTPS site, and
 explicit managed root are configured. API tokens are read from environment

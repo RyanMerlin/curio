@@ -1,6 +1,6 @@
 # Production Handoff Plan — Curio Editorial Pipeline
 
-**Status: COMPLETED 2026-05-10.** All five Tier-1 phases shipped; 72/72 tests pass; live smoke green against all 3 KBs; in-container doctor confirms real Confluence auth. See `CHANGELOG.md` for the per-phase summary. Tier 2 plan to follow.
+**Status: COMPLETED 2026-05-10.** As of 2026-05-10, all five Tier-1 phases shipped; 72/72 tests passed in the then-current Tier-1 suite; live smoke was green against all 3 KBs; in-container doctor confirmed real Confluence auth. See `CHANGELOG.md` for the per-phase summary. Tier 2 plan to follow.
 
 ---
 
@@ -10,7 +10,7 @@
 
 **Operator decisions (locked):**
 - 3-day window. All five Tier-1 phases ship before the demo.
-- Deployment shape is provisionally **service-led** (a hosted API or web UI is the eventual front door for colleagues), with the CLI as the local dev/debug fallback. Both paths must be exercised in the smoke test and runbook.
+- Deployment shape is provisionally **service-led** (a hosted API or web UI was the intended eventual front door for colleagues at this point in the plan), with the CLI as the local dev/debug fallback. Both paths must be exercised in the smoke test and runbook.
 - Confluence is the intended primary human-facing front end. Enhancements to make Confluence a richer review surface (richer Review-tree presentation, action affordances) are bookmarked for Tier 2.
 - Tier 2 begins after Tier 1 is verified end-to-end.
 
@@ -161,7 +161,7 @@ E3. **Hand a colleague a 30-minute test.** Pick one (the user picks); walk throu
 ## Verification
 
 - All Tier-1 items have unit or integration test coverage.
-- `cargo nextest run --all-targets` clean (currently 84 tests).
+- `cargo nextest run --all-targets` clean (at plan completion this had reached 84 tests).
 - `cargo clippy --all-targets -- -D warnings` clean.
 - `deploy/local/smoke-test.sh` extended to exercise the multi-tenant scenario.
 - The runbook is dogfooded against a real KB end-to-end before colleagues see it.
