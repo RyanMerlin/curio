@@ -34,7 +34,7 @@ impl AuthMode {
 #[derive(Debug, Clone)]
 pub struct AuthConfig {
     pub mode: AuthMode,
-    /// Expected audience for IAP JWTs (/projects/<n>/global/backendServices/<id>)
+    /// Expected audience for IAP JWTs (`/projects/<n>/global/backendServices/<id>`)
     pub iap_audience: Option<String>,
     /// Service account email that Pub/Sub uses for OIDC push auth
     pub pubsub_sa_email: Option<String>,

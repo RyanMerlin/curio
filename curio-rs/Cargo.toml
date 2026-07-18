@@ -2,6 +2,7 @@
 name = "curio-km"
 version = "1.0.1"
 edition = "2024"
+rust-version = "1.88"
 description = "Git-native editorial knowledge-base harness — turns raw sources into curated, hierarchically-placed knowledge with Confluence sync"
 license = "Apache-2.0"
 repository = "https://github.com/RyanMerlin/curio"
