@@ -92,7 +92,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@1.100.0
+      # The MSRV is pinned via `toolchain:` below, not the action ref, so a
+      # routine Dependabot bump of the action version can never silently
+      # change which Rust version this job tests against (see #39/2026-07-20,
+      # where `@1.88.0` -> `@1.100.0` broke this job because the ref doubled
+      # as both the action version and the toolchain to install).
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: curio-rs
