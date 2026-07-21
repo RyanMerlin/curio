@@ -470,7 +470,7 @@ dependencies = [
 
 [[package]]
 name = "curio-km"
-version = "1.0.1"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "async-trait",

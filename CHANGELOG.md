@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-07-21 · agent retrieval
+
 - Hardened the Confluence Cloud mirror with effective HTTP timeouts, bounded
   transient retries, rate-limit handling, sanitized diagnostics, strict `/wiki`
   URL validation, same-origin continuation validation, and bounded pagination
@@ -20,11 +22,22 @@
   and the opt-in `scripts/confluence-live-smoke.sh` sandbox harness.
 - Added deterministic published-page retrieval evaluation with checked-in
   baseline metrics, fail-closed ACL snapshots, and cited provenance.
-- Added a local MCP stdio facade and a provider-neutral read-only source-adapter
-  boundary for future Confluence and other source integrations.
+- Added a local MCP stdio facade (`curio-mcp`) — search, fetch, list_categories,
+  and knowledge_status over `wiki/published/` — and a provider-neutral
+  read-only source-adapter boundary for future Confluence and other source
+  integrations. `curio-mcp` ships in every release archive alongside `curio`.
 - Added deterministic, read-only `curio retrieve` ranking over canonical
   `wiki/published/` pages, with cited excerpts, stable local IDs, source and Git
-  provenance, machine-readable validation errors, and strict lane isolation.
+  provenance, machine-readable validation errors, and strict lane isolation,
+  plus a matching `curio fetch --id ... --json` lookup.
+- Fixed a broken MSRV CI pin (`dtolnay/rust-toolchain@1.100.0`, a nonexistent
+  Rust version introduced by an automated dependency bump) and decoupled the
+  action ref from the pinned toolchain version so it can't recur; added the
+  MSRV job to required status checks.
+- Corrected README and roadmap documentation that described the MCP server,
+  `fetch`, and the retrieval evaluation corpus as unshipped when they were
+  already implemented; added a README install path for prebuilt release
+  binaries.
 
 ## [1.0.1] — 2026-07-16 · public milestone readiness
 
