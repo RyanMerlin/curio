@@ -8,15 +8,25 @@ into a governed, cited, freshness-aware corpus, then make that corpus available
 where people and agents already work.
 
 **Release boundary:** the current public release has the editorial pipeline,
-proposal provenance, multi-workspace CLI/service foundations, and a credential-free
-demo. It does not ship an MCP retrieval server, a retrieval evaluation harness,
-source adapters, page-level ACL filtering, or a production-ready hosted service.
-Those are roadmap items, not current capabilities.
+proposal provenance, multi-workspace CLI/service foundations, a credential-free
+demo, deterministic published-knowledge retrieval, and a local read-only MCP
+server. It does not ship source adapters, a full source-side ACL model, or a
+production-ready hosted service. Those remain roadmap items.
 
-**Status update:** `curio retrieve --query ... --json` now provides the first
-deterministic, published-only lexical retrieval contract with cited excerpts and
-Git/source provenance. The MCP wrapper, `fetch`, evaluation corpus, adapters, and
-ACL filtering remain unshipped.
+**Status update (2026-07-21):** `curio retrieve --query ... --json` and
+`curio fetch --id ... --json` provide a deterministic, published-only lexical
+retrieval contract with cited excerpts and Git/source provenance. `curio-mcp`
+wraps the same library as a local stdio MCP server (`search`, `fetch`,
+`list_categories`, `knowledge_status`) and ships in every release archive —
+P1 is substantially shipped, not roadmap. A checked-in retrieval evaluation
+corpus and baseline also run in CI (see
+[`retrieval-evaluation-baseline.md`](retrieval-evaluation-baseline.md)) —
+P2's evaluation deliverable is shipped; its trust-metadata deliverables
+(explicit `owner`/`authority` frontmatter, per-domain freshness policy) are
+not. Foundational ACL primitives exist (`acl.rs`: fail-closed
+`AccessContext`/`AclSnapshot` types wired into search and fetch), but the
+full P4 model — source-side ACL capture during intake, deny-rule enforcement
+across adapters — remains unbuilt. Source adapters (P3) remain unshipped.
 
 This roadmap follows the first public release. It prioritizes work that can create
 an open-source adoption loop while preserving a credible path to enterprise
@@ -100,9 +110,9 @@ The roadmap is successful when Curio can demonstrate all of the following:
 
 | Rank | Target | Adoption value | Enterprise value | Effort | Decision |
 |---|---|---:|---:|---:|---|
-| 0 | Release distribution and five-minute activation | Very high | Medium | Small | Start now |
-| 1 | Read-only MCP search/fetch over `published/` | Very high | High | Medium | Build next |
-| 2 | Retrieval evaluation and provenance contract | High | Very high | Medium | Build with MCP |
+| 0 | Release distribution and five-minute activation | Very high | Medium | Small | Shipped (binaries + checksums); README install matrix still open |
+| 1 | Read-only MCP search/fetch over `published/` | Very high | High | Medium | Shipped (`curio-mcp`) |
+| 2 | Retrieval evaluation and provenance contract | High | Very high | Medium | Evaluation shipped; trust-metadata fields open |
 | 3 | Source-adapter SDK plus GitHub/local Markdown adapter | High | High | Medium | Build after MCP contract |
 | 4 | ACL model and permission-filtered retrieval | Medium | Critical | Large | Required before enterprise connector claims |
 | 5 | SharePoint/OneDrive or Google Drive adapter | High | Very high | Large | Choose from pilot demand |

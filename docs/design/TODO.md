@@ -163,7 +163,7 @@ Objective:
 Keep init, sync, and status deterministic as the system grows.
 
 Planned work:
-- Maintain the hard contract in [curio-core-init.md](/C:/code/agents/curio/docs/design/curio-core-init.md)
+- Maintain the hard contract in [curio-core-init.md](curio-core-init.md)
 - Extend tests around reset, validation, malformed live trees, and stale managed pages.
 - Continue reducing hidden state and ambiguous fallbacks.
 

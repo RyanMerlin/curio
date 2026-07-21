@@ -44,7 +44,7 @@ This document does not cover:
 - environment wiring
 - initial Confluence root creation
 
-The deterministic Confluence tree contract for `curio init` lives in [curio-core-init.md](C:/code/agents/curio/docs/design/curio-core-init.md).
+The deterministic Confluence tree contract for `curio init` lives in [curio-core-init.md](curio-core-init.md).
 
 ## Core Model
 

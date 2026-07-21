@@ -1,9 +1,7 @@
 # Curio Docs Index
 
 Start here if you are new to the repo or need to find the right document quickly.
-Historical launch material is kept under `docs/archive/` for reference only; it
-is not part of the active operator workflow. The root `CHANGELOG.md` remains the
-active release-note record.
+The root `CHANGELOG.md` remains the active release-note record.
 
 ## Core entry points
 
@@ -27,17 +25,18 @@ active release-note record.
 - [Operating Contract](design/operating-contract.md) - the editorial loop and decision rules
 - [Process](design/process.md) - the routing and publishing pipeline
 - [Source Corpus Tuning](design/source-corpus-tuning.md) - feedback loop and tuning ideas
+- [Design Roadmap](design/TODO.md) - phased technical/product backlog for the editorial substrate
 - [Production Handoff Plan](design/2026-05-10-production-handoff-plan.md) - completed Tier 1 hardening
 - [Tier 2 Plan](design/2026-05-10-tier2-plan.md) - remaining editorial enhancements
 - [Adoption Roadmap](design/2026-07-16-adoption-roadmap.md) - active proposal for agent retrieval and enterprise trust
+- [Retrieval Evaluation Baseline](design/retrieval-evaluation-baseline.md) - checked-in recall/citation metrics for published retrieval
+- [Release Readiness Plan](design/2026-07-21-release-readiness-plan.md) - v1.1.0 readiness punch list
 
 ## Historical material
 
 - [Public Repo Scrub Plan](design/2026-05-04-public-repo-scrub.md) - the public-release scrub rationale
 - [Pre-Public v1 Plan](design/2026-05-10-pre-public-v1-plan.md) - archived public-release checklist
 - [Enterprise Readiness Review](design/2026-04-26-enterprise-readiness-roadmap.md) - deferred production-service hardening roadmap
-- [Launch Plan Archive](archive/launch/2026-05-10-v1.0.0-launch-plan.md) - public launch narrative
-- [Launch Response Log Archive](archive/launch/2026-05-10-v1.0.0-response-log.md) - launch telemetry template
 
 ## Demo and fixtures
 

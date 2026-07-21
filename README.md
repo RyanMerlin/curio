@@ -70,12 +70,17 @@ even when the retrieval model changes:
   add authenticated identity, workspace-scoped credentials, and permission
   trimming before it can safely ground enterprise users across multiple
   repositories.
-- **Published-only retrieval is now deterministic.** The CLI exposes a stable
-  `retrieve --query ... --json` contract with cited excerpts and provenance.
-  An MCP server and the complementary `fetch` contract remain roadmap work.
-- **Adapters, evaluation, and page-level ACLs are roadmap work.** The adoption
-  roadmap sequences source adapters, cited retrieval evaluation, provenance
-  fields, and permission-preserving retrieval before enterprise connector claims.
+- **Published-only retrieval is deterministic and agent-ready.** The CLI
+  exposes a stable `retrieve --query ... --json` contract and a matching
+  `fetch --id ... --json` lookup, both with cited excerpts and provenance —
+  plus a local, read-only MCP server (`curio-mcp`) so any MCP-compatible
+  agent client can search and fetch curated knowledge directly. See
+  [Agent retrieval (MCP)](#agent-retrieval-mcp) below.
+- **Adapters and page-level ACLs are roadmap work.** The adoption roadmap
+  sequences source adapters and permission-preserving retrieval before
+  enterprise connector claims. A first retrieval-quality baseline already
+  runs in CI — see
+  [`docs/design/retrieval-evaluation-baseline.md`](docs/design/retrieval-evaluation-baseline.md).
 
 ## The lifecycle
 
@@ -115,7 +120,9 @@ Each KB is a separate git repo with its own taxonomy, Confluence space, and cred
 
 The recommended public path needs no Confluence account, provider account, or
 live enterprise data. It uses a temporary copy of the synthetic workspace and
-verifies the full local lifecycle:
+verifies the full local lifecycle. Requires `bash`, `git`, `python3`, `perl`,
+and a Rust toolchain (`cargo`) — the script builds `curio` from source on
+first run if no binary is cached:
 
 ```sh
 ./scripts/show-hn-demo.sh
@@ -128,7 +135,23 @@ published tree. It never modifies `docs/wiki-demo/`.
 For an agent-led setup intended for knowledge operators, see
 [docs/agent-setup.md](docs/agent-setup.md).
 
-You can also drive Curio three ways. Pick the path that matches your work.
+You can also drive Curio four ways. Pick the path that matches your work.
+
+### Option 0 — Download a release binary (no Rust toolchain)
+
+```sh
+# Linux (x86-64) — see the release page for macOS (aarch64-apple-darwin)
+# and Windows (x86_64-pc-windows-msvc) archives
+curl -LO https://github.com/RyanMerlin/curio/releases/latest/download/curio-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/RyanMerlin/curio/releases/latest/download/SHA256SUMS
+sha256sum --ignore-missing -c SHA256SUMS
+tar -xzf curio-x86_64-unknown-linux-gnu.tar.gz    # unpacks curio and curio-mcp
+
+CURIO_BIN=./curio ./scripts/show-hn-demo.sh       # run the credential-free demo, no cargo needed
+```
+
+Every release archive is built and packaged by CI from the tagged commit;
+checksums are generated in the same run, not on a maintainer laptop.
 
 ### Option 1 — Service via Docker (local shared use)
 
@@ -180,6 +203,47 @@ deploy/local/setup-colleague.sh <name> <space-key> <parent-page-id>
 ```
 
 See [**docs/runbook.md**](docs/runbook.md) for the full day‑zero operator guide.
+
+## Agent retrieval (MCP)
+
+Published knowledge is queryable by any MCP-compatible agent client — no
+extra service to run, no Confluence account needed. `curio-mcp` is read-only,
+scoped to `wiki/published/` (it cannot see `staged/` or `review/`), and never
+calls Confluence.
+
+```sh
+cd curio-rs && cargo build --release --bin curio-mcp
+./scripts/curio-mcp-demo.sh   # launches curio-mcp over the synthetic demo corpus, stdio
+```
+
+Point an MCP client (Claude Desktop, Claude Code, or any other MCP client) at
+the binary directly for a real workspace:
+
+```json
+{
+  "mcpServers": {
+    "curio": {
+      "command": "/path/to/curio-mcp",
+      "args": ["--workspace", "<name>"]
+    }
+  }
+}
+```
+
+Four read-only tools:
+
+| Tool | Returns |
+|---|---|
+| `search(query, category?, limit?, freshness?)` | Ranked, cited excerpts with stable IDs |
+| `fetch(id)` | Canonical Markdown body plus complete provenance |
+| `list_categories()` | The published taxonomy's category list |
+| `knowledge_status()` | Workspace identity, published page count, latest published commit |
+
+Every result carries a stable `curio://` ID, source URI, content hash, and
+Git provenance. `curio-mcp` ships in every release archive alongside `curio`;
+see [`docs/design/retrieval-evaluation-baseline.md`](docs/design/retrieval-evaluation-baseline.md)
+for measured recall and citation-coverage numbers on the checked-in
+evaluation corpus.
 
 ## The Confluence side
 
@@ -269,8 +333,7 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 | [`docs/agent-setup.md`](docs/agent-setup.md) | Knowledge operators + agents | Copy-paste setup contract, approval boundaries, and readiness report |
 | [`docs/release-checklist.md`](docs/release-checklist.md) | Maintainers | Release verification and launch claims |
 | [`docs/show-hn-launch.md`](docs/show-hn-launch.md) | Launch owner | Show HN draft, maker comment, and launch boundaries |
-| [`docs/index.md`](docs/index.md) | Everyone | Navigation map for active docs, design notes, and archives |
-| [`docs/archive/launch/`](docs/archive/launch) | Everyone | Historical launch artifacts preserved for reference only |
+| [`docs/index.md`](docs/index.md) | Everyone | Navigation map for active docs and design notes |
 | [`docs/design/process.md`](docs/design/process.md) | Anyone shaping the editorial pipeline | Long‑form spec for the proposal model |
 | [`docs/design/operating-contract.md`](docs/design/operating-contract.md) | Curation agents + reviewers | The inference‑first loop |
 | [`docs/agent-cli-contract.md`](docs/agent-cli-contract.md) | Tool integrators | Machine‑readable JSON shapes for every command |
