@@ -314,9 +314,11 @@ Adding a fourth provider = one folder under `providers/<name>/` plus one root st
 
 ## Tests and quality
 
-- **84 tests pass** — lib unit tests, demo workspace, multi-KB isolation,
-  multi-workspace safety, publish re-gate, page-body rewrite, multi-source
-  synthesis, routing evaluation, doctest.
+- **120 tests pass** (`cargo nextest run --all-targets`, verified in CI on
+  Linux, macOS, and Windows for v1.1.0) — lib unit tests, demo workspace,
+  multi-KB isolation, multi-workspace safety, publish re-gate, page-body
+  rewrite, multi-source synthesis, routing evaluation, retrieval and MCP
+  contract tests, doctest.
 - Every command supports `--json` with a stable envelope `{command, ok, data}` or, on errors, `{command, ok: false, error: {code, message, hint}}`.
 - `curio doctor` validates eight per‑KB infrastructure invariants (config / NORTHSTAR / git / Confluence URL / email / token / space key / auth probe).
 - `--dry-run` on every write command is a true read‑only preview — `sync --dry-run` never constructs a Confluence client.
