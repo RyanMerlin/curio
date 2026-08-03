@@ -53,7 +53,7 @@ jobs:
         run: cargo build --verbose
 
       - name: Install nextest
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@v2.85.5
         with:
           tool: nextest
 
